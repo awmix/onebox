@@ -62,6 +62,7 @@ nav { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin: 1
 .tab { border: 1px solid var(--line); background: rgba(255, 255, 255, .7); color: var(--muted); border-radius: 16px; padding: 14px 10px; cursor: grab; font-weight: 650; }
 .tab:active { cursor: grabbing; }
 .tab span { font-size: 19px; margin-right: 7px; }
+.tab span svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; vertical-align: -4px; }
 .tab.active { color: var(--ink); background: var(--panel); border-color: var(--primary); box-shadow: none; }
 .tab.reorder-hold, .weather-card.reorder-hold { outline: 3px solid var(--primary); box-shadow: 0 0 0 5px var(--soft); }
 .workspace { background: var(--panel); border: 1px solid var(--line); border-radius: 28px; padding: 28px; min-height: 460px; box-shadow: var(--shadow); }
@@ -350,6 +351,7 @@ body { overscroll-behavior-y: none; }
   isolation: isolate;
 }
 #toolNav::-webkit-scrollbar { display: none; }
+#toolNav[hidden] { display: none !important; }
 .tab { flex: 0 0 78px; min-height: 40px; padding: 9px 5px; border-radius: 13px; font-size: 12px; white-space: nowrap; }
 .tab span { font-size: 15px; margin-right: 3px; }
 .tab.active { border-color: var(--primary); box-shadow: none; }
@@ -718,4 +720,94 @@ main { padding-top: calc(58px + env(safe-area-inset-top) + 55.5px + 12px); }
   #workspace[data-tool="calendar"] .day i { top: 3px; right: 3px; bottom: auto; }
   .weather-card { flex-basis: 252px; min-height: 128px; }
   #eventDialog .event-date-time-grid { grid-template-columns: minmax(0, 1fr); gap: 0; }
+}
+
+/* Bottom app navigation --------------------------------------------------- */
+body { overflow: hidden; }
+main { height: calc(100dvh - 112px); max-height: calc(100dvh - 112px); overflow-y: auto; -webkit-overflow-scrolling: touch; padding-bottom: 24px; }
+.bottom-nav {
+  position: fixed;
+  left: 50%;
+  bottom: 12px;
+  z-index: 70;
+  width: min(460px, calc(100% - 24px));
+  min-height: 62px;
+  transform: translateX(-50%);
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+  padding: 5px;
+  background: color-mix(in srgb, var(--panel) 94%, transparent);
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  box-shadow: 0 18px 55px rgba(10, 16, 38, .18);
+  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(18px);
+}
+.bottom-nav[hidden] { display: none; }
+.bottom-tab { position: relative; min-width: 0; min-height: 51px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; border: 1px solid transparent; border-radius: 16px; background: transparent; color: var(--muted); cursor: pointer; font-size: 11px; font-weight: 700; }
+.bottom-tab-icon { width: 21px; height: 21px; display: grid; place-items: center; }
+.bottom-tab-icon svg { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.bottom-tab.active { color: var(--ink); background: var(--soft); border-color: var(--primary); }
+.bottom-tab sup { position: absolute; top: 5px; right: calc(50% - 21px); min-width: 15px; height: 15px; padding: 0 4px; border-radius: 9px; background: var(--danger); color: #fff; font-size: 9px; line-height: 15px; }
+
+main:has(#workspace[data-tool="home"]), main:has(#workspace[data-tool="messages"]), main:has(#workspace[data-tool="mine"]) { padding-top: calc(58px + env(safe-area-inset-top) + 18px); }
+#workspace[data-tool="home"], #workspace[data-tool="messages"], #workspace[data-tool="mine"] { background: transparent; border: 0; box-shadow: none; padding: 0; }
+.home-page, .section-page { min-height: min(620px, calc(100vh - 190px)); padding: 10px 0 20px; }
+.home-intro { padding: 20px 2px 31px; }
+.home-intro h1, .page-title-row h1 { max-width: 680px; margin: 10px 0 12px; font-size: clamp(32px, 6vw, 55px); line-height: 1.05; letter-spacing: -.055em; }
+.home-intro p { max-width: 520px; margin: 0; color: var(--muted); font-size: 16px; }
+.home-section, .message-panel, .mine-list { padding: 18px; background: var(--panel); border: 1px solid var(--line); border-radius: 22px; box-shadow: var(--shadow); }
+.home-section h2 { margin: 0; font-size: 18px; }
+.home-tool-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; margin-top: 14px; }
+.home-tool-card, .mine-row { min-width: 0; display: flex; align-items: center; gap: 11px; width: 100%; padding: 13px; text-align: left; color: var(--ink); background: var(--panel-2); border: 1px solid var(--line); border-radius: 15px; cursor: pointer; }
+.home-tool-card strong, .home-tool-card small, .mine-row strong, .mine-row small { display: block; }
+.home-tool-card small, .mine-row small { margin-top: 2px; color: var(--muted); font-size: 12px; }
+.home-tool-icon, .mine-row-icon { display: grid; place-items: center; flex: 0 0 34px; width: 34px; height: 34px; border-radius: 11px; background: var(--soft); color: var(--primary); font-size: 19px; font-weight: 800; }
+.home-tool-icon svg { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.home-tool-arrow, .mine-row > span:last-child { margin-left: auto; color: var(--muted); font-size: 20px; }
+.page-title-row { display: flex; align-items: end; justify-content: space-between; gap: 16px; margin-bottom: 20px; }
+.page-title-row h1 { margin-bottom: 0; }
+.message-panel { max-width: 680px; }
+.message-panel .notification-list { max-height: none; margin: 0; }
+.mine-list { max-width: 680px; padding: 8px; display: grid; gap: 8px; }
+.mine-row { border: 0; border-radius: 15px; }
+
+/* Weather search is one aligned control rail: query, location, search, refresh. */
+.weather-search { grid-template-columns: minmax(0, 1fr) 40px auto auto; align-items: stretch; gap: 7px; }
+.weather-search-field { display: flex; min-width: 0; }
+.weather-location-button { position: static; }
+.weather-search-field input { min-width: 0; height: 42px; }
+.weather-search > button { height: 42px; min-width: 52px; margin: 0; padding: 0 12px; display: inline-flex; align-items: center; justify-content: center; white-space: nowrap; }
+.weather-location-button { width: 40px; min-width: 40px !important; padding: 0 !important; border: 1px solid var(--line); border-radius: 13px; background: var(--panel); color: var(--primary); }
+.weather-location-button svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; }
+.weather-search-results { gap: 8px; padding: 12px; border: 1px solid var(--line); border-radius: 16px; background: var(--panel-2); }
+.search-results-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; padding: 0 2px 4px; }
+.search-results-head strong { font-size: 14px; }
+.search-results-head small { color: var(--muted); font-size: 11px; }
+.weather-result { padding: 10px; background: var(--panel); }
+.weather-result > span { min-width: 0; }
+.weather-result .secondary { flex: 0 0 auto; padding: 7px 11px; font-size: 12px; }
+
+/* Calendar cells keep every datum centered while the event badge stays clear of the date. */
+#workspace[data-tool="calendar"] .day { justify-content: center; align-items: center; padding-left: 3px; padding-right: 3px; }
+#workspace[data-tool="calendar"] .day > span, #workspace[data-tool="calendar"] .day > small { width: 100%; padding-right: 0; text-align: center; }
+#workspace[data-tool="calendar"] .day i { top: 1px; right: 1px; bottom: auto; width: 14px; height: 14px; line-height: 14px; font-size: 8px; }
+#workspace[data-tool="calendar"] .calendar-double-tap-hint { display: block; margin-top: 4px; color: var(--muted); font-size: 11px; font-weight: 500; }
+.lunar-dialog-card { width: min(390px, 100%); text-align: center; }
+.lunar-dialog-value { margin: 14px 0 8px; font-size: 30px; font-weight: 800; letter-spacing: -.04em; }
+.lunar-dialog-extra { margin: 0; color: var(--primary); font-size: 14px; font-weight: 700; }
+.lunar-dialog-note { margin: 18px 0 0; color: var(--muted); font-size: 12px; }
+#lunarDialog { z-index: 85; display: flex; align-items: center; justify-content: center; padding: 20px; background: rgba(12, 16, 28, .58); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+#lunarDialog[hidden] { display: none; }
+#lunarDialog .lunar-dialog-card { margin: 0; max-height: min(78vh, 460px); overflow: auto; }
+
+@media (max-width: 390px) {
+  .bottom-nav { width: calc(100% - 16px); bottom: 10px; }
+  .bottom-tab { font-size: 10px; }
+  .weather-search { grid-template-columns: minmax(0, 1fr) 36px auto auto; gap: 4px; }
+  .weather-search > button { min-width: 45px; padding: 0 8px; font-size: 12px; }
+  .weather-location-button { width: 36px; min-width: 36px !important; }
+  .search-results-head { display: block; }
+  .search-results-head small { display: block; margin-top: 2px; }
 }

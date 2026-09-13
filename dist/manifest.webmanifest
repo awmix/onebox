@@ -3,7 +3,7 @@
   "name": "OneBox 日常工具箱",
   "short_name": "OneBox",
   "description": "计算器、日历、天气、单位换算与翻译，一站式轻量工具箱。",
-  "start_url": "./#calculator",
+  "start_url": "./#home",
   "scope": "./",
   "display": "standalone",
   "display_override": ["window-controls-overlay", "standalone"],

@@ -14,12 +14,12 @@
   <link rel="icon" type="image/svg+xml" href="icons/icon.svg">
   <link rel="apple-touch-icon" sizes="180x180" media="(prefers-color-scheme: dark)" href="icons/icon-dark-180.png">
   <link rel="apple-touch-icon" sizes="180x180" media="(prefers-color-scheme: light)" href="icons/icon-180.png">
-  <link rel="stylesheet" href="style.css?v=2.13.0">
+  <link rel="stylesheet" href="style.css?v=2.14.6">
 </head>
 <body>
   <div class="shell">
     <header class="app-header">
-      <a class="brand" href="#calculator" aria-label="OneBox 首页"><span class="logo-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span>OneBox</span></a>
+      <a class="brand" id="brandLink" href="#home" aria-label="OneBox 首页"><span class="logo-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span>OneBox</span></a>
       <div class="header-actions">
         <span class="connection" aria-live="polite"><i></i><span id="connectionStatus">在线</span></span>
         <button id="notifyBtn" class="icon-btn header-icon" aria-label="消息提示" aria-expanded="false"><svg class="header-line-icon bell-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg><sup id="notificationCount" hidden>0</sup></button>
@@ -33,13 +33,14 @@
       <nav id="toolNav" aria-label="工具切换"></nav>
       <section id="workspace" class="workspace" aria-live="polite"></section>
     </main>
-    <footer>OneBox · 日常工具箱</footer>
+    <nav id="bottomNav" class="bottom-nav" aria-label="主导航"></nav>
   </div>
   <aside id="notificationPanel" class="popover notification-panel" hidden aria-label="消息提示"></aside>
   <section id="settingsDialog" class="dialog" hidden aria-label="设置"></section>
   <section id="eventDialog" class="dialog" hidden aria-label="新增日程"></section>
+  <section id="lunarDialog" class="dialog" hidden aria-label="农历信息"></section>
   <section id="agreementDialog" class="dialog" hidden aria-label="用户协议"></section>
-  <script src="calendar-data.js?v=2.13.0"></script>
-  <script src="app.js?v=2.13.0" defer></script>
+  <script src="calendar-data.js?v=2.14.6"></script>
+  <script src="app.js?v=2.14.6" defer></script>
 </body>
 </html>

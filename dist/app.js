@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.13.0';
+const APP_VERSION = '2.14.6';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -19,11 +19,11 @@ const STORAGE = {
   github: 'onebox.github',
 };
 const TOOL_DEFS = {
-  calculator: { icon: '⌗', key: 'calculator' },
-  calendar: { icon: '□', key: 'calendar' },
-  weather: { icon: '◒', key: 'weather' },
-  convert: { icon: '⇄', key: 'convert' },
-  translate: { icon: '文', key: 'translate' },
+  calculator: { icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="3"/><path d="M8 7h8M8 11h2m2 0h2m-4 4h2m2 0h2m-6 4h2m2 0h2"/></svg>', key: 'calculator' },
+  calendar: { icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="16" rx="3"/><path d="M7 3v4M17 3v4M4 9h16M8 13h.01M12 13h.01M16 13h.01M8 17h.01M12 17h.01M16 17h.01"/></svg>', key: 'calendar' },
+  weather: { icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>', key: 'weather' },
+  convert: { icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h16l-3-3M20 16H4l3 3"/></svg>', key: 'convert' },
+  translate: { icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h9M8.5 3v2m-3 0c.6 4 2.5 6.7 5.5 8M6 9h6M15 5h5l-4 9-4-9h3m-2 5h6"/></svg>', key: 'translate' },
 };
 const DEFAULT_TOOL_ORDER = Object.keys(TOOL_DEFS);
 const nav = $('#toolNav');
@@ -59,7 +59,7 @@ const toast = (message, kind = 'info') => {
 
 const DICT = {
   zh: {
-    calculator: '计算器', calendar: '日历', weather: '天气', convert: '转换', translate: '翻译',
+    calculator: '计算', calendar: '日历', weather: '天气', convert: '转换', translate: '翻译',
     online: '在线', offline: '离线', install: '安装应用', settings: '设置', notifications: '消息提示',
     heroSubtitle: '快速、清爽、可离线。你的数据优先保存在当前设备。',
     calculatorDesc: '支持括号、百分比、科学函数和键盘输入，并自动保留最近计算记录。',
@@ -73,13 +73,14 @@ const DICT = {
     today: '今天', off: '休', work: '补班', normalCalendar: '工作日历',
     legalHoliday: '法定休息', makeUpWorkday: '补班', solarTerm: '节气', selectedDay: '选中日期',
     noAgenda: '这一天还没有安排。', addAgenda: '新增日程', addToDay: '添加到这一天', eventDate: '日期', eventTime: '时间（精确到秒）',
-    noteOptional: '备注（可选）', weatherSearch: '添加', currentLocation: '当前位置',
+    noteOptional: '备注（可选）', weatherSearch: '搜索', currentLocation: '当前位置',
     refresh: '刷新', searchPlace: '搜索城市或区县',
     noWeather: '天气需要联网，搜索一个城市或区县开始。', weatherLoading: '正在获取天气…',
     weatherData: '天气数据来自 Open-Meteo；最近一次成功结果会保存在本机，离线时仍可查看。',
     sortWeather: '长按天气卡片可调整顺序', hourly: '前后 12 小时', daily: '前 3 天 · 今天 · 未来 15 天', advice: '天气建议',
     commute: '出行', sport: '运动', clothing: '穿衣', sunscreen: '防晒', hiking: '爬山',
-    addCard: '添加卡片', noResults: '没有找到匹配地点，请换个关键词。',
+    addCard: '添加', noResults: '没有找到匹配地点，请换个关键词。',
+    home: '首页', tools: '工具', messages: '消息', mine: '我的', quickTools: '常用工具', openSettings: '打开设置', noMessages: '还没有消息。',
     converterType: '换算类型', from: '从', to: '到', result: '结果', swap: '交换单位', copyResult: '复制结果',
     copied: '已复制', translationInput: '输入待翻译内容', translateNow: '开始翻译', saveTranslation: '保存到本机',
     source: '源语言', target: '目标语言', translationResult: '翻译结果', translationHistory: '最近翻译',
@@ -111,13 +112,14 @@ const DICT = {
     today: 'Today', off: 'Off', work: 'Make-up workday', normalCalendar: 'Work calendar',
     legalHoliday: 'Public holiday', makeUpWorkday: 'Make-up workday', solarTerm: 'Solar term', selectedDay: 'Selected day',
     noAgenda: 'Nothing planned for this day.', addAgenda: 'New event', addToDay: 'Add to this day', eventDate: 'Date', eventTime: 'Time (to the second)',
-    noteOptional: 'Note (optional)', weatherSearch: 'Add', currentLocation: 'Current location',
+    noteOptional: 'Note (optional)', weatherSearch: 'Search', currentLocation: 'Current location',
     refresh: 'Refresh', searchPlace: 'Search city or district',
     noWeather: 'Search a city or district to get weather.', weatherLoading: 'Loading weather…',
     weatherData: 'Weather by Open-Meteo. The last successful result is cached locally for offline use.',
     sortWeather: 'Long-press a weather card to reorder', hourly: '12 hours before and after', daily: '3 days before · today · next 15 days', advice: 'Advice',
     commute: 'Travel', sport: 'Sport', clothing: 'Clothing', sunscreen: 'Sun care', hiking: 'Hiking',
-    addCard: 'Add card', noResults: 'No matching place. Try another query.',
+    addCard: 'Add', noResults: 'No matching place. Try another query.',
+    home: 'Home', tools: 'Tools', messages: 'Messages', mine: 'Me', quickTools: 'Quick tools', openSettings: 'Open settings', noMessages: 'No messages yet.',
     converterType: 'Conversion', from: 'From', to: 'To', result: 'Result', swap: 'Swap units', copyResult: 'Copy result',
     copied: 'Copied', translationInput: 'Text to translate', translateNow: 'Translate', saveTranslation: 'Save locally',
     source: 'Source', target: 'Target', translationResult: 'Translation', translationHistory: 'Recent translations',
@@ -147,9 +149,13 @@ const normalizeToolOrder = (value) => {
   const order = Array.isArray(value) ? value.filter((id) => TOOL_DEFS[id]) : [];
   return [...new Set(order.concat(Object.keys(TOOL_DEFS)))].slice(0, Object.keys(TOOL_DEFS).length);
 };
-const initialWeatherCards = Array.isArray(rawWeatherCards) && rawWeatherCards.length ? rawWeatherCards : legacyWeather ? [legacyWeather] : [];
+const initialWeatherCards = (Array.isArray(rawWeatherCards) && rawWeatherCards.length ? rawWeatherCards : legacyWeather ? [legacyWeather] : []).map((item) => ({
+  ...item,
+  isCurrentLocation: Boolean(item.isCurrentLocation || item.name === '当前位置' || item.name === 'Current location'),
+})).filter((item, index, cards) => !item.isCurrentLocation || cards.findIndex((candidate) => candidate.isCurrentLocation) === index);
 const state = {
   tool: Object.keys(TOOL_DEFS).includes(location.hash.slice(1)) ? location.hash.slice(1) : 'calculator',
+  section: location.hash.slice(1) === 'home' ? 'home' : 'tools',
   theme: ['light', 'dark', 'system'].includes(storedTheme) ? storedTheme : 'system',
   languageMode: ['zh', 'en', 'system'].includes(storedLanguage) ? storedLanguage : 'system',
   language: resolveLanguageMode(storedLanguage),
@@ -160,6 +166,7 @@ const state = {
   events: parseStored(STORAGE.events, {}) || {},
   weatherCards: initialWeatherCards.map((item) => ({ ...item, id: item.id || uid() })),
   activeWeatherId: initialWeatherCards[0]?.id || null, weatherLoading: false, weatherError: '', weatherRequest: 0, weatherSearchResults: [],
+  lunarDialogDate: null, lastCalendarTap: { key: '', at: 0 },
   translation: { source: 'auto', target: 'zh', input: '', result: '', loading: false, error: '' },
   translationHistory: parseStored(STORAGE.translationHistory, []),
   notifications: parseStored(STORAGE.notifications, []), notificationOpen: false, settingsOpen: false,
@@ -212,6 +219,12 @@ function cycleTheme() {
 function heading(title, subtitle, actions = '') {
   return actions ? '<div class="tool-head"><div class="tool-actions">' + actions + '</div></div>' : '';
 }
+const SECTION_DEFS = {
+  home: { key: 'home', icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1V10Z"/></svg>' },
+  tools: { key: 'tools', icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/></svg>' },
+  messages: { key: 'messages', icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg>' },
+  mine: { key: 'mine', icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5 20a7 7 0 0 1 14 0"/></svg>' },
+};
 function renderNav() {
   nav.innerHTML = state.toolOrder.map((id, index) => {
     const item = TOOL_DEFS[id];
@@ -219,11 +232,24 @@ function renderNav() {
   }).join('');
   nav.title = t('reorderHint');
 }
+function renderBottomNav() {
+  const bottomNav = $('#bottomNav');
+  if (!bottomNav) return;
+  const unread = state.notifications.filter((item) => !item.read).length;
+  bottomNav.innerHTML = Object.values(SECTION_DEFS).map((item) => '<button class="bottom-tab ' + (state.section === item.key ? 'active' : '') + '" data-section="' + item.key + '" aria-current="' + (state.section === item.key ? 'page' : 'false') + '"><span class="bottom-tab-icon" aria-hidden="true">' + item.icon + '</span><span>' + t(item.key) + '</span>' + (item.key === 'messages' && unread ? '<sup>' + (unread > 99 ? '99+' : unread) + '</sup>' : '') + '</button>').join('');
+}
 function selectTool(id) {
   if (!TOOL_DEFS[id]) id = 'calculator';
+  state.section = 'tools';
   state.tool = id;
   if (location.hash.slice(1) !== id) history.replaceState(null, '', '#' + id);
-  renderNav(); render();
+  renderNav(); renderBottomNav(); render();
+}
+function selectSection(section) {
+  if (!SECTION_DEFS[section]) section = 'tools';
+  state.section = section;
+  if (section === 'tools' && !TOOL_DEFS[state.tool]) state.tool = 'calculator';
+  renderNav(); renderBottomNav(); render();
 }
 function saveToolOrder() { saveStored(STORAGE.toolOrder, state.toolOrder); }
 function swapToolOrder(from, to) {
@@ -231,6 +257,22 @@ function swapToolOrder(from, to) {
   [state.toolOrder[from], state.toolOrder[to]] = [state.toolOrder[to], state.toolOrder[from]];
   saveToolOrder(); renderNav();
   toast(state.language === 'en' ? 'Tool order saved' : '工具顺序已保存');
+}
+
+function renderHome() {
+  const tools = state.toolOrder.map((id) => '<button class="home-tool-card" data-home-tool="' + id + '"><span class="home-tool-icon" aria-hidden="true">' + TOOL_DEFS[id].icon + '</span><span><strong>' + toolName(id) + '</strong><small>' + (state.language === 'en' ? 'Open tool' : '打开工具') + '</small></span><span class="home-tool-arrow" aria-hidden="true">›</span></button>').join('');
+  return '<div class="home-page"><div class="home-intro"><span class="section-kicker">ONEBOX</span><h1>' + (state.language === 'en' ? 'Everything you use, in one box.' : '每天要用的工具，都在一个盒子里。') + '</h1><p>' + (state.language === 'en' ? 'A calm workspace for quick calculations, dates, weather and conversions.' : '计算、日历、天气、转换与翻译，打开就能用。') + '</p></div><section class="home-section"><div class="subhead"><h2>' + t('quickTools') + '</h2><button class="text-btn" data-section="tools">' + t('tools') + '</button></div><div class="home-tool-grid">' + tools + '</div></section></div>';
+}
+function notificationItemsMarkup() {
+  const items = [...state.notifications].sort((a, b) => Number(b.at) - Number(a.at));
+  if (!items.length) return '<p class="empty compact">' + t('noMessages') + '</p>';
+  return items.map((item) => '<div class="notification-item ' + (item.read ? '' : 'unread') + '"><div><strong>' + escapeHtml(item.text) + '</strong><small>' + new Intl.DateTimeFormat(state.language === 'en' ? 'en-US' : 'zh-CN', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(item.at)) + '</small></div><button class="icon-btn small" data-delete-notification="' + escapeHtml(item.id) + '" aria-label="' + t('close') + '">×</button></div>').join('');
+}
+function renderMessages() {
+  return '<div class="section-page message-page"><div class="page-title-row"><div><span class="section-kicker">ONEBOX</span><h1>' + t('messages') + '</h1></div><button class="secondary" data-mark-notifications-read>' + t('markRead') + '</button></div><div class="message-panel"><div class="notification-list">' + notificationItemsMarkup() + '</div></div></div>';
+}
+function renderMine() {
+  return '<div class="section-page mine-page"><div class="page-title-row"><div><span class="section-kicker">ONEBOX</span><h1>' + t('mine') + '</h1></div></div><div class="mine-list"><button class="mine-row" data-open-settings-page><span class="mine-row-icon">⚙</span><span><strong>' + t('settings') + '</strong><small>' + (state.language === 'en' ? 'Theme, language, updates and sync' : '主题、语言、更新与同步') + '</small></span><span>›</span></button><button class="mine-row" data-open-agreement-page><span class="mine-row-icon">▤</span><span><strong>' + t('userAgreement') + '</strong><small>' + (state.language === 'en' ? 'Learn how OneBox handles data' : '了解 OneBox 如何处理数据') + '</small></span><span>›</span></button></div></div>';
 }
 
 // Calendar data --------------------------------------------------------------
@@ -446,7 +488,8 @@ function calendar() {
     const termClass = meta.term ? 'term-day' : '';
     const label = meta.holiday && !meta.holiday.isOffDay ? t('makeUpWorkday') : (meta.term || meta.holiday?.name || meta.lunar?.festival || '');
     const lunarCell = meta.lunar ? (meta.lunar.day === 1 ? meta.lunar.monthText + meta.lunar.dayText : meta.lunar.dayText) : '';
-    cells += '<button class="day ' + (outside ? 'muted ' : '') + (key === dateKey(today) ? 'today ' : '') + (key === state.selectedDate ? 'selected ' : '') + holidayClass + ' ' + termClass + '" data-date="' + key + '" data-outside="' + outside + '" aria-label="' + escapeHtml(formatDate(key) + (label ? '，' + label : '') + (eventCount ? '，' + eventCount + ' 个日程' : '')) + '"><span>' + date.getDate() + '</span><small class="lunar-day">' + escapeHtml(lunarCell) + '</small><small class="day-label">' + escapeHtml(label) + '</small>' + (eventCount ? '<i>' + eventCount + '</i>' : '') + '</button>';
+    const eventBadge = eventCount ? (eventCount > 99 ? '…' : String(eventCount)) : '';
+    cells += '<button class="day ' + (outside ? 'muted ' : '') + (key === dateKey(today) ? 'today ' : '') + (key === state.selectedDate ? 'selected ' : '') + holidayClass + ' ' + termClass + '" data-date="' + key + '" data-outside="' + outside + '" aria-label="' + escapeHtml(formatDate(key) + (label ? '，' + label : '') + (eventCount ? '，' + eventCount + ' 个日程' : '')) + '"><span>' + date.getDate() + '</span><small class="lunar-day">' + escapeHtml(lunarCell) + '</small><small class="day-label">' + escapeHtml(label) + '</small>' + (eventCount ? '<i aria-label="' + eventCount + ' 个日程">' + eventBadge + '</i>' : '') + '</button>';
   }
   const selected = calendarMeta(state.selectedDate);
   const selectedEvents = [...(state.events[state.selectedDate] || [])].sort((a, b) => {
@@ -456,7 +499,6 @@ function calendar() {
   const eventList = selectedEvents.length
     ? selectedEvents.map((item) => '<div class="event-item"><div><strong>' + escapeHtml(item.title) + '</strong><small>' + (item.time ? escapeHtml(item.time) : (state.language === 'en' ? 'All day' : '全天')) + '</small></div><button class="icon-btn small" data-delete-event="' + escapeHtml(item.id) + '" aria-label="' + (state.language === 'en' ? 'Delete' : '删除') + '">×</button></div>').join('')
     : '<p class="empty compact">' + t('noAgenda') + '</p>';
-  const lunarLine = selected.lunar ? (selected.lunar.yearName ? selected.lunar.yearName + ' · ' : '') + selected.lunar.monthText + selected.lunar.dayText + (selected.lunar.festival ? ' · ' + selected.lunar.festival : '') : (state.language === 'en' ? 'Lunar calendar unavailable' : '当前浏览器不支持农历格式');
   const status = selected.holiday
     ? '<span class="date-status ' + (selected.holiday.isOffDay ? 'off' : 'work') + '">' + (selected.holiday.isOffDay ? t('off') + ' · ' + escapeHtml(selected.holiday.name) : t('work')) + '</span>'
     : '<span class="date-status normal">' + t('normalCalendar') + '</span>';
@@ -466,7 +508,7 @@ function calendar() {
   return heading(t('calendar'), t('calendarDesc')) +
     '<div class="calendar-layout"><div class="calendar-card"><div class="calendar-top"><button class="icon-btn" data-month="-1" aria-label="Previous month">←</button><div class="calendar-month"><strong>' + monthLabel + '</strong><button class="text-btn calendar-today" data-today>' + t('today') + '</button></div><button class="icon-btn" data-month="1" aria-label="Next month">→</button></div>' +
     '<div class="calendar-legend"><span><i class="dot off"></i>' + t('legalHoliday') + '</span><span><i class="dot work"></i>' + t('makeUpWorkday') + '</span><span><i class="dot term"></i>' + t('solarTerm') + '</span><button class="calendar-add-event" data-open-event-dialog><span aria-hidden="true">＋</span>' + t('addAgenda') + '</button></div><div class="calendar-grid">' + weekdays.map((day) => '<div class="dow">' + day + '</div>').join('') + cells + '</div></div>' +
-    '<aside class="agenda-panel"><div class="subhead"><div><h3>' + escapeHtml(selectedDateLabel) + '</h3></div>' + status + '</div><div class="date-detail"><strong>' + escapeHtml(lunarLine) + '</strong>' + (selected.lunar?.yearName ? '<span class="lunar-year-label">' + (state.language === 'en' ? 'Lunar ' + zodiacFor(selected.lunar.yearName) + ' year' : '农历' + zodiacFor(selected.lunar.yearName) + '年') + '</span>' : '') + (selected.term ? '<span class="term-badge">' + selected.term + '</span>' : '') + '</div><div class="event-list">' + eventList + '</div></aside></div>';
+    '<aside class="agenda-panel"><div class="subhead"><div><h3>' + escapeHtml(selectedDateLabel) + '</h3><small class="calendar-double-tap-hint">' + (state.language === 'en' ? 'Double-tap a date for lunar details' : '连续点击日期查看农历详情') + '</small></div>' + status + '</div><div class="event-list">' + eventList + '</div></aside></div>';
 }
 function saveEvents() { saveStored(STORAGE.events, state.events); }
 
@@ -477,6 +519,19 @@ function renderEventDialog() {
   dialog.hidden = false;
 }
 function closeEventDialog() { const dialog = $('#eventDialog'); if (dialog) dialog.hidden = true; }
+function renderLunarDialog(key) {
+  const dialog = $('#lunarDialog');
+  if (!dialog) return;
+  const meta = calendarMeta(key);
+  const lunar = meta.lunar;
+  const lunarText = lunar ? lunar.monthText + lunar.dayText : (state.language === 'en' ? 'Lunar calendar unavailable' : '当前浏览器不支持农历格式');
+  const zodiac = lunar?.yearName ? (state.language === 'en' ? 'Lunar ' + zodiacFor(lunar.yearName) + ' year' : '农历' + zodiacFor(lunar.yearName) + '年') : '';
+  const extra = [zodiac, lunar?.festival, meta.term, meta.holiday ? (meta.holiday.isOffDay ? meta.holiday.name : t('makeUpWorkday')) : ''].filter(Boolean).join(' · ');
+  dialog.innerHTML = '<div class="dialog-card lunar-dialog-card" role="dialog" aria-modal="true"><div class="dialog-head"><h2>' + escapeHtml(formatDate(key)) + '</h2><button class="icon-btn small" data-close-lunar-dialog aria-label="' + t('close') + '">×</button></div><div class="lunar-dialog-value">' + escapeHtml(lunarText) + '</div>' + (extra ? '<p class="lunar-dialog-extra">' + escapeHtml(extra) + '</p>' : '') + '<p class="lunar-dialog-note">' + (state.language === 'en' ? 'Double-tap any date to view its lunar details.' : '连续点击任意日期即可查看农历详情。') + '</p></div>';
+  dialog.hidden = false;
+  state.lunarDialogDate = key;
+}
+function closeLunarDialog() { const dialog = $('#lunarDialog'); if (dialog) dialog.hidden = true; state.lunarDialogDate = null; }
 
 // Weather --------------------------------------------------------------------
 const weatherCode = (code) => {
@@ -498,16 +553,18 @@ async function getWeatherData(lat, lon) {
 }
 async function addWeatherPlace(place) {
   const request = ++state.weatherRequest;
-  const existingIndex = state.weatherCards.findIndex((item) => Math.abs(Number(item.latitude) - Number(place.latitude)) < .01 && Math.abs(Number(item.longitude) - Number(place.longitude)) < .01);
+  const currentIndex = place.isCurrentLocation ? state.weatherCards.findIndex((item) => item.isCurrentLocation) : -1;
+  const coordinateIndex = state.weatherCards.findIndex((item) => Math.abs(Number(item.latitude) - Number(place.latitude)) < .01 && Math.abs(Number(item.longitude) - Number(place.longitude)) < .01);
+  const existingIndex = currentIndex >= 0 ? currentIndex : coordinateIndex;
   const cardId = existingIndex >= 0 ? state.weatherCards[existingIndex].id : uid();
   const created = existingIndex < 0;
-  if (created) state.weatherCards.push({ id: cardId, ...place, loading: true });
-  else Object.assign(state.weatherCards[existingIndex], place, { loading: true });
+  if (created) state.weatherCards.push({ id: cardId, ...place, isCurrentLocation: Boolean(place.isCurrentLocation), loading: true });
+  else Object.assign(state.weatherCards[existingIndex], place, { isCurrentLocation: Boolean(place.isCurrentLocation || state.weatherCards[existingIndex].isCurrentLocation), loading: true });
   state.activeWeatherId = cardId; state.weatherSearchResults = []; state.weatherLoading = true; state.weatherError = ''; render();
   try {
     const data = await getWeatherData(place.latitude, place.longitude);
     if (request !== state.weatherRequest) return;
-    const card = { ...data, id: cardId, name: place.name, admin1: place.admin1 || '', admin2: place.admin2 || '', country: place.country || '', latitude: place.latitude, longitude: place.longitude, updatedAt: Date.now(), loading: false };
+    const card = { ...data, id: cardId, name: place.name, admin1: place.admin1 || '', admin2: place.admin2 || '', country: place.country || '', latitude: place.latitude, longitude: place.longitude, isCurrentLocation: Boolean(place.isCurrentLocation), updatedAt: Date.now(), loading: false };
     const targetIndex = state.weatherCards.findIndex((item) => item.id === cardId);
     if (targetIndex >= 0) state.weatherCards[targetIndex] = card; else state.weatherCards.push(card);
     state.activeWeatherId = card.id; saveWeatherCards();
@@ -557,8 +614,8 @@ async function reverseGeocode(latitude, longitude) {
     const data = await response.json(); const properties = data.features?.[0]?.properties || {};
     const district = properties.district || properties.county || '';
     const city = properties.city || properties.town || properties.municipality || '';
-    return { latitude, longitude, name: district || city || properties.name || (state.language === 'en' ? 'Current location' : '当前位置'), admin2: city && city !== district ? city : '', admin1: properties.state || properties.region || '', country: properties.country || '' };
-  } catch { return { latitude, longitude, name: state.language === 'en' ? 'Current location' : '当前位置' }; }
+    return { latitude, longitude, name: district || city || properties.name || (state.language === 'en' ? 'Current location' : '当前位置'), admin2: city && city !== district ? city : '', admin1: properties.state || properties.region || '', country: properties.country || '', isCurrentLocation: true };
+  } catch { return { latitude, longitude, name: state.language === 'en' ? 'Current location' : '当前位置', isCurrentLocation: true }; }
 }
 function currentHourIndex(weather) {
   const times = weather?.hourly?.time || []; if (!times.length) return -1;
@@ -583,8 +640,8 @@ function weatherAdvice(weather, current) {
 }
 function weather() {
   const active = state.weatherCards.find((item) => item.id === state.activeWeatherId) || state.weatherCards[0];
-  const search = '<form id="weatherSearch" class="weather-search"><label class="sr-only" for="cityInput">' + t('weatherSearch') + '</label><div class="weather-search-field"><input id="cityInput" placeholder="' + t('searchPlace') + '" autocomplete="off"><button class="weather-location-button" type="button" data-locate aria-label="' + t('currentLocation') + '">⌖</button></div><button class="primary" type="submit">' + t('weatherSearch') + '</button><button class="secondary" type="button" data-refresh-weather>' + t('refresh') + '</button></form>';
-  const results = state.weatherSearchResults.length ? '<div class="weather-search-results">' + state.weatherSearchResults.map((place, index) => '<button class="weather-result" data-weather-result-index="' + index + '"><span><strong>' + escapeHtml(place.name) + '</strong><small>' + escapeHtml(placeLabel(place)) + '</small></span><span aria-hidden="true">＋</span></button>').join('') + '</div>' : '';
+  const search = '<form id="weatherSearch" class="weather-search"><label class="sr-only" for="cityInput">' + t('searchPlace') + '</label><div class="weather-search-field"><input id="cityInput" placeholder="' + t('searchPlace') + '" autocomplete="off"></div><button class="weather-location-button" type="button" data-locate aria-label="' + t('currentLocation') + '"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7"></circle><circle cx="12" cy="12" r="2"></circle><path d="M12 2v3M12 19v3M2 12h3M19 12h3"></path></svg></button><button class="primary" type="submit">' + t('weatherSearch') + '</button><button class="secondary" type="button" data-refresh-weather>' + t('refresh') + '</button></form>';
+  const results = state.weatherSearchResults.length ? '<div class="weather-search-results"><div class="search-results-head"><strong>' + (state.language === 'en' ? 'Search results' : '搜索结果') + '</strong><small>' + (state.language === 'en' ? 'Choose a place, then add it to weather cards' : '选择地点后再添加到天气卡片') + '</small></div>' + state.weatherSearchResults.map((place, index) => '<div class="weather-result"><span><strong>' + escapeHtml(place.name) + '</strong><small>' + escapeHtml(placeLabel(place)) + '</small></span><button class="secondary" data-weather-result-index="' + index + '">' + t('addCard') + '</button></div>').join('') + '</div>' : '';
   if (!active) return heading(t('weather'), t('weatherDesc')) + search + results + '<div class="empty weather-empty">' + (state.weatherLoading ? '<span class="loader"></span>' + t('weatherLoading') : t('noWeather')) + (state.weatherError ? '<strong class="error-text">' + escapeHtml(state.weatherError) + '</strong>' : '') + '</div>';
   const current = active.current || {};
   const cards = state.weatherCards.map((card, index) => {
@@ -965,10 +1022,14 @@ function setupServiceWorker() {
 // Rendering and interaction --------------------------------------------------
 function render() {
   applyLanguage();
+  const bottomNav = $('#bottomNav');
+  if (bottomNav) bottomNav.hidden = false;
+  nav.hidden = state.section !== 'tools';
   const renderers = { calculator, calendar, weather, convert, translate: translateView };
-  workspace.dataset.tool = state.tool;
-  workspace.innerHTML = (renderers[state.tool] || calculator)();
-  if (state.tool === 'calendar') ensureHolidayYear(state.month.getFullYear());
+  workspace.dataset.tool = state.section === 'tools' ? state.tool : state.section;
+  workspace.innerHTML = state.section === 'home' ? renderHome() : state.section === 'messages' ? renderMessages() : state.section === 'mine' ? renderMine() : (renderers[state.tool] || calculator)();
+  if (state.section === 'tools' && state.tool === 'calendar') ensureHolidayYear(state.month.getFullYear());
+  renderBottomNav();
   updateNotificationBadge();
 }
 function swapWeatherCards(from, to) {
@@ -1015,6 +1076,15 @@ workspace.addEventListener('dragstart', (event) => { const card = event.target.c
 workspace.addEventListener('dragover', (event) => { if (event.target.closest('[data-weather-card]')) event.preventDefault(); });
 workspace.addEventListener('drop', (event) => { event.preventDefault(); const card = event.target.closest('[data-weather-card]'); if (card) swapWeatherCards(Number(event.dataTransfer.getData('text/plain')), Number(card.dataset.weatherIndex)); });
 workspace.addEventListener('click', async (event) => {
+  const section = event.target.closest('[data-section]');
+  if (section) return selectSection(section.dataset.section);
+  const homeTool = event.target.closest('[data-home-tool]');
+  if (homeTool) return selectTool(homeTool.dataset.homeTool);
+  if (event.target.closest('[data-open-settings-page]')) return renderSettings();
+  if (event.target.closest('[data-open-agreement-page]')) return renderAgreementDialog();
+  const messageDelete = event.target.closest('[data-delete-notification]');
+  if (messageDelete) { state.notifications = state.notifications.filter((item) => item.id !== messageDelete.dataset.deleteNotification); saveNotifications(); render(); return; }
+  if (event.target.closest('[data-mark-notifications-read]')) { state.notifications.forEach((item) => { item.read = true; }); saveNotifications(); render(); return; }
   const key = event.target.closest('[data-key]');
   if (key) return calculatorKey(key.dataset.key);
   const scienceKey = event.target.closest('[data-science-key]');
@@ -1029,7 +1099,16 @@ workspace.addEventListener('click', async (event) => {
   if (month) { state.month = new Date(state.month.getFullYear(), state.month.getMonth() + Number(month.dataset.month), 1); return render(); }
   if (event.target.closest('[data-today]')) { state.month = new Date(today.getFullYear(), today.getMonth(), 1); state.selectedDate = dateKey(today); return render(); }
   const day = event.target.closest('[data-date]');
-  if (day) { state.selectedDate = day.dataset.date; if (day.dataset.outside === 'true') { const date = dateFromKey(day.dataset.date); state.month = new Date(date.getFullYear(), date.getMonth(), 1); } return render(); }
+  if (day) {
+    const now = Date.now();
+    const repeated = state.lastCalendarTap.key === day.dataset.date && now - state.lastCalendarTap.at < 650;
+    state.lastCalendarTap = { key: day.dataset.date, at: now };
+    state.selectedDate = day.dataset.date;
+    if (day.dataset.outside === 'true') { const date = dateFromKey(day.dataset.date); state.month = new Date(date.getFullYear(), date.getMonth(), 1); }
+    render();
+    if (repeated) renderLunarDialog(day.dataset.date);
+    return;
+  }
   const deleteEvent = event.target.closest('[data-delete-event]');
   if (deleteEvent) {
     state.events[state.selectedDate] = (state.events[state.selectedDate] || []).filter((item) => item.id !== deleteEvent.dataset.deleteEvent);
@@ -1074,6 +1153,10 @@ workspace.addEventListener('click', async (event) => {
   }
   if (event.target.closest('[data-clear-translation-history]')) { state.translationHistory = []; saveTranslationHistory(); return render(); }
 });
+workspace.addEventListener('dblclick', (event) => {
+  const day = event.target.closest('[data-date]');
+  if (day && state.section === 'tools' && state.tool === 'calendar') { event.preventDefault(); renderLunarDialog(day.dataset.date); }
+});
 workspace.addEventListener('input', (event) => {
   if (event.target.id === 'conversionValue') { conversion.value = event.target.value; const output = $('.conversion-result strong'); if (output) output.textContent = formatNumber(convertedValue()); }
   if (event.target.id === 'translationInput') state.translation.input = event.target.value;
@@ -1103,6 +1186,16 @@ $('#eventDialog').addEventListener('submit', (event) => {
   const selectedDate = dateFromKey(key); state.month = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1);
   saveEvents(); syncAgendaReminders(); scheduleNotificationCheck(); closeEventDialog(); render(); toast(state.language === 'en' ? 'Event added' : '日程已添加');
 });
+
+$('#lunarDialog').addEventListener('click', (event) => {
+  if (event.target === $('#lunarDialog') || event.target.closest('[data-close-lunar-dialog]')) closeLunarDialog();
+});
+
+$('#bottomNav').addEventListener('click', (event) => {
+  const tab = event.target.closest('[data-section]');
+  if (tab) selectSection(tab.dataset.section);
+});
+$('#brandLink').addEventListener('click', (event) => { event.preventDefault(); selectSection('home'); });
 
 document.addEventListener('keydown', (event) => {
   if (state.tool !== 'calculator' || event.target.matches('input, textarea, select')) return;
