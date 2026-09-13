@@ -73,7 +73,7 @@ const DICT = {
     legalHoliday: '法定休息', makeUpWorkday: '补班', solarTerm: '节气', selectedDay: '选中日期',
     noAgenda: '这一天还没有安排。', addAgenda: '新增日程', addToDay: '添加到这一天', eventTime: '时间（精确到秒）',
     noteOptional: '备注（可选）', weatherSearch: '搜索天气', currentLocation: '当前位置',
-    refresh: '刷新', searchPlace: '搜索城市或区县，例如：苏州工业园区、Tokyo',
+    refresh: '刷新', searchPlace: '搜索城市或区县',
     noWeather: '天气需要联网，搜索一个城市或区县开始。', weatherLoading: '正在获取天气…',
     weatherData: '天气数据来自 Open-Meteo；最近一次成功结果会保存在本机，离线时仍可查看。',
     sortWeather: '长按天气卡片可调整顺序', hourly: '前后 12 小时', daily: '前 3 天 · 今天 · 未来 15 天', advice: '天气建议',
@@ -109,7 +109,7 @@ const DICT = {
     legalHoliday: 'Public holiday', makeUpWorkday: 'Make-up workday', solarTerm: 'Solar term', selectedDay: 'Selected day',
     noAgenda: 'Nothing planned for this day.', addAgenda: 'New event', addToDay: 'Add to this day', eventTime: 'Time (to the second)',
     noteOptional: 'Note (optional)', weatherSearch: 'Search weather', currentLocation: 'Current location',
-    refresh: 'Refresh', searchPlace: 'Search a city or district, e.g. Suzhou Industrial Park, Tokyo',
+    refresh: 'Refresh', searchPlace: 'Search city or district',
     noWeather: 'Search a city or district to get weather.', weatherLoading: 'Loading weather…',
     weatherData: 'Weather by Open-Meteo. The last successful result is cached locally for offline use.',
     sortWeather: 'Long-press a weather card to reorder', hourly: '12 hours before and after', daily: '3 days before · today · next 15 days', advice: 'Advice',
@@ -133,7 +133,8 @@ const DICT = {
 const t = (key) => DICT[state.language]?.[key] || DICT.zh[key] || key;
 const toolName = (id) => t(TOOL_DEFS[id]?.key || id);
 const storedTheme = localStorage.getItem(STORAGE.theme);
-const storedLanguage = localStorage.getItem(STORAGE.language) || 'zh';
+const storedLanguage = localStorage.getItem(STORAGE.language) || 'system';
+const resolveLanguageMode = (mode) => mode === 'en' || mode === 'zh' ? mode : ((navigator.language || '').toLowerCase().startsWith('en') ? 'en' : 'zh');
 const storedCalculator = parseStored(STORAGE.calculator, { expr: '', history: [] });
 const rawWeatherCards = parseStored(STORAGE.weatherCards, []);
 const legacyWeather = parseStored(STORAGE.legacyWeather, null);
@@ -145,7 +146,8 @@ const initialWeatherCards = Array.isArray(rawWeatherCards) && rawWeatherCards.le
 const state = {
   tool: Object.keys(TOOL_DEFS).includes(location.hash.slice(1)) ? location.hash.slice(1) : 'calculator',
   theme: ['light', 'dark', 'system'].includes(storedTheme) ? storedTheme : 'system',
-  language: ['zh', 'en'].includes(storedLanguage) ? storedLanguage : 'zh',
+  languageMode: ['zh', 'en', 'system'].includes(storedLanguage) ? storedLanguage : 'system',
+  language: resolveLanguageMode(storedLanguage),
   toolOrder: normalizeToolOrder(parseStored(STORAGE.toolOrder, DEFAULT_TOOL_ORDER)),
   calcExpr: storedCalculator.expr || '', calcHistory: Array.isArray(storedCalculator.history) ? storedCalculator.history : [],
   calcJustEvaluated: false, calcScientific: false, calcAngle: 'deg',
@@ -177,20 +179,19 @@ function applyTheme() {
   if (appleStatusBar) appleStatusBar.content = resolved === 'dark' ? 'black-translucent' : 'default';
   const button = $('#themeBtn');
   if (button) {
-    button.textContent = state.theme === 'system' ? '◐' : state.theme === 'dark' ? '☀' : '☾';
     button.setAttribute('aria-label', t('theme') + '：' + t(state.theme));
+    button.dataset.themeMode = state.theme;
   }
 }
 function applyLanguage() {
+  state.language = resolveLanguageMode(state.languageMode);
   document.documentElement.lang = state.language === 'en' ? 'en' : 'zh-CN';
   document.title = state.language === 'en' ? 'OneBox · Daily Toolbox' : 'OneBox · 日常工具箱';
-  const select = $('#languageSelect');
-  if (select) select.value = state.language;
   const connectionStatus = $('#connectionStatus');
   if (connectionStatus) connectionStatus.textContent = navigator.onLine ? t('online') : t('offline');
   applyTheme();
 }
-function saveThemeLanguage() { localStorage.setItem(STORAGE.theme, state.theme); localStorage.setItem(STORAGE.language, state.language); }
+function saveThemeLanguage() { localStorage.setItem(STORAGE.theme, state.theme); localStorage.setItem(STORAGE.language, state.languageMode); }
 function cycleTheme() {
   state.theme = state.theme === 'system' ? 'light' : state.theme === 'light' ? 'dark' : 'system';
   saveThemeLanguage(); applyTheme(); render();
@@ -546,7 +547,7 @@ function weatherAdvice(weather, current) {
 }
 function weather() {
   const active = state.weatherCards.find((item) => item.id === state.activeWeatherId) || state.weatherCards[0];
-  const search = '<form id="weatherSearch" class="weather-search"><label class="sr-only" for="cityInput">' + t('weatherSearch') + '</label><div class="weather-search-field"><input id="cityInput" placeholder="' + t('searchPlace') + '" autocomplete="off"><span class="weather-placeholder" aria-hidden="true">' + t('searchPlace') + '</span><button class="weather-location-button" type="button" data-locate aria-label="' + t('currentLocation') + '">⌖</button></div><button class="primary" type="submit">' + t('weatherSearch') + '</button><button class="secondary" type="button" data-refresh-weather>' + t('refresh') + '</button></form>';
+  const search = '<form id="weatherSearch" class="weather-search"><label class="sr-only" for="cityInput">' + t('weatherSearch') + '</label><div class="weather-search-field"><input id="cityInput" placeholder="' + t('searchPlace') + '" autocomplete="off"><button class="weather-location-button" type="button" data-locate aria-label="' + t('currentLocation') + '">⌖</button></div><button class="primary" type="submit">' + t('weatherSearch') + '</button><button class="secondary" type="button" data-refresh-weather>' + t('refresh') + '</button></form>';
   const results = state.weatherSearchResults.length ? '<div class="weather-search-results">' + state.weatherSearchResults.map((place, index) => '<button class="weather-result" data-weather-result-index="' + index + '"><span><strong>' + escapeHtml(place.name) + '</strong><small>' + escapeHtml(placeLabel(place)) + '</small></span><span aria-hidden="true">＋</span></button>').join('') + '</div>' : '';
   if (!active) return heading(t('weather'), t('weatherDesc')) + search + results + '<div class="empty weather-empty">' + (state.weatherLoading ? '<span class="loader"></span>' + t('weatherLoading') : t('noWeather')) + (state.weatherError ? '<strong class="error-text">' + escapeHtml(state.weatherError) + '</strong>' : '') + '</div>';
   const current = active.current || {};
@@ -583,7 +584,7 @@ function weather() {
   }, 0);
   return heading(t('weather'), escapeHtml(title) + ' · ' + (state.language === 'en' ? 'updated' : '更新于') + ' ' + (active.updatedAt ? new Intl.DateTimeFormat(state.language === 'en' ? 'en-US' : 'zh-CN', { hour: '2-digit', minute: '2-digit' }).format(active.updatedAt) : (state.language === 'en' ? 'cached' : '本机缓存'))) +
     search + results + (state.weatherError ? '<div class="inline-alert">' + escapeHtml(state.weatherError) + '，' + (state.language === 'en' ? 'showing the last successful result' : '当前显示上次成功结果') + '。</div>' : '') +
-    '<p class="weather-sort-hint">' + t('sortWeather') + '</p><div class="weather-card-list">' + cards + '<button class="weather-card" data-add-weather-card>＋ ' + t('addCard') + '</button></div>' +
+    '<p class="weather-sort-hint">' + t('sortWeather') + '</p><div class="weather-card-list">' + cards + '</div>' +
     '<div class="weather-now"><div><span class="weather-location">' + escapeHtml(title) + '</span><h3>' + currentWeather[1] + '</h3><strong>' + Math.round(current.temperature_2m ?? 0) + '°</strong><p>' + (state.language === 'en' ? 'Feels like ' : '体感 ') + Math.round(current.apparent_temperature ?? current.temperature_2m ?? 0) + '° · ' + (state.language === 'en' ? 'Humidity ' : '湿度 ') + (current.relative_humidity_2m ?? '—') + '% · ' + (state.language === 'en' ? 'Wind ' : '风速 ') + Math.round(current.wind_speed_10m ?? 0) + ' km/h</p></div><div class="weather-icon" aria-hidden="true">' + currentWeather[0] + '</div></div>' +
     '<h3 class="weather-section-title">' + t('hourly') + '</h3><div class="hourly-strip">' + hourly + '</div><h3 class="weather-section-title">' + t('advice') + '</h3><div class="advice-strip">' + advice + '</div><h3 class="weather-section-title">' + t('daily') + '</h3><div class="weather-days">' + days + '</div><p class="note">' + t('weatherData') + '</p>';
 }
@@ -726,8 +727,7 @@ function renderNotifications() {
   const panel = $('#notificationPanel');
   const items = [...state.notifications].sort((a, b) => Number(a.at) - Number(b.at));
   const list = items.length ? items.map((item) => '<div class="notification-item ' + (item.read ? '' : 'unread') + '"><div><strong>' + escapeHtml(item.text) + '</strong><small>' + new Intl.DateTimeFormat(state.language === 'en' ? 'en-US' : 'zh-CN', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(item.at)) + '</small></div><button class="icon-btn small" data-delete-notification="' + escapeHtml(item.id) + '" aria-label="Delete">×</button></div>').join('') : '<p class="empty compact">' + t('noNotifications') + '</p>';
-  const minimum = localDateTimeValue(new Date(Date.now() + 60000));
-  panel.innerHTML = '<div class="subhead"><h3>' + t('notifications') + '</h3><button class="text-btn" data-mark-notifications-read>' + t('markRead') + '</button></div><div class="notification-list">' + list + '</div><form class="notification-form" id="notificationForm"><div class="field"><label for="reminderText">' + t('reminderText') + '</label><input id="reminderText" required maxlength="120" placeholder="' + (state.language === 'en' ? 'e.g. Submit report' : '例如：提交报告') + '"></div><div class="field"><label for="reminderAt">' + t('remindAt') + '</label><input id="reminderAt" required type="datetime-local" step="1" min="' + minimum + '"></div><button class="primary full-width" type="submit">' + t('addReminder') + '</button></form>';
+  panel.innerHTML = '<div class="notification-head"><h3>' + t('notifications') + '</h3><button class="text-btn" data-mark-notifications-read>' + t('markRead') + '</button></div><div class="notification-list">' + list + '</div>';
   panel.hidden = false;
 }
 async function requestNotifications() {
@@ -747,7 +747,7 @@ function githubHeaders() {
 }
 function syncPayload() {
   return {
-    app: 'OneBox', version: 2, savedAt: new Date().toISOString(), theme: state.theme, language: state.language,
+    app: 'OneBox', version: 2, savedAt: new Date().toISOString(), theme: state.theme, languageMode: state.languageMode, language: state.language,
     toolOrder: state.toolOrder, calculator: parseStored(STORAGE.calculator, {}), events: state.events,
     weatherCards: state.weatherCards, translationHistory: state.translationHistory, notifications: state.notifications,
   };
@@ -816,7 +816,7 @@ async function githubDownload() {
     if (!content) throw Error();
     const remote = JSON.parse(content);
     if (remote.theme) state.theme = remote.theme;
-    if (remote.language) state.language = remote.language;
+    if (remote.languageMode || remote.language) state.languageMode = ['zh', 'en', 'system'].includes(remote.languageMode || remote.language) ? (remote.languageMode || remote.language) : 'system';
     if (Array.isArray(remote.toolOrder)) state.toolOrder = normalizeToolOrder(remote.toolOrder);
     if (remote.calculator) saveStored(STORAGE.calculator, remote.calculator);
     if (remote.events) { state.events = remote.events; saveEvents(); }
@@ -836,13 +836,12 @@ function renderSettings() {
   const connected = Boolean(state.github.token && state.github.user);
   const account = connected
     ? '<div class="github-user"><img src="' + escapeHtml(state.github.user.avatar_url || '') + '" alt=""><div><strong>' + escapeHtml(state.github.user.login || 'GitHub') + '</strong><small>' + t('githubConnected') + '</small></div></div>'
-    : '<p>' + t('githubNotConnected') + '</p>';
+    : '<span class="settings-note">' + t('githubNotConnected') + '</span>';
   const code = state.github.userCode ? '<div class="device-code"><small>' + (state.language === 'en' ? 'Enter this code at GitHub' : '请在 GitHub 验证页面输入') + '</small><strong>' + escapeHtml(state.github.userCode) + '</strong><p><a href="' + escapeHtml(state.github.verificationUri || 'https://github.com/login/device') + '" target="_blank" rel="noreferrer">' + t('openDevice') + '</a></p></div>' : '';
-  dialog.innerHTML = '<div class="dialog-card" role="dialog" aria-modal="true"><div class="dialog-head"><div><p class="section-kicker">ONEBOX</p><h2>' + t('settings') + '</h2></div><button class="icon-btn small" data-close-settings aria-label="' + t('close') + '">×</button></div>' +
-    '<div class="settings-grid"><div class="field"><label for="settingsTheme">' + t('theme') + '</label><select id="settingsTheme"><option value="system" ' + (state.theme === 'system' ? 'selected' : '') + '>' + t('system') + '</option><option value="light" ' + (state.theme === 'light' ? 'selected' : '') + '>' + t('light') + '</option><option value="dark" ' + (state.theme === 'dark' ? 'selected' : '') + '>' + t('dark') + '</option></select></div><div class="field"><label for="settingsLanguage">' + t('language') + '</label><select id="settingsLanguage"><option value="zh" ' + (state.language === 'zh' ? 'selected' : '') + '>中文</option><option value="en" ' + (state.language === 'en' ? 'selected' : '') + '>English</option></select></div></div>' +
-    '<section class="settings-section"><h3>' + t('notificationsPermission') + '</h3><p>' + t('notificationDescription') + '<br>' + notificationPermissionText() + '</p><button class="secondary" data-request-notifications>' + t('enableNotifications') + '</button></section>' +
-    '<section class="settings-section"><h3>' + t('githubSync') + '</h3><p>' + t('githubDescription') + '</p><div class="field"><label for="githubClientId">' + t('githubClientId') + '</label><input id="githubClientId" value="' + escapeHtml(state.github.clientId) + '" placeholder="Iv1.xxxxxxxxxxxxx"><small class="settings-note">' + t('githubClientHint') + '</small></div>' + account + code + '<div class="settings-actions">' + (connected ? '<button class="secondary" data-github-upload>' + t('upload') + '</button><button class="secondary" data-github-download>' + t('download') + '</button><button class="text-btn" data-github-logout>' + t('githubLogout') + '</button>' : '<button class="primary" data-github-login>' + t('githubLogin') + '</button>') + '</div></section>' +
-    '<p class="settings-note">' + (state.language === 'en' ? 'GitHub Pages is static. Device Flow avoids putting a client secret in this public app; your access token remains only in local storage.' : 'GitHub Pages 是静态托管。这里使用 Device Flow，不把 Client Secret 放进公开前端；访问令牌只保存在当前设备。') + '</p></div>';
+  dialog.innerHTML = '<div class="dialog-card settings-dialog-card" role="dialog" aria-modal="true"><div class="dialog-head"><h2>' + t('settings') + '</h2><button class="icon-btn small" data-close-settings aria-label="' + t('close') + '">×</button></div>' +
+    '<div class="settings-grid"><div class="field"><label for="settingsTheme">' + t('theme') + '</label><select id="settingsTheme"><option value="system" ' + (state.theme === 'system' ? 'selected' : '') + '>' + t('system') + '</option><option value="light" ' + (state.theme === 'light' ? 'selected' : '') + '>' + t('light') + '</option><option value="dark" ' + (state.theme === 'dark' ? 'selected' : '') + '>' + t('dark') + '</option></select></div><div class="field"><label for="settingsLanguage">' + t('language') + '</label><select id="settingsLanguage"><option value="system" ' + (state.languageMode === 'system' ? 'selected' : '') + '>' + t('system') + '</option><option value="zh" ' + (state.languageMode === 'zh' ? 'selected' : '') + '>中文</option><option value="en" ' + (state.languageMode === 'en' ? 'selected' : '') + '>English</option></select></div></div>' +
+    '<section class="settings-section"><div class="settings-row"><h3>' + t('notificationsPermission') + '</h3><button class="secondary" data-request-notifications>' + t('enableNotifications') + '</button></div><small class="settings-note">' + notificationPermissionText() + '</small></section>' +
+    '<section class="settings-section"><div class="settings-row"><h3>' + t('githubSync') + '</h3>' + account + '</div><div class="field"><label for="githubClientId">' + t('githubClientId') + '</label><input id="githubClientId" value="' + escapeHtml(state.github.clientId) + '" placeholder="Iv1.xxxxxxxxxxxxx"></div>' + code + '<div class="settings-actions">' + (connected ? '<button class="secondary" data-github-upload>' + t('upload') + '</button><button class="secondary" data-github-download>' + t('download') + '</button><button class="text-btn" data-github-logout>' + t('githubLogout') + '</button>' : '<button class="primary" data-github-login>' + t('githubLogin') + '</button>') + '</div></section></div>';
   dialog.hidden = false; state.settingsOpen = true;
 }
 function closeSettings() { $('#settingsDialog').hidden = true; state.settingsOpen = false; }
@@ -1002,7 +1001,6 @@ $('#notifyBtn').addEventListener('click', () => {
   else $('#notificationPanel').hidden = true;
   $('#notifyBtn').setAttribute('aria-expanded', String(state.notificationOpen));
 });
-$('#languageSelect').addEventListener('change', (event) => { state.language = event.target.value; saveThemeLanguage(); applyLanguage(); renderNav(); render(); });
 $('#installBtn').addEventListener('click', async () => { if (!window.installPrompt) return; window.installPrompt.prompt(); await window.installPrompt.userChoice; window.installPrompt = null; $('#installBtn').hidden = true; });
 $('#settingsDialog').addEventListener('click', (event) => {
   if (event.target === $('#settingsDialog') || event.target.closest('[data-close-settings]')) return closeSettings();
@@ -1014,20 +1012,13 @@ $('#settingsDialog').addEventListener('click', (event) => {
 });
 $('#settingsDialog').addEventListener('change', (event) => {
   if (event.target.id === 'settingsTheme') { state.theme = event.target.value; saveThemeLanguage(); applyTheme(); render(); }
-  if (event.target.id === 'settingsLanguage') { state.language = event.target.value; saveThemeLanguage(); applyLanguage(); renderNav(); render(); renderSettings(); }
+  if (event.target.id === 'settingsLanguage') { state.languageMode = event.target.value; saveThemeLanguage(); applyLanguage(); renderNav(); render(); renderSettings(); }
 });
 $('#settingsDialog').addEventListener('input', (event) => { if (event.target.id === 'githubClientId') { state.github.clientId = event.target.value.trim(); saveGithub(); } });
 $('#notificationPanel').addEventListener('click', (event) => {
   const deleteNotification = event.target.closest('[data-delete-notification]');
   if (deleteNotification) { state.notifications = state.notifications.filter((item) => item.id !== deleteNotification.dataset.deleteNotification); saveNotifications(); renderNotifications(); updateNotificationBadge(); }
   if (event.target.closest('[data-mark-notifications-read]')) { state.notifications.forEach((item) => { item.read = true; }); saveNotifications(); renderNotifications(); updateNotificationBadge(); }
-});
-$('#notificationPanel').addEventListener('submit', (event) => {
-  event.preventDefault(); if (event.target.id !== 'notificationForm') return;
-  const text = $('#reminderText').value.trim(); const at = new Date($('#reminderAt').value).getTime();
-  if (!text || !Number.isFinite(at)) return;
-  state.notifications.push({ id: uid(), text, at, read: false, delivered: false, source: 'manual' });
-  saveNotifications(); scheduleNotificationCheck(); renderNotifications(); updateNotificationBadge(); toast(state.language === 'en' ? 'Reminder added' : '提醒已添加');
 });
 document.addEventListener('click', (event) => {
   if (state.notificationOpen && !event.target.closest('#notificationPanel, #notifyBtn')) { state.notificationOpen = false; $('#notificationPanel').hidden = true; $('#notifyBtn').setAttribute('aria-expanded', 'false'); }

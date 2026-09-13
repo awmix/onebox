@@ -166,11 +166,8 @@ textarea { min-height: 130px; resize: vertical; }
 .weather-search { display: flex; gap: 8px; margin: -4px 0 12px; }
 .weather-search-field { position: relative; min-width: 0; flex: 1; }
 .weather-search-field input { width: 100%; padding-right: 43px; }
-.weather-placeholder { position: absolute; left: 14px; right: 43px; top: 50%; overflow: hidden; color: var(--muted); white-space: nowrap; pointer-events: none; transform: translateY(-50%); opacity: .8; animation: weather-placeholder 12s linear infinite; transition: opacity .15s ease; }
-.weather-search-field:focus-within .weather-placeholder, #cityInput:not(:placeholder-shown) + .weather-placeholder { opacity: 0; }
 .weather-location-button { position: absolute; right: 5px; top: 5px; width: 34px; height: 34px; padding: 0; border: 0; border-radius: 9px; background: var(--soft); color: var(--primary); cursor: pointer; }
 .weather-search button { white-space: nowrap; }
-@keyframes weather-placeholder { 0%, 12% { transform: translate(0, -50%); } 52%, 62% { transform: translate(-18%, -50%); } 100% { transform: translate(0, -50%); } }
 .weather-search-results { display: grid; gap: 7px; margin: 0 0 16px; }
 .weather-result { display: flex; align-items: center; justify-content: space-between; gap: 12px; border: 1px solid var(--line); background: var(--panel-2); border-radius: 12px; padding: 10px 12px; color: var(--ink); cursor: pointer; text-align: left; }
 .weather-result small { color: var(--muted); display: block; }
@@ -207,7 +204,7 @@ textarea { min-height: 130px; resize: vertical; }
 .weather-section-title { margin: 20px 0 7px; font-size: 14px; }
 .weather-sort-hint { color: var(--muted); font-size: 11px; margin: 0 0 2px; }
 
-.converter-card { max-width: 800px; background: var(--panel-2); border: 1px solid var(--line); border-radius: 20px; padding: 22px; }
+.converter-card { max-width: 760px; background: transparent; border: 0; border-radius: 0; padding: 0; }
 .conversion-row { display: grid; grid-template-columns: 1fr 42px 1fr; gap: 12px; align-items: end; }
 .swap { border: 1px solid var(--line); background: var(--panel); color: var(--primary); height: 44px; border-radius: 13px; font-size: 22px; cursor: pointer; margin-bottom: 16px; }
 .conversion-result { min-height: 51px; border: 1px solid var(--line); border-radius: 14px; background: var(--panel); padding: 8px 13px; display: flex; align-items: baseline; gap: 7px; }
@@ -426,7 +423,7 @@ button:not(:disabled):active { transform: scale(.98); }
   .calendar-today { padding: 3px 0; font-size: 12px; }
   .calendar-legend { gap: 7px; font-size: 9px; margin-bottom: 7px; }
   .calendar-legend .dot { width: 6px; height: 6px; }
-  .converter-card, .translation-card { padding: 15px; border-radius: 18px; }
+  .translation-card { padding: 15px; border-radius: 18px; }
   .conversion-row, .translation-toolbar { grid-template-columns: minmax(0, 1fr) 34px minmax(0, 1fr); gap: 6px; align-items: end; }
   .conversion-row .swap, .translation-toolbar .swap { width: 34px; height: 42px; padding: 0; margin: 0 0 16px; }
   .conversion-row .field, .translation-toolbar .field { min-width: 0; }
@@ -462,4 +459,70 @@ button:not(:disabled):active { transform: scale(.98); }
   .translation-card { padding: 0; }
   .weather-search-field { flex-basis: 100%; }
   .event-dialog-card .inline-fields { grid-template-columns: 1fr 1fr; }
+}
+
+/* Floating surfaces and compact search controls ------------------------- */
+.popover {
+  z-index: 90;
+  top: calc(58px + env(safe-area-inset-top) + 66px);
+  right: max(12px, calc((100vw - 1104px) / 2));
+  width: min(360px, calc(100vw - 24px));
+  max-height: min(70vh, 420px);
+  overflow: hidden;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  box-shadow: 0 24px 72px rgba(10, 16, 38, .28);
+}
+.notification-panel { padding: 14px; }
+.notification-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-bottom: 10px; border-bottom: 1px solid var(--line); }
+.notification-head h3 { margin: 0; font-size: 16px; }
+.notification-list { max-height: min(50vh, 300px); margin: 12px 0 0; padding-right: 2px; overflow: auto; }
+#settingsDialog {
+  z-index: 80;
+  display: flex;
+  align-items: flex-start;
+  padding: calc(58px + env(safe-area-inset-top) + 12px) 12px 24px;
+  background: rgba(12, 16, 28, .58);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+#settingsDialog[hidden] { display: none; }
+#settingsDialog .settings-dialog-card {
+  width: min(560px, 100%);
+  max-height: calc(100vh - 110px - env(safe-area-inset-top));
+  margin: 0 auto;
+  padding: 18px;
+  overflow: auto;
+  border-radius: 22px;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, .34);
+}
+#settingsDialog .dialog-head {
+  position: sticky;
+  top: -18px;
+  z-index: 1;
+  align-items: center;
+  margin: -18px -18px 14px;
+  padding: 14px 18px 12px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--line);
+}
+#settingsDialog .dialog-head h2 { font-size: 21px; }
+#settingsDialog .settings-grid { gap: 10px; }
+#settingsDialog .field { margin-bottom: 10px; }
+#settingsDialog .settings-section { padding-top: 12px; margin-top: 12px; }
+#settingsDialog .settings-section h3 { margin: 0; }
+.settings-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.settings-row .github-user { margin: 0; padding: 0; background: transparent; }
+#settingsDialog .settings-note { display: block; margin-top: 6px; }
+.weather-search { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 6px; }
+.weather-search-field { flex-basis: auto; min-width: 0; }
+.weather-search > .primary, .weather-search > .secondary { flex: initial; padding: 10px 10px; font-size: 12px; }
+.weather-search-field input { min-width: 0; padding-right: 42px; }
+.converter-card { max-width: 760px; padding: 0; border: 0; background: transparent; }
+
+@media (max-width: 390px) {
+  .weather-search { grid-template-columns: minmax(0, 1fr) auto auto; gap: 5px; }
+  .weather-search > .primary, .weather-search > .secondary { padding-left: 8px; padding-right: 8px; font-size: 11px; }
+  #settingsDialog { padding-left: 10px; padding-right: 10px; }
 }
