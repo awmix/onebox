@@ -325,7 +325,7 @@ body { overscroll-behavior-y: none; }
 .header-actions .icon-btn,
 .header-actions .header-icon,
 #themeBtn { width: 34px; min-width: 34px; height: 34px; padding: 0; display: grid; place-items: center; border-radius: 11px; }
-.bell-icon { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+.header-line-icon { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
 .header-icon sup { top: -4px; right: -4px; }
 .language-picker { flex: 0 0 auto; min-width: 0; }
 .language-picker select { width: 54px; min-width: 54px; max-width: 54px; height: 34px; padding: 7px 3px; border-radius: 11px; font-size: 12px; text-overflow: ellipsis; }
