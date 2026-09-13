@@ -238,13 +238,18 @@ async function ensureHolidayYear(year) {
 const holidayFor = (key) => holidayStore[key.slice(0, 4)]?.[key];
 const lunarMonthNames = ['正月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月'];
 const lunarDayNames = ['', '初一', '初二', '初三', '初四', '初五', '初六', '初七', '初八', '初九', '初十', '十一', '十二', '十三', '十四', '十五', '十六', '十七', '十八', '十九', '二十', '廿一', '廿二', '廿三', '廿四', '廿五', '廿六', '廿七', '廿八', '廿九', '三十'];
-const lunarFormatter = (() => { try { return new Intl.DateTimeFormat('zh-CN-u-ca-chinese', { year: 'numeric', month: 'long', day: 'numeric' }); } catch { return null; } })();
+const lunarFormatters = ['zh-CN-u-ca-chinese', 'zh-TW-u-ca-chinese', 'en-US-u-ca-chinese'].map((locale) => {
+  try { return new Intl.DateTimeFormat(locale, { year: 'numeric', month: 'long', day: 'numeric' }); } catch { return null; }
+}).filter(Boolean);
 function chineseNumber(value) {
-  const text = String(value || '').replace(/[月日]/g, '');
-  if (/^\d+$/.test(text)) return Number(text);
+  let text = String(value || '').replace(/[月日]/g, '').replace(/^闰|^閏|^leap/i, '').replace(/^初/, '').trim();
+  const numeric = text.match(/\d+/);
+  if (numeric) return Number(numeric[0]);
   if (text === '廿') return 20;
   if (text === '卅') return 30;
-  const digits = { 零: 0, 一: 1, 二: 2, 三: 3, 四: 4, 五: 5, 六: 6, 七: 7, 八: 8, 九: 9 };
+  if (text.startsWith('廿')) return 20 + ({ 一: 1, 二: 2, 三: 3, 四: 4, 五: 5, 六: 6, 七: 7, 八: 8, 九: 9 }[text.slice(1)] || 0);
+  if (text.startsWith('卅')) return 30 + ({ 一: 1, 二: 2, 三: 3, 四: 4, 五: 5, 六: 6, 七: 7, 八: 8, 九: 9 }[text.slice(1)] || 0);
+  const digits = { 零: 0, 〇: 0, 一: 1, 二: 2, 两: 2, 兩: 2, 三: 3, 四: 4, 五: 5, 六: 6, 七: 7, 八: 8, 九: 9, 正: 1, 元: 1, 冬: 11, 腊: 12, 臘: 12 };
   if (text.includes('十')) {
     const pair = text.split('十');
     return (pair[0] ? digits[pair[0]] * 10 : 10) + (pair[1] ? digits[pair[1]] : 0);
@@ -252,17 +257,19 @@ function chineseNumber(value) {
   return digits[text] ?? 0;
 }
 function lunarFor(date) {
-  if (!lunarFormatter) return null;
-  const parts = Object.fromEntries(lunarFormatter.formatToParts(date).filter((item) => item.type !== 'literal').map((item) => [item.type, item.value]));
-  const rawMonth = parts.month || '';
-  const month = chineseNumber(rawMonth);
-  const day = chineseNumber(parts.day || '');
-  if (!month || !day) return null;
-  const leap = /闰|leap/i.test(rawMonth);
-  const monthText = (leap ? '闰' : '') + (lunarMonthNames[month - 1] || String(month) + '月');
-  const festivals = { '1-1': '春节', '1-15': '元宵节', '5-5': '端午节', '7-7': '七夕', '7-15': '中元节', '8-15': '中秋节', '9-9': '重阳节', '12-8': '腊八节', '12-23': '小年', '12-24': '小年' };
-  const festival = festivals[month + '-' + day] || (month === 12 && day >= 29 ? '除夕' : '');
-  return { month, day, monthText, dayText: lunarDayNames[day] || String(day), yearName: parts.yearName || '', festival, text: monthText + (lunarDayNames[day] || String(day)) };
+  for (const formatter of lunarFormatters) {
+    const parts = Object.fromEntries(formatter.formatToParts(date).filter((item) => item.type !== 'literal').map((item) => [item.type, item.value]));
+    const rawMonth = parts.month || '';
+    const month = chineseNumber(rawMonth);
+    const day = chineseNumber(parts.day || '');
+    if (!month || !day) continue;
+    const leap = /闰|閏|leap/i.test(rawMonth);
+    const monthText = (leap ? '闰' : '') + (lunarMonthNames[month - 1] || String(month) + '月');
+    const festivals = { '1-1': '春节', '1-15': '元宵节', '5-5': '端午节', '7-7': '七夕', '7-15': '中元节', '8-15': '中秋节', '9-9': '重阳节', '12-8': '腊八节', '12-23': '小年', '12-24': '小年' };
+    const festival = festivals[month + '-' + day] || (month === 12 && day >= 29 ? '除夕' : '');
+    return { month, day, monthText, dayText: lunarDayNames[day] || String(day), yearName: parts.yearName || '', festival, text: monthText + (lunarDayNames[day] || String(day)) };
+  }
+  return null;
 }
 const solarTermNames = ['小寒', '大寒', '立春', '雨水', '惊蛰', '春分', '清明', '谷雨', '立夏', '小满', '芒种', '夏至', '小暑', '大暑', '立秋', '处暑', '白露', '秋分', '寒露', '霜降', '立冬', '小雪', '大雪', '冬至'];
 const solarTermConstants21 = [5.4055, 20.12, 3.87, 18.73, 5.63, 20.646, 4.81, 20.1, 5.52, 21.04, 5.678, 21.37, 7.108, 22.83, 7.5, 23.13, 7.646, 23.042, 8.318, 23.438, 7.438, 22.36, 7.18, 21.94];
