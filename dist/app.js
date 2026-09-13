@@ -398,10 +398,9 @@ function calculator() {
   const science = '<button class="science-key angle-toggle" data-toggle-angle>' + (state.calcAngle === 'deg' ? t('degree') : t('radian')) + '</button>' + scienceKeys.map(([label, key]) => '<button class="science-key" data-science-key="' + escapeHtml(key) + '">' + label + '</button>').join('');
   const scientificToggle = '<button class="key scientific-toggle" data-toggle-scientific aria-pressed="' + (state.calcScientific ? 'true' : 'false') + '" aria-label="' + t('scientific') + '">ƒx</button>';
   return heading(t('calculator'), t('calculatorDesc')) +
-    '<div class="calculator-layout"><div><div class="display" aria-live="polite"><div class="expression">' + (escapeHtml(state.calcExpr) || (state.language === 'en' ? 'Ready' : '准备计算')) + '</div><div class="result">' + calcPreview() + '</div></div>' +
+    '<div class="calculator-layout"><div><div class="display" aria-live="polite"><div class="expression">' + (escapeHtml(state.calcExpr) || (state.language === 'en' ? 'Ready' : '准备计算')) + '</div><div class="result">' + calcPreview() + '</div><div class="display-history"><div class="display-history-head"><span>' + t('recentCalculations') + '</span><button class="text-btn" data-clear-calc-history ' + (state.calcHistory.length ? '' : 'disabled') + '>' + t('clear') + '</button></div><div class="display-history-list">' + history + '</div></div></div>' +
     '<div class="keys">' + calcKeys.map((key) => '<button class="key ' + (/[÷×−+%]/.test(key) ? 'op' : '') + ' ' + (key === '=' ? 'equal' : '') + ' ' + (key === 'AC' ? 'danger' : '') + '" data-key="' + key + '">' + key + '</button>').join('') + scientificToggle + '</div>' +
-    '<div class="scientific-bar" ' + (state.calcScientific ? '' : 'hidden') + '>' + science + '</div><p class="keyboard-hint">' + t('keyboard') + '</p></div>' +
-    '<aside class="history-panel"><div class="subhead"><h3>' + t('recentCalculations') + '</h3><button class="text-btn" data-clear-calc-history ' + (state.calcHistory.length ? '' : 'disabled') + '>' + t('clear') + '</button></div>' + history + '</aside></div>';
+    '<div class="scientific-bar" ' + (state.calcScientific ? '' : 'hidden') + '>' + science + '</div><p class="keyboard-hint">' + t('keyboard') + '</p></div></div>';
 }
 function calculatorKey(key) {
   if (key === 'AC') { state.calcExpr = ''; state.calcJustEvaluated = false; }
@@ -449,10 +448,17 @@ function calendar() {
   return heading(t('calendar'), t('calendarDesc')) +
     '<div class="calendar-layout"><div class="calendar-card"><div class="calendar-top"><button class="icon-btn" data-month="-1" aria-label="Previous month">←</button><div class="calendar-month"><strong>' + monthLabel + '</strong><button class="text-btn calendar-today" data-today>' + t('today') + '</button></div><button class="icon-btn" data-month="1" aria-label="Next month">→</button></div>' +
     '<div class="calendar-legend"><span><i class="dot off"></i>' + t('legalHoliday') + '</span><span><i class="dot work"></i>' + t('makeUpWorkday') + '</span><span><i class="dot term"></i>' + t('solarTerm') + '</span></div><div class="calendar-grid">' + weekdays.map((day) => '<div class="dow">' + day + '</div>').join('') + cells + '</div></div>' +
-    '<aside class="agenda-panel"><div class="subhead"><div><p class="section-kicker">' + t('selectedDay') + '</p><h3>' + escapeHtml(formatDate(state.selectedDate)) + '</h3></div>' + status + '</div><div class="date-detail"><strong>' + escapeHtml(lunarLine) + '</strong>' + (selected.term ? '<span class="term-badge">' + selected.term + '</span>' : '') + '<small>' + (selected.lunar?.yearName ? (state.language === 'en' ? 'Lunar ' + zodiacFor(selected.lunar.yearName) + ' year' : '农历' + zodiacFor(selected.lunar.yearName) + '年') : '') + '</small></div><div class="event-list">' + eventList + '</div>' +
-    '<form id="eventForm" class="event-form"><input type="hidden" id="eventDate" value="' + state.selectedDate + '"><div class="field"><label for="eventTitle">' + t('addAgenda') + '</label><input id="eventTitle" required maxlength="60" placeholder="' + (state.language === 'en' ? 'e.g. Project review' : '例如：项目复盘') + '"></div><div class="inline-fields"><label class="sr-only" for="eventTime">' + t('eventTime') + '</label><input id="eventTime" type="time" step="1" aria-label="' + t('eventTime') + '"><input id="eventNote" maxlength="120" placeholder="' + t('noteOptional') + '" aria-label="' + t('noteOptional') + '"></div><button class="primary" type="submit">' + t('addToDay') + '</button></form></aside></div>';
+    '<aside class="agenda-panel"><div class="subhead"><div><p class="section-kicker">' + t('selectedDay') + '</p><h3>' + escapeHtml(formatDate(state.selectedDate)) + '</h3></div>' + status + '</div><div class="date-detail"><strong>' + escapeHtml(lunarLine) + '</strong>' + (selected.term ? '<span class="term-badge">' + selected.term + '</span>' : '') + '<small>' + (selected.lunar?.yearName ? (state.language === 'en' ? 'Lunar ' + zodiacFor(selected.lunar.yearName) + ' year' : '农历' + zodiacFor(selected.lunar.yearName) + '年') : '') + '</small></div><div class="event-list">' + eventList + '</div><button class="primary full-width" data-open-event-dialog>' + t('addAgenda') + '</button></aside></div>';
 }
 function saveEvents() { saveStored(STORAGE.events, state.events); }
+
+function renderEventDialog() {
+  const dialog = $('#eventDialog');
+  if (!dialog) return;
+  dialog.innerHTML = '<div class="dialog-card event-dialog-card" role="dialog" aria-modal="true"><div class="dialog-head"><div><p class="section-kicker">' + t('selectedDay') + '</p><h2>' + t('addAgenda') + '</h2><p class="dialog-date">' + escapeHtml(formatDate(state.selectedDate)) + '</p></div><button class="icon-btn small" data-close-event-dialog aria-label="' + t('close') + '">×</button></div><form id="eventForm" class="event-form"><div class="field"><label for="eventTitle">' + t('addAgenda') + '</label><input id="eventTitle" required maxlength="60" placeholder="' + (state.language === 'en' ? 'e.g. Project review' : '例如：项目复盘') + '"></div><div class="inline-fields"><div class="field"><label for="eventTime">' + t('eventTime') + '</label><input id="eventTime" type="time" step="1" aria-label="' + t('eventTime') + '"></div><div class="field"><label for="eventNote">' + t('noteOptional') + '</label><input id="eventNote" maxlength="120" placeholder="' + t('noteOptional') + '" aria-label="' + t('noteOptional') + '"></div></div><button class="primary full-width" type="submit">' + t('addToDay') + '</button></form></div>';
+  dialog.hidden = false;
+}
+function closeEventDialog() { const dialog = $('#eventDialog'); if (dialog) dialog.hidden = true; }
 
 // Weather --------------------------------------------------------------------
 const weatherCode = (code) => {
@@ -498,8 +504,20 @@ async function searchWeather(query) {
   if (!value) return toast(state.language === 'en' ? 'Enter a city or district' : '请输入城市或区县名称', 'error');
   state.weatherLoading = true; state.weatherError = ''; state.weatherSearchResults = []; render();
   try {
-    const response = await fetch('https://geocoding-api.open-meteo.com/v1/search?name=' + encodeURIComponent(value) + '&count=8&language=' + (state.language === 'en' ? 'en' : 'zh') + '&format=json');
-    const data = await response.json(); state.weatherSearchResults = data.results || [];
+    let results = [];
+    try {
+      const response = await fetchWithTimeout('https://geocoding-api.open-meteo.com/v1/search?name=' + encodeURIComponent(value) + '&count=8&language=' + (state.language === 'en' ? 'en' : 'zh') + '&format=json', { headers: { Accept: 'application/json' } }, 6000);
+      const data = await response.json(); results = data.results || [];
+    } catch { /* Photon below is the district-aware fallback. */ }
+    if (!results.length) {
+      const response = await fetchWithTimeout('https://photon.komoot.io/api/?q=' + encodeURIComponent(value) + '&limit=8', { headers: { Accept: 'application/json' } }, 6000);
+      const data = await response.json();
+      results = (data.features || []).map((feature) => {
+        const properties = feature.properties || {}; const coordinates = feature.geometry?.coordinates || [];
+        return { name: properties.name || properties.city || value, admin2: properties.city || properties.district || '', admin1: properties.state || '', country: properties.country || '', latitude: Number(coordinates[1]), longitude: Number(coordinates[0]) };
+      }).filter((place) => Number.isFinite(place.latitude) && Number.isFinite(place.longitude));
+    }
+    state.weatherSearchResults = results;
     if (!state.weatherSearchResults.length) state.weatherError = t('noResults');
   } catch (error) { state.weatherError = error.message || (state.language === 'en' ? 'Place search failed' : '地点搜索失败'); }
   finally { state.weatherLoading = false; render(); }
@@ -528,7 +546,7 @@ function weatherAdvice(weather, current) {
 }
 function weather() {
   const active = state.weatherCards.find((item) => item.id === state.activeWeatherId) || state.weatherCards[0];
-  const search = '<form id="weatherSearch" class="weather-search"><label class="sr-only" for="cityInput">' + t('weatherSearch') + '</label><input id="cityInput" placeholder="' + t('searchPlace') + '" autocomplete="off"><button class="primary" type="submit">' + t('weatherSearch') + '</button><button class="secondary" type="button" data-locate>' + t('currentLocation') + '</button></form>';
+  const search = '<form id="weatherSearch" class="weather-search"><label class="sr-only" for="cityInput">' + t('weatherSearch') + '</label><div class="weather-search-field"><input id="cityInput" placeholder="' + t('searchPlace') + '" autocomplete="off"><span class="weather-placeholder" aria-hidden="true">' + t('searchPlace') + '</span><button class="weather-location-button" type="button" data-locate aria-label="' + t('currentLocation') + '">⌖</button></div><button class="primary" type="submit">' + t('weatherSearch') + '</button><button class="secondary" type="button" data-refresh-weather>' + t('refresh') + '</button></form>';
   const results = state.weatherSearchResults.length ? '<div class="weather-search-results">' + state.weatherSearchResults.map((place, index) => '<button class="weather-result" data-weather-result-index="' + index + '"><span><strong>' + escapeHtml(place.name) + '</strong><small>' + escapeHtml(placeLabel(place)) + '</small></span><span aria-hidden="true">＋</span></button>').join('') + '</div>' : '';
   if (!active) return heading(t('weather'), t('weatherDesc')) + search + results + '<div class="empty weather-empty">' + (state.weatherLoading ? '<span class="loader"></span>' + t('weatherLoading') : t('noWeather')) + (state.weatherError ? '<strong class="error-text">' + escapeHtml(state.weatherError) + '</strong>' : '') + '</div>';
   const current = active.current || {};
@@ -563,7 +581,7 @@ function weather() {
       strip.scrollTo({ left: Math.max(0, card.offsetLeft - (strip.clientWidth - card.offsetWidth) / 2), behavior: 'smooth' });
     });
   }, 0);
-  return heading(t('weather'), escapeHtml(title) + ' · ' + (state.language === 'en' ? 'updated' : '更新于') + ' ' + (active.updatedAt ? new Intl.DateTimeFormat(state.language === 'en' ? 'en-US' : 'zh-CN', { hour: '2-digit', minute: '2-digit' }).format(active.updatedAt) : (state.language === 'en' ? 'cached' : '本机缓存')), '<button class="secondary" data-refresh-weather>' + t('refresh') + '</button>') +
+  return heading(t('weather'), escapeHtml(title) + ' · ' + (state.language === 'en' ? 'updated' : '更新于') + ' ' + (active.updatedAt ? new Intl.DateTimeFormat(state.language === 'en' ? 'en-US' : 'zh-CN', { hour: '2-digit', minute: '2-digit' }).format(active.updatedAt) : (state.language === 'en' ? 'cached' : '本机缓存'))) +
     search + results + (state.weatherError ? '<div class="inline-alert">' + escapeHtml(state.weatherError) + '，' + (state.language === 'en' ? 'showing the last successful result' : '当前显示上次成功结果') + '。</div>' : '') +
     '<p class="weather-sort-hint">' + t('sortWeather') + '</p><div class="weather-card-list">' + cards + '<button class="weather-card" data-add-weather-card>＋ ' + t('addCard') + '</button></div>' +
     '<div class="weather-now"><div><span class="weather-location">' + escapeHtml(title) + '</span><h3>' + currentWeather[1] + '</h3><strong>' + Math.round(current.temperature_2m ?? 0) + '°</strong><p>' + (state.language === 'en' ? 'Feels like ' : '体感 ') + Math.round(current.apparent_temperature ?? current.temperature_2m ?? 0) + '° · ' + (state.language === 'en' ? 'Humidity ' : '湿度 ') + (current.relative_humidity_2m ?? '—') + '% · ' + (state.language === 'en' ? 'Wind ' : '风速 ') + Math.round(current.wind_speed_10m ?? 0) + ' km/h</p></div><div class="weather-icon" aria-hidden="true">' + currentWeather[0] + '</div></div>' +
@@ -608,6 +626,11 @@ function convert() {
 // Translation ---------------------------------------------------------------
 const languageOptions = [['auto', '自动检测 / Auto'], ['zh', '中文 / Chinese'], ['en', 'English'], ['ja', '日本語 / Japanese'], ['ko', '한국어 / Korean']];
 const translateEndpoints = ['https://translate.argosopentech.com/translate', 'https://translate.astian.org/translate', 'https://libretranslate.com/translate'];
+async function fetchWithTimeout(url, options, timeout = 7000) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeout);
+  try { return await fetch(url, { ...options, signal: controller.signal }); } finally { clearTimeout(timer); }
+}
 function saveTranslationHistory() { saveStored(STORAGE.translationHistory, state.translationHistory.slice(0, 30)); }
 async function translateText() {
   const input = state.translation.input.trim();
@@ -618,10 +641,17 @@ async function translateText() {
     let translated = '';
     for (const endpoint of translateEndpoints) {
       try {
-        const response = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify({ q: input, source: state.translation.source, target: state.translation.target, format: 'text' }) });
+        const response = await fetchWithTimeout(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify({ q: input, source: state.translation.source, target: state.translation.target, format: 'text' }) }, 4500);
         if (!response.ok) throw new Error();
         const data = await response.json(); translated = data.translatedText || data.translation || ''; if (translated) break;
       } catch { /* try next open instance */ }
+    }
+    if (!translated) {
+      const source = state.translation.source === 'auto' ? (/^[\s\d\p{P}\p{S}]*[\u4e00-\u9fff]/u.test(input) ? 'zh-CN' : 'en') : state.translation.source;
+      const target = state.translation.target === 'zh' ? 'zh-CN' : state.translation.target === 'auto' ? 'en' : state.translation.target;
+      const fallbackUrl = 'https://api.mymemory.translated.net/get?q=' + encodeURIComponent(input) + '&langpair=' + encodeURIComponent(source + '|' + target);
+      const response = await fetchWithTimeout(fallbackUrl, { headers: { Accept: 'application/json' } }, 6000);
+      if (response.ok) { const data = await response.json(); translated = data.responseData?.translatedText || ''; }
     }
     if (!translated) throw Error(state.language === 'en' ? 'Translation service unavailable' : '翻译服务暂时不可用');
     state.translation.result = translated;
@@ -674,8 +704,8 @@ async function showNativeNotification(item) {
   if (!('Notification' in window) || Notification.permission !== 'granted') return;
   try {
     const registration = await navigator.serviceWorker?.ready;
-    if (registration?.showNotification) await registration.showNotification('OneBox', { body: item.text, tag: item.id, icon: 'icons/icon.svg', badge: 'icons/icon.svg' });
-    else new Notification('OneBox', { body: item.text, icon: 'icons/icon.svg' });
+    if (registration?.showNotification) await registration.showNotification('OneBox', { body: item.text, tag: item.id, icon: 'icons/bell.svg', badge: 'icons/bell.svg' });
+    else new Notification('OneBox', { body: item.text, icon: 'icons/bell.svg' });
   } catch { /* browser blocked notifications */ }
 }
 function checkNotifications() {
@@ -821,6 +851,7 @@ function closeSettings() { $('#settingsDialog').hidden = true; state.settingsOpe
 function render() {
   applyLanguage();
   const renderers = { calculator, calendar, weather, convert, translate: translateView };
+  workspace.dataset.tool = state.tool;
   workspace.innerHTML = (renderers[state.tool] || calculator)();
   if (state.tool === 'calendar') ensureHolidayYear(state.month.getFullYear());
   updateNotificationBadge();
@@ -878,6 +909,7 @@ workspace.addEventListener('click', async (event) => {
   const history = event.target.closest('[data-history]');
   if (history) { state.calcExpr = history.dataset.history; state.calcJustEvaluated = true; saveCalculator(); return render(); }
   if (event.target.closest('[data-clear-calc-history]')) { state.calcHistory = []; saveCalculator(); return render(); }
+  if (event.target.closest('[data-open-event-dialog]')) return renderEventDialog();
   const month = event.target.closest('[data-month]');
   if (month) { state.month = new Date(state.month.getFullYear(), state.month.getMonth() + Number(month.dataset.month), 1); return render(); }
   if (event.target.closest('[data-today]')) { state.month = new Date(today.getFullYear(), today.getMonth(), 1); state.selectedDate = dateKey(today); return render(); }
@@ -940,13 +972,19 @@ workspace.addEventListener('change', (event) => {
 });
 workspace.addEventListener('submit', (event) => {
   event.preventDefault();
-  if (event.target.id === 'eventForm') {
-    const title = $('#eventTitle').value.trim(); if (!title) return;
-    const key = $('#eventDate').value; state.events[key] ||= [];
-    state.events[key].push({ id: uid(), title, time: $('#eventTime').value, note: $('#eventNote').value.trim() });
-    saveEvents(); syncAgendaReminders(); scheduleNotificationCheck(); render(); toast(state.language === 'en' ? 'Event added' : '日程已添加');
-  }
   if (event.target.id === 'weatherSearch') searchWeather($('#cityInput').value);
+});
+
+$('#eventDialog').addEventListener('click', (event) => {
+  if (event.target === $('#eventDialog') || event.target.closest('[data-close-event-dialog]')) closeEventDialog();
+});
+$('#eventDialog').addEventListener('submit', (event) => {
+  event.preventDefault();
+  if (event.target.id !== 'eventForm') return;
+  const title = $('#eventTitle').value.trim(); if (!title) return;
+  const key = state.selectedDate; state.events[key] ||= [];
+  state.events[key].push({ id: uid(), title, time: $('#eventTime').value, note: $('#eventNote').value.trim() });
+  saveEvents(); syncAgendaReminders(); scheduleNotificationCheck(); closeEventDialog(); render(); toast(state.language === 'en' ? 'Event added' : '日程已添加');
 });
 
 document.addEventListener('keydown', (event) => {
