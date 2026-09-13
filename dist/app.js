@@ -183,10 +183,8 @@ function applyLanguage() {
   document.title = state.language === 'en' ? 'OneBox · Daily Toolbox' : 'OneBox · 日常工具箱';
   const select = $('#languageSelect');
   if (select) select.value = state.language;
-  $('#connectionStatus').textContent = navigator.onLine ? t('online') : t('offline');
-  $('#heroTitle').innerHTML = state.language === 'en' ? 'Put the tools you use every day,<br><em>in one box.</em>' : '把每天都要用的小工具，<br><em>装进一个盒子。</em>';
-  $('#heroSubtitle').textContent = t('heroSubtitle');
-  $('#footerTagline').textContent = state.language === 'en' ? 'Daily toolbox · data stays on this device first' : '日常工具箱 · 数据优先保存在当前设备';
+  const connectionStatus = $('#connectionStatus');
+  if (connectionStatus) connectionStatus.textContent = navigator.onLine ? t('online') : t('offline');
   applyTheme();
 }
 function saveThemeLanguage() { localStorage.setItem(STORAGE.theme, state.theme); localStorage.setItem(STORAGE.language, state.language); }
@@ -196,7 +194,7 @@ function cycleTheme() {
 }
 
 function heading(title, subtitle, actions = '') {
-  return '<div class="tool-head"><div><p class="section-kicker">ONEBOX TOOL</p><h2>' + title + '</h2><p>' + subtitle + '</p></div><div class="tool-actions">' + actions + '</div></div>';
+  return '<div class="tool-head"><div><p class="section-kicker">ONEBOX TOOL</p><h2>' + title + '</h2></div><div class="tool-actions">' + actions + '</div></div>';
 }
 function renderNav() {
   nav.innerHTML = state.toolOrder.map((id, index) => {
@@ -382,7 +380,7 @@ function evaluateExpression(input) {
   return Number(result.toPrecision(12));
 }
 const calcKeys = ['AC', '⌫', '(', ')', '7', '8', '9', '÷', '4', '5', '6', '×', '1', '2', '3', '−', '0', '.', '%', '+', '±', '00', '='];
-const scienceKeys = [['sin', 'sin('], ['cos', 'cos('], ['tan', 'tan('], ['log', 'log('], ['ln', 'ln('], ['√', 'sqrt('], ['x²', '^2'], ['xʸ', '^'], ['π', 'π'], ['e', 'e'], ['!', '!'], ['asin', 'asin('], ['acos', 'acos('], ['atan', 'atan('], ['abs', 'abs('], ['exp', 'exp(']];
+const scienceKeys = [['sin', 'sin('], ['cos', 'cos('], ['tan', 'tan('], ['ln', 'ln('], ['log', 'log('], ['√', 'sqrt('], ['x²', '^2'], ['xʸ', '^'], ['π', 'π'], ['e', 'e'], ['sin⁻¹', 'asin('], ['cos⁻¹', 'acos('], ['tan⁻¹', 'atan('], ['abs', 'abs('], ['exp', 'exp('], ['!', '!']];
 const calcPreview = () => { if (!state.calcExpr) return '0'; try { return formatNumber(evaluateExpression(state.calcExpr)); } catch { return '—'; } };
 function saveCalculator() { saveStored(STORAGE.calculator, { expr: state.calcExpr, history: state.calcHistory.slice(0, 30) }); }
 function calculator() {
@@ -547,7 +545,7 @@ function weather() {
     search + results + (state.weatherError ? '<div class="inline-alert">' + escapeHtml(state.weatherError) + '，' + (state.language === 'en' ? 'showing the last successful result' : '当前显示上次成功结果') + '。</div>' : '') +
     '<p class="weather-sort-hint">' + t('sortWeather') + '</p><div class="weather-card-list">' + cards + '<button class="weather-card" data-add-weather-card>＋ ' + t('addCard') + '</button></div>' +
     '<div class="weather-now"><div><span class="weather-location">' + escapeHtml(title) + '</span><h3>' + currentWeather[1] + '</h3><strong>' + Math.round(current.temperature_2m ?? 0) + '°</strong><p>' + (state.language === 'en' ? 'Feels like ' : '体感 ') + Math.round(current.apparent_temperature ?? current.temperature_2m ?? 0) + '° · ' + (state.language === 'en' ? 'Humidity ' : '湿度 ') + (current.relative_humidity_2m ?? '—') + '% · ' + (state.language === 'en' ? 'Wind ' : '风速 ') + Math.round(current.wind_speed_10m ?? 0) + ' km/h</p></div><div class="weather-icon" aria-hidden="true">' + currentWeather[0] + '</div></div>' +
-    '<h3 class="weather-section-title">' + t('hourly') + '</h3><div class="hourly-strip">' + hourly + '</div><h3 class="weather-section-title">' + t('daily') + '</h3><div class="weather-days">' + days + '</div><h3 class="weather-section-title">' + t('advice') + '</h3><div class="advice-strip">' + advice + '</div><p class="note">' + t('weatherData') + '</p>';
+    '<h3 class="weather-section-title">' + t('hourly') + '</h3><div class="hourly-strip">' + hourly + '</div><h3 class="weather-section-title">' + t('advice') + '</h3><div class="advice-strip">' + advice + '</div><h3 class="weather-section-title">' + t('daily') + '</h3><div class="weather-days">' + days + '</div><p class="note">' + t('weatherData') + '</p>';
 }
 
 // Converter ------------------------------------------------------------------
@@ -971,8 +969,5 @@ window.addEventListener('offline', () => { $('#connectionStatus').textContent = 
 window.addEventListener('hashchange', () => selectTool(location.hash.slice(1)));
 window.matchMedia?.('(prefers-color-scheme: dark)').addEventListener?.('change', () => { if (state.theme === 'system') applyTheme(); });
 setInterval(checkNotifications, 30000);
-const now = new Date();
-$('#heroDay').textContent = now.getDate();
-$('#heroMonth').textContent = now.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }).toUpperCase();
 applyLanguage(); renderNav(); render(); checkNotifications();
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});

@@ -7,6 +7,7 @@
   <meta name="description" content="计算器、日历、天气、单位换算与翻译，一站式轻量工具箱。">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="OneBox">
   <meta name="mobile-web-app-capable" content="yes">
   <title>OneBox · 日常工具箱</title>
   <link rel="manifest" href="manifest.webmanifest">
@@ -20,7 +21,7 @@
       <a class="brand" href="#calculator" aria-label="OneBox 首页"><span class="logo-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span>OneBox</span></a>
       <div class="header-actions">
         <span class="connection" aria-live="polite"><i></i><span id="connectionStatus">在线</span></span>
-        <button id="notifyBtn" class="icon-btn header-icon" aria-label="消息提示" aria-expanded="false"><span aria-hidden="true">♢</span><sup id="notificationCount" hidden>0</sup></button>
+        <button id="notifyBtn" class="icon-btn header-icon" aria-label="消息提示" aria-expanded="false"><svg class="bell-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg><sup id="notificationCount" hidden>0</sup></button>
         <button id="settingsBtn" class="icon-btn header-icon" aria-label="设置">⚙</button>
         <button id="installBtn" class="install" hidden>安装应用</button>
         <button id="themeBtn" class="icon-btn" aria-label="主题：跟随系统">◐</button>
@@ -30,20 +31,12 @@
     <main>
       <nav id="toolNav" aria-label="工具切换"></nav>
       <section id="workspace" class="workspace" aria-live="polite"></section>
-      <section class="hero hero-bottom" aria-labelledby="heroTitle">
-        <div>
-          <p class="eyebrow">FIVE TOOLS · ONE PLACE</p>
-          <h1 id="heroTitle">把每天都要用的小工具，<br><em>装进一个盒子。</em></h1>
-          <p id="heroSubtitle">快速、清爽、可离线。你的数据优先保存在当前设备。</p>
-        </div>
-        <div class="date-orbit" aria-label="今天"><strong id="heroDay">12</strong><span id="heroMonth">SEP · 2026</span></div>
-      </section>
     </main>
-    <footer>OneBox · <span id="footerTagline">日常工具箱 · 数据优先保存在当前设备</span></footer>
+    <footer>OneBox · 日常工具箱</footer>
   </div>
   <aside id="notificationPanel" class="popover notification-panel" hidden aria-label="消息提示"></aside>
   <section id="settingsDialog" class="dialog" hidden aria-label="设置"></section>
-  <script src="calendar-data.js?v=2.0.0"></script>
-  <script src="app.js?v=2.0.0" defer></script>
+  <script src="calendar-data.js?v=2.1.0"></script>
+  <script src="app.js?v=2.1.0" defer></script>
 </body>
 </html>

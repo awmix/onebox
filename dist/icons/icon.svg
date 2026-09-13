@@ -1,23 +1,18 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
   <title id="title">OneBox</title>
-  <desc id="desc">A bright toolbox grid inside a rounded square.</desc>
-  <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#526cff"/><stop offset="1" stop-color="#2639bc"/></linearGradient>
-    <linearGradient id="box" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#dfe5ff"/></linearGradient>
-    <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#0d1557" flood-opacity=".28"/></filter>
-  </defs>
-  <rect width="512" height="512" rx="118" fill="url(#bg)"/>
-  <circle cx="410" cy="94" r="72" fill="#8d9bff" opacity=".34"/>
-  <path d="M126 197c0-21 17-38 38-38h184c21 0 38 17 38 38v174c0 21-17 38-38 38H164c-21 0-38-17-38-38z" fill="url(#box)" filter="url(#shadow)"/>
-  <path d="M182 159c0-27 22-49 49-49h50c27 0 49 22 49 49v28h-35v-22c0-9-7-16-16-16h-46c-9 0-16 7-16 16v22h-35z" fill="#ffffff" opacity=".96"/>
-  <rect x="162" y="222" width="188" height="11" rx="5.5" fill="#b9c4ff"/>
-  <rect x="169" y="251" width="62" height="62" rx="15" fill="#405cf5"/>
-  <rect x="243" y="251" width="62" height="62" rx="15" fill="#7b89ff"/>
-  <rect x="317" y="251" width="25" height="62" rx="12.5" fill="#d14d5b"/>
-  <path d="M191 282h18M200 273v18" stroke="#fff" stroke-width="10" stroke-linecap="round"/>
-  <path d="M262 282h24" stroke="#fff" stroke-width="10" stroke-linecap="round"/>
-  <path d="M185 344h142" stroke="#405cf5" stroke-width="12" stroke-linecap="round" opacity=".55"/>
+  <desc id="desc">OneBox four-cell mark in a rounded square.</desc>
   <style>
-    @media (prefers-color-scheme: dark) { #bg stop:first-child { stop-color: #7183ff; } }
+    .mark-bg { fill: #11131a; }
+    .mark-blue { fill: #405cf5; }
+    .mark-light { fill: #f5f6fa; }
+    @media (prefers-color-scheme: dark) {
+      .mark-bg { fill: #f5f6fa; }
+      .mark-light { fill: #171a22; }
+    }
   </style>
+  <rect class="mark-bg" width="512" height="512" rx="142"/>
+  <rect class="mark-blue" x="112" y="112" width="112" height="112" rx="24"/>
+  <rect class="mark-light" x="288" y="112" width="112" height="112" rx="24"/>
+  <rect class="mark-light" x="112" y="288" width="112" height="112" rx="24"/>
+  <rect class="mark-blue" x="288" y="288" width="112" height="112" rx="24"/>
 </svg>

@@ -1,5 +1,5 @@
-const CACHE = 'onebox-v3';
-const APP_SHELL = ['./', 'index.html', 'style.css', 'app.js?v=2.0.0', 'calendar-data.js?v=2.0.0', 'manifest.webmanifest', 'icons/icon.svg'];
+const CACHE = 'onebox-v4';
+const APP_SHELL = ['./', 'index.html', 'style.css', 'app.js?v=2.1.0', 'calendar-data.js?v=2.1.0', 'manifest.webmanifest', 'icons/icon.svg'];
 const OPEN_METEO = /(^|\.)open-meteo\.com$/;
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(APP_SHELL)).then(() => self.skipWaiting()));

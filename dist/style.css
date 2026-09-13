@@ -306,3 +306,94 @@ textarea { min-height: 130px; resize: vertical; }
   .weather-card { flex-basis: 140px; }
   .popover { top: calc(63px + env(safe-area-inset-top)); right: 14px; }
 }
+
+/* iPhone 14 / compact touch surface ------------------------------------- */
+html, body { overflow-x: hidden; overscroll-behavior-x: none; }
+body { overscroll-behavior-y: none; }
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  min-height: calc(58px + env(safe-area-inset-top));
+  padding: max(9px, env(safe-area-inset-top)) 0 8px;
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  -webkit-backdrop-filter: blur(20px) saturate(1.2);
+  backdrop-filter: blur(20px) saturate(1.2);
+}
+.brand { flex: 0 0 auto; font-size: 18px; gap: 8px; letter-spacing: -.02em; }
+.logo-mark { width: 30px; height: 30px; padding: 7px; border-radius: 10px; gap: 3px; }
+.header-actions { flex: 1 1 auto; min-width: 0; justify-content: flex-end; gap: 4px; }
+.header-actions .icon-btn,
+.header-actions .header-icon,
+#themeBtn { width: 34px; min-width: 34px; height: 34px; padding: 0; display: grid; place-items: center; border-radius: 11px; }
+.bell-icon { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+.header-icon sup { top: -4px; right: -4px; }
+.language-picker { flex: 0 0 auto; min-width: 0; }
+.language-picker select { width: 54px; min-width: 54px; max-width: 54px; height: 34px; padding: 7px 3px; border-radius: 11px; font-size: 12px; text-overflow: ellipsis; }
+#toolNav {
+  position: sticky;
+  top: calc(58px + env(safe-area-inset-top));
+  z-index: 30;
+  display: flex;
+  gap: 7px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  margin: 8px 0 12px;
+  padding: 0 1px 2px;
+  background: var(--bg);
+}
+#toolNav::-webkit-scrollbar { display: none; }
+.tab { flex: 0 0 78px; min-height: 40px; padding: 9px 5px; border-radius: 13px; font-size: 12px; white-space: nowrap; }
+.tab span { font-size: 15px; margin-right: 3px; }
+.tab.active { box-shadow: 0 6px 16px rgba(17, 19, 26, .13); }
+.workspace { min-height: 0; padding: 16px; border-radius: 20px; }
+.tool-head { align-items: center; gap: 10px; margin-bottom: 16px; }
+.tool-head h2 { font-size: 24px; margin-top: 3px; }
+.tool-head p:not(.section-kicker) { display: none; }
+.section-kicker { font-size: 9px; letter-spacing: .15em; }
+.tool-actions { flex: 0 0 auto; }
+.calculator-layout { gap: 12px; }
+.display { min-height: 103px; padding: 18px; border-radius: 18px; }
+.result { font-size: 38px; }
+.keys { gap: 7px; margin-top: 10px; }
+.key { min-height: 50px; padding: 13px 5px; border-radius: 15px; font-size: 17px; }
+.calculator-options { margin-top: 8px; }
+.calculator-layout > div:first-child { display: flex; flex-direction: column; }
+.display { order: 0; }
+.scientific-bar { order: 1; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 7px; margin: 10px 0 0; padding: 0; border-top: 0; }
+.keys { order: 2; }
+.calculator-options { order: 3; }
+.keyboard-hint { order: 4; }
+.science-key { min-width: 0; min-height: 40px; padding: 8px 2px; border-radius: 13px; font-size: 11px; }
+.history-panel { margin-top: 12px; }
+.weather-search { margin-top: -2px; }
+.weather-card-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; overflow: visible; padding: 2px 0 8px; }
+.weather-card { width: 100%; min-width: 0; flex: initial; padding: 11px; border-radius: 14px; }
+.weather-card .weather-card-temp { font-size: 17px; }
+.weather-now { min-width: 0; padding: 18px; border-radius: 18px; gap: 10px; }
+.weather-now > div:first-child { min-width: 0; }
+.weather-location { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.weather-now strong { font-size: 45px; }
+.weather-icon { flex: 0 0 auto; font-size: 44px; }
+.weather-days, .hourly-strip, .advice-strip { margin-right: -16px; padding-right: 16px; scrollbar-width: none; overscroll-behavior-x: contain; }
+.weather-days::-webkit-scrollbar, .hourly-strip::-webkit-scrollbar, .advice-strip::-webkit-scrollbar { display: none; }
+.weather-section-title { margin-top: 15px; font-size: 13px; }
+.advice-card { flex-basis: 176px; padding: 11px; }
+.keyboard-hint { display: none; }
+.calculator-layout:has(.scientific-bar:not([hidden])) .keys { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.calculator-layout:has(.scientific-bar:not([hidden])) .science-key { min-height: 42px; border-radius: 50%; aspect-ratio: 1; padding: 4px 1px; }
+.popover { top: calc(58px + env(safe-area-inset-top)); right: 14px; }
+button:not(:disabled):hover { transform: none; }
+button:not(:disabled):active { transform: scale(.98); }
+
+@media (max-width: 390px) {
+  .shell { padding-left: 12px; padding-right: 12px; }
+  .brand { font-size: 17px; gap: 7px; }
+  .logo-mark { width: 29px; height: 29px; }
+  .header-actions { gap: 3px; }
+  .header-actions .icon-btn, .header-actions .header-icon, #themeBtn { width: 32px; min-width: 32px; height: 32px; }
+  .language-picker select { width: 51px; min-width: 51px; max-width: 51px; font-size: 11px; }
+  #toolNav { top: calc(56px + env(safe-area-inset-top)); }
+  .tab { flex-basis: 74px; }
+}
