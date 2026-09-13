@@ -1,5 +1,5 @@
-const CACHE = 'onebox-v22';
-const APP_SHELL = ['./', 'index.html', 'style.css?v=2.12.0', 'app.js?v=2.12.0', 'calendar-data.js?v=2.12.0', 'manifest.webmanifest', 'icons/icon.svg', 'icons/icon-180.png', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-dark-180.png', 'icons/icon-dark-192.png', 'icons/icon-dark-512.png', 'icons/bell.svg'];
+const CACHE = 'onebox-v23';
+const APP_SHELL = ['./', 'index.html', 'style.css?v=2.13.0', 'app.js?v=2.13.0', 'calendar-data.js?v=2.13.0', 'manifest.webmanifest', 'icons/icon.svg', 'icons/icon-180.png', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-dark-180.png', 'icons/icon-dark-192.png', 'icons/icon-dark-512.png', 'icons/bell.svg', 'icons/bell-192.png'];
 const OPEN_METEO = /(^|\.)open-meteo\.com$/;
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(APP_SHELL)).then(() => self.skipWaiting()));
@@ -9,6 +9,18 @@ self.addEventListener('activate', (event) => {
 });
 self.addEventListener('message', (event) => {
   if (event.data?.type === 'SKIP_WAITING') self.skipWaiting();
+});
+self.addEventListener('push', (event) => {
+  let payload = {};
+  try { payload = event.data?.json() || {}; } catch { payload = { body: event.data?.text() || 'OneBox' }; }
+  event.waitUntil(self.registration.showNotification(payload.title || 'OneBox', {
+    body: payload.body || payload.text || 'OneBox 有新的消息',
+    tag: payload.tag || 'onebox-push-' + Date.now(),
+    icon: 'icons/bell-192.png',
+    badge: 'icons/bell-192.png',
+    renotify: true,
+    data: payload.data || {},
+  }));
 });
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;

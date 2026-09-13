@@ -673,3 +673,49 @@ main { padding-top: calc(58px + env(safe-area-inset-top) + 55.5px + 12px); }
   #eventDialog, #agreementDialog { padding-left: 10px; padding-right: 10px; }
   .calendar-add-event { padding: 5px 7px; }
 }
+
+/* Latest iPhone polish --------------------------------------------------- */
+#workspace[data-tool="calculator"] .display { min-height: 160px; }
+#workspace[data-tool="calculator"] .display-history-list { max-height: 92px; }
+#workspace[data-tool="calculator"] .display-history-head span { font-size: 12px; }
+#workspace[data-tool="calculator"] .display-history-list .history-item { padding: 7px 0; font-size: 13px; }
+
+#workspace[data-tool="calendar"] .calendar-top { margin-bottom: 12px; }
+#workspace[data-tool="calendar"] .calendar-top strong { font-size: 18px; letter-spacing: -.02em; }
+#workspace[data-tool="calendar"] .calendar-month { gap: 12px; }
+#workspace[data-tool="calendar"] .calendar-today { border: 1px solid var(--line); border-radius: 9px; background: var(--panel); color: var(--primary); padding: 5px 10px; font-size: 12px; font-weight: 750; }
+#workspace[data-tool="calendar"] .day i { top: 4px; right: 4px; bottom: auto; width: 16px; height: 16px; line-height: 16px; font-size: 8px; }
+#workspace[data-tool="calendar"] .day > span { width: 100%; padding-right: 10px; }
+#workspace[data-tool="calendar"] .day.term-day small.day-label { color: var(--primary); }
+#workspace[data-tool="calendar"] .date-detail { align-items: baseline; gap: 7px 9px; }
+#workspace[data-tool="calendar"] .date-detail strong { flex: 0 0 auto; }
+#workspace[data-tool="calendar"] .lunar-year-label { color: var(--muted); font-size: 12px; }
+
+.weather-card-list { display: flex; gap: 10px; overflow-x: auto; overflow-y: hidden; padding: 4px 2px 14px; margin-bottom: 12px; scroll-snap-type: x proximity; scrollbar-width: none; }
+.weather-card-list::-webkit-scrollbar { display: none; }
+.weather-card { flex: 0 0 264px; min-height: 132px; padding: 14px; border-radius: 17px; display: flex; flex-direction: column; justify-content: space-between; scroll-snap-align: start; }
+.weather-card-head, .weather-card-main { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.weather-card-head > span:first-child { min-width: 0; }
+.weather-card-head strong, .weather-card-head small { max-width: 190px; }
+.weather-card-icon { flex: 0 0 auto; font-size: 33px; line-height: 1; }
+.weather-card-main { align-items: baseline; margin-top: 9px; }
+.weather-card-temp { font-size: 34px !important; line-height: 1; }
+.weather-card-condition { color: var(--muted); font-size: 13px; font-weight: 700; }
+.weather-card-meta { display: block; color: var(--muted); font-size: 11px; line-height: 1.35; white-space: normal; }
+
+#eventDialog .event-date-time-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; }
+#eventDialog .event-date-time-grid .field { min-width: 0; }
+#eventDialog input[type="date"], #eventDialog input[type="time"] { min-width: 0; max-width: 100%; font-size: 14px; }
+
+@media (max-width: 760px) {
+  #workspace[data-tool="calculator"] .display { min-height: 160px; }
+  #workspace[data-tool="calculator"] .display-history-list { max-height: 92px; }
+  #workspace[data-tool="calculator"] .display-history-head span { font-size: 12px; }
+  #workspace[data-tool="calculator"] .display-history-list .history-item { padding: 7px 0; font-size: 13px; }
+  #workspace[data-tool="calendar"] .calendar-month { gap: 11px; }
+  #workspace[data-tool="calendar"] .calendar-top strong { font-size: 17px; }
+  #workspace[data-tool="calendar"] .calendar-today { padding: 4px 9px; }
+  #workspace[data-tool="calendar"] .day i { top: 3px; right: 3px; bottom: auto; }
+  .weather-card { flex-basis: 252px; min-height: 128px; }
+  #eventDialog .event-date-time-grid { grid-template-columns: minmax(0, 1fr); gap: 0; }
+}
