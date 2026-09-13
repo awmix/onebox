@@ -332,6 +332,7 @@ body { overscroll-behavior-y: none; }
 .header-actions .icon-btn,
 .header-actions .header-icon,
 #themeBtn { width: 34px; min-width: 34px; height: 34px; padding: 0; display: grid; place-items: center; border-radius: 11px; }
+.header-actions > [hidden] { display: none !important; }
 .header-line-icon { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
 .header-icon sup { top: -4px; right: -4px; }
 .language-picker { flex: 0 0 auto; min-width: 0; }
@@ -517,6 +518,16 @@ button:not(:disabled):active { transform: scale(.98); }
 .settings-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .settings-row .github-user { margin: 0; padding: 0; background: transparent; }
 #settingsDialog .settings-note { display: block; margin-top: 6px; }
+.settings-preferences { width: min(460px, 100%); margin: 0 auto; display: grid; gap: 0; }
+.settings-preference-row { display: flex; align-items: center; justify-content: space-between; gap: 14px; min-height: 52px; border-bottom: 1px solid var(--line); }
+.settings-preference-row h3 { flex: 1; margin: 0; font-size: 15px; }
+.settings-preference-control { display: flex; align-items: center; justify-content: flex-end; gap: 8px; flex-wrap: wrap; }
+.settings-preference-control select { width: auto; min-width: 130px; padding: 9px 30px 9px 10px; font-size: 14px; }
+.setting-toggle { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: 11px; white-space: nowrap; cursor: pointer; }
+.setting-toggle input { width: 16px; height: 16px; margin: 0; accent-color: var(--primary); }
+.settings-version { color: var(--muted); font-size: 11px; font-weight: 600; white-space: nowrap; }
+.github-account-row { margin: 12px 0; padding: 10px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.github-dialog-card .settings-note { line-height: 1.55; }
 .weather-search { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 6px; }
 .weather-search-field { flex-basis: auto; min-width: 0; }
 .weather-search > .primary, .weather-search > .secondary { flex: initial; padding: 10px 10px; font-size: 12px; }
@@ -630,7 +641,7 @@ main { padding-top: calc(58px + env(safe-area-inset-top) + 55.5px + 12px); }
 .display-history-list { max-height: 98px; }
 .display-history-list .history-item { padding: 8px 0; font-size: 13px; }
 
-#eventDialog, #agreementDialog {
+#eventDialog, #alarmDialog, #githubDialog, #agreementDialog {
   z-index: 81;
   display: flex;
   align-items: flex-start;
@@ -639,8 +650,8 @@ main { padding-top: calc(58px + env(safe-area-inset-top) + 55.5px + 12px); }
   -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
 }
-#eventDialog[hidden], #agreementDialog[hidden] { display: none; }
-#eventDialog .event-dialog-card, #agreementDialog .agreement-dialog-card {
+#eventDialog[hidden], #alarmDialog[hidden], #githubDialog[hidden], #agreementDialog[hidden] { display: none; }
+#eventDialog .event-dialog-card, #alarmDialog .alarm-dialog-card, #githubDialog .github-dialog-card, #agreementDialog .agreement-dialog-card {
   width: min(480px, 100%);
   max-height: calc(100vh - 110px - env(safe-area-inset-top));
   margin: 0 auto;
@@ -651,7 +662,7 @@ main { padding-top: calc(58px + env(safe-area-inset-top) + 55.5px + 12px); }
   box-shadow: 0 24px 80px rgba(0, 0, 0, .34);
 }
 #agreementDialog .agreement-dialog-card { width: min(560px, 100%); }
-#eventDialog .dialog-head, #agreementDialog .dialog-head {
+#eventDialog .dialog-head, #alarmDialog .dialog-head, #githubDialog .dialog-head, #agreementDialog .dialog-head {
   position: sticky;
   top: -18px;
   z-index: 1;
@@ -661,7 +672,7 @@ main { padding-top: calc(58px + env(safe-area-inset-top) + 55.5px + 12px); }
   background: var(--panel);
   border-bottom: 1px solid var(--line);
 }
-#eventDialog .dialog-head h2, #agreementDialog .dialog-head h2 { font-size: 21px; }
+#eventDialog .dialog-head h2, #alarmDialog .dialog-head h2, #githubDialog .dialog-head h2, #agreementDialog .dialog-head h2 { font-size: 21px; }
 #eventDialog .event-form { border-top: 0; padding-top: 0; }
 .agreement-copy { margin: 0; color: var(--ink); line-height: 1.8; }
 
@@ -672,7 +683,7 @@ main { padding-top: calc(58px + env(safe-area-inset-top) + 55.5px + 12px); }
   #workspace[data-tool="calculator"] .display-history-head span { font-size: 11px; }
   #workspace[data-tool="calculator"] .display-history-list .history-item { padding: 6px 0; font-size: 12px; }
   .day i { right: 3px; bottom: 3px; top: auto; width: 15px; height: 15px; line-height: 15px; font-size: 8px; }
-  #eventDialog, #agreementDialog { padding-left: 10px; padding-right: 10px; }
+  #eventDialog, #alarmDialog, #githubDialog, #agreementDialog { padding-left: 10px; padding-right: 10px; }
   .calendar-add-event { padding: 5px 7px; }
 }
 
@@ -705,7 +716,7 @@ main { padding-top: calc(58px + env(safe-area-inset-top) + 55.5px + 12px); }
 .weather-card-condition { color: var(--muted); font-size: 13px; font-weight: 700; }
 .weather-card-meta { display: block; color: var(--muted); font-size: 11px; line-height: 1.35; white-space: normal; }
 
-#eventDialog .event-date-time-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; }
+#eventDialog .event-date-time-grid, #alarmDialog .event-date-time-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; }
 #eventDialog .event-date-time-grid .field { min-width: 0; }
 #eventDialog input[type="date"], #eventDialog input[type="time"] { min-width: 0; max-width: 100%; font-size: 14px; }
 
@@ -719,7 +730,7 @@ main { padding-top: calc(58px + env(safe-area-inset-top) + 55.5px + 12px); }
   #workspace[data-tool="calendar"] .calendar-today { padding: 4px 9px; }
   #workspace[data-tool="calendar"] .day i { top: 3px; right: 3px; bottom: auto; }
   .weather-card { flex-basis: 252px; min-height: 128px; }
-  #eventDialog .event-date-time-grid { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  #eventDialog .event-date-time-grid { grid-template-columns: minmax(0, 1.15fr) minmax(0, .85fr); gap: 7px; }
 }
 
 /* Bottom app navigation --------------------------------------------------- */
@@ -765,6 +776,7 @@ main:has(#workspace[data-tool="home"]), main:has(#workspace[data-tool="messages"
 .home-tool-card small, .mine-row small { margin-top: 2px; color: var(--muted); font-size: 12px; }
 .home-tool-icon, .mine-row-icon { display: grid; place-items: center; flex: 0 0 34px; width: 34px; height: 34px; border-radius: 11px; background: var(--soft); color: var(--primary); font-size: 19px; font-weight: 800; }
 .home-tool-icon svg { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.mine-row-icon svg { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
 .home-tool-arrow, .mine-row > span:last-child { margin-left: auto; color: var(--muted); font-size: 20px; }
 .page-title-row { display: flex; align-items: end; justify-content: space-between; gap: 16px; margin-bottom: 20px; }
 .page-title-row h1 { margin-bottom: 0; }
@@ -792,7 +804,7 @@ main:has(#workspace[data-tool="home"]), main:has(#workspace[data-tool="messages"
 /* Calendar cells keep every datum centered while the event badge stays clear of the date. */
 #workspace[data-tool="calendar"] .day { justify-content: center; align-items: center; padding-left: 3px; padding-right: 3px; }
 #workspace[data-tool="calendar"] .day > span, #workspace[data-tool="calendar"] .day > small { width: 100%; padding-right: 0; text-align: center; }
-#workspace[data-tool="calendar"] .day i { top: 1px; right: 1px; bottom: auto; width: 14px; height: 14px; line-height: 14px; font-size: 8px; }
+#workspace[data-tool="calendar"] .day i { top: -3px; right: -3px; bottom: auto; z-index: 2; width: 15px; height: 15px; line-height: 15px; font-size: 8px; box-shadow: 0 0 0 2px var(--panel); }
 #workspace[data-tool="calendar"] .calendar-double-tap-hint { display: block; margin-top: 4px; color: var(--muted); font-size: 11px; font-weight: 500; }
 .lunar-dialog-card { width: min(390px, 100%); text-align: center; }
 .lunar-dialog-value { margin: 14px 0 8px; font-size: 30px; font-weight: 800; letter-spacing: -.04em; }
@@ -802,6 +814,30 @@ main:has(#workspace[data-tool="home"]), main:has(#workspace[data-tool="messages"
 #lunarDialog[hidden] { display: none; }
 #lunarDialog .lunar-dialog-card { margin: 0; max-height: min(78vh, 460px); overflow: auto; }
 
+/* Calendar reminders and alarms ------------------------------------------ */
+.alarm-panel { margin-top: 18px; padding: 18px; background: var(--panel); border: 1px solid var(--line); border-radius: 20px; }
+.alarm-panel .subhead { align-items: center; }
+.alarm-panel h3 { margin: 0; font-size: 17px; }
+.alarm-list { display: grid; gap: 8px; margin-top: 12px; }
+.alarm-item { display: flex; align-items: center; gap: 10px; min-width: 0; padding: 10px 0; border-top: 1px solid var(--line); }
+.alarm-item:first-child { border-top: 0; }
+.alarm-item-copy { min-width: 0; flex: 1; }
+.alarm-item-copy strong, .alarm-item-copy small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.alarm-item-copy small { margin-top: 2px; color: var(--muted); font-size: 12px; }
+.alarm-item.disabled .alarm-item-copy { opacity: .5; }
+.alarm-toggle { flex: 0 0 34px; width: 34px; height: 22px; padding: 2px; border: 0; border-radius: 12px; background: var(--line); cursor: pointer; }
+.alarm-toggle-dot { display: block; width: 18px; height: 18px; border-radius: 50%; background: var(--muted); transition: transform .15s ease, background .15s ease; }
+.alarm-toggle[aria-pressed="true"] { background: var(--primary); }
+.alarm-toggle[aria-pressed="true"] .alarm-toggle-dot { background: #fff; transform: translateX(12px); }
+.weekday-options { display: flex; flex-wrap: wrap; gap: 7px; }
+.weekday-option { cursor: pointer; }
+.weekday-option input { position: absolute; opacity: 0; pointer-events: none; }
+.weekday-option span { display: inline-flex; min-width: 36px; justify-content: center; padding: 7px 8px; border: 1px solid var(--line); border-radius: 10px; color: var(--muted); font-size: 12px; }
+.weekday-option input:checked + span { border-color: var(--primary); background: var(--soft); color: var(--primary); }
+#alarmDialog input[type="datetime-local"], #alarmDialog input[type="time"] { min-width: 0; max-width: 100%; font-size: 14px; }
+#alarmDialog .event-form { border-top: 0; padding-top: 0; }
+#alarmDialog .alarm-once-field[hidden], #alarmDialog .alarm-repeat-field[hidden], #alarmDialog .alarm-weekdays-field[hidden] { display: none !important; }
+
 @media (max-width: 390px) {
   .bottom-nav { width: calc(100% - 16px); bottom: 10px; }
   .bottom-tab { font-size: 10px; }
@@ -810,4 +846,12 @@ main:has(#workspace[data-tool="home"]), main:has(#workspace[data-tool="messages"
   .weather-location-button { width: 36px; min-width: 36px !important; }
   .search-results-head { display: block; }
   .search-results-head small { display: block; margin-top: 2px; }
+}
+
+/* Keep the bottom navigation close to the edge while respecting the iPhone home indicator. */
+.bottom-nav { bottom: max(6px, env(safe-area-inset-bottom)); }
+.bottom-nav.auto-hide-enabled { transition: transform .22s ease, opacity .22s ease; }
+.bottom-nav.auto-hide-enabled.is-hidden { transform: translate(-50%, calc(100% + 12px)); opacity: 0; pointer-events: none; }
+@media (max-width: 390px) {
+  .bottom-nav { bottom: max(6px, env(safe-area-inset-bottom)); }
 }

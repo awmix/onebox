@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.14.6';
+const APP_VERSION = '2.14.11';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -16,14 +16,17 @@ const STORAGE = {
   legacyWeather: 'onebox.weather',
   translationHistory: 'onebox.translation-history',
   notifications: 'onebox.notifications',
+  alarms: 'onebox.alarms',
+  headerVisibility: 'onebox.header-visibility',
+  bottomNavAutoHide: 'onebox.bottom-nav-auto-hide',
   github: 'onebox.github',
 };
 const TOOL_DEFS = {
   calculator: { icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="3"/><path d="M8 7h8M8 11h2m2 0h2m-4 4h2m2 0h2m-6 4h2m2 0h2"/></svg>', key: 'calculator' },
   calendar: { icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="16" rx="3"/><path d="M7 3v4M17 3v4M4 9h16M8 13h.01M12 13h.01M16 13h.01M8 17h.01M12 17h.01M16 17h.01"/></svg>', key: 'calendar' },
   weather: { icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>', key: 'weather' },
-  convert: { icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h16l-3-3M20 16H4l3 3"/></svg>', key: 'convert' },
-  translate: { icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h9M8.5 3v2m-3 0c.6 4 2.5 6.7 5.5 8M6 9h6M15 5h5l-4 9-4-9h3m-2 5h6"/></svg>', key: 'translate' },
+  convert: { icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h13l-3-3M20 17H7l3 3M4 4v6M20 14v6"/></svg>', key: 'convert' },
+  translate: { icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 17 4-11 4 11M5.5 13h5M14 6h6M14 10h5M14 14h6M14 18h4"/></svg>', key: 'translate' },
 };
 const DEFAULT_TOOL_ORDER = Object.keys(TOOL_DEFS);
 const nav = $('#toolNav');
@@ -72,7 +75,7 @@ const DICT = {
     keyboard: '键盘：数字、+ − × ÷、括号、Enter 等号、Esc 清空',
     today: '今天', off: '休', work: '补班', normalCalendar: '工作日历',
     legalHoliday: '法定休息', makeUpWorkday: '补班', solarTerm: '节气', selectedDay: '选中日期',
-    noAgenda: '这一天还没有安排。', addAgenda: '新增日程', addToDay: '添加到这一天', eventDate: '日期', eventTime: '时间（精确到秒）',
+    noAgenda: '这一天还没有安排。', agenda: '日程', addAgenda: '新增日程', newReminder: '新增提醒', eventContent: '日程内容', eventPlaceholder: '请输入你的日程信息', addEvent: '添加日程', addToDay: '添加日程', eventDate: '日期', eventTime: '时间（精确到秒）', reminderSchedule: '提醒日程',
     noteOptional: '备注（可选）', weatherSearch: '搜索', currentLocation: '当前位置',
     refresh: '刷新', searchPlace: '搜索城市或区县',
     noWeather: '天气需要联网，搜索一个城市或区县开始。', weatherLoading: '正在获取天气…',
@@ -89,12 +92,12 @@ const DICT = {
     githubClientId: 'GitHub OAuth Client ID', githubClientHint: '首次使用需在 GitHub OAuth App 中开启 Device Flow，并填入 Client ID。',
     githubLogin: '连接 GitHub', githubLogout: '退出 GitHub', upload: '上传到 GitHub', download: '从 GitHub 恢复',
     githubConnected: '已连接', githubNotConnected: '尚未连接', openDevice: '打开验证页面',
-    appUpdate: '应用更新', checkUpdate: '检查更新', updateAvailable: '有新版本可用', upToDate: '已是最新版本', updating: '正在检查…', applyUpdate: '立即更新',
+    appUpdate: '应用更新', checkUpdate: '更新', updateAvailable: '有新版本可用', upToDate: '已是最新版本', updating: '正在检查…', applyUpdate: '立即更新', topDisplay: '顶部显示',
     notificationsPermission: '消息通知', enableNotifications: '允许通知', notificationDescription: 'iPhone 需要先将 OneBox 添加到主屏幕并允许消息通知；应用关闭后的后台提醒仍需要 Push 服务端。',
     userAgreement: '用户协议', viewAgreement: '查看协议', agreementTitle: 'OneBox 用户协议', agreementBody: 'OneBox 是一款本地优先的日常工具应用。计算记录、日程、翻译历史和天气卡片默认保存在当前设备；使用 GitHub 云同步时，数据会写入你自己的私有 Gist。天气和翻译功能会请求对应的开源服务，服务商可能记录必要的请求信息。请在使用提醒、定位和消息通知功能前确认已授予相应权限。',
-    addReminder: '添加提醒', reminderText: '提醒内容', remindAt: '提醒时间', noNotifications: '还没有提醒。',
+    addReminder: '添加提醒', reminderText: '提醒内容', remindAt: '提醒时间', noNotifications: '还没有提醒。', alarm: '闹钟', addAlarm: '添加闹钟', alarmContent: '闹钟内容', alarmPlaceholder: '请输入闹钟内容', alarmAt: '提醒时间', alarmRepeat: '重复方式', once: '指定时间', everyDay: '每天', workdays: '工作日', restdays: '非工作日', weekly: '每周', weekdays: '重复星期', noAlarms: '还没有闹钟。', alarmHint: '闹钟支持指定日期、工作日、非工作日和每周重复。', enabled: '已开启', disabled: '已关闭',
     markRead: '全部已读', close: '关闭', system: '跟随系统', light: '浅色', dark: '深色',
-    language: '语言', theme: '主题', reorderHint: '长按工具标签可以调整顺序',
+    language: '语言', theme: '主题', bottomTab: '底部 Tab', autoHideBottomNav: '自动隐藏，滑动显示', reorderHint: '长按工具标签可以调整顺序',
     languagePending: '日语、韩语语言包已预留，当前版本先提供中文和英文。',
   },
   en: {
@@ -111,7 +114,7 @@ const DICT = {
     keyboard: 'Keyboard: numbers, + − × ÷, parentheses, Enter and Escape',
     today: 'Today', off: 'Off', work: 'Make-up workday', normalCalendar: 'Work calendar',
     legalHoliday: 'Public holiday', makeUpWorkday: 'Make-up workday', solarTerm: 'Solar term', selectedDay: 'Selected day',
-    noAgenda: 'Nothing planned for this day.', addAgenda: 'New event', addToDay: 'Add to this day', eventDate: 'Date', eventTime: 'Time (to the second)',
+    noAgenda: 'Nothing planned for this day.', agenda: 'Events', addAgenda: 'New event', newReminder: 'New reminder', eventContent: 'Event details', eventPlaceholder: 'Enter your event details', addEvent: 'Add event', addToDay: 'Add event', eventDate: 'Date', eventTime: 'Time (to the second)', reminderSchedule: 'Reminder time',
     noteOptional: 'Note (optional)', weatherSearch: 'Search', currentLocation: 'Current location',
     refresh: 'Refresh', searchPlace: 'Search city or district',
     noWeather: 'Search a city or district to get weather.', weatherLoading: 'Loading weather…',
@@ -128,12 +131,12 @@ const DICT = {
     githubClientId: 'GitHub OAuth Client ID', githubClientHint: 'Enable Device Flow in a GitHub OAuth App and paste its Client ID here once.',
     githubLogin: 'Connect GitHub', githubLogout: 'Disconnect GitHub', upload: 'Upload to GitHub', download: 'Restore from GitHub',
     githubConnected: 'Connected', githubNotConnected: 'Not connected', openDevice: 'Open verification page',
-    appUpdate: 'App update', checkUpdate: 'Check for updates', updateAvailable: 'A new version is ready', upToDate: 'You are up to date', updating: 'Checking…', applyUpdate: 'Update now',
+    appUpdate: 'App update', checkUpdate: 'Update', updateAvailable: 'A new version is ready', upToDate: 'You are up to date', updating: 'Checking…', applyUpdate: 'Update now', topDisplay: 'Show at top',
     notificationsPermission: 'Message notifications', enableNotifications: 'Allow notifications', notificationDescription: 'On iPhone, add OneBox to the Home Screen and allow notifications first; background alerts after the app is closed still require a Push server.',
     userAgreement: 'User agreement', viewAgreement: 'View agreement', agreementTitle: 'OneBox user agreement', agreementBody: 'OneBox is a local-first daily tools app. Calculator history, events, translation history and weather cards stay on this device by default; when GitHub sync is enabled, they are written to your own private Gist. Weather and translation features request open-source services, which may record necessary request metadata. Review the permissions before enabling reminders, location or message notifications.',
-    addReminder: 'Add reminder', reminderText: 'Reminder', remindAt: 'When', noNotifications: 'No reminders yet.',
+    addReminder: 'Add reminder', reminderText: 'Reminder', remindAt: 'When', noNotifications: 'No reminders yet.', alarm: 'Alarms', addAlarm: 'Add alarm', alarmContent: 'Alarm label', alarmPlaceholder: 'Enter an alarm label', alarmAt: 'Reminder time', alarmRepeat: 'Repeat', once: 'Once', everyDay: 'Every day', workdays: 'Workdays', restdays: 'Rest days', weekly: 'Weekly', weekdays: 'Weekdays', noAlarms: 'No alarms yet.', alarmHint: 'Alarms support a date, workdays, rest days and weekly repeats.', enabled: 'On', disabled: 'Off',
     markRead: 'Mark all read', close: 'Close', system: 'System', light: 'Light', dark: 'Dark',
-    language: 'Language', theme: 'Theme', reorderHint: 'Long-press a tool tab to reorder',
+    language: 'Language', theme: 'Theme', bottomTab: 'Bottom tabs', autoHideBottomNav: 'Auto-hide; reveal while scrolling', reorderHint: 'Long-press a tool tab to reorder',
     languagePending: 'Japanese and Korean are reserved for a future language pack. Chinese and English are available now.',
   },
 };
@@ -143,6 +146,9 @@ const storedTheme = localStorage.getItem(STORAGE.theme);
 const storedLanguage = localStorage.getItem(STORAGE.language) || 'system';
 const resolveLanguageMode = (mode) => mode === 'en' || mode === 'zh' ? mode : ((navigator.language || '').toLowerCase().startsWith('en') ? 'en' : 'zh');
 const storedCalculator = parseStored(STORAGE.calculator, { expr: '', history: [] });
+const DEFAULT_HEADER_VISIBILITY = { notifications: true, theme: true, language: false, settings: true, update: false };
+const storedHeaderVisibility = parseStored(STORAGE.headerVisibility, {});
+const storedAlarms = parseStored(STORAGE.alarms, []);
 const rawWeatherCards = parseStored(STORAGE.weatherCards, []);
 const legacyWeather = parseStored(STORAGE.legacyWeather, null);
 const normalizeToolOrder = (value) => {
@@ -169,7 +175,10 @@ const state = {
   lunarDialogDate: null, lastCalendarTap: { key: '', at: 0 },
   translation: { source: 'auto', target: 'zh', input: '', result: '', loading: false, error: '' },
   translationHistory: parseStored(STORAGE.translationHistory, []),
-  notifications: parseStored(STORAGE.notifications, []), notificationOpen: false, settingsOpen: false,
+  alarms: Array.isArray(storedAlarms) ? storedAlarms : [],
+  notifications: parseStored(STORAGE.notifications, []), notificationOpen: false, settingsOpen: false, githubDialogOpen: false,
+  headerVisibility: { ...DEFAULT_HEADER_VISIBILITY, ...(storedHeaderVisibility && typeof storedHeaderVisibility === 'object' ? storedHeaderVisibility : {}) },
+  bottomNavAutoHide: Boolean(parseStored(STORAGE.bottomNavAutoHide, false)),
   swRegistration: null, updateAvailable: false, updateChecking: false, updateApplying: false,
   github: (() => { const value = parseStored(STORAGE.github, {}) || {}; return { clientId: value.clientId || '', token: value.token || '', user: value.user || null, gistId: value.gistId || '', deviceCode: '', userCode: '', verificationUri: '', expiresAt: 0, interval: 5 }; })(),
 };
@@ -202,6 +211,15 @@ function applyTheme() {
     button.dataset.resolvedTheme = resolved;
   }
 }
+function renderHeaderControls() {
+  const visibility = state.headerVisibility;
+  ['notifyBtn', 'themeBtn', 'settingsBtn'].forEach((id) => { const button = $('#' + id); if (button) button.hidden = !visibility[id === 'notifyBtn' ? 'notifications' : id === 'themeBtn' ? 'theme' : 'settings']; });
+  const languageControl = $('#languageControl');
+  const languagePicker = $('#languagePicker');
+  if (languageControl) languageControl.hidden = !visibility.language;
+  if (languagePicker) languagePicker.value = state.languageMode;
+  refreshUpdateIndicator();
+}
 function applyLanguage() {
   state.language = resolveLanguageMode(state.languageMode);
   document.documentElement.lang = state.language === 'en' ? 'en' : 'zh-CN';
@@ -209,8 +227,10 @@ function applyLanguage() {
   const connectionStatus = $('#connectionStatus');
   if (connectionStatus) connectionStatus.textContent = navigator.onLine ? t('online') : t('offline');
   applyTheme();
+  renderHeaderControls();
 }
 function saveThemeLanguage() { localStorage.setItem(STORAGE.theme, state.theme); localStorage.setItem(STORAGE.language, state.languageMode); }
+function saveHeaderPreferences() { saveStored(STORAGE.headerVisibility, state.headerVisibility); saveStored(STORAGE.bottomNavAutoHide, state.bottomNavAutoHide); }
 function cycleTheme() {
   state.theme = state.theme === 'system' ? 'light' : state.theme === 'light' ? 'dark' : 'system';
   saveThemeLanguage(); applyTheme(); render();
@@ -236,6 +256,8 @@ function renderBottomNav() {
   const bottomNav = $('#bottomNav');
   if (!bottomNav) return;
   const unread = state.notifications.filter((item) => !item.read).length;
+  bottomNav.classList.toggle('auto-hide-enabled', state.bottomNavAutoHide);
+  if (!state.bottomNavAutoHide || $('main')?.scrollTop <= 8) bottomNav.classList.remove('is-hidden');
   bottomNav.innerHTML = Object.values(SECTION_DEFS).map((item) => '<button class="bottom-tab ' + (state.section === item.key ? 'active' : '') + '" data-section="' + item.key + '" aria-current="' + (state.section === item.key ? 'page' : 'false') + '"><span class="bottom-tab-icon" aria-hidden="true">' + item.icon + '</span><span>' + t(item.key) + '</span>' + (item.key === 'messages' && unread ? '<sup>' + (unread > 99 ? '99+' : unread) + '</sup>' : '') + '</button>').join('');
 }
 function selectTool(id) {
@@ -272,7 +294,8 @@ function renderMessages() {
   return '<div class="section-page message-page"><div class="page-title-row"><div><span class="section-kicker">ONEBOX</span><h1>' + t('messages') + '</h1></div><button class="secondary" data-mark-notifications-read>' + t('markRead') + '</button></div><div class="message-panel"><div class="notification-list">' + notificationItemsMarkup() + '</div></div></div>';
 }
 function renderMine() {
-  return '<div class="section-page mine-page"><div class="page-title-row"><div><span class="section-kicker">ONEBOX</span><h1>' + t('mine') + '</h1></div></div><div class="mine-list"><button class="mine-row" data-open-settings-page><span class="mine-row-icon">⚙</span><span><strong>' + t('settings') + '</strong><small>' + (state.language === 'en' ? 'Theme, language, updates and sync' : '主题、语言、更新与同步') + '</small></span><span>›</span></button><button class="mine-row" data-open-agreement-page><span class="mine-row-icon">▤</span><span><strong>' + t('userAgreement') + '</strong><small>' + (state.language === 'en' ? 'Learn how OneBox handles data' : '了解 OneBox 如何处理数据') + '</small></span><span>›</span></button></div></div>';
+  const githubStatus = state.github.user ? (state.github.user.login || 'GitHub') : t('githubNotConnected');
+  return '<div class="section-page mine-page"><div class="page-title-row"><div><span class="section-kicker">ONEBOX</span><h1>' + t('mine') + '</h1></div></div><div class="mine-list"><button class="mine-row" data-open-settings-page><span class="mine-row-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6 7 7M17 17l1.4 1.4M18.4 5.6 17 7M7 17l-1.4 1.4"/><circle cx="12" cy="12" r="4"/></svg></span><span><strong>' + t('settings') + '</strong><small>' + (state.language === 'en' ? 'Theme, language, updates and display' : '主题、语言、更新与显示设置') + '</small></span><span>›</span></button><button class="mine-row" data-open-github-page><span class="mine-row-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 0 0-2.8 17.55c.45.08.62-.2.62-.43v-1.52c-2.52.55-3.05-1.06-3.05-1.06-.41-1.05-1-1.33-1-1.33-.82-.56.06-.55.06-.55.9.06 1.37.93 1.37.93.8 1.37 2.1.98 2.61.75.08-.58.31-.98.57-1.2-2.01-.23-4.13-1-4.13-4.45 0-.98.35-1.77.93-2.39-.09-.23-.4-1.13.09-2.36 0 0 .76-.24 2.48.91a8.6 8.6 0 0 1 4.5 0c1.72-1.15 2.48-.91 2.48-.91.49 1.23.18 2.13.09 2.36.58.62.93 1.41.93 2.39 0 3.46-2.12 4.22-4.14 4.45.32.27.6.8.6 1.61v2.38c0 .23.16.51.62.42A9 9 0 0 0 12 3Z"/></svg></span><span><strong>GitHub</strong><small>' + escapeHtml(githubStatus) + '</small></span><span>›</span></button><button class="mine-row" data-open-agreement-page><span class="mine-row-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l3 3v15H6zM15 3v4h4M9 12h6M9 16h6"/></svg></span><span><strong>' + t('userAgreement') + '</strong><small>' + (state.language === 'en' ? 'Learn how OneBox handles data' : '了解 OneBox 如何处理数据') + '</small></span><span>›</span></button></div></div>';
 }
 
 // Calendar data --------------------------------------------------------------
@@ -487,11 +510,11 @@ function calendar() {
     const holidayClass = meta.holiday ? (meta.holiday.isOffDay ? 'holiday' : 'workday') : '';
     const termClass = meta.term ? 'term-day' : '';
     const label = meta.holiday && !meta.holiday.isOffDay ? t('makeUpWorkday') : (meta.term || meta.holiday?.name || meta.lunar?.festival || '');
-    const lunarCell = meta.lunar ? (meta.lunar.day === 1 ? meta.lunar.monthText + meta.lunar.dayText : meta.lunar.dayText) : '';
+    const hasPriorityLabel = Boolean(meta.term || meta.holiday);
+    const lunarCell = !hasPriorityLabel && meta.lunar ? (meta.lunar.day === 1 ? meta.lunar.monthText + meta.lunar.dayText : meta.lunar.dayText) : '';
     const eventBadge = eventCount ? (eventCount > 99 ? '…' : String(eventCount)) : '';
     cells += '<button class="day ' + (outside ? 'muted ' : '') + (key === dateKey(today) ? 'today ' : '') + (key === state.selectedDate ? 'selected ' : '') + holidayClass + ' ' + termClass + '" data-date="' + key + '" data-outside="' + outside + '" aria-label="' + escapeHtml(formatDate(key) + (label ? '，' + label : '') + (eventCount ? '，' + eventCount + ' 个日程' : '')) + '"><span>' + date.getDate() + '</span><small class="lunar-day">' + escapeHtml(lunarCell) + '</small><small class="day-label">' + escapeHtml(label) + '</small>' + (eventCount ? '<i aria-label="' + eventCount + ' 个日程">' + eventBadge + '</i>' : '') + '</button>';
   }
-  const selected = calendarMeta(state.selectedDate);
   const selectedEvents = [...(state.events[state.selectedDate] || [])].sort((a, b) => {
     const left = a.time || '00:00:00'; const right = b.time || '00:00:00';
     return right.localeCompare(left) || Number(b.createdAt || 0) - Number(a.createdAt || 0);
@@ -499,26 +522,101 @@ function calendar() {
   const eventList = selectedEvents.length
     ? selectedEvents.map((item) => '<div class="event-item"><div><strong>' + escapeHtml(item.title) + '</strong><small>' + (item.time ? escapeHtml(item.time) : (state.language === 'en' ? 'All day' : '全天')) + '</small></div><button class="icon-btn small" data-delete-event="' + escapeHtml(item.id) + '" aria-label="' + (state.language === 'en' ? 'Delete' : '删除') + '">×</button></div>').join('')
     : '<p class="empty compact">' + t('noAgenda') + '</p>';
-  const status = selected.holiday
-    ? '<span class="date-status ' + (selected.holiday.isOffDay ? 'off' : 'work') + '">' + (selected.holiday.isOffDay ? t('off') + ' · ' + escapeHtml(selected.holiday.name) : t('work')) + '</span>'
-    : '<span class="date-status normal">' + t('normalCalendar') + '</span>';
   const monthLabel = state.language === 'en' ? new Intl.DateTimeFormat('en-US', { month: 'long' }).format(first) + ' ' + year : year + ' 年 ' + (month + 1) + ' 月';
-  const selectedDateLabel = state.language === 'en' ? formatDate(state.selectedDate) : formatDate(state.selectedDate).replace('日星期', '日 星期');
   const weekdays = state.language === 'en' ? ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] : ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
+  const alarmMarkup = renderAlarmPanel();
   return heading(t('calendar'), t('calendarDesc')) +
     '<div class="calendar-layout"><div class="calendar-card"><div class="calendar-top"><button class="icon-btn" data-month="-1" aria-label="Previous month">←</button><div class="calendar-month"><strong>' + monthLabel + '</strong><button class="text-btn calendar-today" data-today>' + t('today') + '</button></div><button class="icon-btn" data-month="1" aria-label="Next month">→</button></div>' +
     '<div class="calendar-legend"><span><i class="dot off"></i>' + t('legalHoliday') + '</span><span><i class="dot work"></i>' + t('makeUpWorkday') + '</span><span><i class="dot term"></i>' + t('solarTerm') + '</span><button class="calendar-add-event" data-open-event-dialog><span aria-hidden="true">＋</span>' + t('addAgenda') + '</button></div><div class="calendar-grid">' + weekdays.map((day) => '<div class="dow">' + day + '</div>').join('') + cells + '</div></div>' +
-    '<aside class="agenda-panel"><div class="subhead"><div><h3>' + escapeHtml(selectedDateLabel) + '</h3><small class="calendar-double-tap-hint">' + (state.language === 'en' ? 'Double-tap a date for lunar details' : '连续点击日期查看农历详情') + '</small></div>' + status + '</div><div class="event-list">' + eventList + '</div></aside></div>';
+   '<aside class="agenda-panel"><div class="subhead"><h3>' + t('agenda') + '</h3><button class="calendar-add-event" data-open-event-dialog><span aria-hidden="true">＋</span>' + t('addAgenda') + '</button></div><div class="event-list">' + eventList + '</div></aside></div>' + alarmMarkup;
 }
 function saveEvents() { saveStored(STORAGE.events, state.events); }
 
 function renderEventDialog() {
   const dialog = $('#eventDialog');
   if (!dialog) return;
-  dialog.innerHTML = '<div class="dialog-card event-dialog-card" role="dialog" aria-modal="true"><div class="dialog-head"><h2>' + t('addAgenda') + '</h2><button class="icon-btn small" data-close-event-dialog aria-label="' + t('close') + '">×</button></div><form id="eventForm" class="event-form"><div class="field"><label for="eventTitle">' + t('addAgenda') + '</label><input id="eventTitle" required maxlength="60" placeholder="' + (state.language === 'en' ? 'e.g. Project review' : '例如：项目复盘') + '"></div><div class="event-date-time-grid"><div class="field"><label for="eventDate">' + t('eventDate') + '</label><input id="eventDate" type="date" value="' + escapeHtml(state.selectedDate) + '" required></div><div class="field"><label for="eventTime">' + t('eventTime') + '</label><input id="eventTime" type="time" step="1" aria-label="' + t('eventTime') + '"></div></div><button class="primary full-width" type="submit">' + t('addToDay') + '</button></form></div>';
+  dialog.innerHTML = '<div class="dialog-card event-dialog-card" role="dialog" aria-modal="true"><div class="dialog-head"><h2>' + t('newReminder') + '</h2><button class="icon-btn small" data-close-event-dialog aria-label="' + t('close') + '">×</button></div><form id="eventForm" class="event-form"><div class="field"><label for="eventTitle">' + t('eventContent') + '</label><input id="eventTitle" required maxlength="60" placeholder="' + t('eventPlaceholder') + '"></div><div class="field"><label>' + t('reminderSchedule') + '</label><div class="event-date-time-grid"><input id="eventDate" type="date" value="' + escapeHtml(state.selectedDate) + '" aria-label="' + t('eventDate') + '" required><input id="eventTime" type="time" step="1" aria-label="' + t('eventTime') + '"></div></div><button class="primary full-width" type="submit">' + t('addEvent') + '</button></form></div>';
   dialog.hidden = false;
 }
 function closeEventDialog() { const dialog = $('#eventDialog'); if (dialog) dialog.hidden = true; }
+const alarmRepeatOptions = ['once', 'daily', 'workdays', 'restdays', 'weekly'];
+const alarmWeekdayLabels = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
+function saveAlarms() { saveStored(STORAGE.alarms, state.alarms.slice(0, 40)); }
+function isWorkdayKey(key) {
+  const holiday = holidayFor(key);
+  if (holiday) return !holiday.isOffDay;
+  const day = dateFromKey(key).getDay();
+  return day !== 0 && day !== 6;
+}
+function alarmMatchesDay(alarm, key) {
+  const weekday = (dateFromKey(key).getDay() + 6) % 7;
+  if (alarm.repeat === 'daily') return true;
+  if (alarm.repeat === 'workdays') return isWorkdayKey(key);
+  if (alarm.repeat === 'restdays') return !isWorkdayKey(key);
+  if (alarm.repeat === 'weekly') return (alarm.weekdays || [weekday]).map(Number).includes(weekday);
+  return false;
+}
+function nextRecurringAlarmAt(alarm, from = Date.now()) {
+  const start = new Date(from);
+  for (let offset = 0; offset <= 14; offset += 1) {
+    const candidate = new Date(start.getFullYear(), start.getMonth(), start.getDate() + offset);
+    const key = dateKey(candidate);
+    if (!alarmMatchesDay(alarm, key) || !alarm.time) continue;
+    const value = new Date(key + 'T' + alarm.time).getTime();
+    if (Number.isFinite(value) && value > from + 250) return value;
+  }
+  return 0;
+}
+function alarmDisplayRepeat(alarm) {
+  if (alarm.repeat === 'once') return new Intl.DateTimeFormat(state.language === 'en' ? 'en-US' : 'zh-CN', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(alarm.at));
+  if (alarm.repeat === 'daily') return t('everyDay') + ' · ' + alarm.time;
+  if (alarm.repeat === 'workdays') return t('workdays') + ' · ' + alarm.time;
+  if (alarm.repeat === 'restdays') return t('restdays') + ' · ' + alarm.time;
+  const days = (alarm.weekdays || []).map((day) => state.language === 'en' ? ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][Number(day)] : alarmWeekdayLabels[Number(day)]).filter(Boolean).join('、');
+  return t('weekly') + ' · ' + (days || (state.language === 'en' ? 'Mon' : '周一')) + ' · ' + alarm.time;
+}
+function renderAlarmPanel() {
+  const alarms = [...state.alarms].sort((a, b) => Number(b.createdAt || 0) - Number(a.createdAt || 0));
+  const list = alarms.length ? alarms.map((alarm) => '<div class="alarm-item ' + (alarm.enabled === false ? 'disabled' : '') + '"><button class="alarm-toggle" data-toggle-alarm="' + escapeHtml(alarm.id) + '" aria-pressed="' + (alarm.enabled !== false ? 'true' : 'false') + '"><span class="alarm-toggle-dot"></span></button><div class="alarm-item-copy"><strong>' + escapeHtml(alarm.title) + '</strong><small>' + escapeHtml(alarmDisplayRepeat(alarm)) + '</small></div><button class="icon-btn small" data-delete-alarm="' + escapeHtml(alarm.id) + '" aria-label="' + t('close') + '">×</button></div>').join('') : '<p class="empty compact">' + t('noAlarms') + '</p>';
+  return '<section class="alarm-panel"><div class="subhead"><div><h3>' + t('alarm') + '</h3><small class="settings-note">' + t('alarmHint') + '</small></div><button class="calendar-add-event" data-open-alarm-dialog><span aria-hidden="true">＋</span>' + t('addAlarm') + '</button></div><div class="alarm-list">' + list + '</div></section>';
+}
+function renderAlarmDialog() {
+  const dialog = $('#alarmDialog');
+  if (!dialog) return;
+  const defaultAt = Date.now() + 3600000;
+  const weekdays = alarmWeekdayLabels.map((label, index) => '<label class="weekday-option"><input type="checkbox" name="alarmWeekday" value="' + index + '" ' + (index < 5 ? 'checked' : '') + '><span>' + (state.language === 'en' ? ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][index] : label) + '</span></label>').join('');
+  dialog.innerHTML = '<div class="dialog-card alarm-dialog-card" role="dialog" aria-modal="true"><div class="dialog-head"><h2>' + t('addAlarm') + '</h2><button class="icon-btn small" data-close-alarm-dialog aria-label="' + t('close') + '">×</button></div><form id="alarmForm" class="event-form"><div class="field"><label for="alarmTitle">' + t('alarmContent') + '</label><input id="alarmTitle" required maxlength="60" placeholder="' + t('alarmPlaceholder') + '"></div><div class="field"><label for="alarmRepeat">' + t('alarmRepeat') + '</label><select id="alarmRepeat">' + alarmRepeatOptions.map((value) => '<option value="' + value + '">' + t(value === 'daily' ? 'everyDay' : value) + '</option>').join('') + '</select></div><div class="field alarm-once-field"><label for="alarmAt">' + t('alarmAt') + '</label><input id="alarmAt" type="datetime-local" step="1" value="' + escapeHtml(localDateTimeValue(defaultAt)) + '" required></div><div class="field alarm-repeat-field" hidden><label for="alarmTime">' + t('alarmAt') + '</label><input id="alarmTime" type="time" step="1" value="08:00:00"></div><div class="field alarm-weekdays-field" hidden><label>' + t('weekdays') + '</label><div class="weekday-options">' + weekdays + '</div></div><button class="primary full-width" type="submit">' + t('addAlarm') + '</button></form></div>';
+  dialog.hidden = false;
+}
+function closeAlarmDialog() { const dialog = $('#alarmDialog'); if (dialog) dialog.hidden = true; }
+function syncAlarmReminders() {
+  const now = Date.now();
+  state.alarms.filter((alarm) => alarm.enabled !== false).forEach((alarm) => {
+    const at = alarm.repeat === 'once' ? Number(alarm.at) : nextRecurringAlarmAt(alarm, now);
+    if (!Number.isFinite(at) || !at || (alarm.repeat === 'once' && at < now - 86400000)) return;
+    const id = 'alarm:' + alarm.id + ':' + at;
+    if (!state.notifications.some((item) => item.id === id)) state.notifications.push({ id, text: alarm.title, at, read: true, delivered: false, source: 'alarm', alarmId: alarm.id });
+  });
+  saveNotifications();
+}
+function createAlarmFromForm() {
+  const title = $('#alarmTitle')?.value.trim();
+  const repeat = $('#alarmRepeat')?.value || 'once';
+  if (!title) return;
+  const alarm = { id: uid(), title, repeat, enabled: true, createdAt: Date.now() };
+  if (repeat === 'once') {
+    const at = new Date($('#alarmAt').value).getTime();
+    if (!Number.isFinite(at) || at <= Date.now()) return toast(state.language === 'en' ? 'Choose a future time' : '请选择未来的提醒时间', 'error');
+    alarm.at = at;
+  } else {
+    alarm.time = $('#alarmTime').value;
+    if (!alarm.time) return toast(state.language === 'en' ? 'Choose a reminder time' : '请选择提醒时间', 'error');
+    alarm.weekdays = repeat === 'weekly' ? $$('input[name="alarmWeekday"]', $('#alarmDialog')).filter((input) => input.checked).map((input) => Number(input.value)) : [];
+    if (repeat === 'weekly' && !alarm.weekdays.length) return toast(state.language === 'en' ? 'Choose at least one weekday' : '请至少选择一个星期', 'error');
+    if (!nextRecurringAlarmAt(alarm)) return toast(state.language === 'en' ? 'No upcoming alarm time' : '没有可用的下一次提醒时间', 'error');
+  }
+  state.alarms.unshift(alarm); saveAlarms(); syncAlarmReminders(); scheduleNotificationCheck(); closeAlarmDialog(); render(); toast(state.language === 'en' ? 'Alarm added' : '闹钟已添加');
+}
 function renderLunarDialog(key) {
   const dialog = $('#lunarDialog');
   if (!dialog) return;
@@ -779,7 +877,7 @@ function syncAgendaReminders() {
     const at = new Date(day + 'T' + event.time).getTime();
     if (!Number.isFinite(at)) return;
     const id = 'agenda:' + day + ':' + event.id;
-    agendaItems.push({ id, text: event.title, at, read: false, delivered: false, source: 'agenda' });
+    agendaItems.push({ id, text: event.title, at, read: true, delivered: false, source: 'agenda' });
   }));
   const reminderIds = new Set(agendaItems.map((item) => item.id));
   state.notifications = state.notifications.filter((item) => item.source !== 'agenda' || reminderIds.has(item.id));
@@ -809,9 +907,19 @@ async function showNativeNotification(item) {
 }
 function checkNotifications() {
   syncAgendaReminders();
+  syncAlarmReminders();
   const due = state.notifications.filter((item) => !item.delivered && item.at && item.at <= Date.now());
-  due.forEach((item) => { item.delivered = true; item.read = false; showNativeNotification(item); toast(item.text); });
+  due.forEach((item) => {
+    item.delivered = true; item.read = false; showNativeNotification(item); toast(item.text);
+    if (item.source === 'alarm') {
+      try { navigator.vibrate?.([180, 100, 180]); } catch { /* vibration is optional */ }
+      const alarm = state.alarms.find((entry) => entry.id === item.alarmId);
+      if (alarm?.repeat === 'once') { alarm.enabled = false; alarm.triggered = true; }
+    }
+  });
   if (due.length) saveNotifications();
+  if (due.some((item) => item.source === 'alarm')) saveAlarms();
+  if (due.length) syncAlarmReminders();
   updateNotificationBadge();
   if (state.notificationOpen) renderNotifications();
   scheduleNotificationCheck();
@@ -858,7 +966,8 @@ function syncPayload() {
   return {
     app: 'OneBox', version: APP_VERSION, savedAt: new Date().toISOString(), theme: state.theme, languageMode: state.languageMode, language: state.language,
     toolOrder: state.toolOrder, calculator: parseStored(STORAGE.calculator, {}), events: state.events,
-    weatherCards: state.weatherCards, translationHistory: state.translationHistory, notifications: state.notifications,
+    weatherCards: state.weatherCards, translationHistory: state.translationHistory, notifications: state.notifications, alarms: state.alarms,
+    headerVisibility: state.headerVisibility, bottomNavAutoHide: state.bottomNavAutoHide,
   };
 }
 async function githubLogin() {
@@ -870,7 +979,7 @@ async function githubLogin() {
     const data = await response.json();
     if (!response.ok || !data.device_code) throw Error(data.error_description || (state.language === 'en' ? 'Unable to start GitHub login' : '无法启动 GitHub 登录'));
     Object.assign(state.github, { deviceCode: data.device_code, userCode: data.user_code, verificationUri: data.verification_uri || 'https://github.com/login/device', expiresAt: Date.now() + Number(data.expires_in || 900) * 1000, interval: Number(data.interval || 5) });
-    renderSettings();
+    renderGithubDialog();
     window.open(state.github.verificationUri, '_blank', 'noopener,noreferrer');
     toast(state.language === 'en' ? 'Enter the code in GitHub, then keep this page open' : '请在 GitHub 页面输入验证码，并保持此页面打开');
     pollGithubLogin();
@@ -886,14 +995,14 @@ async function pollGithubLogin() {
       if (data.access_token) {
         state.github.token = data.access_token; state.github.deviceCode = '';
         const userResponse = await fetch('https://api.github.com/user', { headers: githubHeaders() });
-        state.github.user = await userResponse.json(); saveGithub(); renderSettings();
+        state.github.user = await userResponse.json(); saveGithub(); renderGithubDialog();
         toast(state.language === 'en' ? 'GitHub connected' : 'GitHub 已连接'); return;
       }
       if (data.error === 'slow_down') state.github.interval += 5;
       if (['access_denied', 'expired_token', 'unsupported_grant_type', 'incorrect_client_credentials'].includes(data.error)) throw Error(data.error_description || data.error);
-    } catch (error) { state.github.deviceCode = ''; renderSettings(); toast(error.message, 'error'); return; }
+    } catch (error) { state.github.deviceCode = ''; renderGithubDialog(); toast(error.message, 'error'); return; }
   }
-  state.github.deviceCode = ''; renderSettings(); toast(state.language === 'en' ? 'GitHub verification expired' : 'GitHub 验证已过期', 'error');
+  state.github.deviceCode = ''; renderGithubDialog(); toast(state.language === 'en' ? 'GitHub verification expired' : 'GitHub 验证已过期', 'error');
 }
 async function findOrCreateGist() {
   if (state.github.gistId) return state.github.gistId;
@@ -932,13 +1041,16 @@ async function githubDownload() {
     if (Array.isArray(remote.weatherCards)) { state.weatherCards = remote.weatherCards; state.activeWeatherId = state.weatherCards[0]?.id || null; saveWeatherCards(); }
     if (Array.isArray(remote.translationHistory)) { state.translationHistory = remote.translationHistory; saveTranslationHistory(); }
     if (Array.isArray(remote.notifications)) { state.notifications = remote.notifications; saveNotifications(); }
-    state.github.gistId = id; saveGithub(); applyLanguage(); renderNav(); render(); renderSettings();
+    if (Array.isArray(remote.alarms)) { state.alarms = remote.alarms; saveAlarms(); }
+    if (remote.headerVisibility && typeof remote.headerVisibility === 'object') { state.headerVisibility = { ...DEFAULT_HEADER_VISIBILITY, ...remote.headerVisibility }; saveStored(STORAGE.headerVisibility, state.headerVisibility); }
+    if (typeof remote.bottomNavAutoHide === 'boolean') { state.bottomNavAutoHide = remote.bottomNavAutoHide; saveStored(STORAGE.bottomNavAutoHide, state.bottomNavAutoHide); }
+    state.github.gistId = id; saveGithub(); applyLanguage(); renderNav(); render(); renderGithubDialog();
     toast(state.language === 'en' ? 'Settings restored from GitHub' : '已从 GitHub 恢复设置');
   } catch { toast(state.language === 'en' ? 'GitHub restore failed' : 'GitHub 恢复失败', 'error'); }
 }
 function disconnectGithub() {
   state.github = { clientId: state.github.clientId, token: '', user: null, gistId: '', deviceCode: '', userCode: '', verificationUri: '', expiresAt: 0, interval: 5 };
-  saveGithub(); renderSettings(); toast(state.language === 'en' ? 'GitHub disconnected' : '已退出 GitHub');
+  saveGithub(); renderGithubDialog(); toast(state.language === 'en' ? 'GitHub disconnected' : '已退出 GitHub');
 }
 function renderAgreementDialog() {
   const dialog = $('#agreementDialog');
@@ -947,29 +1059,38 @@ function renderAgreementDialog() {
   dialog.hidden = false;
 }
 function closeAgreementDialog() { const dialog = $('#agreementDialog'); if (dialog) dialog.hidden = true; }
-function renderSettings() {
-  const dialog = $('#settingsDialog');
+function headerVisibilityToggle(key) {
+  return '<label class="setting-toggle"><input type="checkbox" data-header-visibility="' + key + '" ' + (state.headerVisibility[key] ? 'checked' : '') + '><span>' + t('topDisplay') + '</span></label>';
+}
+function renderGithubDialog() {
+  const dialog = $('#githubDialog');
+  if (!dialog) return;
   const connected = Boolean(state.github.token && state.github.user);
-  const updateStatus = state.updateAvailable ? t('updateAvailable') : (state.updateChecking ? t('updating') : t('upToDate'));
-  const updateAction = state.updateAvailable ? '<button class="primary" data-apply-update>' + t('applyUpdate') + '</button>' : '';
   const account = connected
     ? '<div class="github-user"><img src="' + escapeHtml(state.github.user.avatar_url || '') + '" alt=""><div><strong>' + escapeHtml(state.github.user.login || 'GitHub') + '</strong><small>' + t('githubConnected') + '</small></div></div>'
     : '<span class="settings-note">' + t('githubNotConnected') + '</span>';
   const code = state.github.userCode ? '<div class="device-code"><small>' + (state.language === 'en' ? 'Enter this code at GitHub' : '请在 GitHub 验证页面输入') + '</small><strong>' + escapeHtml(state.github.userCode) + '</strong><p><a href="' + escapeHtml(state.github.verificationUri || 'https://github.com/login/device') + '" target="_blank" rel="noreferrer">' + t('openDevice') + '</a></p></div>' : '';
+  dialog.innerHTML = '<div class="dialog-card github-dialog-card" role="dialog" aria-modal="true"><div class="dialog-head"><h2>GitHub</h2><button class="icon-btn small" data-close-github aria-label="' + t('close') + '">×</button></div><p class="settings-note">' + t('githubDescription') + '</p><div class="settings-row github-account-row"><h3>' + t('githubSync') + '</h3>' + account + '</div><div class="field"><label for="githubClientId">' + t('githubClientId') + '</label><input id="githubClientId" value="' + escapeHtml(state.github.clientId) + '" placeholder="Iv1.xxxxxxxxxxxxx"></div>' + code + '<div class="settings-actions">' + (connected ? '<button class="secondary" data-github-upload>' + t('upload') + '</button><button class="secondary" data-github-download>' + t('download') + '</button><button class="text-btn" data-github-logout>' + t('githubLogout') + '</button>' : '<button class="primary" data-github-login>' + t('githubLogin') + '</button>') + '</div></div>';
+  dialog.hidden = false; state.githubDialogOpen = true;
+}
+function closeGithubDialog() { const dialog = $('#githubDialog'); if (dialog) dialog.hidden = true; state.githubDialogOpen = false; }
+function renderSettings() {
+  const dialog = $('#settingsDialog');
+  const updateStatus = state.updateAvailable ? t('updateAvailable') : (state.updateChecking ? t('updating') : t('upToDate'));
+  const updateAction = state.updateAvailable ? '<button class="primary" data-apply-update>' + t('applyUpdate') + '</button>' : '';
   dialog.innerHTML = '<div class="dialog-card settings-dialog-card" role="dialog" aria-modal="true"><div class="dialog-head"><h2>' + t('settings') + '</h2><button class="icon-btn small" data-close-settings aria-label="' + t('close') + '">×</button></div>' +
-    '<div class="settings-grid"><div class="field"><label for="settingsTheme">' + t('theme') + '</label><select id="settingsTheme"><option value="system" ' + (state.theme === 'system' ? 'selected' : '') + '>' + t('system') + '</option><option value="light" ' + (state.theme === 'light' ? 'selected' : '') + '>' + t('light') + '</option><option value="dark" ' + (state.theme === 'dark' ? 'selected' : '') + '>' + t('dark') + '</option></select></div><div class="field"><label for="settingsLanguage">' + t('language') + '</label><select id="settingsLanguage"><option value="system" ' + (state.languageMode === 'system' ? 'selected' : '') + '>' + t('system') + '</option><option value="zh" ' + (state.languageMode === 'zh' ? 'selected' : '') + '>中文</option><option value="en" ' + (state.languageMode === 'en' ? 'selected' : '') + '>English</option></select></div></div>' +
-    '<section class="settings-section"><div class="settings-row"><h3>' + t('appUpdate') + ' <small class="settings-version">v' + APP_VERSION + '</small></h3><div class="settings-actions"><button class="secondary" data-check-update ' + (state.updateChecking ? 'disabled' : '') + '>' + t('checkUpdate') + '</button>' + updateAction + '</div></div><small class="settings-note" aria-live="polite">' + updateStatus + '</small></section>' +
-    '<section class="settings-section"><div class="settings-row"><h3>' + t('notificationsPermission') + '</h3><button class="secondary" data-request-notifications>' + t('enableNotifications') + '</button></div><small class="settings-note">' + t('notificationDescription') + '</small><small class="settings-note">' + notificationPermissionText() + '</small></section>' +
-    '<section class="settings-section"><div class="settings-row"><h3>' + t('githubSync') + '</h3>' + account + '</div><div class="field"><label for="githubClientId">' + t('githubClientId') + '</label><input id="githubClientId" value="' + escapeHtml(state.github.clientId) + '" placeholder="Iv1.xxxxxxxxxxxxx"></div>' + code + '<div class="settings-actions">' + (connected ? '<button class="secondary" data-github-upload>' + t('upload') + '</button><button class="secondary" data-github-download>' + t('download') + '</button><button class="text-btn" data-github-logout>' + t('githubLogout') + '</button>' : '<button class="primary" data-github-login>' + t('githubLogin') + '</button>') + '</div></section>' +
-    '<section class="settings-section"><div class="settings-row"><h3>' + t('userAgreement') + '</h3><button class="secondary" data-open-agreement>' + t('viewAgreement') + '</button></div></section></div>';
+    '<div class="settings-preferences"><div class="settings-preference-row"><h3>' + t('theme') + '</h3><div class="settings-preference-control"><select id="settingsTheme"><option value="system" ' + (state.theme === 'system' ? 'selected' : '') + '>' + t('system') + '</option><option value="light" ' + (state.theme === 'light' ? 'selected' : '') + '>' + t('light') + '</option><option value="dark" ' + (state.theme === 'dark' ? 'selected' : '') + '>' + t('dark') + '</option></select>' + headerVisibilityToggle('theme') + '</div></div><div class="settings-preference-row"><h3>' + t('language') + '</h3><div class="settings-preference-control"><select id="settingsLanguage"><option value="system" ' + (state.languageMode === 'system' ? 'selected' : '') + '>' + t('system') + '</option><option value="zh" ' + (state.languageMode === 'zh' ? 'selected' : '') + '>中文</option><option value="en" ' + (state.languageMode === 'en' ? 'selected' : '') + '>English</option></select>' + headerVisibilityToggle('language') + '</div></div><div class="settings-preference-row"><h3>' + t('notifications') + '</h3><div class="settings-preference-control">' + headerVisibilityToggle('notifications') + '</div></div><div class="settings-preference-row"><h3>' + t('settings') + '</h3><div class="settings-preference-control">' + headerVisibilityToggle('settings') + '</div></div><div class="settings-preference-row"><h3>' + t('bottomTab') + '</h3><div class="settings-preference-control"><label class="setting-toggle"><input type="checkbox" id="bottomNavAutoHide" ' + (state.bottomNavAutoHide ? 'checked' : '') + '><span>' + t('autoHideBottomNav') + '</span></label></div></div></div>' +
+    '<section class="settings-section"><div class="settings-row"><h3>' + t('appUpdate') + ' <small class="settings-version">v' + APP_VERSION + ' · ' + updateStatus + '</small></h3><div class="settings-preference-control"><button class="secondary" data-check-update ' + (state.updateChecking ? 'disabled' : '') + '>' + t('checkUpdate') + '</button>' + updateAction + headerVisibilityToggle('update') + '</div></div></section>' +
+    '<section class="settings-section"><div class="settings-row"><h3>' + t('notificationsPermission') + '</h3><button class="secondary" data-request-notifications>' + t('enableNotifications') + '</button></div><small class="settings-note">' + notificationPermissionText() + '</small></section></div>';
   dialog.hidden = false; state.settingsOpen = true;
 }
 function closeSettings() { $('#settingsDialog').hidden = true; state.settingsOpen = false; }
 function refreshUpdateIndicator() {
   const button = $('#updateBtn');
   if (!button) return;
-  button.hidden = !state.updateAvailable;
+  button.hidden = !state.headerVisibility.update;
   button.setAttribute('aria-label', state.updateAvailable ? t('applyUpdate') : t('checkUpdate'));
+  button.dataset.updateAvailable = state.updateAvailable ? 'true' : 'false';
 }
 function markUpdateAvailable() {
   state.updateAvailable = true;
@@ -1081,6 +1202,7 @@ workspace.addEventListener('click', async (event) => {
   const homeTool = event.target.closest('[data-home-tool]');
   if (homeTool) return selectTool(homeTool.dataset.homeTool);
   if (event.target.closest('[data-open-settings-page]')) return renderSettings();
+  if (event.target.closest('[data-open-github-page]')) return renderGithubDialog();
   if (event.target.closest('[data-open-agreement-page]')) return renderAgreementDialog();
   const messageDelete = event.target.closest('[data-delete-notification]');
   if (messageDelete) { state.notifications = state.notifications.filter((item) => item.id !== messageDelete.dataset.deleteNotification); saveNotifications(); render(); return; }
@@ -1095,6 +1217,20 @@ workspace.addEventListener('click', async (event) => {
   if (history) { state.calcExpr = history.dataset.historyExpression || ''; state.calcJustEvaluated = false; saveCalculator(); return render(); }
   if (event.target.closest('[data-clear-calc-history]')) { state.calcHistory = []; saveCalculator(); return render(); }
   if (event.target.closest('[data-open-event-dialog]')) return renderEventDialog();
+  if (event.target.closest('[data-open-alarm-dialog]')) return renderAlarmDialog();
+  const toggleAlarm = event.target.closest('[data-toggle-alarm]');
+  if (toggleAlarm) {
+    const alarm = state.alarms.find((item) => item.id === toggleAlarm.dataset.toggleAlarm);
+    if (alarm) { alarm.enabled = alarm.enabled === false; saveAlarms(); syncAlarmReminders(); scheduleNotificationCheck(); render(); }
+    return;
+  }
+  const deleteAlarm = event.target.closest('[data-delete-alarm]');
+  if (deleteAlarm) {
+    state.alarms = state.alarms.filter((item) => item.id !== deleteAlarm.dataset.deleteAlarm);
+    state.notifications = state.notifications.filter((item) => item.source !== 'alarm' || item.alarmId !== deleteAlarm.dataset.deleteAlarm || item.delivered);
+    saveAlarms(); saveNotifications(); scheduleNotificationCheck(); render();
+    return;
+  }
   const month = event.target.closest('[data-month]');
   if (month) { state.month = new Date(state.month.getFullYear(), state.month.getMonth() + Number(month.dataset.month), 1); return render(); }
   if (event.target.closest('[data-today]')) { state.month = new Date(today.getFullYear(), today.getMonth(), 1); state.selectedDate = dateKey(today); return render(); }
@@ -1187,6 +1323,26 @@ $('#eventDialog').addEventListener('submit', (event) => {
   saveEvents(); syncAgendaReminders(); scheduleNotificationCheck(); closeEventDialog(); render(); toast(state.language === 'en' ? 'Event added' : '日程已添加');
 });
 
+$('#alarmDialog').addEventListener('click', (event) => {
+  if (event.target === $('#alarmDialog') || event.target.closest('[data-close-alarm-dialog]')) closeAlarmDialog();
+});
+$('#alarmDialog').addEventListener('change', (event) => {
+  if (event.target.id !== 'alarmRepeat') return;
+  const recurring = event.target.value !== 'once';
+  const onceField = $('.alarm-once-field', $('#alarmDialog'));
+  const repeatField = $('.alarm-repeat-field', $('#alarmDialog'));
+  const weekdaysField = $('.alarm-weekdays-field', $('#alarmDialog'));
+  if (onceField) onceField.hidden = recurring;
+  if (repeatField) repeatField.hidden = !recurring;
+  if (weekdaysField) weekdaysField.hidden = event.target.value !== 'weekly';
+  const alarmAt = $('#alarmAt'); if (alarmAt) alarmAt.required = !recurring;
+  const alarmTime = $('#alarmTime'); if (alarmTime) alarmTime.required = recurring;
+});
+$('#alarmDialog').addEventListener('submit', (event) => {
+  event.preventDefault();
+  if (event.target.id === 'alarmForm') createAlarmFromForm();
+});
+
 $('#lunarDialog').addEventListener('click', (event) => {
   if (event.target === $('#lunarDialog') || event.target.closest('[data-close-lunar-dialog]')) closeLunarDialog();
 });
@@ -1196,6 +1352,17 @@ $('#bottomNav').addEventListener('click', (event) => {
   if (tab) selectSection(tab.dataset.section);
 });
 $('#brandLink').addEventListener('click', (event) => { event.preventDefault(); selectSection('home'); });
+$('#languagePicker').addEventListener('change', (event) => { state.languageMode = event.target.value; saveThemeLanguage(); applyLanguage(); renderNav(); render(); if (state.settingsOpen) renderSettings(); });
+let lastMainScrollTop = 0;
+$('main').addEventListener('scroll', (event) => {
+  const main = event.currentTarget;
+  const bottomNav = $('#bottomNav');
+  if (!bottomNav || !state.bottomNavAutoHide) return;
+  const current = main.scrollTop;
+  if (current <= 8 || current < lastMainScrollTop - 4) bottomNav.classList.remove('is-hidden');
+  else if (current > lastMainScrollTop + 4) bottomNav.classList.add('is-hidden');
+  lastMainScrollTop = current;
+}, { passive: true });
 
 document.addEventListener('keydown', (event) => {
   if (state.tool !== 'calculator' || event.target.matches('input, textarea, select')) return;
@@ -1228,11 +1395,22 @@ $('#settingsDialog').addEventListener('click', (event) => {
 $('#settingsDialog').addEventListener('change', (event) => {
   if (event.target.id === 'settingsTheme') { state.theme = event.target.value; saveThemeLanguage(); applyTheme(); render(); }
   if (event.target.id === 'settingsLanguage') { state.languageMode = event.target.value; saveThemeLanguage(); applyLanguage(); renderNav(); render(); renderSettings(); }
+  const visibility = event.target.dataset.headerVisibility;
+  if (visibility) { state.headerVisibility[visibility] = event.target.checked; saveHeaderPreferences(); renderHeaderControls(); }
+  if (event.target.id === 'bottomNavAutoHide') { state.bottomNavAutoHide = event.target.checked; saveHeaderPreferences(); renderBottomNav(); }
 });
-$('#settingsDialog').addEventListener('input', (event) => { if (event.target.id === 'githubClientId') { state.github.clientId = event.target.value.trim(); saveGithub(); } });
+$('#settingsDialog').addEventListener('input', () => {});
 $('#agreementDialog').addEventListener('click', (event) => {
   if (event.target === $('#agreementDialog') || event.target.closest('[data-close-agreement]')) closeAgreementDialog();
 });
+$('#githubDialog').addEventListener('click', (event) => {
+  if (event.target === $('#githubDialog') || event.target.closest('[data-close-github]')) return closeGithubDialog();
+  if (event.target.closest('[data-github-login]')) return githubLogin();
+  if (event.target.closest('[data-github-upload]')) return githubUpload();
+  if (event.target.closest('[data-github-download]')) return githubDownload();
+  if (event.target.closest('[data-github-logout]')) return disconnectGithub();
+});
+$('#githubDialog').addEventListener('input', (event) => { if (event.target.id === 'githubClientId') { state.github.clientId = event.target.value.trim(); saveGithub(); } });
 $('#notificationPanel').addEventListener('click', (event) => {
   if (event.target === $('#notificationPanel') || event.target.closest('[data-close-notifications]')) return closeNotifications();
   const deleteNotification = event.target.closest('[data-delete-notification]');
