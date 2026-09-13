@@ -1,4 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
+const APP_VERSION = '2.12.0';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -72,7 +73,7 @@ const DICT = {
     today: '今天', off: '休', work: '补班', normalCalendar: '工作日历',
     legalHoliday: '法定休息', makeUpWorkday: '补班', solarTerm: '节气', selectedDay: '选中日期',
     noAgenda: '这一天还没有安排。', addAgenda: '新增日程', addToDay: '添加到这一天', eventTime: '时间（精确到秒）',
-    noteOptional: '备注（可选）', weatherSearch: '搜索天气', currentLocation: '当前位置',
+    noteOptional: '备注（可选）', weatherSearch: '添加', currentLocation: '当前位置',
     refresh: '刷新', searchPlace: '搜索城市或区县',
     noWeather: '天气需要联网，搜索一个城市或区县开始。', weatherLoading: '正在获取天气…',
     weatherData: '天气数据来自 Open-Meteo；最近一次成功结果会保存在本机，离线时仍可查看。',
@@ -88,7 +89,8 @@ const DICT = {
     githubLogin: '连接 GitHub', githubLogout: '退出 GitHub', upload: '上传到 GitHub', download: '从 GitHub 恢复',
     githubConnected: '已连接', githubNotConnected: '尚未连接', openDevice: '打开验证页面',
     appUpdate: '应用更新', checkUpdate: '检查更新', updateAvailable: '有新版本可用', upToDate: '已是最新版本', updating: '正在检查…', applyUpdate: '立即更新',
-    notificationsPermission: '原生通知', enableNotifications: '允许通知', notificationDescription: 'Safari 添加到主屏幕后可申请通知权限；真正的后台推送仍需要服务端。',
+    notificationsPermission: '消息通知', enableNotifications: '允许通知', notificationDescription: 'Safari 添加到主屏幕后可申请通知权限；真正的后台推送仍需要服务端。',
+    userAgreement: '用户协议', viewAgreement: '查看协议', agreementTitle: 'OneBox 用户协议', agreementBody: 'OneBox 是一款本地优先的日常工具应用。计算记录、日程、翻译历史和天气卡片默认保存在当前设备；使用 GitHub 云同步时，数据会写入你自己的私有 Gist。天气和翻译功能会请求对应的开源服务，服务商可能记录必要的请求信息。请在使用提醒、定位和消息通知功能前确认已授予相应权限。',
     addReminder: '添加提醒', reminderText: '提醒内容', remindAt: '提醒时间', noNotifications: '还没有提醒。',
     markRead: '全部已读', close: '关闭', system: '跟随系统', light: '浅色', dark: '深色',
     language: '语言', theme: '主题', reorderHint: '长按工具标签可以调整顺序',
@@ -109,7 +111,7 @@ const DICT = {
     today: 'Today', off: 'Off', work: 'Make-up workday', normalCalendar: 'Work calendar',
     legalHoliday: 'Public holiday', makeUpWorkday: 'Make-up workday', solarTerm: 'Solar term', selectedDay: 'Selected day',
     noAgenda: 'Nothing planned for this day.', addAgenda: 'New event', addToDay: 'Add to this day', eventTime: 'Time (to the second)',
-    noteOptional: 'Note (optional)', weatherSearch: 'Search weather', currentLocation: 'Current location',
+    noteOptional: 'Note (optional)', weatherSearch: 'Add', currentLocation: 'Current location',
     refresh: 'Refresh', searchPlace: 'Search city or district',
     noWeather: 'Search a city or district to get weather.', weatherLoading: 'Loading weather…',
     weatherData: 'Weather by Open-Meteo. The last successful result is cached locally for offline use.',
@@ -125,7 +127,8 @@ const DICT = {
     githubLogin: 'Connect GitHub', githubLogout: 'Disconnect GitHub', upload: 'Upload to GitHub', download: 'Restore from GitHub',
     githubConnected: 'Connected', githubNotConnected: 'Not connected', openDevice: 'Open verification page',
     appUpdate: 'App update', checkUpdate: 'Check for updates', updateAvailable: 'A new version is ready', upToDate: 'You are up to date', updating: 'Checking…', applyUpdate: 'Update now',
-    notificationsPermission: 'Native notifications', enableNotifications: 'Allow notifications', notificationDescription: 'Safari Home Screen apps can request notification permission; true background push still needs a server.',
+    notificationsPermission: 'Message notifications', enableNotifications: 'Allow notifications', notificationDescription: 'Safari Home Screen apps can request notification permission; true background push still needs a server.',
+    userAgreement: 'User agreement', viewAgreement: 'View agreement', agreementTitle: 'OneBox user agreement', agreementBody: 'OneBox is a local-first daily tools app. Calculator history, events, translation history and weather cards stay on this device by default; when GitHub sync is enabled, they are written to your own private Gist. Weather and translation features request open-source services, which may record necessary request metadata. Review the permissions before enabling reminders, location or message notifications.',
     addReminder: 'Add reminder', reminderText: 'Reminder', remindAt: 'When', noNotifications: 'No reminders yet.',
     markRead: 'Mark all read', close: 'Close', system: 'System', light: 'Light', dark: 'Dark',
     language: 'Language', theme: 'Theme', reorderHint: 'Long-press a tool tab to reorder',
@@ -404,7 +407,7 @@ const scienceKeys = [['sin', 'sin('], ['cos', 'cos('], ['tan', 'tan('], ['ln', '
 const calcPreview = () => { if (!state.calcExpr) return '0'; try { return formatNumber(evaluateExpression(state.calcExpr)); } catch { return '—'; } };
 function saveCalculator() { saveStored(STORAGE.calculator, { expr: state.calcExpr, history: state.calcHistory.slice(0, 30) }); }
 function calculator() {
-  const history = state.calcHistory.length ? state.calcHistory.slice(0, 7).map((item) => '<button class="history-item" data-history="' + escapeHtml(item.result) + '"><span>' + escapeHtml(item.expression) + '</span><b>' + escapeHtml(item.result) + '</b></button>').join('') : '<p class="empty compact">' + t('ready') + '</p>';
+  const history = state.calcHistory.length ? state.calcHistory.slice(0, 7).map((item) => '<button class="history-item" data-history-expression="' + escapeHtml(item.expression) + '"><span>' + escapeHtml(item.expression) + '</span><b>' + escapeHtml(item.result) + '</b></button>').join('') : '<p class="empty compact">' + t('ready') + '</p>';
   const science = '<button class="science-key angle-toggle" data-toggle-angle>' + (state.calcAngle === 'deg' ? t('degree') : t('radian')) + '</button>' + scienceKeys.map(([label, key]) => '<button class="science-key" data-science-key="' + escapeHtml(key) + '">' + label + '</button>').join('');
   const scientificToggle = '<button class="key scientific-toggle" data-toggle-scientific aria-pressed="' + (state.calcScientific ? 'true' : 'false') + '" aria-label="' + t('scientific') + '">ƒx</button>';
   return heading(t('calculator'), t('calculatorDesc')) +
@@ -445,9 +448,12 @@ function calendar() {
     cells += '<button class="day ' + (outside ? 'muted ' : '') + (key === dateKey(today) ? 'today ' : '') + (key === state.selectedDate ? 'selected ' : '') + holidayClass + '" data-date="' + key + '" data-outside="' + outside + '" aria-label="' + escapeHtml(formatDate(key) + (label ? '，' + label : '') + (eventCount ? '，' + eventCount + ' 个日程' : '')) + '"><span>' + date.getDate() + '</span><small class="lunar-day">' + escapeHtml(lunarCell) + '</small><small class="day-label">' + escapeHtml(label) + '</small>' + (eventCount ? '<i>' + eventCount + '</i>' : '') + '</button>';
   }
   const selected = calendarMeta(state.selectedDate);
-  const selectedEvents = state.events[state.selectedDate] || [];
+  const selectedEvents = [...(state.events[state.selectedDate] || [])].sort((a, b) => {
+    const left = a.time || '00:00:00'; const right = b.time || '00:00:00';
+    return right.localeCompare(left) || Number(b.createdAt || 0) - Number(a.createdAt || 0);
+  });
   const eventList = selectedEvents.length
-    ? selectedEvents.map((item) => '<div class="event-item"><div><strong>' + escapeHtml(item.title) + '</strong><small>' + (item.time ? escapeHtml(item.time) + ' · ' : '') + escapeHtml(item.note || (state.language === 'en' ? 'No note' : '无备注')) + '</small></div><button class="icon-btn small" data-delete-event="' + escapeHtml(item.id) + '" aria-label="' + (state.language === 'en' ? 'Delete' : '删除') + '">×</button></div>').join('')
+    ? selectedEvents.map((item) => '<div class="event-item"><div><strong>' + escapeHtml(item.title) + '</strong><small>' + (item.time ? escapeHtml(item.time) : (state.language === 'en' ? 'All day' : '全天')) + '</small></div><button class="icon-btn small" data-delete-event="' + escapeHtml(item.id) + '" aria-label="' + (state.language === 'en' ? 'Delete' : '删除') + '">×</button></div>').join('')
     : '<p class="empty compact">' + t('noAgenda') + '</p>';
   const lunarLine = selected.lunar ? (selected.lunar.yearName ? selected.lunar.yearName + ' · ' : '') + selected.lunar.monthText + selected.lunar.dayText + (selected.lunar.festival ? ' · ' + selected.lunar.festival : '') : (state.language === 'en' ? 'Lunar calendar unavailable' : '当前浏览器不支持农历格式');
   const status = selected.holiday
@@ -457,15 +463,15 @@ function calendar() {
   const weekdays = state.language === 'en' ? ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] : ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
   return heading(t('calendar'), t('calendarDesc')) +
     '<div class="calendar-layout"><div class="calendar-card"><div class="calendar-top"><button class="icon-btn" data-month="-1" aria-label="Previous month">←</button><div class="calendar-month"><strong>' + monthLabel + '</strong><button class="text-btn calendar-today" data-today>' + t('today') + '</button></div><button class="icon-btn" data-month="1" aria-label="Next month">→</button></div>' +
-    '<div class="calendar-legend"><span><i class="dot off"></i>' + t('legalHoliday') + '</span><span><i class="dot work"></i>' + t('makeUpWorkday') + '</span><span><i class="dot term"></i>' + t('solarTerm') + '</span></div><div class="calendar-grid">' + weekdays.map((day) => '<div class="dow">' + day + '</div>').join('') + cells + '</div></div>' +
-    '<aside class="agenda-panel"><div class="subhead"><div><p class="section-kicker">' + t('selectedDay') + '</p><h3>' + escapeHtml(formatDate(state.selectedDate)) + '</h3></div>' + status + '</div><div class="date-detail"><strong>' + escapeHtml(lunarLine) + '</strong>' + (selected.term ? '<span class="term-badge">' + selected.term + '</span>' : '') + '<small>' + (selected.lunar?.yearName ? (state.language === 'en' ? 'Lunar ' + zodiacFor(selected.lunar.yearName) + ' year' : '农历' + zodiacFor(selected.lunar.yearName) + '年') : '') + '</small></div><div class="event-list">' + eventList + '</div><button class="primary full-width" data-open-event-dialog>' + t('addAgenda') + '</button></aside></div>';
+    '<div class="calendar-legend"><span><i class="dot off"></i>' + t('legalHoliday') + '</span><span><i class="dot work"></i>' + t('makeUpWorkday') + '</span><span><i class="dot term"></i>' + t('solarTerm') + '</span><button class="calendar-add-event" data-open-event-dialog><span aria-hidden="true">＋</span>' + t('addAgenda') + '</button></div><div class="calendar-grid">' + weekdays.map((day) => '<div class="dow">' + day + '</div>').join('') + cells + '</div></div>' +
+    '<aside class="agenda-panel"><div class="subhead"><div><p class="section-kicker">' + t('selectedDay') + '</p><h3>' + escapeHtml(formatDate(state.selectedDate)) + '</h3></div>' + status + '</div><div class="date-detail"><strong>' + escapeHtml(lunarLine) + '</strong>' + (selected.term ? '<span class="term-badge">' + selected.term + '</span>' : '') + '<small>' + (selected.lunar?.yearName ? (state.language === 'en' ? 'Lunar ' + zodiacFor(selected.lunar.yearName) + ' year' : '农历' + zodiacFor(selected.lunar.yearName) + '年') : '') + '</small></div><div class="event-list">' + eventList + '</div></aside></div>';
 }
 function saveEvents() { saveStored(STORAGE.events, state.events); }
 
 function renderEventDialog() {
   const dialog = $('#eventDialog');
   if (!dialog) return;
-  dialog.innerHTML = '<div class="dialog-card event-dialog-card" role="dialog" aria-modal="true"><div class="dialog-head"><div><p class="section-kicker">' + t('selectedDay') + '</p><h2>' + t('addAgenda') + '</h2><p class="dialog-date">' + escapeHtml(formatDate(state.selectedDate)) + '</p></div><button class="icon-btn small" data-close-event-dialog aria-label="' + t('close') + '">×</button></div><form id="eventForm" class="event-form"><div class="field"><label for="eventTitle">' + t('addAgenda') + '</label><input id="eventTitle" required maxlength="60" placeholder="' + (state.language === 'en' ? 'e.g. Project review' : '例如：项目复盘') + '"></div><div class="inline-fields"><div class="field"><label for="eventTime">' + t('eventTime') + '</label><input id="eventTime" type="time" step="1" aria-label="' + t('eventTime') + '"></div><div class="field"><label for="eventNote">' + t('noteOptional') + '</label><input id="eventNote" maxlength="120" placeholder="' + t('noteOptional') + '" aria-label="' + t('noteOptional') + '"></div></div><button class="primary full-width" type="submit">' + t('addToDay') + '</button></form></div>';
+  dialog.innerHTML = '<div class="dialog-card event-dialog-card" role="dialog" aria-modal="true"><div class="dialog-head"><div><p class="section-kicker">' + t('selectedDay') + '</p><h2>' + t('addAgenda') + '</h2><p class="dialog-date">' + escapeHtml(formatDate(state.selectedDate)) + '</p></div><button class="icon-btn small" data-close-event-dialog aria-label="' + t('close') + '">×</button></div><form id="eventForm" class="event-form"><div class="field"><label for="eventTitle">' + t('addAgenda') + '</label><input id="eventTitle" required maxlength="60" placeholder="' + (state.language === 'en' ? 'e.g. Project review' : '例如：项目复盘') + '"></div><div class="field"><label for="eventTime">' + t('eventTime') + '</label><input id="eventTime" type="time" step="1" aria-label="' + t('eventTime') + '"></div><button class="primary full-width" type="submit">' + t('addToDay') + '</button></form></div>';
   dialog.hidden = false;
 }
 function closeEventDialog() { const dialog = $('#eventDialog'); if (dialog) dialog.hidden = true; }
@@ -484,22 +490,32 @@ const weatherCode = (code) => {
 const weatherUrl = (lat, lon) => 'https://api.open-meteo.com/v1/forecast?latitude=' + encodeURIComponent(lat) + '&longitude=' + encodeURIComponent(lon) + '&current=temperature_2m,apparent_temperature,weather_code,relative_humidity_2m,wind_speed_10m,precipitation&hourly=temperature_2m,apparent_temperature,weather_code,precipitation_probability,uv_index,wind_speed_10m,relative_humidity_2m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunrise,sunset,uv_index_max,wind_speed_10m_max&timezone=auto&past_days=3&forecast_days=16';
 function saveWeatherCards() { saveStored(STORAGE.weatherCards, state.weatherCards); }
 async function getWeatherData(lat, lon) {
-  const response = await fetch(weatherUrl(lat, lon), { headers: { Accept: 'application/json' } });
+  const response = await fetchWithTimeout(weatherUrl(lat, lon), { headers: { Accept: 'application/json' } }, 9000);
   if (!response.ok) throw Error(state.language === 'en' ? 'Weather service is unavailable' : '天气服务暂时不可用');
   return response.json();
 }
 async function addWeatherPlace(place) {
   const request = ++state.weatherRequest;
-  state.weatherLoading = true; state.weatherError = ''; render();
+  const existingIndex = state.weatherCards.findIndex((item) => Math.abs(Number(item.latitude) - Number(place.latitude)) < .01 && Math.abs(Number(item.longitude) - Number(place.longitude)) < .01);
+  const cardId = existingIndex >= 0 ? state.weatherCards[existingIndex].id : uid();
+  const created = existingIndex < 0;
+  if (created) state.weatherCards.push({ id: cardId, ...place, loading: true });
+  else Object.assign(state.weatherCards[existingIndex], place, { loading: true });
+  state.activeWeatherId = cardId; state.weatherSearchResults = []; state.weatherLoading = true; state.weatherError = ''; render();
   try {
     const data = await getWeatherData(place.latitude, place.longitude);
     if (request !== state.weatherRequest) return;
-    const card = { ...data, id: uid(), name: place.name, admin1: place.admin1 || '', admin2: place.admin2 || '', country: place.country || '', latitude: place.latitude, longitude: place.longitude, updatedAt: Date.now() };
-    const existing = state.weatherCards.findIndex((item) => Math.abs(Number(item.latitude) - Number(place.latitude)) < .01 && Math.abs(Number(item.longitude) - Number(place.longitude)) < .01);
-    if (existing >= 0) { card.id = state.weatherCards[existing].id; state.weatherCards[existing] = card; } else state.weatherCards.push(card);
-    state.activeWeatherId = card.id; state.weatherSearchResults = []; saveWeatherCards();
+    const card = { ...data, id: cardId, name: place.name, admin1: place.admin1 || '', admin2: place.admin2 || '', country: place.country || '', latitude: place.latitude, longitude: place.longitude, updatedAt: Date.now(), loading: false };
+    const targetIndex = state.weatherCards.findIndex((item) => item.id === cardId);
+    if (targetIndex >= 0) state.weatherCards[targetIndex] = card; else state.weatherCards.push(card);
+    state.activeWeatherId = card.id; saveWeatherCards();
     toast(state.language === 'en' ? 'Weather card saved' : '天气卡片已保存');
-  } catch (error) { state.weatherError = error.message || (state.language === 'en' ? 'Weather search failed' : '天气获取失败'); }
+  } catch (error) {
+    const failedIndex = state.weatherCards.findIndex((item) => item.id === cardId);
+    if (created && failedIndex >= 0) state.weatherCards.splice(failedIndex, 1);
+    else if (failedIndex >= 0) state.weatherCards[failedIndex].loading = false;
+    state.weatherError = error.message || (state.language === 'en' ? 'Weather search failed' : '天气获取失败');
+  }
   finally { if (request === state.weatherRequest) { state.weatherLoading = false; render(); } }
 }
 async function refreshWeatherCard(card) {
@@ -533,6 +549,15 @@ async function searchWeather(query) {
   finally { state.weatherLoading = false; render(); }
 }
 function placeLabel(place) { return [place.name, place.admin2, place.admin1, place.country].filter(Boolean).join(' · '); }
+async function reverseGeocode(latitude, longitude) {
+  try {
+    const response = await fetchWithTimeout('https://photon.komoot.io/reverse?lat=' + encodeURIComponent(latitude) + '&lon=' + encodeURIComponent(longitude), { headers: { Accept: 'application/json' } }, 5000);
+    const data = await response.json(); const properties = data.features?.[0]?.properties || {};
+    const district = properties.district || properties.county || '';
+    const city = properties.city || properties.town || properties.municipality || '';
+    return { latitude, longitude, name: district || city || properties.name || (state.language === 'en' ? 'Current location' : '当前位置'), admin2: city && city !== district ? city : '', admin1: properties.state || properties.region || '', country: properties.country || '' };
+  } catch { return { latitude, longitude, name: state.language === 'en' ? 'Current location' : '当前位置' }; }
+}
 function currentHourIndex(weather) {
   const times = weather?.hourly?.time || []; if (!times.length) return -1;
   const now = Date.now();
@@ -562,9 +587,13 @@ function weather() {
   const current = active.current || {};
   const currentWeather = weatherCode(current.weather_code);
   const cards = state.weatherCards.map((card, index) => {
-    const item = weatherCode(card.current?.weather_code);
-    return '<button class="weather-card ' + (card.id === active.id ? 'active' : '') + '" draggable="true" data-weather-card="' + card.id + '" data-weather-index="' + index + '"><strong>' + escapeHtml(card.name) + '</strong><small>' + escapeHtml([card.admin2, card.admin1].filter(Boolean).join(' · ') || card.country || '') + '</small><span class="weather-card-temp">' + item[0] + ' ' + Math.round(card.current?.temperature_2m ?? 0) + '°</span></button>';
+    const item = card.loading && !card.current ? ['⏳', t('weatherLoading')] : weatherCode(card.current?.weather_code);
+    return '<button class="weather-card ' + (card.id === active.id ? 'active' : '') + (card.loading ? ' loading' : '') + '" draggable="true" data-weather-card="' + card.id + '" data-weather-index="' + index + '"><strong>' + escapeHtml(card.name) + '</strong><small>' + escapeHtml([card.admin2, card.admin1].filter(Boolean).join(' · ') || card.country || '') + '</small><span class="weather-card-temp">' + item[0] + ' ' + (card.loading && !card.current ? '…' : Math.round(card.current?.temperature_2m ?? 0) + '°') + '</span></button>';
   }).join('');
+  const title = [active.name, active.admin2, active.admin1, active.country].filter(Boolean).join(' · ');
+  if (active.loading && !active.current) {
+    return heading(t('weather'), escapeHtml(title)) + search + results + '<p class="weather-sort-hint">' + t('sortWeather') + '</p><div class="weather-card-list">' + cards + '</div><div class="weather-now weather-loading-card"><div><span class="weather-location">' + escapeHtml(title) + '</span><h3>' + t('weatherLoading') + '</h3><strong>…</strong></div><div class="loader" aria-label="' + t('weatherLoading') + '"></div></div>';
+  }
   const hourlyTimes = active.hourly?.time || [];
   const selectedHour = currentHourIndex(active);
   const currentHour = selectedHour >= 0 ? selectedHour : 0;
@@ -584,7 +613,6 @@ function weather() {
     return '<div class="forecast ' + (isCurrent ? 'current' : '') + '" ' + (isCurrent ? 'data-current-day' : '') + '><small>' + label + '</small><b>' + item[0] + '</b><span>' + Math.round(active.daily.temperature_2m_max[index]) + '° / ' + Math.round(active.daily.temperature_2m_min[index]) + '°</span><small>' + (active.daily.precipitation_probability_max?.[index] ?? 0) + '% ' + (state.language === 'en' ? 'rain' : '降水') + '</small></div>';
   }).join('');
   const advice = weatherAdvice(active, current).map((item) => '<article class="advice-card"><b>' + item.icon + ' ' + item.title + '</b><p>' + item.body + '</p></article>').join('');
-  const title = [active.name, active.admin2, active.admin1, active.country].filter(Boolean).join(' · ');
   setTimeout(() => {
     [['[data-current-hour]', '.hourly-strip'], ['[data-current-day]', '.weather-days']].forEach(([cardSelector, stripSelector]) => {
       const card = $(cardSelector); const strip = $(stripSelector); if (!card || !strip) return;
@@ -734,7 +762,7 @@ function updateNotificationBadge() {
 }
 function renderNotifications() {
   const panel = $('#notificationPanel');
-  const items = [...state.notifications].sort((a, b) => Number(a.at) - Number(b.at));
+  const items = [...state.notifications].sort((a, b) => Number(b.at) - Number(a.at));
   const list = items.length ? items.map((item) => '<div class="notification-item ' + (item.read ? '' : 'unread') + '"><div><strong>' + escapeHtml(item.text) + '</strong><small>' + new Intl.DateTimeFormat(state.language === 'en' ? 'en-US' : 'zh-CN', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(item.at)) + '</small></div><button class="icon-btn small" data-delete-notification="' + escapeHtml(item.id) + '" aria-label="Delete">×</button></div>').join('') : '<p class="empty compact">' + t('noNotifications') + '</p>';
   panel.innerHTML = '<div class="notification-dialog-card" role="dialog" aria-modal="true" aria-label="' + t('notifications') + '"><div class="dialog-head notification-head"><h2>' + t('notifications') + '</h2><div class="notification-head-actions"><button class="text-btn" data-mark-notifications-read>' + t('markRead') + '</button><button class="icon-btn small" data-close-notifications aria-label="' + t('close') + '">×</button></div></div><div class="notification-list">' + list + '</div></div>';
   panel.hidden = false;
@@ -761,7 +789,7 @@ function githubHeaders() {
 }
 function syncPayload() {
   return {
-    app: 'OneBox', version: 2, savedAt: new Date().toISOString(), theme: state.theme, languageMode: state.languageMode, language: state.language,
+    app: 'OneBox', version: APP_VERSION, savedAt: new Date().toISOString(), theme: state.theme, languageMode: state.languageMode, language: state.language,
     toolOrder: state.toolOrder, calculator: parseStored(STORAGE.calculator, {}), events: state.events,
     weatherCards: state.weatherCards, translationHistory: state.translationHistory, notifications: state.notifications,
   };
@@ -845,6 +873,13 @@ function disconnectGithub() {
   state.github = { clientId: state.github.clientId, token: '', user: null, gistId: '', deviceCode: '', userCode: '', verificationUri: '', expiresAt: 0, interval: 5 };
   saveGithub(); renderSettings(); toast(state.language === 'en' ? 'GitHub disconnected' : '已退出 GitHub');
 }
+function renderAgreementDialog() {
+  const dialog = $('#agreementDialog');
+  if (!dialog) return;
+  dialog.innerHTML = '<div class="dialog-card agreement-dialog-card" role="dialog" aria-modal="true"><div class="dialog-head"><h2>' + t('agreementTitle') + '</h2><button class="icon-btn small" data-close-agreement aria-label="' + t('close') + '">×</button></div><p class="agreement-copy">' + t('agreementBody') + '</p><p class="settings-note">' + (state.language === 'en' ? 'Last updated with app version ' : '随应用版本更新：') + APP_VERSION + '</p></div>';
+  dialog.hidden = false;
+}
+function closeAgreementDialog() { const dialog = $('#agreementDialog'); if (dialog) dialog.hidden = true; }
 function renderSettings() {
   const dialog = $('#settingsDialog');
   const connected = Boolean(state.github.token && state.github.user);
@@ -856,9 +891,10 @@ function renderSettings() {
   const code = state.github.userCode ? '<div class="device-code"><small>' + (state.language === 'en' ? 'Enter this code at GitHub' : '请在 GitHub 验证页面输入') + '</small><strong>' + escapeHtml(state.github.userCode) + '</strong><p><a href="' + escapeHtml(state.github.verificationUri || 'https://github.com/login/device') + '" target="_blank" rel="noreferrer">' + t('openDevice') + '</a></p></div>' : '';
   dialog.innerHTML = '<div class="dialog-card settings-dialog-card" role="dialog" aria-modal="true"><div class="dialog-head"><h2>' + t('settings') + '</h2><button class="icon-btn small" data-close-settings aria-label="' + t('close') + '">×</button></div>' +
     '<div class="settings-grid"><div class="field"><label for="settingsTheme">' + t('theme') + '</label><select id="settingsTheme"><option value="system" ' + (state.theme === 'system' ? 'selected' : '') + '>' + t('system') + '</option><option value="light" ' + (state.theme === 'light' ? 'selected' : '') + '>' + t('light') + '</option><option value="dark" ' + (state.theme === 'dark' ? 'selected' : '') + '>' + t('dark') + '</option></select></div><div class="field"><label for="settingsLanguage">' + t('language') + '</label><select id="settingsLanguage"><option value="system" ' + (state.languageMode === 'system' ? 'selected' : '') + '>' + t('system') + '</option><option value="zh" ' + (state.languageMode === 'zh' ? 'selected' : '') + '>中文</option><option value="en" ' + (state.languageMode === 'en' ? 'selected' : '') + '>English</option></select></div></div>' +
-    '<section class="settings-section"><div class="settings-row"><h3>' + t('appUpdate') + '</h3><div class="settings-actions"><button class="secondary" data-check-update ' + (state.updateChecking ? 'disabled' : '') + '>' + t('checkUpdate') + '</button>' + updateAction + '</div></div><small class="settings-note" aria-live="polite">' + updateStatus + '</small></section>' +
+    '<section class="settings-section"><div class="settings-row"><h3>' + t('appUpdate') + ' <small class="settings-version">v' + APP_VERSION + '</small></h3><div class="settings-actions"><button class="secondary" data-check-update ' + (state.updateChecking ? 'disabled' : '') + '>' + t('checkUpdate') + '</button>' + updateAction + '</div></div><small class="settings-note" aria-live="polite">' + updateStatus + '</small></section>' +
     '<section class="settings-section"><div class="settings-row"><h3>' + t('notificationsPermission') + '</h3><button class="secondary" data-request-notifications>' + t('enableNotifications') + '</button></div><small class="settings-note">' + notificationPermissionText() + '</small></section>' +
-    '<section class="settings-section"><div class="settings-row"><h3>' + t('githubSync') + '</h3>' + account + '</div><div class="field"><label for="githubClientId">' + t('githubClientId') + '</label><input id="githubClientId" value="' + escapeHtml(state.github.clientId) + '" placeholder="Iv1.xxxxxxxxxxxxx"></div>' + code + '<div class="settings-actions">' + (connected ? '<button class="secondary" data-github-upload>' + t('upload') + '</button><button class="secondary" data-github-download>' + t('download') + '</button><button class="text-btn" data-github-logout>' + t('githubLogout') + '</button>' : '<button class="primary" data-github-login>' + t('githubLogin') + '</button>') + '</div></section></div>';
+    '<section class="settings-section"><div class="settings-row"><h3>' + t('githubSync') + '</h3>' + account + '</div><div class="field"><label for="githubClientId">' + t('githubClientId') + '</label><input id="githubClientId" value="' + escapeHtml(state.github.clientId) + '" placeholder="Iv1.xxxxxxxxxxxxx"></div>' + code + '<div class="settings-actions">' + (connected ? '<button class="secondary" data-github-upload>' + t('upload') + '</button><button class="secondary" data-github-download>' + t('download') + '</button><button class="text-btn" data-github-logout>' + t('githubLogout') + '</button>' : '<button class="primary" data-github-login>' + t('githubLogin') + '</button>') + '</div></section>' +
+    '<section class="settings-section"><div class="settings-row"><h3>' + t('userAgreement') + '</h3><button class="secondary" data-open-agreement>' + t('viewAgreement') + '</button></div></section></div>';
   dialog.hidden = false; state.settingsOpen = true;
 }
 function closeSettings() { $('#settingsDialog').hidden = true; state.settingsOpen = false; }
@@ -975,8 +1011,8 @@ workspace.addEventListener('click', async (event) => {
   if (scienceKey) { state.calcJustEvaluated = false; state.calcExpr += scienceKey.dataset.scienceKey; saveCalculator(); return render(); }
   if (event.target.closest('[data-toggle-scientific]')) { state.calcScientific = !state.calcScientific; return render(); }
   if (event.target.closest('[data-toggle-angle]')) { state.calcAngle = state.calcAngle === 'deg' ? 'rad' : 'deg'; return render(); }
-  const history = event.target.closest('[data-history]');
-  if (history) { state.calcExpr = history.dataset.history; state.calcJustEvaluated = true; saveCalculator(); return render(); }
+  const history = event.target.closest('[data-history-expression]');
+  if (history) { state.calcExpr = history.dataset.historyExpression || ''; state.calcJustEvaluated = false; saveCalculator(); return render(); }
   if (event.target.closest('[data-clear-calc-history]')) { state.calcHistory = []; saveCalculator(); return render(); }
   if (event.target.closest('[data-open-event-dialog]')) return renderEventDialog();
   const month = event.target.closest('[data-month]');
@@ -1000,7 +1036,7 @@ workspace.addEventListener('click', async (event) => {
   if (event.target.closest('[data-locate]')) {
     if (!navigator.geolocation) return toast(state.language === 'en' ? 'Geolocation is unavailable' : '当前浏览器不支持定位', 'error');
     state.weatherLoading = true; render();
-    return navigator.geolocation.getCurrentPosition((position) => addWeatherPlace({ latitude: position.coords.latitude, longitude: position.coords.longitude, name: state.language === 'en' ? 'Current location' : '当前位置' }), () => { state.weatherLoading = false; state.weatherError = state.language === 'en' ? 'Location permission was denied' : '无法获取当前位置，请检查浏览器权限'; render(); });
+    return navigator.geolocation.getCurrentPosition(async (position) => addWeatherPlace(await reverseGeocode(position.coords.latitude, position.coords.longitude)), () => { state.weatherLoading = false; state.weatherError = state.language === 'en' ? 'Location permission was denied' : '无法获取当前位置，请检查浏览器权限'; render(); });
   }
   if (event.target.closest('[data-refresh-weather]')) return refreshWeatherCard(state.weatherCards.find((item) => item.id === state.activeWeatherId));
   if (event.target.closest('[data-swap]')) { [conversion.from, conversion.to] = [conversion.to, conversion.from]; return render(); }
@@ -1052,7 +1088,7 @@ $('#eventDialog').addEventListener('submit', (event) => {
   if (event.target.id !== 'eventForm') return;
   const title = $('#eventTitle').value.trim(); if (!title) return;
   const key = state.selectedDate; state.events[key] ||= [];
-  state.events[key].push({ id: uid(), title, time: $('#eventTime').value, note: $('#eventNote').value.trim() });
+  state.events[key].push({ id: uid(), title, time: $('#eventTime').value, createdAt: Date.now() });
   saveEvents(); syncAgendaReminders(); scheduleNotificationCheck(); closeEventDialog(); render(); toast(state.language === 'en' ? 'Event added' : '日程已添加');
 });
 
@@ -1075,6 +1111,7 @@ $('#updateBtn').addEventListener('click', applyUpdate);
 $('#installBtn').addEventListener('click', async () => { if (!window.installPrompt) return; window.installPrompt.prompt(); await window.installPrompt.userChoice; window.installPrompt = null; $('#installBtn').hidden = true; });
 $('#settingsDialog').addEventListener('click', (event) => {
   if (event.target === $('#settingsDialog') || event.target.closest('[data-close-settings]')) return closeSettings();
+  if (event.target.closest('[data-open-agreement]')) return renderAgreementDialog();
   if (event.target.closest('[data-check-update]')) return checkForUpdate();
   if (event.target.closest('[data-apply-update]')) return applyUpdate();
   if (event.target.closest('[data-request-notifications]')) return requestNotifications();
@@ -1088,6 +1125,9 @@ $('#settingsDialog').addEventListener('change', (event) => {
   if (event.target.id === 'settingsLanguage') { state.languageMode = event.target.value; saveThemeLanguage(); applyLanguage(); renderNav(); render(); renderSettings(); }
 });
 $('#settingsDialog').addEventListener('input', (event) => { if (event.target.id === 'githubClientId') { state.github.clientId = event.target.value.trim(); saveGithub(); } });
+$('#agreementDialog').addEventListener('click', (event) => {
+  if (event.target === $('#agreementDialog') || event.target.closest('[data-close-agreement]')) closeAgreementDialog();
+});
 $('#notificationPanel').addEventListener('click', (event) => {
   if (event.target === $('#notificationPanel') || event.target.closest('[data-close-notifications]')) return closeNotifications();
   const deleteNotification = event.target.closest('[data-delete-notification]');

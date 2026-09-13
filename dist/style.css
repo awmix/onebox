@@ -598,3 +598,78 @@ main { padding-top: calc(58px + env(safe-area-inset-top) + 55.5px + 12px); }
   margin: 0;
   transform: translateX(-50%);
 }
+
+/* Final compact polish --------------------------------------------------- */
+.settings-version { color: var(--muted); font-size: 11px; font-weight: 650; margin-left: 4px; }
+#settingsDialog .settings-grid .field { flex-direction: row; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 0; }
+#settingsDialog .settings-grid .field label { flex: 1; }
+#settingsDialog .settings-grid .field select { width: auto; min-width: 138px; }
+#settingsDialog [data-check-update], #settingsDialog [data-apply-update], #settingsDialog [data-request-notifications], #settingsDialog [data-open-agreement] { padding: 7px 10px; border-radius: 10px; font-size: 12px; }
+#settingsDialog .settings-section h3 { display: flex; align-items: baseline; gap: 2px; }
+
+.calendar-legend { align-items: center; flex-wrap: wrap; }
+.calendar-add-event { display: inline-flex; align-items: center; gap: 3px; margin-left: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); color: var(--primary); padding: 6px 9px; font-size: 11px; font-weight: 750; cursor: pointer; }
+.calendar-add-event span { font-size: 15px; line-height: 1; }
+.day i { top: auto; right: 4px; bottom: 4px; width: 17px; height: 17px; line-height: 17px; font-size: 9px; z-index: 1; }
+.day span { position: relative; z-index: 0; }
+.event-item { border-left: 3px solid var(--primary); padding: 10px 10px 10px 12px; }
+.event-item small { font-variant-numeric: tabular-nums; }
+
+.weather-now { background: var(--panel-2); color: var(--ink); border: 1px solid var(--line); border-radius: 18px; padding: 18px 20px; }
+.weather-location { color: var(--muted); opacity: 1; font-size: 12px; }
+.weather-now h3 { margin: 3px 0 0; font-size: 16px; }
+.weather-now strong { font-size: 44px; }
+.weather-now p { color: var(--muted); opacity: 1; }
+.weather-icon { font-size: 50px; }
+.weather-now.weather-loading-card { min-height: 118px; }
+.weather-now.weather-loading-card .loader { flex: 0 0 auto; }
+.weather-card.loading { cursor: progress; opacity: .78; }
+
+.display-history-list { max-height: 98px; }
+.display-history-list .history-item { padding: 8px 0; font-size: 13px; }
+
+#eventDialog, #agreementDialog {
+  z-index: 81;
+  display: flex;
+  align-items: flex-start;
+  padding: calc(58px + env(safe-area-inset-top) + 12px) 12px 24px;
+  background: rgba(12, 16, 28, .58);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+#eventDialog[hidden], #agreementDialog[hidden] { display: none; }
+#eventDialog .event-dialog-card, #agreementDialog .agreement-dialog-card {
+  width: min(480px, 100%);
+  max-height: calc(100vh - 110px - env(safe-area-inset-top));
+  margin: 0 auto;
+  padding: 18px;
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, .34);
+}
+#agreementDialog .agreement-dialog-card { width: min(560px, 100%); }
+#eventDialog .dialog-head, #agreementDialog .dialog-head {
+  position: sticky;
+  top: -18px;
+  z-index: 1;
+  align-items: center;
+  margin: -18px -18px 14px;
+  padding: 14px 18px 12px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--line);
+}
+#eventDialog .dialog-head h2, #agreementDialog .dialog-head h2 { font-size: 21px; }
+#eventDialog .event-form { border-top: 0; padding-top: 0; }
+.agreement-copy { margin: 0; color: var(--ink); line-height: 1.8; }
+
+@media (max-width: 760px) {
+  #settingsDialog .settings-grid .field { min-height: 42px; }
+  #settingsDialog .settings-grid .field select { min-width: 132px; }
+  #workspace[data-tool="calculator"] .display-history-list { max-height: 68px; }
+  #workspace[data-tool="calculator"] .display-history-head span { font-size: 11px; }
+  #workspace[data-tool="calculator"] .display-history-list .history-item { padding: 6px 0; font-size: 12px; }
+  .day i { right: 3px; bottom: 3px; top: auto; width: 15px; height: 15px; line-height: 15px; font-size: 8px; }
+  #eventDialog, #agreementDialog { padding-left: 10px; padding-right: 10px; }
+  .calendar-add-event { padding: 5px 7px; }
+}
