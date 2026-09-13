@@ -60,7 +60,7 @@ const DICT = {
     calculator: '计算器', calendar: '日历', weather: '天气', convert: '转换', translate: '翻译',
     online: '在线', offline: '离线', install: '安装应用', settings: '设置', notifications: '消息提示',
     heroSubtitle: '快速、清爽、可离线。你的数据优先保存在当前设备。',
-    localSaved: '● 本机保存', calculatorDesc: '支持括号、百分比、科学函数和键盘输入，并自动保留最近计算记录。',
+    calculatorDesc: '支持括号、百分比、科学函数和键盘输入，并自动保留最近计算记录。',
     calendarDesc: '公历、农历、节气、节假日、补班和个人日程集中查看。',
     weatherDesc: '搜索区县，查看实时、小时级和未来 15 天天气趋势。',
     convertDesc: '覆盖长度、重量、面积、体积、速度、时间、数据和温度。',
@@ -68,7 +68,7 @@ const DICT = {
     recentCalculations: '最近计算', clear: '清除', ready: '完成的计算会显示在这里。',
     scientific: '科学计算', collapse: '收起', expand: '展开', degree: '度', radian: '弧度',
     keyboard: '键盘：数字、+ − × ÷、括号、Enter 等号、Esc 清空',
-    today: '回到今天', off: '休', work: '补班', normalCalendar: '工作日历',
+    today: '今天', off: '休', work: '补班', normalCalendar: '工作日历',
     legalHoliday: '法定休息', makeUpWorkday: '补班', solarTerm: '节气', selectedDay: '选中日期',
     noAgenda: '这一天还没有安排。', addAgenda: '新增日程', addToDay: '添加到这一天',
     noteOptional: '备注（可选）', weatherSearch: '搜索天气', currentLocation: '当前位置',
@@ -96,7 +96,7 @@ const DICT = {
     calculator: 'Calculator', calendar: 'Calendar', weather: 'Weather', convert: 'Convert', translate: 'Translate',
     online: 'Online', offline: 'Offline', install: 'Install', settings: 'Settings', notifications: 'Notifications',
     heroSubtitle: 'Fast, calm and offline-ready. Your data stays on this device first.',
-    localSaved: '● Saved locally', calculatorDesc: 'Parentheses, percentages, scientific functions, keyboard input and history.',
+    calculatorDesc: 'Parentheses, percentages, scientific functions, keyboard input and history.',
     calendarDesc: 'Gregorian, lunar, solar terms, holidays, make-up workdays and personal events.',
     weatherDesc: 'Search cities and districts for current, hourly and 15-day forecasts.',
     convertDesc: 'Length, weight, area, volume, speed, time, data and temperature.',
@@ -171,7 +171,9 @@ function applyTheme() {
   document.documentElement.dataset.themeMode = state.theme;
   document.documentElement.style.colorScheme = resolved;
   const meta = $('meta[name="theme-color"]');
-  if (meta) meta.content = resolved === 'dark' ? '#0d0f14' : '#405cf5';
+  if (meta) meta.content = resolved === 'dark' ? '#0d0f14' : '#f3f5fa';
+  const appleStatusBar = $('meta[name="apple-mobile-web-app-status-bar-style"]');
+  if (appleStatusBar) appleStatusBar.content = resolved === 'dark' ? 'black-translucent' : 'default';
   const button = $('#themeBtn');
   if (button) {
     button.textContent = state.theme === 'system' ? '◐' : state.theme === 'dark' ? '☀' : '☾';
@@ -194,7 +196,7 @@ function cycleTheme() {
 }
 
 function heading(title, subtitle, actions = '') {
-  return '<div class="tool-head"><div><p class="section-kicker">ONEBOX TOOL</p><h2>' + title + '</h2></div><div class="tool-actions">' + actions + '</div></div>';
+  return '<div class="tool-head"><div><h2>' + title + '</h2></div>' + (actions ? '<div class="tool-actions">' + actions + '</div>' : '') + '</div>';
 }
 function renderNav() {
   nav.innerHTML = state.toolOrder.map((id, index) => {
@@ -392,11 +394,11 @@ const calcPreview = () => { if (!state.calcExpr) return '0'; try { return format
 function saveCalculator() { saveStored(STORAGE.calculator, { expr: state.calcExpr, history: state.calcHistory.slice(0, 30) }); }
 function calculator() {
   const history = state.calcHistory.length ? state.calcHistory.slice(0, 7).map((item) => '<button class="history-item" data-history="' + escapeHtml(item.result) + '"><span>' + escapeHtml(item.expression) + '</span><b>' + escapeHtml(item.result) + '</b></button>').join('') : '<p class="empty compact">' + t('ready') + '</p>';
-  const science = scienceKeys.map(([label, key]) => '<button class="science-key" data-science-key="' + escapeHtml(key) + '">' + label + '</button>').join('');
-  return heading(t('calculator'), t('calculatorDesc'), '<span class="saved-badge">' + t('localSaved') + '</span>') +
+  const science = '<button class="science-key angle-toggle" data-toggle-angle>' + (state.calcAngle === 'deg' ? t('degree') : t('radian')) + '</button>' + scienceKeys.map(([label, key]) => '<button class="science-key" data-science-key="' + escapeHtml(key) + '">' + label + '</button>').join('');
+  const scientificToggle = '<button class="key scientific-toggle" data-toggle-scientific aria-pressed="' + (state.calcScientific ? 'true' : 'false') + '" aria-label="' + t('scientific') + '">ƒx</button>';
+  return heading(t('calculator'), t('calculatorDesc')) +
     '<div class="calculator-layout"><div><div class="display" aria-live="polite"><div class="expression">' + (escapeHtml(state.calcExpr) || (state.language === 'en' ? 'Ready' : '准备计算')) + '</div><div class="result">' + calcPreview() + '</div></div>' +
-    '<div class="keys">' + calcKeys.map((key) => '<button class="key ' + (/[÷×−+%]/.test(key) ? 'op' : '') + ' ' + (key === '=' ? 'equal' : '') + ' ' + (key === 'AC' ? 'danger' : '') + '" data-key="' + key + '">' + key + '</button>').join('') + '</div>' +
-    '<div class="calculator-options"><button class="text-btn" data-toggle-scientific>' + t('scientific') + ' · ' + (state.calcScientific ? t('collapse') : t('expand')) + '</button><button class="text-btn" data-toggle-angle>' + (state.calcAngle === 'deg' ? t('degree') : t('radian')) + '</button></div>' +
+    '<div class="keys">' + calcKeys.map((key) => '<button class="key ' + (/[÷×−+%]/.test(key) ? 'op' : '') + ' ' + (key === '=' ? 'equal' : '') + ' ' + (key === 'AC' ? 'danger' : '') + '" data-key="' + key + '">' + key + '</button>').join('') + scientificToggle + '</div>' +
     '<div class="scientific-bar" ' + (state.calcScientific ? '' : 'hidden') + '>' + science + '</div><p class="keyboard-hint">' + t('keyboard') + '</p></div>' +
     '<aside class="history-panel"><div class="subhead"><h3>' + t('recentCalculations') + '</h3><button class="text-btn" data-clear-calc-history ' + (state.calcHistory.length ? '' : 'disabled') + '>' + t('clear') + '</button></div>' + history + '</aside></div>';
 }
@@ -418,19 +420,19 @@ function calendar() {
   const first = new Date(year, month, 1);
   const start = (first.getDay() + 6) % 7;
   const days = new Date(year, month + 1, 0).getDate();
-  const previousDays = new Date(year, month, 0).getDate();
+  const cellCount = start + days > 35 ? 42 : 35;
   let cells = '';
-  for (let index = 0; index < 42; index += 1) {
-    let number; let date; let muted = false;
-    if (index < start) { number = previousDays - start + index + 1; muted = true; date = new Date(year, month - 1, number); }
-    else if (index >= start + days) { number = index - start - days + 1; muted = true; date = new Date(year, month + 1, number); }
-    else { number = index - start + 1; date = new Date(year, month, number); }
+  for (let index = 0; index < cellCount; index += 1) {
+    if (index < start || index >= start + days) { cells += '<div class="day empty-day" aria-hidden="true"></div>'; continue; }
+    const number = index - start + 1;
+    const date = new Date(year, month, number);
     const key = dateKey(date);
     const meta = calendarMeta(key);
     const eventCount = state.events[key]?.length || 0;
     const holidayClass = meta.holiday ? (meta.holiday.isOffDay ? 'holiday' : 'workday') : '';
     const label = meta.holiday && !meta.holiday.isOffDay ? t('makeUpWorkday') : (meta.term || meta.holiday?.name || meta.lunar?.festival || '');
-    cells += '<button class="day ' + (muted ? 'muted' : '') + ' ' + (key === dateKey(today) ? 'today' : '') + ' ' + (key === state.selectedDate ? 'selected' : '') + ' ' + holidayClass + '" data-date="' + key + '" aria-label="' + escapeHtml(formatDate(key) + (label ? '，' + label : '') + (eventCount ? '，' + eventCount + ' 个日程' : '')) + '"><span>' + number + '</span><small class="lunar-day">' + escapeHtml(meta.lunar?.text || '') + '</small><small class="day-label">' + escapeHtml(label) + '</small>' + (eventCount ? '<i>' + eventCount + '</i>' : '') + '</button>';
+    const lunarCell = meta.lunar ? (meta.lunar.day === 1 ? meta.lunar.monthText + meta.lunar.dayText : meta.lunar.dayText) : '';
+    cells += '<button class="day ' + (key === dateKey(today) ? 'today' : '') + ' ' + (key === state.selectedDate ? 'selected' : '') + ' ' + holidayClass + '" data-date="' + key + '" aria-label="' + escapeHtml(formatDate(key) + (label ? '，' + label : '') + (eventCount ? '，' + eventCount + ' 个日程' : '')) + '"><span>' + number + '</span><small class="lunar-day">' + escapeHtml(lunarCell) + '</small><small class="day-label">' + escapeHtml(label) + '</small>' + (eventCount ? '<i>' + eventCount + '</i>' : '') + '</button>';
   }
   const selected = calendarMeta(state.selectedDate);
   const selectedEvents = state.events[state.selectedDate] || [];
@@ -441,10 +443,10 @@ function calendar() {
   const status = selected.holiday
     ? '<span class="date-status ' + (selected.holiday.isOffDay ? 'off' : 'work') + '">' + (selected.holiday.isOffDay ? t('off') + ' · ' + escapeHtml(selected.holiday.name) : t('work')) + '</span>'
     : '<span class="date-status normal">' + t('normalCalendar') + '</span>';
-  const monthLabel = state.language === 'en' ? new Intl.DateTimeFormat('en-US', { month: 'long' }).format(first) : (month + 1) + ' 月';
+  const monthLabel = state.language === 'en' ? new Intl.DateTimeFormat('en-US', { month: 'long' }).format(first) + ' ' + year : year + ' 年 ' + (month + 1) + ' 月';
   const weekdays = state.language === 'en' ? ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] : ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
-  return heading(t('calendar'), t('calendarDesc'), '<button class="secondary" data-today>' + t('today') + '</button>') +
-    '<div class="calendar-layout"><div class="calendar-card"><div class="calendar-top"><button class="icon-btn" data-month="-1" aria-label="Previous month">←</button><strong>' + year + ' ' + monthLabel + '</strong><button class="icon-btn" data-month="1" aria-label="Next month">→</button></div>' +
+  return heading(t('calendar'), t('calendarDesc')) +
+    '<div class="calendar-layout"><div class="calendar-card"><div class="calendar-top"><button class="icon-btn" data-month="-1" aria-label="Previous month">←</button><div class="calendar-month"><strong>' + monthLabel + '</strong><button class="text-btn calendar-today" data-today>' + t('today') + '</button></div><button class="icon-btn" data-month="1" aria-label="Next month">→</button></div>' +
     '<div class="calendar-legend"><span><i class="dot off"></i>' + t('legalHoliday') + '</span><span><i class="dot work"></i>' + t('makeUpWorkday') + '</span><span><i class="dot term"></i>' + t('solarTerm') + '</span></div><div class="calendar-grid">' + weekdays.map((day) => '<div class="dow">' + day + '</div>').join('') + cells + '</div></div>' +
     '<aside class="agenda-panel"><div class="subhead"><div><p class="section-kicker">' + t('selectedDay') + '</p><h3>' + escapeHtml(formatDate(state.selectedDate)) + '</h3></div>' + status + '</div><div class="date-detail"><strong>' + escapeHtml(lunarLine) + '</strong>' + (selected.term ? '<span class="term-badge">' + selected.term + '</span>' : '') + '<small>' + (selected.lunar?.yearName ? (state.language === 'en' ? 'Lunar ' + zodiacFor(selected.lunar.yearName) + ' year' : '农历' + zodiacFor(selected.lunar.yearName) + '年') : '') + '</small></div><div class="event-list">' + eventList + '</div>' +
     '<form id="eventForm" class="event-form"><input type="hidden" id="eventDate" value="' + state.selectedDate + '"><div class="field"><label for="eventTitle">' + t('addAgenda') + '</label><input id="eventTitle" required maxlength="60" placeholder="' + (state.language === 'en' ? 'e.g. Project review' : '例如：项目复盘') + '"></div><div class="inline-fields"><input id="eventTime" type="time" aria-label="Time"><input id="eventNote" maxlength="120" placeholder="' + t('noteOptional') + '" aria-label="' + t('noteOptional') + '"></div><button class="primary" type="submit">' + t('addToDay') + '</button></form></aside></div>';
@@ -583,7 +585,7 @@ function unitOptions(category, selected) {
 function convert() {
   const category = units[conversion.category];
   const categories = Object.entries(units).map(([key, item]) => '<option value="' + key + '" ' + (key === conversion.category ? 'selected' : '') + '>' + item.name + '</option>').join('');
-  return heading(t('convert'), t('convertDesc'), '<span class="saved-badge">' + (state.language === 'en' ? 'High precision' : '高精度换算') + '</span>') +
+  return heading(t('convert'), t('convertDesc')) +
     '<div class="converter-card"><div class="field"><label for="conversionCategory">' + t('converterType') + '</label><select id="conversionCategory">' + categories + '</select></div><div class="conversion-row">' +
     '<div class="field"><label for="fromUnit">' + t('from') + '</label><select id="fromUnit">' + unitOptions(category, conversion.from) + '</select><input id="conversionValue" type="number" step="any" inputmode="decimal" value="' + escapeHtml(conversion.value) + '" aria-label="' + t('from') + '"></div>' +
     '<button class="swap" data-swap aria-label="' + t('swap') + '">⇄</button><div class="field"><label for="toUnit">' + t('to') + '</label><select id="toUnit">' + unitOptions(category, conversion.to) + '</select><div class="conversion-result" aria-live="polite"><small>' + t('result') + '</small><strong>' + formatNumber(convertedValue()) + '</strong><span>' + category.units[conversion.to][1] + '</span></div></div></div>' +
@@ -621,7 +623,7 @@ function translateView() {
     : '<p class="empty compact">' + t('noHistory') + '</p>';
   const options = (selected) => languageOptions.map(([value, label]) => '<option value="' + value + '" ' + (selected === value ? 'selected' : '') + '>' + label + '</option>').join('');
   const result = state.translation.loading ? (state.language === 'en' ? 'Translating…' : '翻译中…') : state.translation.result || t('noTranslation');
-  return heading(t('translate'), t('translateDesc'), '<span class="saved-badge">' + t('localSaved') + '</span>') +
+  return heading(t('translate'), t('translateDesc')) +
     '<div class="translation-layout"><div class="translation-card"><div class="translation-toolbar"><div class="field"><label for="translationSource">' + t('source') + '</label><select id="translationSource">' + options(state.translation.source) + '</select></div><button class="swap" data-swap-language aria-label="' + t('swap') + '">⇄</button><div class="field"><label for="translationTarget">' + t('target') + '</label><select id="translationTarget">' + options(state.translation.target) + '</select></div></div>' +
     '<div class="field"><label for="translationInput">' + t('translationInput') + '</label><textarea id="translationInput" maxlength="5000" placeholder="' + (state.language === 'en' ? 'Type or paste text here…' : '输入或粘贴文字…') + '">' + escapeHtml(state.translation.input) + '</textarea></div><div class="translation-actions"><button class="primary" data-translate-submit ' + (state.translation.loading ? 'disabled' : '') + '>' + t('translateNow') + '</button><button class="secondary" data-save-translation>' + t('saveTranslation') + '</button></div><h3 class="weather-section-title">' + t('translationResult') + '</h3><div class="translation-result ' + (state.translation.result ? '' : 'placeholder') + '">' + escapeHtml(result) + '</div>' + (state.translation.error ? '<p class="inline-alert">' + escapeHtml(state.translation.error) + '</p>' : '') + '</div>' +
     '<aside class="translation-history"><div class="subhead"><h3>' + t('translationHistory') + '</h3><button class="text-btn" data-clear-translation-history>' + t('clear') + '</button></div>' + history + '</aside></div>';
