@@ -717,6 +717,7 @@ main { padding-top: calc(58px + env(safe-area-inset-top) + 55.5px + 12px); }
 .weather-card-meta { display: block; color: var(--muted); font-size: 11px; line-height: 1.35; white-space: normal; }
 
 #eventDialog .event-date-time-grid, #alarmDialog .event-date-time-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; }
+#eventDialog .event-weekdays-field[hidden] { display: none !important; }
 #eventDialog .event-date-time-grid .field { min-width: 0; }
 #eventDialog input[type="date"], #eventDialog input[type="time"] { min-width: 0; max-width: 100%; font-size: 14px; }
 
@@ -854,4 +855,144 @@ main:has(#workspace[data-tool="home"]), main:has(#workspace[data-tool="messages"
 .bottom-nav.auto-hide-enabled.is-hidden { transform: translate(-50%, calc(100% + 12px)); opacity: 0; pointer-events: none; }
 @media (max-width: 390px) {
   .bottom-nav { bottom: max(6px, env(safe-area-inset-bottom)); }
+}
+
+/* OneBox 2.15 reader and interaction polish ------------------------------ */
+#toolNav { display: flex; align-items: stretch; gap: 8px; overflow-x: auto; overflow-y: hidden; padding: 0 2px 4px; scrollbar-width: none; }
+#toolNav::-webkit-scrollbar { display: none; }
+#toolNav .tab { flex: 0 0 auto; min-width: 104px; white-space: nowrap; }
+select, input, textarea { background: color-mix(in srgb, var(--panel) 88%, var(--bg)); }
+.field-inline { flex-direction: row; align-items: center; justify-content: space-between; gap: 12px; }
+.field-inline label { flex: 0 0 auto; font-size: 15px; color: var(--ink); }
+.field-inline select, .field-inline input, .field-inline .conversion-result { flex: 1 1 auto; min-width: 0; }
+.conversion-row .field-inline { min-width: 0; }
+
+/* Calculator: science functions and numeric keys are separate, equal cells. */
+#workspace[data-tool="calculator"] .calculator-layout { display: block; }
+#workspace[data-tool="calculator"] .calculator-surface { max-width: 560px; margin: 0 auto; }
+#workspace[data-tool="calculator"] .calculator-keyboard { margin-top: 10px; }
+#workspace[data-tool="calculator"] .scientific-bar { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; margin: 0 0 8px; padding: 0; border: 0; }
+#workspace[data-tool="calculator"] .scientific-bar[hidden] { display: none; }
+#workspace[data-tool="calculator"] .science-key { min-height: 35px; padding: 6px 3px; border-radius: 11px; font-size: 12px; }
+#workspace[data-tool="calculator"] .keys { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin-top: 0; }
+#workspace[data-tool="calculator"] .key { min-height: 46px; padding: 8px 4px; border-radius: 13px; }
+#workspace[data-tool="calculator"] .display { min-height: 142px; padding: 15px; }
+#workspace[data-tool="calculator"] .display-history-list { max-height: 68px; }
+
+/* Swipe-to-delete rows share one interaction surface across tools. */
+.swipe-row { position: relative; min-width: 0; overflow: hidden; border-radius: 12px; }
+.swipe-content { position: relative; z-index: 1; transform: translateX(0); transition: transform .18s ease; }
+.swipe-row.swiped .swipe-content { transform: translateX(-68px); }
+.swipe-delete { position: absolute; inset: 0 0 0 auto; z-index: 0; width: 68px; border: 0; background: var(--danger); color: #fff; font-size: 12px; font-weight: 750; cursor: pointer; }
+.history-swipe-row .history-item { width: 100%; background: var(--panel); }
+.event-swipe-row .event-item { width: 100%; }
+.translation-swipe-row .translation-history-item { width: 100%; }
+
+/* Calendar metadata is a single centered line, never two competing rows. */
+#workspace[data-tool="calendar"] .day { gap: 3px; }
+#workspace[data-tool="calendar"] .day-meta { min-height: 15px; font-size: 10px; color: var(--muted); }
+#workspace[data-tool="calendar"] .day-meta.priority { color: var(--primary); }
+#workspace[data-tool="calendar"] .day.holiday .day-meta.priority { color: var(--danger); }
+#workspace[data-tool="calendar"] .day.workday .day-meta.priority { color: var(--warning); }
+
+/* Cleaner weather hierarchy: the control rail and cards keep a shared rhythm. */
+.weather-section-title { margin: 22px 0 0; font-size: 16px; }
+.weather-card-list { align-items: stretch; }
+.weather-card.active { flex-basis: min(100%, 286px); }
+.weather-card:not(.active) { flex-basis: 218px; }
+.weather-card-meta { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+
+/* Translation actions live inside the input and history is a bounded list. */
+.translation-input-wrap { position: relative; }
+.translation-input-wrap textarea { padding-right: 86px; }
+.translation-input-actions { position: absolute; right: 9px; bottom: 9px; display: flex; gap: 5px; }
+.input-action { width: 32px; height: 32px; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); color: var(--primary); cursor: pointer; }
+.input-action svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.translation-actions { display: none; }
+.translation-history-list { max-height: min(430px, 55vh); overflow: auto; display: grid; gap: 8px; }
+.translation-history-item { min-height: 66px; }
+
+/* Local document bookshelf and reader. */
+.reader-shell { max-width: 860px; margin: 0 auto; }
+.reader-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-bottom: 16px; }
+.reader-toolbar h2 { margin: 0; font-size: 20px; }
+.reader-toolbar p { margin: 4px 0 0; color: var(--muted); font-size: 12px; }
+.bookshelf-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.book-card { position: relative; min-width: 0; display: flex; align-items: stretch; background: var(--panel-2); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; }
+.book-open { min-width: 0; flex: 1; display: flex; align-items: center; gap: 11px; padding: 13px; border: 0; background: transparent; color: var(--ink); text-align: left; cursor: pointer; }
+.book-cover { flex: 0 0 43px; width: 43px; height: 58px; display: grid; place-items: center; border-radius: 8px 10px 10px 8px; background: linear-gradient(145deg, var(--primary), #8290ff); color: #fff; font-size: 10px; font-weight: 850; letter-spacing: .06em; box-shadow: inset 5px 0 rgba(0,0,0,.12); }
+.book-cover.pdf { background: linear-gradient(145deg, #a54a5c, #e28392); }
+.book-cover.epub { background: linear-gradient(145deg, #32826a, #69c6a1); }
+.book-copy { min-width: 0; }
+.book-copy strong, .book-copy small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.book-copy small { margin-top: 4px; color: var(--muted); font-size: 11px; }
+.book-delete { align-self: center; margin-right: 8px; }
+#readerDialog, #annotationDialog { z-index: 90; display: flex; align-items: center; justify-content: center; padding: 18px; background: rgba(12, 16, 28, .62); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
+#readerDialog[hidden], #annotationDialog[hidden] { display: none; }
+.reader-dialog-card { width: min(820px, 100%); max-height: calc(100vh - 36px); display: flex; flex-direction: column; overflow: hidden; background: var(--panel); border: 1px solid var(--line); border-radius: 24px; box-shadow: 0 24px 90px rgba(0,0,0,.4); }
+.reader-dialog-card .dialog-head { flex: 0 0 auto; align-items: center; margin: 0; padding: 16px 18px 13px; border-bottom: 1px solid var(--line); }
+.reader-dialog-card .dialog-head h2 { max-width: min(52vw, 470px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 19px; }
+.reader-file-meta { color: var(--muted); font-size: 11px; }
+.reader-head-actions { display: flex; align-items: center; gap: 7px; }
+.reader-annotate-button[hidden] { display: none; }
+.reader-content { min-height: 180px; flex: 1 1 auto; overflow: auto; padding: 24px clamp(18px, 5vw, 54px); line-height: 1.85; overscroll-behavior: contain; -webkit-user-select: text; user-select: text; }
+.reader-content h1, .reader-content h2, .reader-content h3 { line-height: 1.25; margin: 1.2em 0 .45em; }
+.reader-content h1:first-child, .reader-content h2:first-child { margin-top: 0; }
+.reader-content p { margin: 0 0 1em; }
+.reader-content pre { padding: 13px; overflow: auto; background: var(--panel-2); border: 1px solid var(--line); border-radius: 12px; line-height: 1.55; }
+.reader-content blockquote { margin: 1em 0; padding: 8px 14px; border-left: 3px solid var(--primary); color: var(--muted); background: var(--panel-2); border-radius: 0 10px 10px 0; }
+.reader-content hr { border: 0; border-top: 1px solid var(--line); margin: 28px 0; }
+.reader-pdf { width: 100%; height: min(64vh, 620px); border: 0; background: var(--panel-2); }
+.reader-annotations { flex: 0 0 auto; max-height: 180px; overflow: auto; padding: 12px 18px 16px; border-top: 1px solid var(--line); }
+.reader-annotations .subhead { align-items: baseline; }
+.reader-annotations .subhead small { color: var(--muted); font-size: 11px; }
+.reader-note-list { display: grid; gap: 7px; margin-top: 8px; }
+.reader-note { position: relative; padding: 9px 38px 9px 10px; border: 1px solid var(--line); border-radius: 11px; background: var(--panel-2); }
+.reader-note blockquote { margin: 0; color: var(--primary); font-size: 12px; }
+.reader-note p { margin: 4px 0 0; font-size: 13px; }
+.reader-note .icon-btn { position: absolute; right: 7px; top: 7px; }
+.annotation-dialog-card { width: min(460px, 100%); }
+.annotation-quote { margin: 0 0 12px; padding: 10px 12px; border-left: 3px solid var(--primary); color: var(--muted); background: var(--panel-2); border-radius: 0 10px 10px 0; font-size: 13px; }
+
+/* Move the fixed bottom rail closer to the iPhone edge without touching it. */
+.bottom-nav { bottom: max(6px, calc(env(safe-area-inset-bottom) - 16px)); }
+main { padding-bottom: calc(94px + env(safe-area-inset-bottom)); }
+
+@media (max-width: 600px) {
+  #toolNav .tab { min-width: 96px; padding: 11px 9px; }
+  .bookshelf-grid { grid-template-columns: 1fr; }
+  .reader-toolbar { align-items: flex-start; }
+  .reader-toolbar p { max-width: 210px; }
+  #readerDialog, #annotationDialog { padding: 9px; }
+  .reader-dialog-card { max-height: calc(100dvh - 18px); border-radius: 20px; }
+  .reader-content { padding: 20px 16px; }
+  .reader-annotations { max-height: 150px; padding-left: 14px; padding-right: 14px; }
+  .reader-dialog-card .dialog-head { padding: 13px 14px 11px; }
+  .reader-dialog-card .dialog-head h2 { max-width: 42vw; font-size: 16px; }
+  .reader-annotate-button { padding: 7px 8px; font-size: 11px; }
+  .weather-search { grid-template-columns: minmax(0, 1fr) 40px; gap: 6px; }
+  .weather-search-field { grid-column: 1; }
+  .weather-location-button { grid-column: 2; }
+  .weather-search > .primary { grid-column: 1; }
+  .weather-search > .secondary { grid-column: 2; }
+  #workspace[data-tool="calculator"] .display { min-height: 124px; padding: 12px; }
+  #workspace[data-tool="calculator"] .result { font-size: 34px; }
+  #workspace[data-tool="calculator"] .display-history-list { max-height: 64px; }
+  #workspace[data-tool="calculator"] .key { min-height: 43px; }
+  #workspace[data-tool="calculator"] .science-key { min-height: 29px; height: 29px; font-size: 11px; }
+  #workspace[data-tool="calculator"] .keyboard-hint { display: none; }
+  .field-inline { gap: 8px; }
+  .field-inline label { font-size: 14px; }
+  .translation-toolbar { grid-template-columns: minmax(0, 1fr) 34px minmax(0, 1fr); }
+  .translation-toolbar .field-inline { flex-direction: column; align-items: stretch; gap: 5px; }
+  .translation-toolbar .field-inline label { font-size: 12px; }
+}
+
+@media (max-width: 600px) and (min-height: 700px) {
+  /* Keep both scientific groups inside an iPhone viewport; history remains scrollable. */
+  main:has(#workspace[data-tool="calculator"]) { height: 100dvh; max-height: 100dvh; overflow: hidden; padding-bottom: 0; }
+  #workspace[data-tool="calculator"] .display { min-height: 124px; }
+  #workspace[data-tool="calculator"] .scientific-bar { gap: 4px; margin-bottom: 6px; padding-bottom: 5px; border-bottom: 1px solid var(--line); }
+  #workspace[data-tool="calculator"] .calculator-layout:has(.scientific-bar:not([hidden])) .science-key { height: 27px; min-height: 27px; padding: 3px 1px; border-radius: 9px; }
+  #workspace[data-tool="calculator"] .key { min-height: 41px; padding-top: 6px; padding-bottom: 6px; }
 }

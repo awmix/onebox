@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.14.11';
+const APP_VERSION = '2.15.5';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -17,6 +17,7 @@ const STORAGE = {
   translationHistory: 'onebox.translation-history',
   notifications: 'onebox.notifications',
   alarms: 'onebox.alarms',
+  library: 'onebox.library',
   headerVisibility: 'onebox.header-visibility',
   bottomNavAutoHide: 'onebox.bottom-nav-auto-hide',
   github: 'onebox.github',
@@ -27,6 +28,7 @@ const TOOL_DEFS = {
   weather: { icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>', key: 'weather' },
   convert: { icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h13l-3-3M20 17H7l3 3M4 4v6M20 14v6"/></svg>', key: 'convert' },
   translate: { icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 17 4-11 4 11M5.5 13h5M14 6h6M14 10h5M14 14h6M14 18h4"/></svg>', key: 'translate' },
+  reader: { icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4.5A2.5 2.5 0 0 1 7.5 2H19v17H7.5A2.5 2.5 0 0 0 5 21.5zM5 4.5v17M8 6h8M8 10h8M8 14h6"/></svg>', key: 'reader' },
 };
 const DEFAULT_TOOL_ORDER = Object.keys(TOOL_DEFS);
 const nav = $('#toolNav');
@@ -34,9 +36,75 @@ const workspace = $('#workspace');
 const parseStored = (key, fallback) => {
   try { return JSON.parse(localStorage.getItem(key)) ?? fallback; } catch { return fallback; }
 };
+let persistenceTimer = null;
+let oneBoxDbPromise = null;
+function openOneBoxDb() {
+  if (oneBoxDbPromise || !window.indexedDB) return oneBoxDbPromise;
+  oneBoxDbPromise = new Promise((resolve, reject) => {
+    const request = indexedDB.open('onebox-local-data', 1);
+    request.onupgradeneeded = () => {
+      const db = request.result;
+      if (!db.objectStoreNames.contains('snapshot')) db.createObjectStore('snapshot');
+      if (!db.objectStoreNames.contains('books')) db.createObjectStore('books');
+    };
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error || Error('IndexedDB unavailable'));
+  }).catch(() => null);
+  return oneBoxDbPromise;
+}
+async function oneBoxDbGet(storeName, key) {
+  const db = await openOneBoxDb();
+  if (!db) return null;
+  return new Promise((resolve) => {
+    const request = db.transaction(storeName, 'readonly').objectStore(storeName).get(key);
+    request.onsuccess = () => resolve(request.result ?? null);
+    request.onerror = () => resolve(null);
+  });
+}
+async function oneBoxDbPut(storeName, key, value) {
+  const db = await openOneBoxDb();
+  if (!db) return false;
+  return new Promise((resolve) => {
+    const request = db.transaction(storeName, 'readwrite').objectStore(storeName).put(value, key);
+    request.onsuccess = () => resolve(true);
+    request.onerror = () => resolve(false);
+  });
+}
+async function oneBoxDbDelete(storeName, key) {
+  const db = await openOneBoxDb();
+  if (!db) return false;
+  return new Promise((resolve) => {
+    const request = db.transaction(storeName, 'readwrite').objectStore(storeName).delete(key);
+    request.onsuccess = () => resolve(true);
+    request.onerror = () => resolve(false);
+  });
+}
+async function writePersistentSnapshot() {
+  const values = {};
+  Object.values(STORAGE).forEach((key) => {
+    const value = localStorage.getItem(key);
+    if (value !== null) values[key] = value;
+  });
+  await oneBoxDbPut('snapshot', 'app', { version: 1, savedAt: Date.now(), values });
+}
+function queuePersistentSnapshot() {
+  clearTimeout(persistenceTimer);
+  persistenceTimer = setTimeout(() => { writePersistentSnapshot(); }, 180);
+}
 const saveStored = (key, value) => {
-  try { localStorage.setItem(key, JSON.stringify(value)); } catch { /* private mode can deny storage */ }
+  try { localStorage.setItem(key, JSON.stringify(value)); queuePersistentSnapshot(); } catch { /* private mode can deny storage */ }
 };
+async function restorePersistentSnapshot() {
+  const snapshot = await oneBoxDbGet('snapshot', 'app');
+  if (!snapshot?.values) return false;
+  let restored = false;
+  Object.entries(snapshot.values).forEach(([key, value]) => {
+    if (localStorage.getItem(key) === null) {
+      try { localStorage.setItem(key, value); restored = true; } catch { /* private mode can deny storage */ }
+    }
+  });
+  return restored;
+}
 const escapeHtml = (value = '') => String(value).replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
 const dateKey = (date) => {
   const value = new Date(date);
@@ -62,7 +130,7 @@ const toast = (message, kind = 'info') => {
 
 const DICT = {
   zh: {
-    calculator: '计算', calendar: '日历', weather: '天气', convert: '转换', translate: '翻译',
+    calculator: '计算', calendar: '日历', weather: '天气', convert: '转换', translate: '翻译', reader: '阅读',
     online: '在线', offline: '离线', install: '安装应用', settings: '设置', notifications: '消息提示',
     heroSubtitle: '快速、清爽、可离线。你的数据优先保存在当前设备。',
     calculatorDesc: '支持括号、百分比、科学函数和键盘输入，并自动保留最近计算记录。',
@@ -75,7 +143,7 @@ const DICT = {
     keyboard: '键盘：数字、+ − × ÷、括号、Enter 等号、Esc 清空',
     today: '今天', off: '休', work: '补班', normalCalendar: '工作日历',
     legalHoliday: '法定休息', makeUpWorkday: '补班', solarTerm: '节气', selectedDay: '选中日期',
-    noAgenda: '这一天还没有安排。', agenda: '日程', addAgenda: '新增日程', newReminder: '新增提醒', eventContent: '日程内容', eventPlaceholder: '请输入你的日程信息', addEvent: '添加日程', addToDay: '添加日程', eventDate: '日期', eventTime: '时间（精确到秒）', reminderSchedule: '提醒日程',
+    noAgenda: '这一天还没有安排。', agenda: '日程', addAgenda: '新增日程', newReminder: '新增提醒', eventContent: '日程内容', eventPlaceholder: '请输入你的日程信息', addEvent: '添加日程', addToDay: '添加日程', eventDate: '日期', eventTime: '时间（精确到秒）', reminderSchedule: '提醒日程', eventRepeat: '重复方式',
     noteOptional: '备注（可选）', weatherSearch: '搜索', currentLocation: '当前位置',
     refresh: '刷新', searchPlace: '搜索城市或区县',
     noWeather: '天气需要联网，搜索一个城市或区县开始。', weatherLoading: '正在获取天气…',
@@ -99,9 +167,10 @@ const DICT = {
     markRead: '全部已读', close: '关闭', system: '跟随系统', light: '浅色', dark: '深色',
     language: '语言', theme: '主题', bottomTab: '底部 Tab', autoHideBottomNav: '自动隐藏，滑动显示', reorderHint: '长按工具标签可以调整顺序',
     languagePending: '日语、韩语语言包已预留，当前版本先提供中文和英文。',
+    bookshelf: '书架', addBook: '添加文档', noBooks: '还没有本地文档。', readerHint: '支持 Markdown、PDF、EPUB；文档仅保存在当前设备。', openBook: '打开阅读', deleteBook: '删除文档', annotations: '标注', addAnnotation: '添加标注', annotationPlaceholder: '写下你的标注…', saveAnnotation: '保存标注', annotationHint: '选择文字后长按或点击标注按钮。', noAnnotations: '还没有标注。', reading: '正在阅读', closeReader: '关闭阅读', unsupportedFile: '请选择 .md、.markdown、.pdf 或 .epub 文件。', importFailed: '文档读取失败，请重试。', deleteConfirm: '确定删除这本文档吗？', pdfHint: 'PDF 使用浏览器原生阅读器打开。', epubHint: 'EPUB 已转换为适合 OneBox 的连续阅读视图。',
   },
   en: {
-    calculator: 'Calculator', calendar: 'Calendar', weather: 'Weather', convert: 'Convert', translate: 'Translate',
+    calculator: 'Calculator', calendar: 'Calendar', weather: 'Weather', convert: 'Convert', translate: 'Translate', reader: 'Reader',
     online: 'Online', offline: 'Offline', install: 'Install', settings: 'Settings', notifications: 'Notifications',
     heroSubtitle: 'Fast, calm and offline-ready. Your data stays on this device first.',
     calculatorDesc: 'Parentheses, percentages, scientific functions, keyboard input and history.',
@@ -114,7 +183,7 @@ const DICT = {
     keyboard: 'Keyboard: numbers, + − × ÷, parentheses, Enter and Escape',
     today: 'Today', off: 'Off', work: 'Make-up workday', normalCalendar: 'Work calendar',
     legalHoliday: 'Public holiday', makeUpWorkday: 'Make-up workday', solarTerm: 'Solar term', selectedDay: 'Selected day',
-    noAgenda: 'Nothing planned for this day.', agenda: 'Events', addAgenda: 'New event', newReminder: 'New reminder', eventContent: 'Event details', eventPlaceholder: 'Enter your event details', addEvent: 'Add event', addToDay: 'Add event', eventDate: 'Date', eventTime: 'Time (to the second)', reminderSchedule: 'Reminder time',
+    noAgenda: 'Nothing planned for this day.', agenda: 'Events', addAgenda: 'New event', newReminder: 'New reminder', eventContent: 'Event details', eventPlaceholder: 'Enter your event details', addEvent: 'Add event', addToDay: 'Add event', eventDate: 'Date', eventTime: 'Time (to the second)', reminderSchedule: 'Reminder time', eventRepeat: 'Repeat',
     noteOptional: 'Note (optional)', weatherSearch: 'Search', currentLocation: 'Current location',
     refresh: 'Refresh', searchPlace: 'Search city or district',
     noWeather: 'Search a city or district to get weather.', weatherLoading: 'Loading weather…',
@@ -138,6 +207,7 @@ const DICT = {
     markRead: 'Mark all read', close: 'Close', system: 'System', light: 'Light', dark: 'Dark',
     language: 'Language', theme: 'Theme', bottomTab: 'Bottom tabs', autoHideBottomNav: 'Auto-hide; reveal while scrolling', reorderHint: 'Long-press a tool tab to reorder',
     languagePending: 'Japanese and Korean are reserved for a future language pack. Chinese and English are available now.',
+    bookshelf: 'Bookshelf', addBook: 'Add document', noBooks: 'No local documents yet.', readerHint: 'Supports Markdown, PDF and EPUB. Files stay on this device.', openBook: 'Open', deleteBook: 'Delete', annotations: 'Notes', addAnnotation: 'Add note', annotationPlaceholder: 'Write a note…', saveAnnotation: 'Save note', annotationHint: 'Select text, long-press or use the note button.', noAnnotations: 'No notes yet.', reading: 'Reading', closeReader: 'Close reader', unsupportedFile: 'Choose a .md, .markdown, .pdf or .epub file.', importFailed: 'Could not read this document.', deleteConfirm: 'Delete this document?', pdfHint: 'PDF opens in the browser native reader.', epubHint: 'EPUB is converted into a continuous OneBox reading view.',
   },
 };
 const t = (key) => DICT[state.language]?.[key] || DICT.zh[key] || key;
@@ -149,6 +219,7 @@ const storedCalculator = parseStored(STORAGE.calculator, { expr: '', history: []
 const DEFAULT_HEADER_VISIBILITY = { notifications: true, theme: true, language: false, settings: true, update: false };
 const storedHeaderVisibility = parseStored(STORAGE.headerVisibility, {});
 const storedAlarms = parseStored(STORAGE.alarms, []);
+const storedLibrary = parseStored(STORAGE.library, []);
 const rawWeatherCards = parseStored(STORAGE.weatherCards, []);
 const legacyWeather = parseStored(STORAGE.legacyWeather, null);
 const normalizeToolOrder = (value) => {
@@ -176,6 +247,8 @@ const state = {
   translation: { source: 'auto', target: 'zh', input: '', result: '', loading: false, error: '' },
   translationHistory: parseStored(STORAGE.translationHistory, []),
   alarms: Array.isArray(storedAlarms) ? storedAlarms : [],
+  library: (Array.isArray(storedLibrary) ? storedLibrary : []).filter((book) => book && book.id && book.name),
+  readerBookId: null, readerUrl: '', readerSelectedText: '', annotationBookId: null,
   notifications: parseStored(STORAGE.notifications, []), notificationOpen: false, settingsOpen: false, githubDialogOpen: false,
   headerVisibility: { ...DEFAULT_HEADER_VISIBILITY, ...(storedHeaderVisibility && typeof storedHeaderVisibility === 'object' ? storedHeaderVisibility : {}) },
   bottomNavAutoHide: Boolean(parseStored(STORAGE.bottomNavAutoHide, false)),
@@ -229,7 +302,7 @@ function applyLanguage() {
   applyTheme();
   renderHeaderControls();
 }
-function saveThemeLanguage() { localStorage.setItem(STORAGE.theme, state.theme); localStorage.setItem(STORAGE.language, state.languageMode); }
+function saveThemeLanguage() { localStorage.setItem(STORAGE.theme, state.theme); localStorage.setItem(STORAGE.language, state.languageMode); queuePersistentSnapshot(); }
 function saveHeaderPreferences() { saveStored(STORAGE.headerVisibility, state.headerVisibility); saveStored(STORAGE.bottomNavAutoHide, state.bottomNavAutoHide); }
 function cycleTheme() {
   state.theme = state.theme === 'system' ? 'light' : state.theme === 'light' ? 'dark' : 'system';
@@ -298,7 +371,164 @@ function renderMine() {
   return '<div class="section-page mine-page"><div class="page-title-row"><div><span class="section-kicker">ONEBOX</span><h1>' + t('mine') + '</h1></div></div><div class="mine-list"><button class="mine-row" data-open-settings-page><span class="mine-row-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6 7 7M17 17l1.4 1.4M18.4 5.6 17 7M7 17l-1.4 1.4"/><circle cx="12" cy="12" r="4"/></svg></span><span><strong>' + t('settings') + '</strong><small>' + (state.language === 'en' ? 'Theme, language, updates and display' : '主题、语言、更新与显示设置') + '</small></span><span>›</span></button><button class="mine-row" data-open-github-page><span class="mine-row-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 0 0-2.8 17.55c.45.08.62-.2.62-.43v-1.52c-2.52.55-3.05-1.06-3.05-1.06-.41-1.05-1-1.33-1-1.33-.82-.56.06-.55.06-.55.9.06 1.37.93 1.37.93.8 1.37 2.1.98 2.61.75.08-.58.31-.98.57-1.2-2.01-.23-4.13-1-4.13-4.45 0-.98.35-1.77.93-2.39-.09-.23-.4-1.13.09-2.36 0 0 .76-.24 2.48.91a8.6 8.6 0 0 1 4.5 0c1.72-1.15 2.48-.91 2.48-.91.49 1.23.18 2.13.09 2.36.58.62.93 1.41.93 2.39 0 3.46-2.12 4.22-4.14 4.45.32.27.6.8.6 1.61v2.38c0 .23.16.51.62.42A9 9 0 0 0 12 3Z"/></svg></span><span><strong>GitHub</strong><small>' + escapeHtml(githubStatus) + '</small></span><span>›</span></button><button class="mine-row" data-open-agreement-page><span class="mine-row-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l3 3v15H6zM15 3v4h4M9 12h6M9 16h6"/></svg></span><span><strong>' + t('userAgreement') + '</strong><small>' + (state.language === 'en' ? 'Learn how OneBox handles data' : '了解 OneBox 如何处理数据') + '</small></span><span>›</span></button></div></div>';
 }
 
+// Reader --------------------------------------------------------------------
+function saveLibrary() { saveStored(STORAGE.library, state.library.slice(0, 80)); }
+function readerBookById(id) { return state.library.find((book) => book.id === id); }
+function markdownToHtml(source) {
+  const safe = escapeHtml(String(source || '').replace(/\r\n?/g, '\n'));
+  const blocks = safe.split(/\n{2,}/).map((block) => {
+    if (/^```/.test(block)) return '<pre><code>' + block.replace(/^```[^\n]*\n?/, '').replace(/```$/, '') + '</code></pre>';
+    if (/^### /.test(block)) return '<h3>' + block.slice(4) + '</h3>';
+    if (/^## /.test(block)) return '<h2>' + block.slice(3) + '</h2>';
+    if (/^# /.test(block)) return '<h1>' + block.slice(2) + '</h1>';
+    if (/^> /.test(block)) return '<blockquote>' + block.replace(/^> /gm, '') + '</blockquote>';
+    if (/^(?:[-*] |\d+\. )/.test(block)) {
+      const ordered = /^\d+\. /.test(block);
+      const items = block.split('\n').map((line) => '<li>' + line.replace(/^(?:[-*] |\d+\. )/, '') + '</li>').join('');
+      return '<' + (ordered ? 'ol' : 'ul') + '>' + items + '</' + (ordered ? 'ol' : 'ul') + '>';
+    }
+    return '<p>' + block.replace(/\n/g, '<br>') + '</p>';
+  });
+  return blocks.join('');
+}
+function sanitizeReaderMarkup(markup) {
+  const documentFragment = new DOMParser().parseFromString(String(markup || ''), 'text/html');
+  documentFragment.querySelectorAll('script,style,iframe,object,embed,form,link,meta').forEach((node) => node.remove());
+  documentFragment.querySelectorAll('*').forEach((node) => [...node.attributes].forEach((attribute) => {
+    if (/^on/i.test(attribute.name) || attribute.name === 'srcdoc') node.removeAttribute(attribute.name);
+  }));
+  return documentFragment.body.innerHTML;
+}
+function zipEntries(bytes) {
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  let eocd = -1;
+  for (let index = bytes.length - 22; index >= Math.max(0, bytes.length - 65557); index -= 1) {
+    if (view.getUint32(index, true) === 0x06054b50) { eocd = index; break; }
+  }
+  if (eocd < 0) throw Error('Invalid EPUB archive');
+  const count = view.getUint16(eocd + 10, true);
+  const offset = view.getUint32(eocd + 16, true);
+  const decoder = new TextDecoder(); const entries = new Map(); let cursor = offset;
+  for (let index = 0; index < count; index += 1) {
+    if (view.getUint32(cursor, true) !== 0x02014b50) break;
+    const method = view.getUint16(cursor + 10, true);
+    const compressedSize = view.getUint32(cursor + 20, true);
+    const nameLength = view.getUint16(cursor + 28, true);
+    const extraLength = view.getUint16(cursor + 30, true);
+    const commentLength = view.getUint16(cursor + 32, true);
+    const localOffset = view.getUint32(cursor + 42, true);
+    const name = decoder.decode(bytes.slice(cursor + 46, cursor + 46 + nameLength));
+    entries.set(name, { method, compressedSize, localOffset });
+    cursor += 46 + nameLength + extraLength + commentLength;
+  }
+  return entries;
+}
+async function readZipEntry(bytes, entries, name) {
+  const entry = entries.get(name); if (!entry) return null;
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  const local = entry.localOffset;
+  const nameLength = view.getUint16(local + 26, true);
+  const extraLength = view.getUint16(local + 28, true);
+  const start = local + 30 + nameLength + extraLength;
+  const data = bytes.slice(start, start + entry.compressedSize);
+  if (entry.method === 0) return data;
+  if (entry.method !== 8 || !window.DecompressionStream) throw Error('This EPUB compression is not supported');
+  const stream = new Blob([data]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
+  return new Uint8Array(await new Response(stream).arrayBuffer());
+}
+function xmlAttribute(tag, name) {
+  return tag.match(new RegExp(`${name}\\s*=\\s*["']([^"']+)`, 'i'))?.[1] || '';
+}
+async function epubToHtml(bytes) {
+  const entries = zipEntries(bytes); const decoder = new TextDecoder();
+  const container = decoder.decode(await readZipEntry(bytes, entries, 'META-INF/container.xml') || new Uint8Array());
+  const opfPath = container.match(/full-path\s*=\s*["']([^"']+)["']/i)?.[1];
+  if (!opfPath) throw Error('EPUB package not found');
+  const opf = decoder.decode(await readZipEntry(bytes, entries, opfPath) || new Uint8Array());
+  const base = opfPath.includes('/') ? opfPath.slice(0, opfPath.lastIndexOf('/') + 1) : '';
+  const manifest = {};
+  [...opf.matchAll(/<item\b[^>]*>/gi)].forEach((match) => {
+    const tag = match[0]; const id = xmlAttribute(tag, 'id');
+    if (id) manifest[id] = { href: decodeURIComponent(xmlAttribute(tag, 'href')), media: xmlAttribute(tag, 'media-type') };
+  });
+  const spine = [...opf.matchAll(/<itemref\b[^>]*>/gi)].map((match) => xmlAttribute(match[0], 'idref')).map((id) => manifest[id]).filter(Boolean);
+  const parts = [];
+  for (const item of spine) {
+    if (!/html|xhtml/i.test(item.media)) continue;
+    const path = base + item.href.replace(/^\.\//, '');
+    const html = decoder.decode(await readZipEntry(bytes, entries, path) || new Uint8Array());
+    const body = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i)?.[1] || html;
+    parts.push('<section>' + sanitizeReaderMarkup(body) + '</section>');
+  }
+  if (!parts.length) throw Error('EPUB has no readable chapters');
+  const title = opf.match(/<dc:title[^>]*>([\s\S]*?)<\/dc:title>/i)?.[1]?.replace(/<[^>]+>/g, '').trim();
+  return { title, html: parts.join('<hr>') };
+}
+async function importReaderFiles(fileList) {
+  const files = [...(fileList || [])]; if (!files.length) return;
+  for (const file of files) {
+    const extension = file.name.split('.').pop()?.toLowerCase();
+    if (!['md', 'markdown', 'pdf', 'epub'].includes(extension)) { toast(t('unsupportedFile'), 'error'); continue; }
+    try {
+      const id = uid(); const book = { id, name: file.name, type: extension === 'markdown' ? 'md' : extension, size: file.size, createdAt: Date.now(), lastOpenedAt: 0, progress: 0, annotations: [] };
+      if (book.type === 'md') book.content = await file.text();
+      else await oneBoxDbPut('books', id, await file.arrayBuffer());
+      state.library.unshift(book); saveLibrary();
+    } catch { toast(t('importFailed'), 'error'); }
+  }
+  const input = $('#readerFileInput'); if (input) input.value = '';
+  render(); toast(state.language === 'en' ? 'Document added' : '文档已添加');
+}
+function readerAnnotationMarkup(book) {
+  const notes = (book.annotations || []).slice().reverse();
+  if (!notes.length) return '<p class="empty compact">' + t('noAnnotations') + '</p>';
+  return notes.map((note) => '<div class="reader-note"><blockquote>' + escapeHtml(note.quote) + '</blockquote><p>' + escapeHtml(note.note) + '</p><button class="icon-btn small" data-delete-annotation="' + escapeHtml(note.id) + '" aria-label="' + t('close') + '">×</button></div>').join('');
+}
+function renderReaderDialog(content, hint = '') {
+  const book = readerBookById(state.readerBookId); const dialog = $('#readerDialog'); if (!book || !dialog) return;
+  dialog.innerHTML = '<div class="reader-dialog-card" role="dialog" aria-modal="true"><div class="dialog-head"><div><h2>' + escapeHtml(book.name) + '</h2><small class="reader-file-meta">' + escapeHtml(hint || (book.type.toUpperCase() + ' · ' + Math.max(1, Math.round(book.size / 1024)) + ' KB')) + '</small></div><div class="reader-head-actions"><button class="secondary reader-annotate-button" data-annotate-selection hidden>' + t('addAnnotation') + '</button><button class="icon-btn small" data-close-reader aria-label="' + t('closeReader') + '">×</button></div></div><article class="reader-content" data-reader-content>' + content + '</article><section class="reader-annotations"><div class="subhead"><h3>' + t('annotations') + '</h3><small>' + t('annotationHint') + '</small></div><div class="reader-note-list">' + readerAnnotationMarkup(book) + '</div></section></div>';
+  dialog.hidden = false;
+}
+async function openReaderBook(id) {
+  const book = readerBookById(id); if (!book) return;
+  state.readerBookId = id; state.readerSelectedText = ''; book.lastOpenedAt = Date.now(); saveLibrary();
+  try {
+    let content = ''; let hint = '';
+    if (book.type === 'md') content = markdownToHtml(book.content);
+    else {
+      const data = await oneBoxDbGet('books', id); if (!data) throw Error();
+      const bytes = new Uint8Array(data);
+      if (book.type === 'epub') { const parsed = await epubToHtml(bytes); content = parsed.html; hint = parsed.title ? parsed.title + ' · ' + t('epubHint') : t('epubHint'); }
+      else { state.readerUrl = URL.createObjectURL(new Blob([bytes], { type: 'application/pdf' })); content = '<iframe class="reader-pdf" title="' + escapeHtml(book.name) + '" src="' + state.readerUrl + '"></iframe>'; hint = t('pdfHint'); }
+    }
+    renderReaderDialog(content, hint);
+    setTimeout(() => { const node = $('[data-reader-content]'); if (node && book.progress) node.scrollTop = node.scrollHeight * book.progress; }, 0);
+  } catch { toast(t('importFailed'), 'error'); state.readerBookId = null; }
+}
+function closeReader() {
+  if (state.readerUrl) URL.revokeObjectURL(state.readerUrl);
+  state.readerUrl = ''; state.readerBookId = null; state.readerSelectedText = '';
+  const dialog = $('#readerDialog'); if (dialog) dialog.hidden = true;
+}
+function renderAnnotationDialog() {
+  if (!state.readerSelectedText) return;
+  const dialog = $('#annotationDialog'); if (!dialog) return;
+  dialog.innerHTML = '<div class="dialog-card annotation-dialog-card" role="dialog" aria-modal="true"><div class="dialog-head"><h2>' + t('addAnnotation') + '</h2><button class="icon-btn small" data-close-annotation aria-label="' + t('close') + '">×</button></div><blockquote class="annotation-quote">' + escapeHtml(state.readerSelectedText) + '</blockquote><textarea id="annotationText" maxlength="500" placeholder="' + t('annotationPlaceholder') + '"></textarea><button class="primary full-width" data-save-annotation>' + t('saveAnnotation') + '</button></div>';
+  dialog.hidden = false;
+}
+function reader() {
+  const books = [...state.library].sort((a, b) => Number(b.lastOpenedAt || b.createdAt) - Number(a.lastOpenedAt || a.createdAt));
+  const cards = books.length ? books.map((book) => '<article class="book-card"><button class="book-open" data-open-reader="' + escapeHtml(book.id) + '"><span class="book-cover ' + book.type + '">' + book.type.toUpperCase() + '</span><span class="book-copy"><strong>' + escapeHtml(book.name) + '</strong><small>' + (book.lastOpenedAt ? t('reading') : t('openBook')) + ' · ' + Math.max(1, Math.round(book.size / 1024)) + ' KB</small></span></button><button class="icon-btn small book-delete" data-delete-book="' + escapeHtml(book.id) + '" aria-label="' + t('deleteBook') + '">×</button></article>').join('') : '<p class="empty compact">' + t('noBooks') + '</p>';
+  return heading(t('reader'), t('readerHint')) + '<div class="reader-shell"><div class="reader-toolbar"><div><h2>' + t('bookshelf') + '</h2><p>' + t('readerHint') + '</p></div><button class="primary" data-open-reader-file>＋ ' + t('addBook') + '</button><input id="readerFileInput" type="file" hidden multiple accept=".md,.markdown,.pdf,.epub,text/markdown,application/pdf,application/epub+zip"></div><div class="bookshelf-grid">' + cards + '</div></div>';
+}
+
 // Calendar data --------------------------------------------------------------
+function eventsForDate(key) {
+  const direct = [...(state.events[key] || [])];
+  const directIds = new Set(direct.map((event) => event.id));
+  const recurring = Object.values(state.events || {}).flat().filter((event) => !directIds.has(event.id) && eventMatchesDay(event, key));
+  return direct.concat(recurring);
+}
 const holidayStore = { ...(window.ONEBOX_HOLIDAY_DATA || {}) };
 const holidayLoaded = new Set(Object.keys(holidayStore).map(String));
 const holidaySource = 'https://raw.githubusercontent.com/NateScarlet/holiday-cn/master';
@@ -467,24 +697,28 @@ function evaluateExpression(input) {
   if (position !== tokens.length || !Number.isFinite(result)) throw Error(state.language === 'en' ? 'Expression cannot be evaluated' : '表达式无法计算');
   return Number(result.toPrecision(12));
 }
-const calcKeys = ['AC', '⌫', '(', ')', '7', '8', '9', '÷', '4', '5', '6', '×', '1', '2', '3', '−', '0', '.', '%', '+', '±', '00', '='];
+const calcKeys = ['AC', '⌫', '(', ')', '7', '8', '9', '÷', '4', '5', '6', '×', '1', '2', '3', '−', '0', '.', '%', '+', '±', '00', '=', 'ƒx'];
 const scienceKeys = [['sin', 'sin('], ['cos', 'cos('], ['tan', 'tan('], ['ln', 'ln('], ['log', 'log('], ['√', 'sqrt('], ['x²', '^2'], ['xʸ', '^'], ['π', 'π'], ['e', 'e'], ['sin⁻¹', 'asin('], ['cos⁻¹', 'acos('], ['tan⁻¹', 'atan('], ['abs', 'abs('], ['exp', 'exp('], ['!', '!']];
 const calcPreview = () => { if (!state.calcExpr) return '0'; try { return formatNumber(evaluateExpression(state.calcExpr)); } catch { return '—'; } };
 function saveCalculator() { saveStored(STORAGE.calculator, { expr: state.calcExpr, history: state.calcHistory.slice(0, 30) }); }
 function calculator() {
-  const history = state.calcHistory.length ? state.calcHistory.slice(0, 7).map((item) => '<button class="history-item" data-history-expression="' + escapeHtml(item.expression) + '"><span>' + escapeHtml(item.expression) + '</span><b>' + escapeHtml(item.result) + '</b></button>').join('') : '<p class="empty compact">' + t('ready') + '</p>';
+  const history = state.calcHistory.length ? state.calcHistory.slice(0, 8).map((item) => {
+    const id = item.id || String(item.at || item.expression);
+    return '<div class="swipe-row history-swipe-row" data-swipe-row><button class="history-item swipe-content" data-history-expression="' + escapeHtml(item.expression) + '"><span>' + escapeHtml(item.expression) + '</span><b>' + escapeHtml(item.result) + '</b></button><button class="swipe-delete" data-delete-calc-history="' + escapeHtml(id) + '">' + (state.language === 'en' ? 'Delete' : '删除') + '</button></div>';
+  }).join('') : '<p class="empty compact">' + t('ready') + '</p>';
   const science = '<button class="science-key angle-toggle" data-toggle-angle>' + (state.calcAngle === 'deg' ? t('degree') : t('radian')) + '</button>' + scienceKeys.map(([label, key]) => '<button class="science-key" data-science-key="' + escapeHtml(key) + '">' + label + '</button>').join('');
-  const scientificToggle = '<button class="key scientific-toggle" data-toggle-scientific aria-pressed="' + (state.calcScientific ? 'true' : 'false') + '" aria-label="' + t('scientific') + '">ƒx</button>';
+  const basic = calcKeys.map((key) => key === 'ƒx'
+    ? '<button class="key scientific-toggle" data-toggle-scientific aria-pressed="' + (state.calcScientific ? 'true' : 'false') + '" aria-label="' + t('scientific') + '">ƒx</button>'
+    : '<button class="key ' + (/[÷×−+%]/.test(key) ? 'op' : '') + ' ' + (key === '=' ? 'equal' : '') + ' ' + (key === 'AC' ? 'danger' : '') + '" data-key="' + key + '">' + key + '</button>').join('');
   return heading(t('calculator'), t('calculatorDesc')) +
-    '<div class="calculator-layout"><div><div class="display" aria-live="polite"><div class="expression">' + (escapeHtml(state.calcExpr) || (state.language === 'en' ? 'Ready' : '准备计算')) + '</div><div class="result">' + calcPreview() + '</div><div class="display-history"><div class="display-history-head"><span>' + t('recentCalculations') + '</span><button class="text-btn" data-clear-calc-history ' + (state.calcHistory.length ? '' : 'disabled') + '>' + t('clear') + '</button></div><div class="display-history-list">' + history + '</div></div></div>' +
-    '<div class="keys">' + calcKeys.map((key) => '<button class="key ' + (/[÷×−+%]/.test(key) ? 'op' : '') + ' ' + (key === '=' ? 'equal' : '') + ' ' + (key === 'AC' ? 'danger' : '') + '" data-key="' + key + '">' + key + '</button>').join('') + scientificToggle + '</div>' +
-    '<div class="scientific-bar" ' + (state.calcScientific ? '' : 'hidden') + '>' + science + '</div><p class="keyboard-hint">' + t('keyboard') + '</p></div></div>';
+    '<div class="calculator-layout"><div class="calculator-surface"><div class="display" aria-live="polite"><div class="expression">' + (escapeHtml(state.calcExpr) || (state.language === 'en' ? 'Ready' : '准备计算')) + '</div><div class="result">' + calcPreview() + '</div><div class="display-history"><div class="display-history-head"><span>' + t('recentCalculations') + '</span><button class="text-btn" data-clear-calc-history ' + (state.calcHistory.length ? '' : 'disabled') + '>' + t('clear') + '</button></div><div class="display-history-list">' + history + '</div></div></div>' +
+    '<div class="calculator-keyboard"><div class="scientific-bar" ' + (state.calcScientific ? '' : 'hidden') + '>' + science + '</div><div class="keys">' + basic + '</div></div><p class="keyboard-hint">' + t('keyboard') + '</p></div></div>';
 }
 function calculatorKey(key) {
   if (key === 'AC') { state.calcExpr = ''; state.calcJustEvaluated = false; }
   else if (key === '⌫') { state.calcExpr = state.calcExpr.slice(0, -1); state.calcJustEvaluated = false; }
   else if (key === '=') {
-    try { const result = evaluateExpression(state.calcExpr); if (state.calcExpr) state.calcHistory.unshift({ expression: state.calcExpr, result: formatNumber(result), at: Date.now() }); state.calcExpr = String(result); state.calcJustEvaluated = true; }
+    try { const result = evaluateExpression(state.calcExpr); if (state.calcExpr) state.calcHistory.unshift({ id: uid(), expression: state.calcExpr, result: formatNumber(result), at: Date.now() }); state.calcExpr = String(result); state.calcJustEvaluated = true; }
     catch (error) { toast(error.message, 'error'); }
   } else if (key === '±') { state.calcExpr = state.calcExpr.startsWith('-') ? state.calcExpr.slice(1) : '-' + (state.calcExpr || '0'); state.calcJustEvaluated = false; }
   else { if (state.calcJustEvaluated && (/[0-9.]/.test(key) || key === '(' || key === 'π')) state.calcExpr = ''; state.calcJustEvaluated = false; state.calcExpr += key; }
@@ -506,21 +740,22 @@ function calendar() {
     const key = dateKey(date);
     const outside = date.getMonth() !== month;
     const meta = calendarMeta(key);
-    const eventCount = state.events[key]?.length || 0;
+    const eventCount = eventsForDate(key).length;
     const holidayClass = meta.holiday ? (meta.holiday.isOffDay ? 'holiday' : 'workday') : '';
     const termClass = meta.term ? 'term-day' : '';
     const label = meta.holiday && !meta.holiday.isOffDay ? t('makeUpWorkday') : (meta.term || meta.holiday?.name || meta.lunar?.festival || '');
     const hasPriorityLabel = Boolean(meta.term || meta.holiday);
     const lunarCell = !hasPriorityLabel && meta.lunar ? (meta.lunar.day === 1 ? meta.lunar.monthText + meta.lunar.dayText : meta.lunar.dayText) : '';
+    const cellLabel = label || lunarCell;
     const eventBadge = eventCount ? (eventCount > 99 ? '…' : String(eventCount)) : '';
-    cells += '<button class="day ' + (outside ? 'muted ' : '') + (key === dateKey(today) ? 'today ' : '') + (key === state.selectedDate ? 'selected ' : '') + holidayClass + ' ' + termClass + '" data-date="' + key + '" data-outside="' + outside + '" aria-label="' + escapeHtml(formatDate(key) + (label ? '，' + label : '') + (eventCount ? '，' + eventCount + ' 个日程' : '')) + '"><span>' + date.getDate() + '</span><small class="lunar-day">' + escapeHtml(lunarCell) + '</small><small class="day-label">' + escapeHtml(label) + '</small>' + (eventCount ? '<i aria-label="' + eventCount + ' 个日程">' + eventBadge + '</i>' : '') + '</button>';
+    cells += '<button class="day ' + (outside ? 'muted ' : '') + (key === dateKey(today) ? 'today ' : '') + (key === state.selectedDate ? 'selected ' : '') + holidayClass + ' ' + termClass + '" data-date="' + key + '" data-outside="' + outside + '" aria-label="' + escapeHtml(formatDate(key) + (cellLabel ? '，' + cellLabel : '') + (eventCount ? '，' + eventCount + ' 个日程' : '')) + '"><span>' + date.getDate() + '</span><small class="day-meta ' + (label ? 'priority' : '') + '">' + escapeHtml(cellLabel) + '</small>' + (eventCount ? '<i aria-label="' + eventCount + ' 个日程">' + eventBadge + '</i>' : '') + '</button>';
   }
-  const selectedEvents = [...(state.events[state.selectedDate] || [])].sort((a, b) => {
+  const selectedEvents = eventsForDate(state.selectedDate).sort((a, b) => {
     const left = a.time || '00:00:00'; const right = b.time || '00:00:00';
     return right.localeCompare(left) || Number(b.createdAt || 0) - Number(a.createdAt || 0);
   });
   const eventList = selectedEvents.length
-    ? selectedEvents.map((item) => '<div class="event-item"><div><strong>' + escapeHtml(item.title) + '</strong><small>' + (item.time ? escapeHtml(item.time) : (state.language === 'en' ? 'All day' : '全天')) + '</small></div><button class="icon-btn small" data-delete-event="' + escapeHtml(item.id) + '" aria-label="' + (state.language === 'en' ? 'Delete' : '删除') + '">×</button></div>').join('')
+    ? selectedEvents.map((item) => '<div class="swipe-row event-swipe-row" data-swipe-row><div class="event-item swipe-content"><div><strong>' + escapeHtml(item.title) + '</strong><small>' + (item.time ? escapeHtml(item.time) : (state.language === 'en' ? 'All day' : '全天')) + '</small></div><button class="swipe-delete" data-delete-event="' + escapeHtml(item.id) + '">' + (state.language === 'en' ? 'Delete' : '删除') + '</button></div></div>').join('')
     : '<p class="empty compact">' + t('noAgenda') + '</p>';
   const monthLabel = state.language === 'en' ? new Intl.DateTimeFormat('en-US', { month: 'long' }).format(first) + ' ' + year : year + ' 年 ' + (month + 1) + ' 月';
   const weekdays = state.language === 'en' ? ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] : ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
@@ -535,7 +770,9 @@ function saveEvents() { saveStored(STORAGE.events, state.events); }
 function renderEventDialog() {
   const dialog = $('#eventDialog');
   if (!dialog) return;
-  dialog.innerHTML = '<div class="dialog-card event-dialog-card" role="dialog" aria-modal="true"><div class="dialog-head"><h2>' + t('newReminder') + '</h2><button class="icon-btn small" data-close-event-dialog aria-label="' + t('close') + '">×</button></div><form id="eventForm" class="event-form"><div class="field"><label for="eventTitle">' + t('eventContent') + '</label><input id="eventTitle" required maxlength="60" placeholder="' + t('eventPlaceholder') + '"></div><div class="field"><label>' + t('reminderSchedule') + '</label><div class="event-date-time-grid"><input id="eventDate" type="date" value="' + escapeHtml(state.selectedDate) + '" aria-label="' + t('eventDate') + '" required><input id="eventTime" type="time" step="1" aria-label="' + t('eventTime') + '"></div></div><button class="primary full-width" type="submit">' + t('addEvent') + '</button></form></div>';
+  const options = ['once', 'daily', 'workdays', 'restdays', 'weekly'].map((value) => '<option value="' + value + '">' + t(value === 'daily' ? 'everyDay' : value) + '</option>').join('');
+  const weekdays = alarmWeekdayLabels.map((label, index) => '<label class="weekday-option"><input type="checkbox" name="eventWeekday" value="' + index + '" ' + (index < 5 ? 'checked' : '') + '><span>' + (state.language === 'en' ? ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][index] : label) + '</span></label>').join('');
+  dialog.innerHTML = '<div class="dialog-card event-dialog-card" role="dialog" aria-modal="true"><div class="dialog-head"><h2>' + t('newReminder') + '</h2><button class="icon-btn small" data-close-event-dialog aria-label="' + t('close') + '">×</button></div><form id="eventForm" class="event-form"><div class="field"><label for="eventTitle">' + t('eventContent') + '</label><input id="eventTitle" required maxlength="60" placeholder="' + t('eventPlaceholder') + '"></div><div class="field"><label>' + t('reminderSchedule') + '</label><div class="event-date-time-grid"><input id="eventDate" type="date" value="' + escapeHtml(state.selectedDate) + '" aria-label="' + t('eventDate') + '" required><input id="eventTime" type="time" step="1" aria-label="' + t('eventTime') + '"></div></div><div class="field"><label for="eventRepeat">' + t('eventRepeat') + '</label><select id="eventRepeat">' + options + '</select></div><div class="field event-weekdays-field" hidden><label>' + t('weekdays') + '</label><div class="weekday-options">' + weekdays + '</div></div><button class="primary full-width" type="submit">' + t('addEvent') + '</button></form></div>';
   dialog.hidden = false;
 }
 function closeEventDialog() { const dialog = $('#eventDialog'); if (dialog) dialog.hidden = true; }
@@ -813,9 +1050,9 @@ function convert() {
   const category = units[conversion.category];
   const categories = Object.entries(units).map(([key, item]) => '<option value="' + key + '" ' + (key === conversion.category ? 'selected' : '') + '>' + item.name + '</option>').join('');
   return heading(t('convert'), t('convertDesc')) +
-    '<div class="converter-card"><div class="field"><label for="conversionCategory">' + t('converterType') + '</label><select id="conversionCategory">' + categories + '</select></div><div class="conversion-row">' +
-    '<div class="field"><label for="fromUnit">' + t('from') + '</label><select id="fromUnit">' + unitOptions(category, conversion.from) + '</select><input id="conversionValue" type="number" step="any" inputmode="decimal" value="' + escapeHtml(conversion.value) + '" aria-label="' + t('from') + '"></div>' +
-    '<button class="swap" data-swap aria-label="' + t('swap') + '">⇄</button><div class="field"><label for="toUnit">' + t('to') + '</label><select id="toUnit">' + unitOptions(category, conversion.to) + '</select><div class="conversion-result" aria-live="polite"><small>' + t('result') + '</small><strong>' + formatNumber(convertedValue()) + '</strong><span>' + category.units[conversion.to][1] + '</span></div></div></div>' +
+    '<div class="converter-card"><div class="field field-inline"><label for="conversionCategory">' + t('converterType') + '</label><select id="conversionCategory">' + categories + '</select></div><div class="conversion-row">' +
+    '<div class="field field-inline"><label for="fromUnit">' + t('from') + '</label><select id="fromUnit">' + unitOptions(category, conversion.from) + '</select><input id="conversionValue" type="number" step="any" inputmode="decimal" value="' + escapeHtml(conversion.value) + '" aria-label="' + t('from') + '"></div>' +
+    '<button class="swap" data-swap aria-label="' + t('swap') + '">⇄</button><div class="field field-inline"><label for="toUnit">' + t('to') + '</label><select id="toUnit">' + unitOptions(category, conversion.to) + '</select><div class="conversion-result" aria-live="polite"><small>' + t('result') + '</small><strong>' + formatNumber(convertedValue()) + '</strong><span>' + category.units[conversion.to][1] + '</span></div></div></div>' +
     '<button class="secondary copy-button" data-copy-conversion>' + t('copyResult') + '</button><span class="copy-status" id="copyStatus"></span></div>';
 }
 
@@ -858,26 +1095,55 @@ async function translateText() {
 }
 function translateView() {
   const history = state.translationHistory.length
-    ? state.translationHistory.slice(0, 12).map((item) => '<button class="translation-history-item" data-translation-history="' + escapeHtml(item.id) + '"><b>' + escapeHtml(item.input.slice(0, 70)) + '</b><small>' + escapeHtml(item.result.slice(0, 100)) + '</small></button>').join('')
+    ? state.translationHistory.slice(0, 12).map((item) => '<div class="swipe-row translation-swipe-row" data-swipe-row><button class="translation-history-item swipe-content" data-translation-history="' + escapeHtml(item.id) + '"><b>' + escapeHtml(item.input.slice(0, 70)) + '</b><small>' + escapeHtml(item.result.slice(0, 100)) + '</small></button><button class="swipe-delete" data-delete-translation="' + escapeHtml(item.id) + '">' + (state.language === 'en' ? 'Delete' : '删除') + '</button></div>').join('')
     : '<p class="empty compact">' + t('noHistory') + '</p>';
   const options = (selected) => languageOptions.map(([value, label]) => '<option value="' + value + '" ' + (selected === value ? 'selected' : '') + '>' + label + '</option>').join('');
   const result = state.translation.loading ? (state.language === 'en' ? 'Translating…' : '翻译中…') : state.translation.result || t('noTranslation');
   return heading(t('translate'), t('translateDesc')) +
-    '<div class="translation-layout"><div class="translation-card"><div class="translation-toolbar"><div class="field"><label for="translationSource">' + t('source') + '</label><select id="translationSource">' + options(state.translation.source) + '</select></div><button class="swap" data-swap-language aria-label="' + t('swap') + '">⇄</button><div class="field"><label for="translationTarget">' + t('target') + '</label><select id="translationTarget">' + options(state.translation.target) + '</select></div></div>' +
-    '<div class="field"><label for="translationInput">' + t('translationInput') + '</label><textarea id="translationInput" maxlength="5000" placeholder="' + (state.language === 'en' ? 'Type or paste text here…' : '输入或粘贴文字…') + '">' + escapeHtml(state.translation.input) + '</textarea></div><div class="translation-actions"><button class="primary" data-translate-submit ' + (state.translation.loading ? 'disabled' : '') + '>' + t('translateNow') + '</button><button class="secondary" data-save-translation>' + t('saveTranslation') + '</button></div><h3 class="weather-section-title">' + t('translationResult') + '</h3><div class="translation-result ' + (state.translation.result ? '' : 'placeholder') + '">' + escapeHtml(result) + '</div>' + (state.translation.error ? '<p class="inline-alert">' + escapeHtml(state.translation.error) + '</p>' : '') + '</div>' +
-    '<aside class="translation-history"><div class="subhead"><h3>' + t('translationHistory') + '</h3><button class="text-btn" data-clear-translation-history>' + t('clear') + '</button></div>' + history + '</aside></div>';
+    '<div class="translation-layout"><div class="translation-card"><div class="translation-toolbar"><div class="field field-inline"><label for="translationSource">' + t('source') + '</label><select id="translationSource">' + options(state.translation.source) + '</select></div><button class="swap" data-swap-language aria-label="' + t('swap') + '">⇄</button><div class="field field-inline"><label for="translationTarget">' + t('target') + '</label><select id="translationTarget">' + options(state.translation.target) + '</select></div></div>' +
+    '<div class="field"><label for="translationInput">' + t('translationInput') + '</label><div class="translation-input-wrap"><textarea id="translationInput" maxlength="5000" placeholder="' + (state.language === 'en' ? 'Type or paste text here…' : '输入或粘贴文字…') + '">' + escapeHtml(state.translation.input) + '</textarea><div class="translation-input-actions"><button class="input-action" data-translate-submit ' + (state.translation.loading ? 'disabled' : '') + ' aria-label="' + t('translateNow') + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 12 16-8-5 16-3-6-8-2Z"/><path d="m12 14 4-4"/></svg></button><button class="input-action" data-save-translation aria-label="' + t('saveTranslation') + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h11l3 3v13H5zM8 4v6h8V4M8 16h8"/></svg></button></div></div></div><h3 class="weather-section-title">' + t('translationResult') + '</h3><div class="translation-result ' + (state.translation.result ? '' : 'placeholder') + '">' + escapeHtml(result) + '</div>' + (state.translation.error ? '<p class="inline-alert">' + escapeHtml(state.translation.error) + '</p>' : '') + '</div>' +
+    '<aside class="translation-history"><div class="subhead"><h3>' + t('translationHistory') + '</h3><button class="text-btn" data-clear-translation-history>' + t('clear') + '</button></div><div class="translation-history-list">' + history + '</div></aside></div>';
 }
 
 // Notifications and calendar reminders -------------------------------------
 function saveNotifications() { saveStored(STORAGE.notifications, state.notifications.slice(0, 80)); }
+let alertAudioContext = null;
+function unlockAlertAudio() {
+  if (alertAudioContext || !window.AudioContext) return;
+  try { alertAudioContext = new AudioContext(); alertAudioContext.resume().catch(() => {}); } catch { alertAudioContext = null; }
+}
+function playAlertChime() {
+  if (!alertAudioContext) return;
+  try {
+    const oscillator = alertAudioContext.createOscillator(); const gain = alertAudioContext.createGain();
+    oscillator.type = 'sine'; oscillator.frequency.setValueAtTime(880, alertAudioContext.currentTime); oscillator.frequency.exponentialRampToValueAtTime(660, alertAudioContext.currentTime + .22);
+    gain.gain.setValueAtTime(.001, alertAudioContext.currentTime); gain.gain.exponentialRampToValueAtTime(.18, alertAudioContext.currentTime + .02); gain.gain.exponentialRampToValueAtTime(.001, alertAudioContext.currentTime + .48);
+    oscillator.connect(gain).connect(alertAudioContext.destination); oscillator.start(); oscillator.stop(alertAudioContext.currentTime + .5);
+  } catch { /* audio is optional */ }
+}
+function eventMatchesDay(event, key) {
+  const weekday = (dateFromKey(key).getDay() + 6) % 7;
+  if (!event.repeat || event.repeat === 'once') return false;
+  if (event.repeat === 'daily') return true;
+  if (event.repeat === 'workdays') return isWorkdayKey(key);
+  if (event.repeat === 'restdays') return !isWorkdayKey(key);
+  return event.repeat === 'weekly' && (event.weekdays || [weekday]).map(Number).includes(weekday);
+}
 function syncAgendaReminders() {
   const agendaItems = [];
   Object.entries(state.events || {}).forEach(([day, events]) => (events || []).forEach((event) => {
     if (!event.time) return;
-    const at = new Date(day + 'T' + event.time).getTime();
-    if (!Number.isFinite(at)) return;
-    const id = 'agenda:' + day + ':' + event.id;
-    agendaItems.push({ id, text: event.title, at, read: true, delivered: false, source: 'agenda' });
+    if (!event.repeat || event.repeat === 'once') {
+      const at = new Date(day + 'T' + event.time).getTime();
+      if (Number.isFinite(at)) agendaItems.push({ id: 'agenda:' + day + ':' + event.id, text: event.title, at, read: true, delivered: false, source: 'agenda', eventId: event.id });
+      return;
+    }
+    for (let offset = 0; offset < 16; offset += 1) {
+      const candidate = new Date(Date.now() + offset * 86400000); const key = dateKey(candidate);
+      if (!eventMatchesDay(event, key)) continue;
+      const at = new Date(key + 'T' + event.time).getTime();
+      if (Number.isFinite(at) && at > Date.now() - 60000) agendaItems.push({ id: 'agenda:' + event.id + ':' + key, text: event.title, at, read: true, delivered: false, source: 'agenda', eventId: event.id });
+    }
   }));
   const reminderIds = new Set(agendaItems.map((item) => item.id));
   state.notifications = state.notifications.filter((item) => item.source !== 'agenda' || reminderIds.has(item.id));
@@ -900,7 +1166,7 @@ async function showNativeNotification(item) {
   if (!('Notification' in window) || Notification.permission !== 'granted') return;
   try {
     const registration = await navigator.serviceWorker?.ready;
-    const options = { body: item.text, tag: item.id, icon: 'icons/bell-192.png', badge: 'icons/bell-192.png', renotify: true, requireInteraction: true, timestamp: Number(item.at) || Date.now(), data: { notificationId: item.id } };
+    const options = { body: item.text, tag: item.id, icon: 'icons/bell-192.png', badge: 'icons/bell-192.png', renotify: true, silent: false, requireInteraction: true, timestamp: Number(item.at) || Date.now(), data: { notificationId: item.id } };
     if (registration?.showNotification) await registration.showNotification('OneBox', options);
     else new Notification('OneBox', options);
   } catch { /* browser blocked notifications */ }
@@ -910,7 +1176,7 @@ function checkNotifications() {
   syncAlarmReminders();
   const due = state.notifications.filter((item) => !item.delivered && item.at && item.at <= Date.now());
   due.forEach((item) => {
-    item.delivered = true; item.read = false; showNativeNotification(item); toast(item.text);
+    item.delivered = true; item.read = false; showNativeNotification(item); playAlertChime(); toast(item.text);
     if (item.source === 'alarm') {
       try { navigator.vibrate?.([180, 100, 180]); } catch { /* vibration is optional */ }
       const alarm = state.alarms.find((entry) => entry.id === item.alarmId);
@@ -966,7 +1232,7 @@ function syncPayload() {
   return {
     app: 'OneBox', version: APP_VERSION, savedAt: new Date().toISOString(), theme: state.theme, languageMode: state.languageMode, language: state.language,
     toolOrder: state.toolOrder, calculator: parseStored(STORAGE.calculator, {}), events: state.events,
-    weatherCards: state.weatherCards, translationHistory: state.translationHistory, notifications: state.notifications, alarms: state.alarms,
+    weatherCards: state.weatherCards, translationHistory: state.translationHistory, notifications: state.notifications, alarms: state.alarms, library: state.library,
     headerVisibility: state.headerVisibility, bottomNavAutoHide: state.bottomNavAutoHide,
   };
 }
@@ -1042,6 +1308,7 @@ async function githubDownload() {
     if (Array.isArray(remote.translationHistory)) { state.translationHistory = remote.translationHistory; saveTranslationHistory(); }
     if (Array.isArray(remote.notifications)) { state.notifications = remote.notifications; saveNotifications(); }
     if (Array.isArray(remote.alarms)) { state.alarms = remote.alarms; saveAlarms(); }
+    if (Array.isArray(remote.library)) { state.library = remote.library; saveLibrary(); }
     if (remote.headerVisibility && typeof remote.headerVisibility === 'object') { state.headerVisibility = { ...DEFAULT_HEADER_VISIBILITY, ...remote.headerVisibility }; saveStored(STORAGE.headerVisibility, state.headerVisibility); }
     if (typeof remote.bottomNavAutoHide === 'boolean') { state.bottomNavAutoHide = remote.bottomNavAutoHide; saveStored(STORAGE.bottomNavAutoHide, state.bottomNavAutoHide); }
     state.github.gistId = id; saveGithub(); applyLanguage(); renderNav(); render(); renderGithubDialog();
@@ -1146,7 +1413,7 @@ function render() {
   const bottomNav = $('#bottomNav');
   if (bottomNav) bottomNav.hidden = false;
   nav.hidden = state.section !== 'tools';
-  const renderers = { calculator, calendar, weather, convert, translate: translateView };
+  const renderers = { calculator, calendar, weather, convert, translate: translateView, reader };
   workspace.dataset.tool = state.section === 'tools' ? state.tool : state.section;
   workspace.innerHTML = state.section === 'home' ? renderHome() : state.section === 'messages' ? renderMessages() : state.section === 'mine' ? renderMine() : (renderers[state.tool] || calculator)();
   if (state.section === 'tools' && state.tool === 'calendar') ensureHolidayYear(state.month.getFullYear());
@@ -1162,6 +1429,7 @@ function swapWeatherCards(from, to) {
 }
 let reorderTimer = null;
 let reorderTarget = null;
+let swipeGesture = null;
 function startLongPress(target, type, index) {
   clearTimeout(reorderTimer);
   reorderTarget = { target, type, index };
@@ -1178,6 +1446,20 @@ function handleReorderClick(target, type, index) {
   return true;
 }
 
+workspace.addEventListener('pointerdown', (event) => {
+  const row = event.target.closest('[data-swipe-row]');
+  if (row) swipeGesture = { row, startX: event.clientX, startY: event.clientY, moved: false };
+});
+workspace.addEventListener('pointermove', (event) => {
+  if (!swipeGesture) return;
+  const dx = event.clientX - swipeGesture.startX; const dy = event.clientY - swipeGesture.startY;
+  if (Math.abs(dy) > Math.abs(dx) || Math.abs(dx) < 8) return;
+  swipeGesture.moved = true;
+  if (dx < -28) swipeGesture.row.classList.add('swiped');
+  if (dx > 18) swipeGesture.row.classList.remove('swiped');
+});
+document.addEventListener('pointerup', () => { swipeGesture = null; }, { passive: true });
+
 nav.addEventListener('pointerdown', (event) => { const tab = event.target.closest('[data-tool]'); if (tab) startLongPress(tab, 'tool', Number(tab.dataset.toolIndex)); });
 nav.addEventListener('pointerup', endLongPress);
 nav.addEventListener('pointercancel', endLongPress);
@@ -1188,7 +1470,7 @@ nav.addEventListener('click', (event) => {
 });
 nav.addEventListener('dragstart', (event) => { const tab = event.target.closest('[data-tool]'); if (tab) event.dataTransfer.setData('text/plain', tab.dataset.toolIndex); });
 nav.addEventListener('dragover', (event) => { if (event.target.closest('[data-tool]')) event.preventDefault(); });
-nav.addEventListener('drop', (event) => { event.preventDefault(); const tab = event.target.closest('[data-tool]'); if (tab) swapToolOrder(Number(event.dataTransfer.getData('text/plain')), Number(tab.dataset.toolIndex)); });
+  nav.addEventListener('drop', (event) => { event.preventDefault(); const tab = event.target.closest('[data-tool]'); if (tab) swapToolOrder(Number(event.dataTransfer.getData('text/plain')), Number(tab.dataset.toolIndex)); });
 
 workspace.addEventListener('pointerdown', (event) => { const card = event.target.closest('[data-weather-card]'); if (card) startLongPress(card, 'weather', Number(card.dataset.weatherIndex)); });
 workspace.addEventListener('pointerup', endLongPress);
@@ -1201,6 +1483,20 @@ workspace.addEventListener('click', async (event) => {
   if (section) return selectSection(section.dataset.section);
   const homeTool = event.target.closest('[data-home-tool]');
   if (homeTool) return selectTool(homeTool.dataset.homeTool);
+  if (event.target.closest('[data-open-reader-file]')) { $('#readerFileInput')?.click(); return; }
+  const openReader = event.target.closest('[data-open-reader]');
+  if (openReader) return openReaderBook(openReader.dataset.openReader);
+  const deleteBook = event.target.closest('[data-delete-book]');
+  if (deleteBook) {
+    if (!window.confirm(t('deleteConfirm'))) return;
+    state.library = state.library.filter((book) => book.id !== deleteBook.dataset.deleteBook); await oneBoxDbDelete('books', deleteBook.dataset.deleteBook); saveLibrary(); render(); return;
+  }
+  if (event.target.closest('[data-annotate-selection]')) return renderAnnotationDialog();
+  const deleteAnnotation = event.target.closest('[data-delete-annotation]');
+  if (deleteAnnotation) {
+    const book = readerBookById(state.readerBookId); if (book) { book.annotations = (book.annotations || []).filter((note) => note.id !== deleteAnnotation.dataset.deleteAnnotation); saveLibrary(); renderReaderDialog($('[data-reader-content]')?.innerHTML || ''); }
+    return;
+  }
   if (event.target.closest('[data-open-settings-page]')) return renderSettings();
   if (event.target.closest('[data-open-github-page]')) return renderGithubDialog();
   if (event.target.closest('[data-open-agreement-page]')) return renderAgreementDialog();
@@ -1215,6 +1511,8 @@ workspace.addEventListener('click', async (event) => {
   if (event.target.closest('[data-toggle-angle]')) { state.calcAngle = state.calcAngle === 'deg' ? 'rad' : 'deg'; return render(); }
   const history = event.target.closest('[data-history-expression]');
   if (history) { state.calcExpr = history.dataset.historyExpression || ''; state.calcJustEvaluated = false; saveCalculator(); return render(); }
+  const deleteCalcHistory = event.target.closest('[data-delete-calc-history]');
+  if (deleteCalcHistory) { state.calcHistory = state.calcHistory.filter((item) => String(item.id || item.at || item.expression) !== deleteCalcHistory.dataset.deleteCalcHistory); saveCalculator(); return render(); }
   if (event.target.closest('[data-clear-calc-history]')) { state.calcHistory = []; saveCalculator(); return render(); }
   if (event.target.closest('[data-open-event-dialog]')) return renderEventDialog();
   if (event.target.closest('[data-open-alarm-dialog]')) return renderAlarmDialog();
@@ -1247,7 +1545,7 @@ workspace.addEventListener('click', async (event) => {
   }
   const deleteEvent = event.target.closest('[data-delete-event]');
   if (deleteEvent) {
-    state.events[state.selectedDate] = (state.events[state.selectedDate] || []).filter((item) => item.id !== deleteEvent.dataset.deleteEvent);
+    Object.keys(state.events).forEach((day) => { state.events[day] = (state.events[day] || []).filter((item) => item.id !== deleteEvent.dataset.deleteEvent); if (!state.events[day].length) delete state.events[day]; });
     saveEvents(); syncAgendaReminders(); scheduleNotificationCheck(); return render();
   }
   const weatherResult = event.target.closest('[data-weather-result-index]');
@@ -1287,6 +1585,8 @@ workspace.addEventListener('click', async (event) => {
     if (item) { state.translation.source = item.source; state.translation.target = item.target; state.translation.input = item.input; state.translation.result = item.result; render(); }
     return;
   }
+  const deleteTranslation = event.target.closest('[data-delete-translation]');
+  if (deleteTranslation) { state.translationHistory = state.translationHistory.filter((item) => item.id !== deleteTranslation.dataset.deleteTranslation); saveTranslationHistory(); return render(); }
   if (event.target.closest('[data-clear-translation-history]')) { state.translationHistory = []; saveTranslationHistory(); return render(); }
 });
 workspace.addEventListener('dblclick', (event) => {
@@ -1298,6 +1598,7 @@ workspace.addEventListener('input', (event) => {
   if (event.target.id === 'translationInput') state.translation.input = event.target.value;
 });
 workspace.addEventListener('change', (event) => {
+  if (event.target.id === 'readerFileInput') { importReaderFiles(event.target.files); return; }
   if (event.target.id === 'conversionCategory') { conversion.category = event.target.value; conversion.from = 0; conversion.to = 1; return render(); }
   if (event.target.id === 'fromUnit') { conversion.from = Number(event.target.value); return render(); }
   if (event.target.id === 'toUnit') { conversion.to = Number(event.target.value); return render(); }
@@ -1312,12 +1613,22 @@ workspace.addEventListener('submit', (event) => {
 $('#eventDialog').addEventListener('click', (event) => {
   if (event.target === $('#eventDialog') || event.target.closest('[data-close-event-dialog]')) closeEventDialog();
 });
+$('#eventDialog').addEventListener('change', (event) => {
+  if (event.target.id === 'eventRepeat') {
+    const weekly = $('.event-weekdays-field', $('#eventDialog')); if (weekly) weekly.hidden = event.target.value !== 'weekly';
+    const time = $('#eventTime'); if (time) time.required = event.target.value !== 'once';
+  }
+});
 $('#eventDialog').addEventListener('submit', (event) => {
   event.preventDefault();
   if (event.target.id !== 'eventForm') return;
   const title = $('#eventTitle').value.trim(); if (!title) return;
-  const key = $('#eventDate').value || state.selectedDate; state.events[key] ||= [];
-  state.events[key].push({ id: uid(), title, time: $('#eventTime').value, createdAt: Date.now() });
+  const key = $('#eventDate').value || state.selectedDate; const repeat = $('#eventRepeat')?.value || 'once'; const time = $('#eventTime').value;
+  if (repeat !== 'once' && !time) return toast(state.language === 'en' ? 'Choose a reminder time for a repeating event' : '周期性日程需要选择提醒时间', 'error');
+  const weekdays = repeat === 'weekly' ? $$('input[name="eventWeekday"]', $('#eventDialog')).filter((input) => input.checked).map((input) => Number(input.value)) : [];
+  if (repeat === 'weekly' && !weekdays.length) return toast(state.language === 'en' ? 'Choose at least one weekday' : '请至少选择一个星期', 'error');
+  state.events[key] ||= [];
+  state.events[key].push({ id: uid(), title, time, repeat, weekdays, createdAt: Date.now() });
   state.selectedDate = key;
   const selectedDate = dateFromKey(key); state.month = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1);
   saveEvents(); syncAgendaReminders(); scheduleNotificationCheck(); closeEventDialog(); render(); toast(state.language === 'en' ? 'Event added' : '日程已添加');
@@ -1345,6 +1656,34 @@ $('#alarmDialog').addEventListener('submit', (event) => {
 
 $('#lunarDialog').addEventListener('click', (event) => {
   if (event.target === $('#lunarDialog') || event.target.closest('[data-close-lunar-dialog]')) closeLunarDialog();
+});
+
+$('#readerDialog').addEventListener('click', (event) => {
+  if (event.target === $('#readerDialog') || event.target.closest('[data-close-reader]')) return closeReader();
+  if (event.target.closest('[data-annotate-selection]')) return renderAnnotationDialog();
+  const deleteAnnotation = event.target.closest('[data-delete-annotation]');
+  if (deleteAnnotation) {
+    const book = readerBookById(state.readerBookId); if (book) { book.annotations = (book.annotations || []).filter((note) => note.id !== deleteAnnotation.dataset.deleteAnnotation); saveLibrary(); renderReaderDialog($('[data-reader-content]')?.innerHTML || ''); }
+  }
+});
+$('#readerDialog').addEventListener('scroll', (event) => {
+  const book = readerBookById(state.readerBookId); const content = event.target.closest('[data-reader-content]');
+  if (!book || !content || !content.scrollHeight) return;
+  book.progress = Math.min(1, content.scrollTop / Math.max(1, content.scrollHeight - content.clientHeight)); saveLibrary();
+}, true);
+$('#annotationDialog').addEventListener('click', (event) => {
+  if (event.target === $('#annotationDialog') || event.target.closest('[data-close-annotation]')) { $('#annotationDialog').hidden = true; return; }
+  if (!event.target.closest('[data-save-annotation]')) return;
+  const book = readerBookById(state.readerBookId); const note = $('#annotationText')?.value.trim();
+  if (!book || !state.readerSelectedText || !note) return toast(state.language === 'en' ? 'Write a note first' : '请先写下标注内容', 'error');
+  book.annotations ||= []; book.annotations.push({ id: uid(), quote: state.readerSelectedText, note, createdAt: Date.now() }); saveLibrary(); $('#annotationDialog').hidden = true; renderReaderDialog($('[data-reader-content]')?.innerHTML || '');
+});
+document.addEventListener('selectionchange', () => {
+  if (!state.readerBookId) return;
+  const selection = window.getSelection(); const text = selection?.toString().trim() || '';
+  if (text) state.readerSelectedText = text.slice(0, 1000);
+  const button = $('[data-annotate-selection]', $('#readerDialog'));
+  if (button) button.hidden = !state.readerSelectedText;
 });
 
 $('#bottomNav').addEventListener('click', (event) => {
@@ -1420,6 +1759,8 @@ $('#notificationPanel').addEventListener('click', (event) => {
 document.addEventListener('click', (event) => {
   if (state.notificationOpen && !event.target.closest('#notificationPanel, #notifyBtn')) closeNotifications();
 });
+document.addEventListener('pointerdown', unlockAlertAudio, { once: true, passive: true });
+window.addEventListener('pagehide', () => { clearTimeout(persistenceTimer); writePersistentSnapshot(); });
 window.addEventListener('beforeinstallprompt', (event) => { event.preventDefault(); window.installPrompt = event; $('#installBtn').hidden = false; });
 window.addEventListener('online', () => { $('#connectionStatus').textContent = t('online'); toast(state.language === 'en' ? 'Back online' : '网络已恢复'); });
 window.addEventListener('offline', () => { $('#connectionStatus').textContent = t('offline'); toast(state.language === 'en' ? 'Offline mode' : '已切换到离线模式'); });
@@ -1427,6 +1768,12 @@ window.addEventListener('hashchange', () => selectTool(location.hash.slice(1)));
 window.matchMedia?.('(prefers-color-scheme: dark)').addEventListener?.('change', () => { if (state.theme === 'system') applyTheme(); });
 document.addEventListener('visibilitychange', () => { if (!document.hidden) state.swRegistration?.update().catch(() => {}); });
 window.addEventListener('focus', () => state.swRegistration?.update().catch(() => {}));
-setInterval(checkNotifications, 30000);
-applyLanguage(); renderNav(); render(); checkNotifications();
-setupServiceWorker();
+function bootApp() {
+  setInterval(checkNotifications, 30000);
+  applyLanguage(); renderNav(); render(); checkNotifications();
+  setupServiceWorker();
+}
+restorePersistentSnapshot().then((restored) => {
+  if (restored) { window.location.reload(); return; }
+  bootApp();
+}).catch(bootApp);
