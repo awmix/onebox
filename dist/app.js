@@ -87,6 +87,7 @@ const DICT = {
     githubClientId: 'GitHub OAuth Client ID', githubClientHint: '首次使用需在 GitHub OAuth App 中开启 Device Flow，并填入 Client ID。',
     githubLogin: '连接 GitHub', githubLogout: '退出 GitHub', upload: '上传到 GitHub', download: '从 GitHub 恢复',
     githubConnected: '已连接', githubNotConnected: '尚未连接', openDevice: '打开验证页面',
+    appUpdate: '应用更新', checkUpdate: '检查更新', updateAvailable: '有新版本可用', upToDate: '已是最新版本', updating: '正在检查…', applyUpdate: '立即更新',
     notificationsPermission: '原生通知', enableNotifications: '允许通知', notificationDescription: 'Safari 添加到主屏幕后可申请通知权限；真正的后台推送仍需要服务端。',
     addReminder: '添加提醒', reminderText: '提醒内容', remindAt: '提醒时间', noNotifications: '还没有提醒。',
     markRead: '全部已读', close: '关闭', system: '跟随系统', light: '浅色', dark: '深色',
@@ -123,6 +124,7 @@ const DICT = {
     githubClientId: 'GitHub OAuth Client ID', githubClientHint: 'Enable Device Flow in a GitHub OAuth App and paste its Client ID here once.',
     githubLogin: 'Connect GitHub', githubLogout: 'Disconnect GitHub', upload: 'Upload to GitHub', download: 'Restore from GitHub',
     githubConnected: 'Connected', githubNotConnected: 'Not connected', openDevice: 'Open verification page',
+    appUpdate: 'App update', checkUpdate: 'Check for updates', updateAvailable: 'A new version is ready', upToDate: 'You are up to date', updating: 'Checking…', applyUpdate: 'Update now',
     notificationsPermission: 'Native notifications', enableNotifications: 'Allow notifications', notificationDescription: 'Safari Home Screen apps can request notification permission; true background push still needs a server.',
     addReminder: 'Add reminder', reminderText: 'Reminder', remindAt: 'When', noNotifications: 'No reminders yet.',
     markRead: 'Mark all read', close: 'Close', system: 'System', light: 'Light', dark: 'Dark',
@@ -158,6 +160,7 @@ const state = {
   translation: { source: 'auto', target: 'zh', input: '', result: '', loading: false, error: '' },
   translationHistory: parseStored(STORAGE.translationHistory, []),
   notifications: parseStored(STORAGE.notifications, []), notificationOpen: false, settingsOpen: false,
+  swRegistration: null, updateAvailable: false, updateChecking: false, updateApplying: false,
   github: (() => { const value = parseStored(STORAGE.github, {}) || {}; return { clientId: value.clientId || '', token: value.token || '', user: value.user || null, gistId: value.gistId || '', deviceCode: '', userCode: '', verificationUri: '', expiresAt: 0, interval: 5 }; })(),
 };
 function formatNumber(value) {
@@ -167,6 +170,10 @@ function formatNumber(value) {
 }
 function formatDate(key, options = { month: 'long', day: 'numeric', weekday: 'long' }) {
   return new Intl.DateTimeFormat(state.language === 'en' ? 'en-US' : 'zh-CN', options).format(dateFromKey(key));
+}
+function themeIcon(resolved) {
+  if (resolved === 'dark') return '<svg class="header-line-icon theme-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 15.5A8.5 8.5 0 0 1 8.5 4 8.5 8.5 0 1 0 20 15.5Z"/></svg>';
+  return '<svg class="header-line-icon theme-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.5"/><path d="M12 2.5v2M12 19.5v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2.5 12h2M19.5 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>';
 }
 function applyTheme() {
   const resolved = state.theme === 'system' ? (window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : state.theme;
@@ -179,8 +186,10 @@ function applyTheme() {
   if (appleStatusBar) appleStatusBar.content = resolved === 'dark' ? 'black-translucent' : 'default';
   const button = $('#themeBtn');
   if (button) {
+    button.innerHTML = themeIcon(resolved);
     button.setAttribute('aria-label', t('theme') + '：' + t(state.theme));
     button.dataset.themeMode = state.theme;
+    button.dataset.resolvedTheme = resolved;
   }
 }
 function applyLanguage() {
@@ -727,8 +736,13 @@ function renderNotifications() {
   const panel = $('#notificationPanel');
   const items = [...state.notifications].sort((a, b) => Number(a.at) - Number(b.at));
   const list = items.length ? items.map((item) => '<div class="notification-item ' + (item.read ? '' : 'unread') + '"><div><strong>' + escapeHtml(item.text) + '</strong><small>' + new Intl.DateTimeFormat(state.language === 'en' ? 'en-US' : 'zh-CN', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(item.at)) + '</small></div><button class="icon-btn small" data-delete-notification="' + escapeHtml(item.id) + '" aria-label="Delete">×</button></div>').join('') : '<p class="empty compact">' + t('noNotifications') + '</p>';
-  panel.innerHTML = '<div class="notification-head"><h3>' + t('notifications') + '</h3><button class="text-btn" data-mark-notifications-read>' + t('markRead') + '</button></div><div class="notification-list">' + list + '</div>';
+  panel.innerHTML = '<div class="notification-dialog-card" role="dialog" aria-modal="true" aria-label="' + t('notifications') + '"><div class="dialog-head notification-head"><h2>' + t('notifications') + '</h2><div class="notification-head-actions"><button class="text-btn" data-mark-notifications-read>' + t('markRead') + '</button><button class="icon-btn small" data-close-notifications aria-label="' + t('close') + '">×</button></div></div><div class="notification-list">' + list + '</div></div>';
   panel.hidden = false;
+}
+function closeNotifications() {
+  state.notificationOpen = false;
+  const panel = $('#notificationPanel'); if (panel) panel.hidden = true;
+  $('#notifyBtn')?.setAttribute('aria-expanded', 'false');
 }
 async function requestNotifications() {
   if (!('Notification' in window)) return toast(state.language === 'en' ? 'This browser does not support notifications' : '当前浏览器不支持通知', 'error');
@@ -834,17 +848,73 @@ function disconnectGithub() {
 function renderSettings() {
   const dialog = $('#settingsDialog');
   const connected = Boolean(state.github.token && state.github.user);
+  const updateStatus = state.updateAvailable ? t('updateAvailable') : (state.updateChecking ? t('updating') : t('upToDate'));
+  const updateAction = state.updateAvailable ? '<button class="primary" data-apply-update>' + t('applyUpdate') + '</button>' : '';
   const account = connected
     ? '<div class="github-user"><img src="' + escapeHtml(state.github.user.avatar_url || '') + '" alt=""><div><strong>' + escapeHtml(state.github.user.login || 'GitHub') + '</strong><small>' + t('githubConnected') + '</small></div></div>'
     : '<span class="settings-note">' + t('githubNotConnected') + '</span>';
   const code = state.github.userCode ? '<div class="device-code"><small>' + (state.language === 'en' ? 'Enter this code at GitHub' : '请在 GitHub 验证页面输入') + '</small><strong>' + escapeHtml(state.github.userCode) + '</strong><p><a href="' + escapeHtml(state.github.verificationUri || 'https://github.com/login/device') + '" target="_blank" rel="noreferrer">' + t('openDevice') + '</a></p></div>' : '';
   dialog.innerHTML = '<div class="dialog-card settings-dialog-card" role="dialog" aria-modal="true"><div class="dialog-head"><h2>' + t('settings') + '</h2><button class="icon-btn small" data-close-settings aria-label="' + t('close') + '">×</button></div>' +
     '<div class="settings-grid"><div class="field"><label for="settingsTheme">' + t('theme') + '</label><select id="settingsTheme"><option value="system" ' + (state.theme === 'system' ? 'selected' : '') + '>' + t('system') + '</option><option value="light" ' + (state.theme === 'light' ? 'selected' : '') + '>' + t('light') + '</option><option value="dark" ' + (state.theme === 'dark' ? 'selected' : '') + '>' + t('dark') + '</option></select></div><div class="field"><label for="settingsLanguage">' + t('language') + '</label><select id="settingsLanguage"><option value="system" ' + (state.languageMode === 'system' ? 'selected' : '') + '>' + t('system') + '</option><option value="zh" ' + (state.languageMode === 'zh' ? 'selected' : '') + '>中文</option><option value="en" ' + (state.languageMode === 'en' ? 'selected' : '') + '>English</option></select></div></div>' +
+    '<section class="settings-section"><div class="settings-row"><h3>' + t('appUpdate') + '</h3><div class="settings-actions"><button class="secondary" data-check-update ' + (state.updateChecking ? 'disabled' : '') + '>' + t('checkUpdate') + '</button>' + updateAction + '</div></div><small class="settings-note" aria-live="polite">' + updateStatus + '</small></section>' +
     '<section class="settings-section"><div class="settings-row"><h3>' + t('notificationsPermission') + '</h3><button class="secondary" data-request-notifications>' + t('enableNotifications') + '</button></div><small class="settings-note">' + notificationPermissionText() + '</small></section>' +
     '<section class="settings-section"><div class="settings-row"><h3>' + t('githubSync') + '</h3>' + account + '</div><div class="field"><label for="githubClientId">' + t('githubClientId') + '</label><input id="githubClientId" value="' + escapeHtml(state.github.clientId) + '" placeholder="Iv1.xxxxxxxxxxxxx"></div>' + code + '<div class="settings-actions">' + (connected ? '<button class="secondary" data-github-upload>' + t('upload') + '</button><button class="secondary" data-github-download>' + t('download') + '</button><button class="text-btn" data-github-logout>' + t('githubLogout') + '</button>' : '<button class="primary" data-github-login>' + t('githubLogin') + '</button>') + '</div></section></div>';
   dialog.hidden = false; state.settingsOpen = true;
 }
 function closeSettings() { $('#settingsDialog').hidden = true; state.settingsOpen = false; }
+function refreshUpdateIndicator() {
+  const button = $('#updateBtn');
+  if (!button) return;
+  button.hidden = !state.updateAvailable;
+  button.setAttribute('aria-label', state.updateAvailable ? t('applyUpdate') : t('checkUpdate'));
+}
+function markUpdateAvailable() {
+  state.updateAvailable = true;
+  refreshUpdateIndicator();
+  if (state.settingsOpen) renderSettings();
+}
+async function checkForUpdate() {
+  const registration = state.swRegistration || await navigator.serviceWorker?.getRegistration();
+  if (!registration) return toast(state.language === 'en' ? 'Updates are unavailable in this browser' : '当前浏览器暂不支持更新检查', 'error');
+  state.swRegistration = registration;
+  state.updateChecking = true;
+  if (state.settingsOpen) renderSettings();
+  try {
+    await registration.update();
+    if (registration.waiting) markUpdateAvailable();
+    else { state.updateAvailable = false; refreshUpdateIndicator(); if (state.settingsOpen) renderSettings(); toast(t('upToDate')); }
+  } catch { toast(state.language === 'en' ? 'Update check failed' : '更新检查失败', 'error'); }
+  finally { state.updateChecking = false; if (state.settingsOpen) renderSettings(); }
+}
+function applyUpdate() {
+  const worker = state.swRegistration?.waiting;
+  if (!worker) return checkForUpdate();
+  state.updateApplying = true;
+  worker.postMessage({ type: 'SKIP_WAITING' });
+}
+function setupServiceWorker() {
+  if (!('serviceWorker' in navigator)) return;
+  let controllerReady = Boolean(navigator.serviceWorker.controller);
+  let didReload = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!controllerReady) { controllerReady = true; return; }
+    if (didReload) return;
+    didReload = true;
+    window.location.reload();
+  });
+  navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then((registration) => {
+    state.swRegistration = registration;
+    if (registration.waiting) markUpdateAvailable();
+    registration.addEventListener('updatefound', () => {
+      const worker = registration.installing;
+      if (!worker) return;
+      worker.addEventListener('statechange', () => {
+        if (worker.state === 'installed' && navigator.serviceWorker.controller) markUpdateAvailable();
+      });
+    });
+    registration.update().catch(() => {});
+  }).catch(() => {});
+}
 
 // Rendering and interaction --------------------------------------------------
 function render() {
@@ -998,12 +1068,15 @@ $('#settingsBtn').addEventListener('click', () => renderSettings());
 $('#notifyBtn').addEventListener('click', () => {
   state.notificationOpen = !state.notificationOpen;
   if (state.notificationOpen) { state.notifications.forEach((item) => { if (item.at <= Date.now()) item.read = true; }); saveNotifications(); renderNotifications(); }
-  else $('#notificationPanel').hidden = true;
+  else closeNotifications();
   $('#notifyBtn').setAttribute('aria-expanded', String(state.notificationOpen));
 });
+$('#updateBtn').addEventListener('click', applyUpdate);
 $('#installBtn').addEventListener('click', async () => { if (!window.installPrompt) return; window.installPrompt.prompt(); await window.installPrompt.userChoice; window.installPrompt = null; $('#installBtn').hidden = true; });
 $('#settingsDialog').addEventListener('click', (event) => {
   if (event.target === $('#settingsDialog') || event.target.closest('[data-close-settings]')) return closeSettings();
+  if (event.target.closest('[data-check-update]')) return checkForUpdate();
+  if (event.target.closest('[data-apply-update]')) return applyUpdate();
   if (event.target.closest('[data-request-notifications]')) return requestNotifications();
   if (event.target.closest('[data-github-login]')) return githubLogin();
   if (event.target.closest('[data-github-upload]')) return githubUpload();
@@ -1016,18 +1089,21 @@ $('#settingsDialog').addEventListener('change', (event) => {
 });
 $('#settingsDialog').addEventListener('input', (event) => { if (event.target.id === 'githubClientId') { state.github.clientId = event.target.value.trim(); saveGithub(); } });
 $('#notificationPanel').addEventListener('click', (event) => {
+  if (event.target === $('#notificationPanel') || event.target.closest('[data-close-notifications]')) return closeNotifications();
   const deleteNotification = event.target.closest('[data-delete-notification]');
   if (deleteNotification) { state.notifications = state.notifications.filter((item) => item.id !== deleteNotification.dataset.deleteNotification); saveNotifications(); renderNotifications(); updateNotificationBadge(); }
   if (event.target.closest('[data-mark-notifications-read]')) { state.notifications.forEach((item) => { item.read = true; }); saveNotifications(); renderNotifications(); updateNotificationBadge(); }
 });
 document.addEventListener('click', (event) => {
-  if (state.notificationOpen && !event.target.closest('#notificationPanel, #notifyBtn')) { state.notificationOpen = false; $('#notificationPanel').hidden = true; $('#notifyBtn').setAttribute('aria-expanded', 'false'); }
+  if (state.notificationOpen && !event.target.closest('#notificationPanel, #notifyBtn')) closeNotifications();
 });
 window.addEventListener('beforeinstallprompt', (event) => { event.preventDefault(); window.installPrompt = event; $('#installBtn').hidden = false; });
 window.addEventListener('online', () => { $('#connectionStatus').textContent = t('online'); toast(state.language === 'en' ? 'Back online' : '网络已恢复'); });
 window.addEventListener('offline', () => { $('#connectionStatus').textContent = t('offline'); toast(state.language === 'en' ? 'Offline mode' : '已切换到离线模式'); });
 window.addEventListener('hashchange', () => selectTool(location.hash.slice(1)));
 window.matchMedia?.('(prefers-color-scheme: dark)').addEventListener?.('change', () => { if (state.theme === 'system') applyTheme(); });
+document.addEventListener('visibilitychange', () => { if (!document.hidden) state.swRegistration?.update().catch(() => {}); });
+window.addEventListener('focus', () => state.swRegistration?.update().catch(() => {}));
 setInterval(checkNotifications, 30000);
 applyLanguage(); renderNav(); render(); checkNotifications();
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+setupServiceWorker();

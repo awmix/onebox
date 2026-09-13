@@ -13,7 +13,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" type="image/svg+xml" href="icons/icon.svg">
   <link rel="apple-touch-icon" href="icons/icon.svg">
-  <link rel="stylesheet" href="style.css?v=2.10.0">
+  <link rel="stylesheet" href="style.css?v=2.11.1">
 </head>
 <body>
   <div class="shell">
@@ -22,8 +22,9 @@
       <div class="header-actions">
         <span class="connection" aria-live="polite"><i></i><span id="connectionStatus">在线</span></span>
         <button id="notifyBtn" class="icon-btn header-icon" aria-label="消息提示" aria-expanded="false"><svg class="header-line-icon bell-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg><sup id="notificationCount" hidden>0</sup></button>
-        <button id="themeBtn" class="icon-btn header-icon" aria-label="主题：跟随系统"><svg class="header-line-icon theme-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 15.5A8.5 8.5 0 0 1 8.5 4 8.5 8.5 0 1 0 20 15.5Z"/></svg></button>
+        <button id="themeBtn" class="icon-btn header-icon" aria-label="主题：跟随系统"><svg class="header-line-icon theme-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.5"/><path d="M12 2.5v2M12 19.5v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2.5 12h2M19.5 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></button>
         <button id="settingsBtn" class="icon-btn header-icon" aria-label="设置"><svg class="header-line-icon settings-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.5"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-1.8 1.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5v.2h-2.6v-.2a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1-1.8-1.8.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H6.4v-2.6h.2a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1 1.8-1.8.1.1a1.7 1.7 0 0 0 1.9.3 1.7 1.7 0 0 0 1-1.5v-.2h2.6v.2a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1 1.8 1.8-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.5 1h.2V14h-.2a1.7 1.7 0 0 0-1.5 1Z"/></svg></button>
+        <button id="updateBtn" class="icon-btn header-icon" aria-label="检查更新" hidden><svg class="header-line-icon update-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14.8-4L3 10"/><path d="M3 5v5h5M4 13a8 8 0 0 0 14.8 4L21 14"/><path d="M21 19v-5h-5"/></svg></button>
         <button id="installBtn" class="install" hidden>安装应用</button>
       </div>
     </header>
@@ -36,7 +37,7 @@
   <aside id="notificationPanel" class="popover notification-panel" hidden aria-label="消息提示"></aside>
   <section id="settingsDialog" class="dialog" hidden aria-label="设置"></section>
   <section id="eventDialog" class="dialog" hidden aria-label="新增日程"></section>
-  <script src="calendar-data.js?v=2.10.0"></script>
-  <script src="app.js?v=2.10.0" defer></script>
+  <script src="calendar-data.js?v=2.11.1"></script>
+  <script src="app.js?v=2.11.1" defer></script>
 </body>
 </html>

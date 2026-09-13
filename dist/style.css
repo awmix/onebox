@@ -45,9 +45,9 @@ a { color: inherit; }
   padding-top: env(safe-area-inset-top);
 }
 .brand { color: inherit; text-decoration: none; font-size: 21px; font-weight: 800; display: flex; gap: 11px; align-items: center; }
-.logo-mark { width: 34px; height: 34px; padding: 8px; border-radius: 11px; background: var(--ink); display: grid; grid-template-columns: repeat(2, 1fr); gap: 3px; box-shadow: 0 7px 16px rgba(64, 92, 245, .2); }
+.logo-mark { width: 34px; height: 34px; padding: 8px; border: 1px solid var(--line); border-radius: 11px; background: var(--panel); display: grid; grid-template-columns: repeat(2, 1fr); gap: 3px; box-shadow: 0 7px 16px rgba(64, 92, 245, .12); }
 .logo-mark i { display: block; border-radius: 3px; background: var(--primary); }
-.logo-mark i:nth-child(2), .logo-mark i:nth-child(3) { background: var(--panel); }
+.logo-mark i:nth-child(2), .logo-mark i:nth-child(3) { background: var(--ink); }
 .header-actions { display: flex; align-items: center; gap: 8px; }
 .connection { display: flex; gap: 6px; align-items: center; color: var(--muted); font-size: 12px; }
 .connection i { width: 7px; height: 7px; border-radius: 50%; background: var(--success); display: block; }
@@ -62,7 +62,7 @@ nav { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin: 1
 .tab { border: 1px solid var(--line); background: rgba(255, 255, 255, .7); color: var(--muted); border-radius: 16px; padding: 14px 10px; cursor: grab; font-weight: 650; }
 .tab:active { cursor: grabbing; }
 .tab span { font-size: 19px; margin-right: 7px; }
-.tab.active { color: var(--ink); background: var(--panel); border-color: var(--line); box-shadow: 0 10px 22px rgba(17, 19, 26, .08); }
+.tab.active { color: var(--ink); background: var(--panel); border-color: var(--primary); box-shadow: none; }
 .tab.reorder-hold, .weather-card.reorder-hold { outline: 3px solid var(--primary); box-shadow: 0 0 0 5px var(--soft); }
 .workspace { background: var(--panel); border: 1px solid var(--line); border-radius: 28px; padding: 28px; min-height: 460px; box-shadow: var(--shadow); }
 .hero { display: flex; justify-content: space-between; align-items: center; gap: 30px; }
@@ -233,8 +233,6 @@ textarea { min-height: 130px; resize: vertical; }
 .notification-item { display: flex; justify-content: space-between; gap: 10px; padding: 10px; border-radius: 11px; background: var(--panel-2); font-size: 13px; }
 .notification-item.unread { box-shadow: inset 3px 0 var(--primary); }
 .notification-item small { display: block; color: var(--muted); margin-top: 3px; }
-.notification-form { border-top: 1px solid var(--line); padding-top: 12px; }
-.notification-form .field { margin-bottom: 10px; }
 .dialog { position: fixed; z-index: 30; inset: 0; background: rgba(12, 16, 28, .45); padding: 20px; overflow: auto; }
 .dialog-card { width: min(620px, 100%); margin: max(24px, 8vh) auto; background: var(--panel); border-radius: 22px; box-shadow: 0 24px 80px rgba(0, 0, 0, .24); padding: 22px; }
 .dialog-head { display: flex; justify-content: space-between; gap: 16px; align-items: start; margin-bottom: 18px; }
@@ -323,6 +321,7 @@ body { overscroll-behavior-y: none; }
   min-height: calc(58px + env(safe-area-inset-top));
   padding: calc(env(safe-area-inset-top) + 10px) 0 10px;
   background: var(--bg);
+  isolation: isolate;
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
 }
@@ -339,7 +338,7 @@ body { overscroll-behavior-y: none; }
 #toolNav {
   position: sticky;
   top: calc(58px + env(safe-area-inset-top));
-  z-index: 30;
+  z-index: 50;
   display: flex;
   gap: 7px;
   overflow-x: auto;
@@ -348,11 +347,12 @@ body { overscroll-behavior-y: none; }
   margin: 0 0 12px;
   padding: 8px 1px 5px;
   background: var(--bg);
+  isolation: isolate;
 }
 #toolNav::-webkit-scrollbar { display: none; }
 .tab { flex: 0 0 78px; min-height: 40px; padding: 9px 5px; border-radius: 13px; font-size: 12px; white-space: nowrap; }
 .tab span { font-size: 15px; margin-right: 3px; }
-.tab.active { box-shadow: 0 6px 16px rgba(17, 19, 26, .13); }
+.tab.active { border-color: var(--primary); box-shadow: none; }
 .workspace { min-height: 0; padding: 16px; border-radius: 20px; }
 .tool-head { align-items: center; gap: 10px; margin-bottom: 16px; }
 .tool-head h2 { font-size: 24px; margin-top: 3px; }
@@ -521,8 +521,80 @@ button:not(:disabled):active { transform: scale(.98); }
 .weather-search-field input { min-width: 0; padding-right: 42px; }
 .converter-card { max-width: 760px; padding: 0; border: 0; background: transparent; }
 
+[data-theme="dark"] .tab.active { border-color: #8794ff; background: var(--soft); box-shadow: none; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .tab.active { border-color: #8794ff; background: var(--soft); box-shadow: none; }
+}
+
+/* Notifications use the same modal surface as settings. */
+#notificationPanel {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  width: auto;
+  max-height: none;
+  padding: calc(58px + env(safe-area-inset-top) + 12px) max(12px, calc((100vw - 1104px) / 2)) 24px;
+  overflow: auto;
+  background: rgba(12, 16, 28, .58);
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+#notificationPanel[hidden] { display: none; }
+#notificationPanel .notification-dialog-card {
+  width: min(360px, calc(100vw - 24px));
+  max-height: min(70vh, 420px);
+  margin: 0;
+  padding: 18px;
+  overflow: auto;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, .34);
+}
+#notificationPanel .dialog-head {
+  position: sticky;
+  top: -18px;
+  z-index: 1;
+  align-items: center;
+  margin: -18px -18px 14px;
+  padding: 14px 18px 12px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--line);
+}
+#notificationPanel .dialog-head h2 { margin: 0; font-size: 21px; }
+.notification-head-actions { display: flex; align-items: center; gap: 12px; }
+#notificationPanel .notification-list { max-height: none; margin-top: 0; }
+
 @media (max-width: 390px) {
   .weather-search { grid-template-columns: minmax(0, 1fr) auto auto; gap: 5px; }
   .weather-search > .primary, .weather-search > .secondary { padding-left: 8px; padding-right: 8px; font-size: 11px; }
   #settingsDialog { padding-left: 10px; padding-right: 10px; }
+}
+
+/* The app chrome is a fixed rail, so long tool pages never push it away. */
+.app-header {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  z-index: 60;
+  width: 100%;
+  transform: translateX(-50%);
+  padding-left: max(12px, calc((100% - 1104px) / 2));
+  padding-right: max(12px, calc((100% - 1104px) / 2));
+}
+main { padding-top: calc(58px + env(safe-area-inset-top) + 55.5px + 12px); }
+#toolNav {
+  position: fixed;
+  top: calc(58px + env(safe-area-inset-top));
+  left: 50%;
+  z-index: 50;
+  width: min(1104px, calc(100% - 24px));
+  margin: 0;
+  transform: translateX(-50%);
 }
