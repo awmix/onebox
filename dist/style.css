@@ -1645,3 +1645,27 @@ main:has(#workspace[data-tool="mine"]) { background: var(--panel); }
 #workspace[data-tool="home"] .feed-item:first-child {
   border-top: 1px solid var(--line);
 }
+
+/* 2.18.20: make the tool rail use the same edge-to-edge active underline as
+   the homepage source rail. The active mark sits on top of the rail divider. */
+#toolNav {
+  height: 42px;
+  box-sizing: border-box;
+  padding: 0 8px;
+}
+#toolNav .tab,
+#toolNav .tab.active {
+  height: 100%;
+  min-height: 0;
+  box-sizing: border-box;
+  padding: 4px 10px 5px;
+  border-radius: 0;
+}
+#toolNav .tab.active::after {
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  border-radius: 2px 2px 0 0;
+  z-index: 1;
+}
