@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.8';
+const APP_VERSION = '2.18.9';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -19,6 +19,7 @@ const STORAGE = {
   alarms: 'onebox.alarms',
   library: 'onebox.library',
   homeFeeds: 'onebox.home-feeds',
+  homeFeedRead: 'onebox.home-feed-read',
   homeFeedOrder: 'onebox.home-feed-order',
   headerVisibility: 'onebox.header-visibility',
   bottomNavAutoHide: 'onebox.bottom-nav-auto-hide',
@@ -41,6 +42,8 @@ const RSS_SOURCES = [
 ];
 const RSS_JSON_ENDPOINT = 'https://api.rss2json.com/v1/api.json?rss_url=';
 const RSS_REFRESH_INTERVAL = 10 * 60 * 1000;
+const RSS_RETENTION_MS = 2 * 24 * 60 * 60 * 1000;
+const RSS_MAX_ITEMS_PER_SOURCE = 60;
 const DEFAULT_HOME_FEED_ORDER = RSS_SOURCES.map((source) => source.id);
 const DEFAULT_TOOL_ORDER = Object.keys(TOOL_DEFS);
 const nav = $('#toolNav');
@@ -235,6 +238,7 @@ const storedHeaderVisibility = parseStored(STORAGE.headerVisibility, {});
 const storedAlarms = parseStored(STORAGE.alarms, []);
 const storedLibrary = parseStored(STORAGE.library, []);
 const storedHomeFeeds = parseStored(STORAGE.homeFeeds, {}) || {};
+const storedHomeFeedRead = parseStored(STORAGE.homeFeedRead, {}) || {};
 const storedHomeFeedOrder = parseStored(STORAGE.homeFeedOrder, DEFAULT_HOME_FEED_ORDER);
 const storedNotificationPreference = parseStored(STORAGE.notificationPreference, 'allow');
 const storedBottomNavAutoHide = parseStored(STORAGE.bottomNavAutoHide, null);
@@ -275,6 +279,7 @@ const state = {
   library: (Array.isArray(storedLibrary) ? storedLibrary : []).filter((book) => book && book.id && book.name),
   readerBookId: null, readerUrl: '', readerSelectedText: '', annotationBookId: null,
   homeFeed: { active: DEFAULT_HOME_FEED_ORDER[0], order: normalizeHomeFeedOrder(storedHomeFeedOrder), hasNew: false, loading: false, errors: {}, updatedAt: Number(storedHomeFeeds.updatedAt || 0), cacheVersion: storedHomeFeeds.cacheVersion || '', sources: storedHomeFeeds.sources && typeof storedHomeFeeds.sources === 'object' ? storedHomeFeeds.sources : {} },
+  homeFeedRead: storedHomeFeedRead && typeof storedHomeFeedRead === 'object' ? storedHomeFeedRead : {},
   homeFeedRequest: 0,
   notifications: parseStored(STORAGE.notifications, []), notificationOpen: false, settingsOpen: false, githubDialogOpen: false,
   headerVisibility: { ...DEFAULT_HEADER_VISIBILITY, ...(storedHeaderVisibility && typeof storedHeaderVisibility === 'object' ? storedHeaderVisibility : {}) },
@@ -406,9 +411,40 @@ function feedText(value = '') { return String(value).replace(/<[^>]*>/g, ' ').re
 function safeExternalUrl(value = '') {
   try { const url = new URL(value); return ['http:', 'https:'].includes(url.protocol) ? url.href : ''; } catch { return ''; }
 }
-function feedDate(value) {
-  const date = new Date(value); if (!Number.isFinite(date.getTime())) return '';
-  return new Intl.DateTimeFormat(state.language === 'en' ? 'en-US' : 'zh-CN', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }).format(date);
+function parseFeedTimestamp(value) {
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
+  const raw = String(value || '').trim();
+  if (!raw) return NaN;
+  const hasExplicitZone = /(?:Z|[+-]\d{2}:?\d{2}|GMT|UTC)$/i.test(raw);
+  const plain = raw.match(/^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})(?::(\d{2}))?$/);
+  if (plain && !hasExplicitZone) {
+    // rss2json drops the original GMT suffix from several feeds. Its plain
+    // YYYY-MM-DD HH:mm:ss value is therefore UTC, not local device time.
+    return Date.UTC(Number(plain[1]), Number(plain[2]) - 1, Number(plain[3]), Number(plain[4]), Number(plain[5]), Number(plain[6] || 0));
+  }
+  const normalized = raw.replace(/^(\d{4}-\d{2}-\d{2})\s+(\d{2}:\d{2}(?::\d{2})?)$/, '$1T$2');
+  const parsed = Date.parse(normalized);
+  if (Number.isFinite(parsed)) return parsed;
+  return NaN;
+}
+function feedSource(item) { return RSS_SOURCES.find((source) => source.id === item?.source) || RSS_SOURCES[0]; }
+function feedItemTimestamp(item) {
+  const parsed = parseFeedTimestamp(item?.publishedAt);
+  if (Number.isFinite(parsed)) return parsed;
+  const value = Number(item?.publishedMs);
+  return Number.isFinite(value) && value > 0 ? value : NaN;
+}
+function feedDate(value, item) {
+  const timestamp = typeof value === 'object' ? feedItemTimestamp(value) : parseFeedTimestamp(value);
+  if (!Number.isFinite(timestamp)) return '';
+  const date = new Date(timestamp);
+  return new Intl.DateTimeFormat(state.language === 'en' ? 'en-US' : 'zh-CN', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Asia/Shanghai' }).format(date);
+}
+function saveHomeFeedRead() { saveStored(STORAGE.homeFeedRead, state.homeFeedRead); }
+function markFeedRead(id) {
+  if (!id || state.homeFeedRead[id]) return;
+  state.homeFeedRead[id] = Date.now();
+  saveHomeFeedRead();
 }
 function feedImageUrl(value) {
   const url = safeExternalUrl(value);
@@ -420,7 +456,18 @@ function normalizeFeedItem(item, source) {
   const title = feedText(item.title || item.name); const link = safeExternalUrl(item.link || item.guid);
   if (!title || !link) return null;
   const thumbnail = feedImageUrl(item.thumbnail || item.enclosure?.link || item.enclosure?.url);
-  return { id: source.id + ':' + (item.guid || item.link || title), source: source.id, title, link, description: feedText(item.description || item.content || '').slice(0, 180), thumbnail, publishedAt: item.pubDate || item.published || item.isoDate || '' };
+  const publishedAt = item.pubDate || item.published || item.isoDate || item.date || '';
+  return { id: source.id + ':' + (item.guid || item.link || title), source: source.id, title, link, description: feedText(item.description || item.content || '').slice(0, 180), thumbnail, publishedAt, publishedMs: parseFeedTimestamp(publishedAt) };
+}
+function mergeFeedItems(source, incoming) {
+  const existing = state.homeFeed.sources[source.id]?.items || [];
+  const merged = new Map(existing.map((item) => [item.id, item]));
+  incoming.forEach((item) => merged.set(item.id, { ...merged.get(item.id), ...item }));
+  const cutoff = Date.now() - RSS_RETENTION_MS;
+  return [...merged.values()]
+    .filter((item) => { const timestamp = feedItemTimestamp(item); return !Number.isFinite(timestamp) || timestamp >= cutoff; })
+    .sort((a, b) => (feedItemTimestamp(b) || 0) - (feedItemTimestamp(a) || 0))
+    .slice(0, RSS_MAX_ITEMS_PER_SOURCE);
 }
 async function fetchFeedSource(source) {
   let lastError = null;
@@ -430,7 +477,7 @@ async function fetchFeedSource(source) {
       if (!response.ok) throw Error('HTTP ' + response.status);
       const payload = await response.json();
       if (payload.status !== 'ok' || !Array.isArray(payload.items)) throw Error('Invalid RSS response');
-      const items = payload.items.map((item) => normalizeFeedItem(item, source)).filter(Boolean).slice(0, 18);
+      const items = payload.items.map((item) => normalizeFeedItem(item, source)).filter(Boolean).slice(0, RSS_MAX_ITEMS_PER_SOURCE);
       if (!items.length) throw Error('Empty RSS feed');
       return { items, updatedAt: Date.now(), feedUrl };
     } catch (error) { lastError = error; }
@@ -455,7 +502,7 @@ async function loadHomeFeeds(force = false) {
     if (result) {
       const previousIds = new Set((state.homeFeed.sources[source.id]?.items || []).map((item) => item.id));
       if (hadCachedItems && result.items.some((item) => !previousIds.has(item.id))) discoveredNewItems = true;
-      state.homeFeed.sources[source.id] = result;
+      state.homeFeed.sources[source.id] = { ...result, items: mergeFeedItems(source, result.items) };
     } else state.homeFeed.errors[source.id] = error;
   });
   state.homeFeed.updatedAt = Date.now(); state.homeFeed.loading = false;
@@ -465,16 +512,18 @@ async function loadHomeFeeds(force = false) {
   if (state.section === 'home') render(); else renderBottomNav();
 }
 function renderFeedItem(item, index) {
-  const source = RSS_SOURCES.find((entry) => entry.id === item.source) || RSS_SOURCES[0];
+  const source = feedSource(item);
   const thumbnail = feedImageUrl(item.thumbnail);
   const image = thumbnail ? '<span class="feed-item-media"><img class="feed-item-image" src="' + escapeHtml(thumbnail) + '" alt="" loading="lazy" onerror="this.hidden=true;this.nextElementSibling.hidden=false"><span class="feed-image-fallback" hidden aria-hidden="true">' + escapeHtml(source.badge) + '</span></span>' : '';
-  return '<article class="feed-item" data-feed-link="' + escapeHtml(item.link) + '" tabindex="0" role="link"><span class="feed-rank">' + (index + 1) + '</span><div class="feed-item-body"><h2>' + escapeHtml(item.title) + '</h2>' + (item.description ? '<p>' + escapeHtml(item.description) + '</p>' : '') + '<div class="feed-item-meta"><span class="feed-source-tag ' + source.className + '"><b><img src="' + escapeHtml(source.icon) + '" alt="" loading="lazy" onerror="this.hidden=true;this.nextElementSibling.style.display=\'inline\'"><span class="feed-source-fallback">' + escapeHtml(source.badge) + '</span></b>' + escapeHtml(source.name) + '</span><time>' + escapeHtml(feedDate(item.publishedAt)) + '</time></div></div>' + image + '</article>';
+  const read = Boolean(state.homeFeedRead[item.id]);
+  return '<article class="feed-item ' + (read ? 'is-read' : '') + '" data-feed-id="' + escapeHtml(item.id) + '" data-feed-link="' + escapeHtml(item.link) + '" tabindex="0" role="link"><span class="feed-rank">' + (index + 1) + '</span><div class="feed-item-body"><h2>' + escapeHtml(item.title) + '</h2>' + (item.description ? '<p>' + escapeHtml(item.description) + '</p>' : '') + '<div class="feed-item-meta"><span class="feed-source-tag ' + source.className + '"><b><img src="' + escapeHtml(source.icon) + '" alt="" loading="lazy" onerror="this.hidden=true;this.nextElementSibling.style.display=\'inline\'"><span class="feed-source-fallback">' + escapeHtml(source.badge) + '</span></b>' + escapeHtml(source.name) + '</span><time datetime="' + escapeHtml(new Date(feedItemTimestamp(item) || Date.now()).toISOString()) + '">' + escapeHtml(feedDate(item)) + '</time>' + (read ? '<span class="feed-read-label">' + (state.language === 'en' ? 'Read' : '已读') + '</span>' : '') + '</div></div>' + image + '</article>';
 }
 function renderHome() {
   const sources = homeFeedSources();
   const sourceTabs = sources.map((source, index) => '<button class="feed-source-tab ' + (state.homeFeed.active === source.id ? 'active' : '') + '" draggable="true" data-feed-source="' + source.id + '" data-feed-source-index="' + index + '"><span class="feed-source-mark ' + source.className + '"><img src="' + escapeHtml(source.icon) + '" alt="" loading="eager" onerror="this.hidden=true;this.nextElementSibling.style.display=\'inline\'"><span class="feed-source-fallback">' + escapeHtml(source.badge) + '</span></span><span>' + escapeHtml(source.name) + '</span></button>').join('');
   const sourceItems = state.homeFeed.sources[state.homeFeed.active]?.items || [];
-  const items = sourceItems.slice(0, 30);
+  const cutoff = Date.now() - RSS_RETENTION_MS;
+  const items = sourceItems.filter((item) => { const timestamp = feedItemTimestamp(item); return !Number.isFinite(timestamp) || timestamp >= cutoff; }).sort((a, b) => (feedItemTimestamp(b) || 0) - (feedItemTimestamp(a) || 0)).slice(0, RSS_MAX_ITEMS_PER_SOURCE);
   const hasItems = items.length > 0;
   const errors = Object.keys(state.homeFeed.errors || {}).length;
   const feedBody = state.homeFeed.loading && !hasItems ? '<div class="feed-loading"><span></span><span></span><span></span></div>' : hasItems ? '<div class="feed-list">' + items.map(renderFeedItem).join('') + '</div>' : '<p class="empty feed-empty">' + t('feedEmpty') + '</p>';
@@ -1634,8 +1683,9 @@ workspace.addEventListener('click', async (event) => {
     state.homeFeed.active = feedSource.dataset.feedSource; return render();
   }
   if (event.target.closest('[data-refresh-feeds]')) return loadHomeFeeds(true);
-  const feedLink = event.target.closest('[data-feed-link]')?.dataset.feedLink;
-  if (feedLink) { window.open(feedLink, '_blank', 'noopener,noreferrer'); return; }
+  const feedItem = event.target.closest('[data-feed-link]');
+  const feedLink = feedItem?.dataset.feedLink;
+  if (feedLink) { markFeedRead(feedItem.dataset.feedId); feedItem.classList.add('is-read'); if (!feedItem.querySelector('.feed-read-label')) { const meta = $('.feed-item-meta', feedItem); if (meta) meta.insertAdjacentHTML('beforeend', '<span class="feed-read-label">' + (state.language === 'en' ? 'Read' : '已读') + '</span>'); } window.open(feedLink, '_blank', 'noopener,noreferrer'); return; }
   if (event.target.closest('[data-open-reader-file]')) { $('#readerFileInput')?.click(); return; }
   const openReader = event.target.closest('[data-open-reader]');
   if (openReader) return openReaderBook(openReader.dataset.openReader);
