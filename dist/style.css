@@ -1521,7 +1521,7 @@ html.standalone-pwa main { padding-bottom: calc(94px + env(safe-area-inset-botto
   box-shadow: none;
 }
 #workspace[data-tool="home"] .feed-panel {
-  margin-top: 4px;
+  margin-top: 5px;
   min-height: calc(100dvh - var(--app-header-height) - 42px - 64px);
   overflow: hidden;
   border: 1px solid var(--line);
@@ -1529,6 +1529,7 @@ html.standalone-pwa main { padding-bottom: calc(94px + env(safe-area-inset-botto
   background: var(--panel);
   box-shadow: var(--shadow);
 }
+
 #workspace[data-tool="home"] .feed-list {
   background: transparent;
   border: 0;
@@ -1583,3 +1584,20 @@ main:has(#workspace[data-tool="home"]) { padding-top: calc(var(--app-header-heig
   #workspace[data-tool="home"] .feed-source-tag b { width: 18px; height: 18px; }
   main:has(#workspace[data-tool="home"]) { padding-top: calc(var(--app-header-height) + 1px); padding-bottom: calc(72px + env(safe-area-inset-bottom)); }
 }
+
+/* 2.18.16: let the feed continue behind a soft floating bottom rail. */
+.bottom-nav {
+  background: color-mix(in srgb, var(--panel) 86%, transparent);
+  border-color: color-mix(in srgb, var(--line) 82%, transparent);
+  border-radius: 24px;
+  box-shadow: 0 15px 38px rgba(10, 16, 38, .15), 0 2px 10px rgba(10, 16, 38, .06);
+}
+main { padding-bottom: 18px; }
+main:has(#workspace[data-tool="home"]),
+main:has(#workspace[data-tool="messages"]),
+main:has(#workspace[data-tool="mine"]) { padding-bottom: 18px; }
+html.standalone-pwa main:has(#workspace[data-tool="home"]),
+html.standalone-pwa main:has(#workspace[data-tool="messages"]),
+html.standalone-pwa main:has(#workspace[data-tool="mine"]) { padding-bottom: calc(24px + env(safe-area-inset-bottom)); }
+#workspace { min-height: calc(100dvh - var(--app-header-height) - 42px); }
+#workspace[data-tool="home"] .feed-panel { min-height: calc(100dvh - var(--app-header-height) - 42px); }
