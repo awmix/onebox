@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.10';
+const APP_VERSION = '2.18.11';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -22,6 +22,7 @@ const STORAGE = {
   homeFeedRead: 'onebox.home-feed-read',
   homeFeedOrder: 'onebox.home-feed-order',
   headerVisibility: 'onebox.header-visibility',
+  headerVisibilityDefaultsVersion: 'onebox.header-visibility-defaults-version',
   bottomNavAutoHide: 'onebox.bottom-nav-auto-hide',
   notificationPreference: 'onebox.notification-preference',
   github: 'onebox.github',
@@ -235,6 +236,11 @@ const resolveLanguageMode = (mode) => mode === 'en' || mode === 'zh' ? mode : ((
 const storedCalculator = parseStored(STORAGE.calculator, { expr: '', history: [] });
 const DEFAULT_HEADER_VISIBILITY = { notifications: false, theme: false, language: false, settings: false, update: false };
 const storedHeaderVisibility = parseStored(STORAGE.headerVisibility, {});
+const storedHeaderVisibilityDefaultsVersion = localStorage.getItem(STORAGE.headerVisibilityDefaultsVersion);
+const effectiveHeaderVisibility = storedHeaderVisibilityDefaultsVersion === APP_VERSION ? storedHeaderVisibility : DEFAULT_HEADER_VISIBILITY;
+if (storedHeaderVisibilityDefaultsVersion !== APP_VERSION) {
+  try { localStorage.setItem(STORAGE.headerVisibility, JSON.stringify(DEFAULT_HEADER_VISIBILITY)); localStorage.setItem(STORAGE.headerVisibilityDefaultsVersion, APP_VERSION); } catch { /* private mode can deny storage */ }
+}
 const storedAlarms = parseStored(STORAGE.alarms, []);
 const storedLibrary = parseStored(STORAGE.library, []);
 const storedHomeFeeds = parseStored(STORAGE.homeFeeds, {}) || {};
@@ -282,7 +288,7 @@ const state = {
   homeFeedRead: storedHomeFeedRead && typeof storedHomeFeedRead === 'object' ? storedHomeFeedRead : {},
   homeFeedRequest: 0,
   notifications: parseStored(STORAGE.notifications, []), notificationOpen: false, settingsOpen: false, githubDialogOpen: false, recentReadingOpen: false,
-  headerVisibility: { ...DEFAULT_HEADER_VISIBILITY, ...(storedHeaderVisibility && typeof storedHeaderVisibility === 'object' ? storedHeaderVisibility : {}) },
+  headerVisibility: { ...DEFAULT_HEADER_VISIBILITY, ...(effectiveHeaderVisibility && typeof effectiveHeaderVisibility === 'object' ? effectiveHeaderVisibility : {}) },
   bottomNavAutoHide: storedBottomNavAutoHide == null ? !isStandalonePwa() : Boolean(storedBottomNavAutoHide),
   notificationPreference: storedNotificationPreference === 'deny' ? 'deny' : 'allow',
   swRegistration: null, updateAvailable: false, updateChecking: false, updateApplying: false,
