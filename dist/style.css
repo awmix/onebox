@@ -1073,3 +1073,76 @@ main { padding-bottom: calc(94px + env(safe-area-inset-bottom)); }
   #workspace[data-tool="calculator"] .science-control-key { min-height: 27px; height: 27px; padding: 3px 1px; border-radius: 9px; font-size: 11px; }
   #workspace[data-tool="calculator"] .calculator-layout:has(.scientific-bar:not([hidden])) .key { min-height: 41px; padding-top: 6px; padding-bottom: 6px; }
 }
+
+/* Homepage feed rail: fixed app chrome, compact divider, source tabs stay visible. */
+#workspace[data-tool="home"] .feed-source-panel {
+  position: fixed;
+  top: calc(58px + env(safe-area-inset-top));
+  left: 50%;
+  z-index: 55;
+  width: min(1104px, calc(100% - 24px));
+  transform: translateX(-50%);
+  margin: 0;
+  padding: 6px 8px 5px;
+  border-top-color: transparent;
+  border-left-color: transparent;
+  border-right-color: transparent;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0 0 14px 14px;
+  background: color-mix(in srgb, var(--panel) 92%, transparent);
+  box-shadow: 0 8px 18px color-mix(in srgb, var(--ink) 8%, transparent);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+}
+#workspace[data-tool="home"] .feed-home { padding-top: 40px; }
+#workspace[data-tool="home"] .feed-source-tabs { gap: 2px; touch-action: pan-x; }
+#workspace[data-tool="home"] .feed-source-tab {
+  position: relative;
+  padding: 8px 10px 9px;
+  border-color: transparent;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--muted);
+}
+#workspace[data-tool="home"] .feed-source-tab.active {
+  border-color: transparent;
+  background: transparent;
+  color: var(--ink);
+}
+#workspace[data-tool="home"] .feed-source-tab.active::after {
+  content: '';
+  position: absolute;
+  left: 6px;
+  right: 6px;
+  bottom: 2px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--primary);
+}
+#workspace[data-tool="home"] .feed-source-mark img,
+#workspace[data-tool="home"] .feed-source-tag b img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: inherit;
+}
+#workspace[data-tool="home"] .feed-source-mark .feed-source-fallback,
+#workspace[data-tool="home"] .feed-source-tag b .feed-source-fallback { display: none; }
+#workspace[data-tool="home"] .feed-source-tag b { overflow: hidden; }
+#workspace[data-tool="home"] .feed-source-tab.reorder-hold {
+  outline: 2px solid var(--primary);
+  box-shadow: 0 0 0 4px var(--soft);
+}
+#workspace[data-tool="home"] .feed-source-mark.huxiu,
+#workspace[data-tool="home"] .feed-source-tag.huxiu b { background: #e39a35; color: #fff; border: 0; }
+#workspace[data-tool="home"] .feed-source-mark.v2ex,
+#workspace[data-tool="home"] .feed-source-tag.v2ex b { background: #5c86a8; color: #fff; border: 0; }
+#workspace[data-tool="home"] .feed-panel { margin-top: 6px; border-radius: 16px; }
+#workspace[data-tool="home"] .feed-refresh { margin-right: 1px; }
+
+@media (max-width: 600px) {
+  #workspace[data-tool="home"] .feed-source-panel { padding-inline: 6px; }
+  #workspace[data-tool="home"] .feed-source-tab { padding-inline: 8px; }
+  #workspace[data-tool="home"] .feed-source-mark { width: 20px; height: 20px; }
+}

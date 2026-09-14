@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.16.0';
+const APP_VERSION = '2.17.2';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -19,6 +19,7 @@ const STORAGE = {
   alarms: 'onebox.alarms',
   library: 'onebox.library',
   homeFeeds: 'onebox.home-feeds',
+  homeFeedOrder: 'onebox.home-feed-order',
   headerVisibility: 'onebox.header-visibility',
   bottomNavAutoHide: 'onebox.bottom-nav-auto-hide',
   github: 'onebox.github',
@@ -32,13 +33,14 @@ const TOOL_DEFS = {
   reader: { icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4.5A2.5 2.5 0 0 1 7.5 2H19v17H7.5A2.5 2.5 0 0 0 5 21.5zM5 4.5v17M8 6h8M8 10h8M8 14h6"/></svg>', key: 'reader' },
 };
 const RSS_SOURCES = [
-  { id: 'ithome', name: 'IT之家', badge: 'IT', className: 'ithome', urls: ['https://www.ithome.com/rss/'] },
-  { id: 'huxiu', name: '虎嗅', badge: '虎', className: 'huxiu', urls: ['https://www.huxiu.com/rss/0.xml', 'https://feedx.net/rss/huxiu.xml'] },
-  { id: 'zhihu', name: '知乎', badge: '知', className: 'zhihu', urls: ['https://feedx.net/rss/zhihudaily.xml', 'https://rss.mifaw.com/articles/5c8bb11a3c41f61efd36683e/5c919d543882afa09dff3fa4', 'https://rsshub.rssforever.com/zhihu/hotlist', 'https://rsshub.app/zhihu/hotlist'] },
-  { id: 'v2ex', name: 'V2EX', badge: 'V2', className: 'v2ex', urls: ['https://www.v2ex.com/index.xml'] },
+  { id: 'ithome', name: 'IT之家', badge: 'IT', icon: 'https://www.ithome.com/favicon.ico', className: 'ithome', urls: ['https://www.ithome.com/rss/', 'https://www.ithome.com/rss'] },
+  { id: 'huxiu', name: '虎嗅', badge: 'H', icon: 'https://www.huxiu.com/favicon.ico', className: 'huxiu', urls: ['https://www.huxiu.com/rss/0.xml', 'https://feedx.net/rss/huxiu.xml'] },
+  { id: 'zhihu', name: '知乎', badge: '知', icon: 'https://www.zhihu.com/favicon.ico', className: 'zhihu', urls: ['https://feedx.net/rss/zhihudaily.xml', 'https://rss.mifaw.com/articles/5c8bb11a3c41f61efd36683e/5c919d543882afa09dff3fa4', 'https://rsshub.rssforever.com/zhihu/hotlist', 'https://rsshub.app/zhihu/hotlist'] },
+  { id: 'v2ex', name: 'V2EX', badge: 'V', icon: 'https://www.v2ex.com/favicon.ico', className: 'v2ex', urls: ['https://www.v2ex.com/feed/rss.xml', 'https://www.v2ex.com/index.xml'] },
 ];
 const RSS_JSON_ENDPOINT = 'https://api.rss2json.com/v1/api.json?rss_url=';
 const RSS_REFRESH_INTERVAL = 10 * 60 * 1000;
+const DEFAULT_HOME_FEED_ORDER = RSS_SOURCES.map((source) => source.id);
 const DEFAULT_TOOL_ORDER = Object.keys(TOOL_DEFS);
 const nav = $('#toolNav');
 const workspace = $('#workspace');
@@ -232,11 +234,16 @@ const storedHeaderVisibility = parseStored(STORAGE.headerVisibility, {});
 const storedAlarms = parseStored(STORAGE.alarms, []);
 const storedLibrary = parseStored(STORAGE.library, []);
 const storedHomeFeeds = parseStored(STORAGE.homeFeeds, {}) || {};
+const storedHomeFeedOrder = parseStored(STORAGE.homeFeedOrder, DEFAULT_HOME_FEED_ORDER);
 const rawWeatherCards = parseStored(STORAGE.weatherCards, []);
 const legacyWeather = parseStored(STORAGE.legacyWeather, null);
 const normalizeToolOrder = (value) => {
   const order = Array.isArray(value) ? value.filter((id) => TOOL_DEFS[id]) : [];
   return [...new Set(order.concat(Object.keys(TOOL_DEFS)))].slice(0, Object.keys(TOOL_DEFS).length);
+};
+const normalizeHomeFeedOrder = (value) => {
+  const order = Array.isArray(value) ? value.filter((id) => DEFAULT_HOME_FEED_ORDER.includes(id)) : [];
+  return [...new Set(order.concat(DEFAULT_HOME_FEED_ORDER))].slice(0, DEFAULT_HOME_FEED_ORDER.length);
 };
 const initialWeatherCards = (Array.isArray(rawWeatherCards) && rawWeatherCards.length ? rawWeatherCards : legacyWeather ? [legacyWeather] : []).map((item) => ({
   ...item,
@@ -261,7 +268,7 @@ const state = {
   alarms: Array.isArray(storedAlarms) ? storedAlarms : [],
   library: (Array.isArray(storedLibrary) ? storedLibrary : []).filter((book) => book && book.id && book.name),
   readerBookId: null, readerUrl: '', readerSelectedText: '', annotationBookId: null,
-  homeFeed: { active: 'all', period: 'today', loading: false, errors: {}, updatedAt: Number(storedHomeFeeds.updatedAt || 0), sources: storedHomeFeeds.sources && typeof storedHomeFeeds.sources === 'object' ? storedHomeFeeds.sources : {} },
+  homeFeed: { active: DEFAULT_HOME_FEED_ORDER[0], order: normalizeHomeFeedOrder(storedHomeFeedOrder), hasNew: false, loading: false, errors: {}, updatedAt: Number(storedHomeFeeds.updatedAt || 0), sources: storedHomeFeeds.sources && typeof storedHomeFeeds.sources === 'object' ? storedHomeFeeds.sources : {} },
   homeFeedRequest: 0,
   notifications: parseStored(STORAGE.notifications, []), notificationOpen: false, settingsOpen: false, githubDialogOpen: false,
   headerVisibility: { ...DEFAULT_HEADER_VISIBILITY, ...(storedHeaderVisibility && typeof storedHeaderVisibility === 'object' ? storedHeaderVisibility : {}) },
@@ -345,7 +352,11 @@ function renderBottomNav() {
   const unread = state.notifications.filter((item) => !item.read).length;
   bottomNav.classList.toggle('auto-hide-enabled', state.bottomNavAutoHide);
   if (!state.bottomNavAutoHide || $('main')?.scrollTop <= 8) bottomNav.classList.remove('is-hidden');
-  bottomNav.innerHTML = Object.values(SECTION_DEFS).map((item) => '<button class="bottom-tab ' + (state.section === item.key ? 'active' : '') + '" data-section="' + item.key + '" aria-current="' + (state.section === item.key ? 'page' : 'false') + '"><span class="bottom-tab-icon" aria-hidden="true">' + item.icon + '</span><span>' + t(item.key) + '</span>' + (item.key === 'messages' && unread ? '<sup>' + (unread > 99 ? '99+' : unread) + '</sup>' : '') + '</button>').join('');
+  const refreshIcon = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0 2 5M20 5v6h-6"/></svg>';
+  bottomNav.innerHTML = Object.values(SECTION_DEFS).map((item) => {
+    const isHomeRefresh = item.key === 'home' && state.homeFeed.hasNew;
+    return '<button class="bottom-tab ' + (state.section === item.key ? 'active' : '') + '" data-section="' + item.key + '" aria-current="' + (state.section === item.key ? 'page' : 'false') + '" aria-label="' + (isHomeRefresh ? (state.language === 'en' ? 'Refresh home' : '刷新首页') : t(item.key)) + '"><span class="bottom-tab-icon" aria-hidden="true">' + (isHomeRefresh ? refreshIcon : item.icon) + '</span><span>' + t(item.key) + '</span>' + (item.key === 'messages' && unread ? '<sup>' + (unread > 99 ? '99+' : unread) + '</sup>' : '') + '</button>';
+  }).join('');
 }
 function selectTool(id) {
   if (!TOOL_DEFS[id]) id = 'calculator';
@@ -357,6 +368,7 @@ function selectTool(id) {
 function selectSection(section) {
   if (!SECTION_DEFS[section]) section = 'tools';
   state.section = section;
+  if (section === 'home') state.homeFeed.hasNew = false;
   if (section === 'tools' && !TOOL_DEFS[state.tool]) state.tool = 'calculator';
   renderNav(); renderBottomNav(); render();
 }
@@ -367,6 +379,16 @@ function swapToolOrder(from, to) {
   saveToolOrder(); renderNav();
   toast(state.language === 'en' ? 'Tool order saved' : '工具顺序已保存');
 }
+function homeFeedSources() {
+  return state.homeFeed.order.map((id) => RSS_SOURCES.find((source) => source.id === id)).filter(Boolean);
+}
+function saveHomeFeedOrder() { saveStored(STORAGE.homeFeedOrder, state.homeFeed.order); }
+function swapHomeFeedSources(from, to) {
+  if (from === to || from == null || to == null) return;
+  [state.homeFeed.order[from], state.homeFeed.order[to]] = [state.homeFeed.order[to], state.homeFeed.order[from]];
+  saveHomeFeedOrder(); render();
+  toast(state.language === 'en' ? 'Feed order saved' : '订阅源顺序已保存');
+}
 
 function feedText(value = '') { return String(value).replace(/<[^>]*>/g, ' ').replace(/&nbsp;/gi, ' ').replace(/\s+/g, ' ').trim(); }
 function safeExternalUrl(value = '') {
@@ -375,13 +397,6 @@ function safeExternalUrl(value = '') {
 function feedDate(value) {
   const date = new Date(value); if (!Number.isFinite(date.getTime())) return '';
   return new Intl.DateTimeFormat(state.language === 'en' ? 'en-US' : 'zh-CN', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }).format(date);
-}
-function feedItemsForPeriod(items) {
-  const now = new Date(); const start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  if (state.homeFeed.period === 'week') start.setDate(start.getDate() - ((start.getDay() + 6) % 7));
-  if (state.homeFeed.period === 'month') start.setDate(1);
-  const filtered = items.filter((item) => !item.publishedAt || new Date(item.publishedAt).getTime() >= start.getTime());
-  return filtered.length ? filtered : items;
 }
 function normalizeFeedItem(item, source) {
   const title = feedText(item.title || item.name); const link = safeExternalUrl(item.link || item.guid);
@@ -409,34 +424,39 @@ async function loadHomeFeeds(force = false) {
   const hasItems = RSS_SOURCES.some((source) => state.homeFeed.sources[source.id]?.items?.length);
   if (!force && hasItems && Date.now() - state.homeFeed.updatedAt < RSS_REFRESH_INTERVAL) return;
   state.homeFeed.loading = true; state.homeFeed.errors = {}; const request = ++state.homeFeedRequest;
+  const hadCachedItems = hasItems;
+  let discoveredNewItems = false;
   const results = await Promise.all(RSS_SOURCES.map(async (source) => {
     try { return { source, result: await fetchFeedSource(source) }; }
     catch (error) { return { source, error: error?.message || 'RSS unavailable' }; }
   }));
   if (request !== state.homeFeedRequest) return;
   results.forEach(({ source, result, error }) => {
-    if (result) state.homeFeed.sources[source.id] = result;
-    else state.homeFeed.errors[source.id] = error;
+    if (result) {
+      const previousIds = new Set((state.homeFeed.sources[source.id]?.items || []).map((item) => item.id));
+      if (hadCachedItems && result.items.some((item) => !previousIds.has(item.id))) discoveredNewItems = true;
+      state.homeFeed.sources[source.id] = result;
+    } else state.homeFeed.errors[source.id] = error;
   });
   state.homeFeed.updatedAt = Date.now(); state.homeFeed.loading = false;
+  state.homeFeed.hasNew = state.section === 'home' ? false : state.homeFeed.hasNew || discoveredNewItems;
   saveStored(STORAGE.homeFeeds, { updatedAt: state.homeFeed.updatedAt, sources: state.homeFeed.sources });
-  if (state.section === 'home') render();
+  if (state.section === 'home') render(); else renderBottomNav();
 }
 function renderFeedItem(item, index) {
   const source = RSS_SOURCES.find((entry) => entry.id === item.source) || RSS_SOURCES[0];
   const image = item.thumbnail ? '<img class="feed-item-image" src="' + escapeHtml(item.thumbnail) + '" alt="" loading="lazy">' : '';
-  return '<article class="feed-item" data-feed-link="' + escapeHtml(item.link) + '" tabindex="0" role="link"><span class="feed-rank">' + (index + 1) + '</span><div class="feed-item-body"><h2>' + escapeHtml(item.title) + '</h2>' + (item.description ? '<p>' + escapeHtml(item.description) + '</p>' : '') + '<div class="feed-item-meta"><span class="feed-source-tag ' + source.className + '"><b>' + escapeHtml(source.badge) + '</b>' + escapeHtml(source.name) + '</span><time>' + escapeHtml(feedDate(item.publishedAt)) + '</time></div></div>' + image + '</article>';
+  return '<article class="feed-item" data-feed-link="' + escapeHtml(item.link) + '" tabindex="0" role="link"><span class="feed-rank">' + (index + 1) + '</span><div class="feed-item-body"><h2>' + escapeHtml(item.title) + '</h2>' + (item.description ? '<p>' + escapeHtml(item.description) + '</p>' : '') + '<div class="feed-item-meta"><span class="feed-source-tag ' + source.className + '"><b><img src="' + escapeHtml(source.icon) + '" alt="" loading="lazy" onerror="this.hidden=true;this.nextElementSibling.style.display=\'inline\'"><span class="feed-source-fallback">' + escapeHtml(source.badge) + '</span></b>' + escapeHtml(source.name) + '</span><time>' + escapeHtml(feedDate(item.publishedAt)) + '</time></div></div>' + image + '</article>';
 }
 function renderHome() {
-  const sourceTabs = [{ id: 'all', name: t('allFeeds'), badge: 'R', className: 'all' }].concat(RSS_SOURCES).map((source) => '<button class="feed-source-tab ' + (state.homeFeed.active === source.id ? 'active' : '') + '" data-feed-source="' + source.id + '"><span class="feed-source-mark ' + source.className + '">' + escapeHtml(source.badge) + '</span><span>' + escapeHtml(source.name) + '</span></button>').join('');
-  const periodTabs = [['today', state.language === 'en' ? 'Today' : '今日'], ['week', state.language === 'en' ? 'This week' : '本周'], ['month', state.language === 'en' ? 'This month' : '本月']].map(([id, label]) => '<button class="feed-period-tab ' + (state.homeFeed.period === id ? 'active' : '') + '" data-feed-period="' + id + '">' + label + '</button>').join('');
-  const allItems = RSS_SOURCES.flatMap((source) => (state.homeFeed.sources[source.id]?.items || []).map((item) => ({ ...item, source: source.id }))).sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
-  const sourceItems = state.homeFeed.active === 'all' ? allItems : (state.homeFeed.sources[state.homeFeed.active]?.items || []);
-  const items = feedItemsForPeriod(sourceItems).slice(0, 30);
+  const sources = homeFeedSources();
+  const sourceTabs = sources.map((source, index) => '<button class="feed-source-tab ' + (state.homeFeed.active === source.id ? 'active' : '') + '" draggable="true" data-feed-source="' + source.id + '" data-feed-source-index="' + index + '"><span class="feed-source-mark ' + source.className + '"><img src="' + escapeHtml(source.icon) + '" alt="" loading="eager" onerror="this.hidden=true;this.nextElementSibling.style.display=\'inline\'"><span class="feed-source-fallback">' + escapeHtml(source.badge) + '</span></span><span>' + escapeHtml(source.name) + '</span></button>').join('');
+  const sourceItems = state.homeFeed.sources[state.homeFeed.active]?.items || [];
+  const items = sourceItems.slice(0, 30);
   const hasItems = items.length > 0;
   const errors = Object.keys(state.homeFeed.errors || {}).length;
   const feedBody = state.homeFeed.loading && !hasItems ? '<div class="feed-loading"><span></span><span></span><span></span></div>' : hasItems ? '<div class="feed-list">' + items.map(renderFeedItem).join('') + '</div>' : '<p class="empty feed-empty">' + t('feedEmpty') + '</p>';
-  return '<div class="home-page feed-home"><section class="feed-source-panel"><div class="feed-source-tabs" role="tablist" aria-label="RSS 来源">' + sourceTabs + '</div><button class="icon-btn feed-refresh" data-refresh-feeds aria-label="' + t('feedRefresh') + '" ' + (state.homeFeed.loading ? 'disabled' : '') + '><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0 2 5M20 5v6h-6"/></svg></button></section><section class="feed-panel"><div class="feed-period-tabs" role="tablist" aria-label="' + t('home') + '">' + periodTabs + '</div>' + (errors ? '<p class="feed-warning">' + t('feedPartial') + '</p>' : '') + feedBody + '<p class="feed-hint">' + t('feedProxyHint') + (state.homeFeed.updatedAt ? ' · ' + t('feedUpdated') + ' ' + escapeHtml(feedDate(state.homeFeed.updatedAt)) : '') + '</p></section></div>';
+  return '<div class="home-page feed-home"><section class="feed-source-panel"><div class="feed-source-tabs" role="tablist" aria-label="RSS 来源">' + sourceTabs + '</div></section><section class="feed-panel">' + (errors ? '<p class="feed-warning">' + t('feedPartial') + '</p>' : '') + feedBody + '<p class="feed-hint">' + t('feedProxyHint') + (state.homeFeed.updatedAt ? ' · ' + t('feedUpdated') + ' ' + escapeHtml(feedDate(state.homeFeed.updatedAt)) : '') + '</p></section></div>';
 }
 function notificationItemsMarkup() {
   const items = [...state.notifications].sort((a, b) => Number(b.at) - Number(a.at));
@@ -1525,7 +1545,7 @@ function startLongPress(target, type, index) {
 function endLongPress() { clearTimeout(reorderTimer); reorderTimer = null; }
 function handleReorderClick(target, type, index) {
   if (!reorderTarget || reorderTarget.type !== type || !reorderTarget.target.dataset.longPressed) return false;
-  if (reorderTarget.index !== index) type === 'tool' ? swapToolOrder(reorderTarget.index, index) : swapWeatherCards(reorderTarget.index, index);
+  if (reorderTarget.index !== index) type === 'tool' ? swapToolOrder(reorderTarget.index, index) : type === 'feed' ? swapHomeFeedSources(reorderTarget.index, index) : swapWeatherCards(reorderTarget.index, index);
   reorderTarget.target.classList.remove('reorder-hold'); delete reorderTarget.target.dataset.longPressed; reorderTarget = null;
   return true;
 }
@@ -1567,11 +1587,15 @@ nav.addEventListener('dragover', (event) => { if (event.target.closest('[data-to
   nav.addEventListener('drop', (event) => { event.preventDefault(); const tab = event.target.closest('[data-tool]'); if (tab) swapToolOrder(Number(event.dataTransfer.getData('text/plain')), Number(tab.dataset.toolIndex)); });
 
 workspace.addEventListener('pointerdown', (event) => { const card = event.target.closest('[data-weather-card]'); if (card) startLongPress(card, 'weather', Number(card.dataset.weatherIndex)); });
+workspace.addEventListener('pointerdown', (event) => { const source = event.target.closest('[data-feed-source]'); if (source) startLongPress(source, 'feed', Number(source.dataset.feedSourceIndex)); });
 workspace.addEventListener('pointerup', endLongPress);
 workspace.addEventListener('pointercancel', endLongPress);
 workspace.addEventListener('dragstart', (event) => { const card = event.target.closest('[data-weather-card]'); if (card) event.dataTransfer.setData('text/plain', card.dataset.weatherIndex); });
 workspace.addEventListener('dragover', (event) => { if (event.target.closest('[data-weather-card]')) event.preventDefault(); });
 workspace.addEventListener('drop', (event) => { event.preventDefault(); const card = event.target.closest('[data-weather-card]'); if (card) swapWeatherCards(Number(event.dataTransfer.getData('text/plain')), Number(card.dataset.weatherIndex)); });
+workspace.addEventListener('dragstart', (event) => { const source = event.target.closest('[data-feed-source]'); if (source) event.dataTransfer.setData('text/plain', source.dataset.feedSourceIndex); });
+workspace.addEventListener('dragover', (event) => { if (event.target.closest('[data-feed-source]')) event.preventDefault(); });
+workspace.addEventListener('drop', (event) => { event.preventDefault(); const source = event.target.closest('[data-feed-source]'); if (source) swapHomeFeedSources(Number(event.dataTransfer.getData('text/plain')), Number(source.dataset.feedSourceIndex)); });
 workspace.addEventListener('click', async (event) => {
   if (Date.now() < swipeSuppressClickUntil && event.target.closest('[data-swipe-row]')) return;
   const section = event.target.closest('[data-section]');
@@ -1579,9 +1603,10 @@ workspace.addEventListener('click', async (event) => {
   const homeTool = event.target.closest('[data-home-tool]');
   if (homeTool) return selectTool(homeTool.dataset.homeTool);
   const feedSource = event.target.closest('[data-feed-source]');
-  if (feedSource) { state.homeFeed.active = feedSource.dataset.feedSource; return render(); }
-  const feedPeriod = event.target.closest('[data-feed-period]');
-  if (feedPeriod) { state.homeFeed.period = feedPeriod.dataset.feedPeriod; return render(); }
+  if (feedSource) {
+    if (handleReorderClick(feedSource, 'feed', Number(feedSource.dataset.feedSourceIndex))) { event.preventDefault(); return; }
+    state.homeFeed.active = feedSource.dataset.feedSource; return render();
+  }
   if (event.target.closest('[data-refresh-feeds]')) return loadHomeFeeds(true);
   const feedLink = event.target.closest('[data-feed-link]')?.dataset.feedLink;
   if (feedLink) { window.open(feedLink, '_blank', 'noopener,noreferrer'); return; }
@@ -1792,6 +1817,12 @@ $('#bottomNav').addEventListener('click', (event) => {
   const tab = event.target.closest('[data-section]');
   if (tab) selectSection(tab.dataset.section);
 });
+$('#bottomNav').addEventListener('dblclick', (event) => {
+  const tab = event.target.closest('[data-section]');
+  if (!tab || tab.dataset.section !== 'home') return;
+  if (state.section !== 'home') selectSection('home');
+  loadHomeFeeds(true);
+});
 $('#brandLink').addEventListener('click', (event) => { event.preventDefault(); selectSection('home'); });
 $('#languagePicker').addEventListener('change', (event) => { state.languageMode = event.target.value; saveThemeLanguage(); applyLanguage(); renderNav(); render(); if (state.settingsOpen) renderSettings(); });
 let lastMainScrollTop = 0;
@@ -1870,9 +1901,16 @@ window.addEventListener('hashchange', () => selectTool(location.hash.slice(1)));
 window.matchMedia?.('(prefers-color-scheme: dark)').addEventListener?.('change', () => { if (state.theme === 'system') applyTheme(); });
 document.addEventListener('visibilitychange', () => { if (!document.hidden) state.swRegistration?.update().catch(() => {}); });
 window.addEventListener('focus', () => state.swRegistration?.update().catch(() => {}));
+let homeFeedPollTimer = null;
+function scheduleHomeFeedPolling() {
+  if (homeFeedPollTimer) return;
+  homeFeedPollTimer = setInterval(() => {
+    if (!document.hidden) loadHomeFeeds(true);
+  }, RSS_REFRESH_INTERVAL);
+}
 function bootApp() {
   setInterval(checkNotifications, 30000);
-  applyLanguage(); renderNav(); render(); checkNotifications();
+  applyLanguage(); renderNav(); render(); checkNotifications(); scheduleHomeFeedPolling(); loadHomeFeeds();
   setupServiceWorker();
 }
 restorePersistentSnapshot().then((restored) => {
