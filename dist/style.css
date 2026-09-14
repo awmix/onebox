@@ -1616,3 +1616,32 @@ main { height: 100dvh; max-height: 100dvh; }
 main:has(#workspace[data-tool="home"]),
 main:has(#workspace[data-tool="messages"]),
 main:has(#workspace[data-tool="mine"]) { background: var(--panel); }
+
+/* 2.18.19: the homepage feed is a stream, not a nested card. Remove the
+   outer workspace/feed frame while keeping each message row readable. */
+#workspace[data-tool="home"] {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+#workspace[data-tool="home"] .feed-panel {
+  margin-top: 4px;
+  min-height: 0;
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+#workspace[data-tool="home"] .feed-list {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+#workspace[data-tool="home"] .feed-item {
+  background: var(--panel);
+}
+#workspace[data-tool="home"] .feed-item:first-child {
+  border-top: 1px solid var(--line);
+}
