@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.12';
+const APP_VERSION = '2.18.13';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -523,7 +523,7 @@ function renderFeedItem(item) {
   const image = thumbnail ? '<span class="feed-item-media"><img class="feed-item-image" src="' + escapeHtml(thumbnail) + '" alt="" loading="lazy" onerror="this.hidden=true;this.nextElementSibling.hidden=false"><span class="feed-image-fallback" hidden aria-hidden="true">' + escapeHtml(source.badge) + '</span></span>' : '';
   const meta = '<div class="feed-item-meta"><span class="feed-source-tag ' + source.className + '"><b><img src="' + escapeHtml(source.icon) + '" alt="" loading="lazy" onerror="this.hidden=true;this.nextElementSibling.style.display=\'inline\'"><span class="feed-source-fallback">' + escapeHtml(source.badge) + '</span></b>' + escapeHtml(source.name) + '</span><time datetime="' + escapeHtml(new Date(feedItemTimestamp(item) || Date.now()).toISOString()) + '">' + escapeHtml(feedDate(item)) + '</time></div>';
   const read = Boolean(state.homeFeedRead[item.id]);
-  return '<article class="feed-item ' + (read ? 'is-read' : '') + '" data-feed-id="' + escapeHtml(item.id) + '" data-feed-link="' + escapeHtml(item.link) + '" tabindex="0" role="link"><div class="feed-item-body"><h2>' + escapeHtml(item.title) + '</h2>' + (item.description ? '<p>' + escapeHtml(item.description) + '</p>' : '') + '</div><div class="feed-item-side">' + image + meta + '</div></article>';
+  return '<article class="feed-item ' + (thumbnail ? 'has-media ' : '') + (read ? 'is-read' : '') + '" data-feed-id="' + escapeHtml(item.id) + '" data-feed-link="' + escapeHtml(item.link) + '" tabindex="0" role="link"><div class="feed-item-body"><h2>' + escapeHtml(item.title) + '</h2>' + (item.description ? '<p>' + escapeHtml(item.description) + '</p>' : '') + meta + '</div>' + (image ? '<div class="feed-item-side">' + image + '</div>' : '') + '</article>';
 }
 function renderHome() {
   const sources = homeFeedSources();
