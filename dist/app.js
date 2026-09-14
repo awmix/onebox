@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.17.2';
+const APP_VERSION = '2.18.2';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -25,12 +25,12 @@ const STORAGE = {
   github: 'onebox.github',
 };
 const TOOL_DEFS = {
-  calculator: { icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="3"/><path d="M8 7h8M8 11h2m2 0h2m-4 4h2m2 0h2m-6 4h2m2 0h2"/></svg>', key: 'calculator' },
-  calendar: { icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="16" rx="3"/><path d="M7 3v4M17 3v4M4 9h16M8 13h.01M12 13h.01M16 13h.01M8 17h.01M12 17h.01M16 17h.01"/></svg>', key: 'calendar' },
-  weather: { icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>', key: 'weather' },
-  convert: { icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h13l-3-3M20 17H7l3 3M4 4v6M20 14v6"/></svg>', key: 'convert' },
-  translate: { icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 17 4-11 4 11M5.5 13h5M14 6h6M14 10h5M14 14h6M14 18h4"/></svg>', key: 'translate' },
-  reader: { icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4.5A2.5 2.5 0 0 1 7.5 2H19v17H7.5A2.5 2.5 0 0 0 5 21.5zM5 4.5v17M8 6h8M8 10h8M8 14h6"/></svg>', key: 'reader' },
+  calculator: { icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="3"/><path d="M8 7h8M8 11h.01M12 11h.01M16 11h.01M8 15h.01M12 15h.01M16 15h.01M8 18h8"/></svg>', key: 'calculator' },
+  calendar: { icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="16" rx="3"/><path d="M8 3v4M16 3v4M4 9h16M8 13h.01M12 13h.01M16 13h.01M8 17h.01M12 17h.01M16 17h.01"/></svg>', key: 'calendar' },
+  weather: { icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.5"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>', key: 'weather' },
+  convert: { icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h12l-3-3M19 17H7l3 3M17 4v4M7 16v4"/></svg>', key: 'convert' },
+  translate: { icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 17 8 6l4 11M5.5 13h5M14 6h6M14 10h4M14 14h6M14 18h4"/></svg>', key: 'translate' },
+  reader: { icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4h12v17H7.5A1.5 1.5 0 0 1 6 19.5V4Z"/><path d="M6 5.5A2.5 2.5 0 0 1 8.5 3H18M9 8h6M9 12h6M9 16h4"/></svg>', key: 'reader' },
 };
 const RSS_SOURCES = [
   { id: 'ithome', name: 'IT之家', badge: 'IT', icon: 'https://www.ithome.com/favicon.ico', className: 'ithome', urls: ['https://www.ithome.com/rss/', 'https://www.ithome.com/rss'] },
@@ -177,7 +177,7 @@ const DICT = {
     userAgreement: '用户协议', viewAgreement: '查看协议', agreementTitle: 'OneBox 用户协议', agreementBody: 'OneBox 是一款本地优先的日常工具应用。计算记录、日程、翻译历史和天气卡片默认保存在当前设备；使用 GitHub 云同步时，数据会写入你自己的私有 Gist。天气和翻译功能会请求对应的开源服务，服务商可能记录必要的请求信息。请在使用提醒、定位和消息通知功能前确认已授予相应权限。',
     addReminder: '添加提醒', reminderText: '提醒内容', remindAt: '提醒时间', noNotifications: '还没有提醒。', alarm: '闹钟', addAlarm: '添加闹钟', alarmContent: '闹钟内容', alarmPlaceholder: '请输入闹钟内容', alarmAt: '提醒时间', alarmRepeat: '重复方式', once: '指定时间', everyDay: '每天', workdays: '工作日', restdays: '非工作日', weekly: '每周', weekdays: '重复星期', noAlarms: '还没有闹钟。', alarmHint: '闹钟支持指定日期、工作日、非工作日和每周重复。', enabled: '已开启', disabled: '已关闭',
     markRead: '全部已读', close: '关闭', system: '跟随系统', light: '浅色', dark: '深色',
-    language: '语言', theme: '主题', bottomTab: '底部 Tab', autoHideBottomNav: '自动隐藏，滑动显示', reorderHint: '长按工具标签可以调整顺序',
+    language: '语言', theme: '主题', bottomTab: '底部导航', autoHideBottomNav: '动态隐藏', reorderHint: '长按工具标签可以调整顺序',
     languagePending: '日语、韩语语言包已预留，当前版本先提供中文和英文。',
     bookshelf: '书架', addBook: '添加文档', noBooks: '还没有本地文档。', readerHint: '支持 Markdown、PDF、EPUB；文档仅保存在当前设备。', openBook: '打开阅读', deleteBook: '删除文档', annotations: '标注', addAnnotation: '添加标注', annotationPlaceholder: '写下你的标注…', saveAnnotation: '保存标注', annotationHint: '选择文字后长按或点击标注按钮。', noAnnotations: '还没有标注。', reading: '正在阅读', closeReader: '关闭阅读', unsupportedFile: '请选择 .md、.markdown、.pdf 或 .epub 文件。', importFailed: '文档读取失败，请重试。', deleteConfirm: '确定删除这本文档吗？', pdfHint: 'PDF 使用浏览器原生阅读器打开。', epubHint: 'EPUB 已转换为适合 OneBox 的连续阅读视图。',
   },
@@ -218,7 +218,7 @@ const DICT = {
     userAgreement: 'User agreement', viewAgreement: 'View agreement', agreementTitle: 'OneBox user agreement', agreementBody: 'OneBox is a local-first daily tools app. Calculator history, events, translation history and weather cards stay on this device by default; when GitHub sync is enabled, they are written to your own private Gist. Weather and translation features request open-source services, which may record necessary request metadata. Review the permissions before enabling reminders, location or message notifications.',
     addReminder: 'Add reminder', reminderText: 'Reminder', remindAt: 'When', noNotifications: 'No reminders yet.', alarm: 'Alarms', addAlarm: 'Add alarm', alarmContent: 'Alarm label', alarmPlaceholder: 'Enter an alarm label', alarmAt: 'Reminder time', alarmRepeat: 'Repeat', once: 'Once', everyDay: 'Every day', workdays: 'Workdays', restdays: 'Rest days', weekly: 'Weekly', weekdays: 'Weekdays', noAlarms: 'No alarms yet.', alarmHint: 'Alarms support a date, workdays, rest days and weekly repeats.', enabled: 'On', disabled: 'Off',
     markRead: 'Mark all read', close: 'Close', system: 'System', light: 'Light', dark: 'Dark',
-    language: 'Language', theme: 'Theme', bottomTab: 'Bottom tabs', autoHideBottomNav: 'Auto-hide; reveal while scrolling', reorderHint: 'Long-press a tool tab to reorder',
+    language: 'Language', theme: 'Theme', bottomTab: 'Bottom navigation', autoHideBottomNav: 'Dynamic hide', reorderHint: 'Long-press a tool tab to reorder',
     languagePending: 'Japanese and Korean are reserved for a future language pack. Chinese and English are available now.',
     bookshelf: 'Bookshelf', addBook: 'Add document', noBooks: 'No local documents yet.', readerHint: 'Supports Markdown, PDF and EPUB. Files stay on this device.', openBook: 'Open', deleteBook: 'Delete', annotations: 'Notes', addAnnotation: 'Add note', annotationPlaceholder: 'Write a note…', saveAnnotation: 'Save note', annotationHint: 'Select text, long-press or use the note button.', noAnnotations: 'No notes yet.', reading: 'Reading', closeReader: 'Close reader', unsupportedFile: 'Choose a .md, .markdown, .pdf or .epub file.', importFailed: 'Could not read this document.', deleteConfirm: 'Delete this document?', pdfHint: 'PDF opens in the browser native reader.', epubHint: 'EPUB is converted into a continuous OneBox reading view.',
   },
@@ -357,6 +357,7 @@ function renderBottomNav() {
     const isHomeRefresh = item.key === 'home' && state.homeFeed.hasNew;
     return '<button class="bottom-tab ' + (state.section === item.key ? 'active' : '') + '" data-section="' + item.key + '" aria-current="' + (state.section === item.key ? 'page' : 'false') + '" aria-label="' + (isHomeRefresh ? (state.language === 'en' ? 'Refresh home' : '刷新首页') : t(item.key)) + '"><span class="bottom-tab-icon" aria-hidden="true">' + (isHomeRefresh ? refreshIcon : item.icon) + '</span><span>' + t(item.key) + '</span>' + (item.key === 'messages' && unread ? '<sup>' + (unread > 99 ? '99+' : unread) + '</sup>' : '') + '</button>';
   }).join('');
+  $('main')?.classList.toggle('bottom-nav-hidden', Boolean(state.bottomNavAutoHide && bottomNav.classList.contains('is-hidden')));
 }
 function selectTool(id) {
   if (!TOOL_DEFS[id]) id = 'calculator';
@@ -367,9 +368,11 @@ function selectTool(id) {
 }
 function selectSection(section) {
   if (!SECTION_DEFS[section]) section = 'tools';
+  const unchanged = state.section === section;
   state.section = section;
   if (section === 'home') state.homeFeed.hasNew = false;
   if (section === 'tools' && !TOOL_DEFS[state.tool]) state.tool = 'calculator';
+  if (unchanged) { renderBottomNav(); return; }
   renderNav(); renderBottomNav(); render();
 }
 function saveToolOrder() { saveStored(STORAGE.toolOrder, state.toolOrder); }
@@ -398,10 +401,16 @@ function feedDate(value) {
   const date = new Date(value); if (!Number.isFinite(date.getTime())) return '';
   return new Intl.DateTimeFormat(state.language === 'en' ? 'en-US' : 'zh-CN', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }).format(date);
 }
+function feedImageUrl(value) {
+  const url = safeExternalUrl(value);
+  if (!url) return '';
+  if (url.includes('images.weserv.nl/')) return url;
+  return 'https://images.weserv.nl/?url=' + encodeURIComponent(url);
+}
 function normalizeFeedItem(item, source) {
   const title = feedText(item.title || item.name); const link = safeExternalUrl(item.link || item.guid);
   if (!title || !link) return null;
-  const thumbnail = safeExternalUrl(item.thumbnail || item.enclosure?.link || item.enclosure?.url);
+  const thumbnail = feedImageUrl(item.thumbnail || item.enclosure?.link || item.enclosure?.url);
   return { id: source.id + ':' + (item.guid || item.link || title), source: source.id, title, link, description: feedText(item.description || item.content || '').slice(0, 180), thumbnail, publishedAt: item.pubDate || item.published || item.isoDate || '' };
 }
 async function fetchFeedSource(source) {
@@ -424,6 +433,7 @@ async function loadHomeFeeds(force = false) {
   const hasItems = RSS_SOURCES.some((source) => state.homeFeed.sources[source.id]?.items?.length);
   if (!force && hasItems && Date.now() - state.homeFeed.updatedAt < RSS_REFRESH_INTERVAL) return;
   state.homeFeed.loading = true; state.homeFeed.errors = {}; const request = ++state.homeFeedRequest;
+  if (state.section === 'home') render();
   const hadCachedItems = hasItems;
   let discoveredNewItems = false;
   const results = await Promise.all(RSS_SOURCES.map(async (source) => {
@@ -445,7 +455,8 @@ async function loadHomeFeeds(force = false) {
 }
 function renderFeedItem(item, index) {
   const source = RSS_SOURCES.find((entry) => entry.id === item.source) || RSS_SOURCES[0];
-  const image = item.thumbnail ? '<img class="feed-item-image" src="' + escapeHtml(item.thumbnail) + '" alt="" loading="lazy">' : '';
+  const thumbnail = feedImageUrl(item.thumbnail);
+  const image = thumbnail ? '<span class="feed-item-media"><img class="feed-item-image" src="' + escapeHtml(thumbnail) + '" alt="" loading="lazy" onerror="this.hidden=true;this.nextElementSibling.hidden=false"><span class="feed-image-fallback" hidden aria-hidden="true">' + escapeHtml(source.badge) + '</span></span>' : '';
   return '<article class="feed-item" data-feed-link="' + escapeHtml(item.link) + '" tabindex="0" role="link"><span class="feed-rank">' + (index + 1) + '</span><div class="feed-item-body"><h2>' + escapeHtml(item.title) + '</h2>' + (item.description ? '<p>' + escapeHtml(item.description) + '</p>' : '') + '<div class="feed-item-meta"><span class="feed-source-tag ' + source.className + '"><b><img src="' + escapeHtml(source.icon) + '" alt="" loading="lazy" onerror="this.hidden=true;this.nextElementSibling.style.display=\'inline\'"><span class="feed-source-fallback">' + escapeHtml(source.badge) + '</span></b>' + escapeHtml(source.name) + '</span><time>' + escapeHtml(feedDate(item.publishedAt)) + '</time></div></div>' + image + '</article>';
 }
 function renderHome() {
@@ -456,7 +467,8 @@ function renderHome() {
   const hasItems = items.length > 0;
   const errors = Object.keys(state.homeFeed.errors || {}).length;
   const feedBody = state.homeFeed.loading && !hasItems ? '<div class="feed-loading"><span></span><span></span><span></span></div>' : hasItems ? '<div class="feed-list">' + items.map(renderFeedItem).join('') + '</div>' : '<p class="empty feed-empty">' + t('feedEmpty') + '</p>';
-  return '<div class="home-page feed-home"><section class="feed-source-panel"><div class="feed-source-tabs" role="tablist" aria-label="RSS 来源">' + sourceTabs + '</div></section><section class="feed-panel">' + (errors ? '<p class="feed-warning">' + t('feedPartial') + '</p>' : '') + feedBody + '<p class="feed-hint">' + t('feedProxyHint') + (state.homeFeed.updatedAt ? ' · ' + t('feedUpdated') + ' ' + escapeHtml(feedDate(state.homeFeed.updatedAt)) : '') + '</p></section></div>';
+  const refreshState = state.homeFeed.loading ? '<div class="feed-refresh-state" role="status"><span></span>' + (state.language === 'en' ? 'Refreshing' : '正在刷新') + '</div>' : '';
+  return '<div class="home-page feed-home"><section class="feed-source-panel"><div class="feed-source-tabs" role="tablist" aria-label="RSS 来源">' + sourceTabs + '</div></section><section class="feed-panel">' + refreshState + (errors ? '<p class="feed-warning">' + t('feedPartial') + '</p>' : '') + feedBody + '<p class="feed-hint">' + t('feedProxyHint') + (state.homeFeed.updatedAt ? ' · ' + t('feedUpdated') + ' ' + escapeHtml(feedDate(state.homeFeed.updatedAt)) : '') + '</p></section></div>';
 }
 function notificationItemsMarkup() {
   const items = [...state.notifications].sort((a, b) => Number(b.at) - Number(a.at));
@@ -799,7 +811,7 @@ function evaluateExpression(input) {
 }
 const calcKeys = ['AC', '⌫', '(', ')', '7', '8', '9', '÷', '4', '5', '6', '×', '1', '2', '3', '−', '0', '.', '%', '+', '±', '00', '=', 'ƒx'];
 const scientificCalcKeys = ['AC', '⌫', '÷', '×', '7', '8', '9', '−', '4', '5', '6', '+', '1', '2', '3', '=', '0', '.', 'ƒx'];
-const scienceKeys = [['sin', 'sin('], ['cos', 'cos('], ['tan', 'tan('], ['ln', 'ln('], ['log', 'log('], ['√', 'sqrt('], ['x²', '^2'], ['xʸ', '^'], ['π', 'π'], ['e', 'e'], ['sin⁻¹', 'asin('], ['cos⁻¹', 'acos('], ['tan⁻¹', 'atan('], ['abs', 'abs('], ['exp', 'exp('], ['!', '!']];
+const scienceKeys = [['sin', 'sin('], ['cos', 'cos('], ['tan', 'tan('], ['ln', 'ln('], ['log', 'log('], ['√', 'sqrt('], ['x²', '^2'], ['xʸ', '^'], ['π', 'π'], ['e', 'e'], ['sin⁻¹', 'asin('], ['cos⁻¹', 'acos('], ['tan⁻¹', 'atan('], ['abs', 'abs('], ['exp', 'exp('], ['!', '!'], ['%', '%'], ['(', '('], [')', ')']];
 const calcPreview = () => { if (!state.calcExpr) return '0'; try { return formatNumber(evaluateExpression(state.calcExpr)); } catch { return '—'; } };
 function saveCalculator() { saveStored(STORAGE.calculator, { expr: state.calcExpr, history: state.calcHistory.slice(0, 30) }); }
 function calculator() {
@@ -808,13 +820,12 @@ function calculator() {
     return '<div class="swipe-row history-swipe-row" data-swipe-row><button class="history-item swipe-content" data-history-expression="' + escapeHtml(item.expression) + '"><span>' + escapeHtml(item.expression) + '</span><b>' + escapeHtml(item.result) + '</b></button><button class="swipe-delete" data-delete-calc-history="' + escapeHtml(id) + '">' + (state.language === 'en' ? 'Delete' : '删除') + '</button></div>';
   }).join('') : '<p class="empty compact">' + t('ready') + '</p>';
   const science = '<button class="science-key angle-toggle" data-toggle-angle>' + (state.calcAngle === 'deg' ? t('degree') : t('radian')) + '</button>' + scienceKeys.map(([label, key]) => '<button class="science-key" data-science-key="' + escapeHtml(key) + '">' + label + '</button>').join('');
-  const scienceControls = '<div class="science-control-bar" ' + (state.calcScientific ? '' : 'hidden') + '><button class="science-control-key" data-science-key="%">%</button><button class="science-control-key" data-science-key="(">(</button><button class="science-control-key" data-science-key=")">)</button></div>';
   const basic = (state.calcScientific ? scientificCalcKeys : calcKeys).map((key) => key === 'ƒx'
     ? '<button class="key scientific-toggle" data-toggle-scientific aria-pressed="' + (state.calcScientific ? 'true' : 'false') + '" aria-label="' + t('scientific') + '">ƒx</button>'
     : '<button class="key ' + (/[÷×−+%]/.test(key) ? 'op' : '') + ' ' + (key === '=' ? 'equal' : '') + ' ' + (key === 'AC' ? 'danger' : '') + '" data-key="' + key + '">' + key + '</button>').join('');
   return heading(t('calculator'), t('calculatorDesc')) +
     '<div class="calculator-layout"><div class="calculator-surface"><div class="display" aria-live="polite"><div class="expression">' + (escapeHtml(state.calcExpr) || (state.language === 'en' ? 'Ready' : '准备计算')) + '</div><div class="result">' + calcPreview() + '</div><div class="display-history"><div class="display-history-head"><span>' + t('recentCalculations') + '</span><button class="text-btn" data-clear-calc-history ' + (state.calcHistory.length ? '' : 'disabled') + '>' + t('clear') + '</button></div><div class="display-history-list">' + history + '</div></div></div>' +
-    '<div class="calculator-keyboard"><div class="scientific-bar" ' + (state.calcScientific ? '' : 'hidden') + '>' + science + '</div>' + scienceControls + '<div class="keys">' + basic + '</div></div><p class="keyboard-hint">' + t('keyboard') + '</p></div></div>';
+    '<div class="calculator-keyboard"><div class="scientific-bar" ' + (state.calcScientific ? '' : 'hidden') + '>' + science + '</div><div class="keys">' + basic + '</div></div><p class="keyboard-hint">' + t('keyboard') + '</p></div></div>';
 }
 function calculatorKey(key) {
   if (key === 'AC') { state.calcExpr = ''; state.calcJustEvaluated = false; }
@@ -1447,10 +1458,10 @@ function renderSettings() {
   const dialog = $('#settingsDialog');
   const updateStatus = state.updateAvailable ? t('updateAvailable') : (state.updateChecking ? t('updating') : t('upToDate'));
   const updateAction = state.updateAvailable ? '<button class="primary" data-apply-update>' + t('applyUpdate') + '</button>' : '';
+  const newBadge = '<span class="new-badge" title="New" aria-label="New"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.2 5.1 5.6.7-4.1 3.8 1.1 5.5-4.8-2.8-4.8 2.8 1.1-5.5-4.1-3.8 5.6-.7L12 3Z"/></svg></span>';
   dialog.innerHTML = '<div class="dialog-card settings-dialog-card" role="dialog" aria-modal="true"><div class="dialog-head"><h2>' + t('settings') + '</h2><button class="icon-btn small" data-close-settings aria-label="' + t('close') + '">×</button></div>' +
-    '<div class="settings-preferences"><div class="settings-preference-row"><h3>' + t('theme') + '</h3><div class="settings-preference-control"><select id="settingsTheme"><option value="system" ' + (state.theme === 'system' ? 'selected' : '') + '>' + t('system') + '</option><option value="light" ' + (state.theme === 'light' ? 'selected' : '') + '>' + t('light') + '</option><option value="dark" ' + (state.theme === 'dark' ? 'selected' : '') + '>' + t('dark') + '</option></select>' + headerVisibilityToggle('theme') + '</div></div><div class="settings-preference-row"><h3>' + t('language') + '</h3><div class="settings-preference-control"><select id="settingsLanguage"><option value="system" ' + (state.languageMode === 'system' ? 'selected' : '') + '>' + t('system') + '</option><option value="zh" ' + (state.languageMode === 'zh' ? 'selected' : '') + '>中文</option><option value="en" ' + (state.languageMode === 'en' ? 'selected' : '') + '>English</option></select>' + headerVisibilityToggle('language') + '</div></div><div class="settings-preference-row"><h3>' + t('notifications') + '</h3><div class="settings-preference-control">' + headerVisibilityToggle('notifications') + '</div></div><div class="settings-preference-row"><h3>' + t('settings') + '</h3><div class="settings-preference-control">' + headerVisibilityToggle('settings') + '</div></div><div class="settings-preference-row"><h3>' + t('bottomTab') + '</h3><div class="settings-preference-control"><label class="setting-toggle"><input type="checkbox" id="bottomNavAutoHide" ' + (state.bottomNavAutoHide ? 'checked' : '') + '><span>' + t('autoHideBottomNav') + '</span></label></div></div></div>' +
-    '<section class="settings-section"><div class="settings-row"><h3>' + t('appUpdate') + ' <small class="settings-version">v' + APP_VERSION + ' · ' + updateStatus + '</small></h3><div class="settings-preference-control"><button class="secondary" data-check-update ' + (state.updateChecking ? 'disabled' : '') + '>' + t('checkUpdate') + '</button>' + updateAction + headerVisibilityToggle('update') + '</div></div></section>' +
-    '<section class="settings-section"><div class="settings-row"><h3>' + t('notificationsPermission') + '</h3><button class="secondary" data-request-notifications>' + t('enableNotifications') + '</button></div><small class="settings-note">' + notificationPermissionText() + '</small></section></div>';
+    '<div class="settings-preferences"><div class="settings-preference-row"><h3>' + t('theme') + '</h3><div class="settings-preference-control"><select id="settingsTheme"><option value="system" ' + (state.theme === 'system' ? 'selected' : '') + '>' + t('system') + '</option><option value="light" ' + (state.theme === 'light' ? 'selected' : '') + '>' + t('light') + '</option><option value="dark" ' + (state.theme === 'dark' ? 'selected' : '') + '>' + t('dark') + '</option></select>' + headerVisibilityToggle('theme') + '</div></div><div class="settings-preference-row"><h3>' + t('language') + '</h3><div class="settings-preference-control"><select id="settingsLanguage"><option value="system" ' + (state.languageMode === 'system' ? 'selected' : '') + '>' + t('system') + '</option><option value="zh" ' + (state.languageMode === 'zh' ? 'selected' : '') + '>中文</option><option value="en" ' + (state.languageMode === 'en' ? 'selected' : '') + '>English</option></select>' + headerVisibilityToggle('language') + '</div></div><div class="settings-preference-row"><h3>' + t('messages') + '</h3><div class="settings-preference-control"><button class="secondary settings-message-button" data-request-notifications>' + t('enableNotifications') + '</button>' + headerVisibilityToggle('notifications') + '</div></div><div class="settings-preference-row"><h3>' + t('bottomTab') + '</h3><div class="settings-preference-control"><label class="setting-toggle"><input type="checkbox" id="bottomNavAutoHide" ' + (state.bottomNavAutoHide ? 'checked' : '') + '><span>' + t('autoHideBottomNav') + '</span></label></div></div></div>' +
+    '<section class="settings-section settings-update-section"><div class="settings-row"><h3>' + t('appUpdate') + ' <small class="settings-version">v' + APP_VERSION + ' ' + newBadge + ' · ' + updateStatus + '</small></h3><div class="settings-preference-control"><button class="primary update-check-button" data-check-update ' + (state.updateChecking ? 'disabled' : '') + '>' + t('checkUpdate') + '</button>' + updateAction + '</div></div></section></div>';
   dialog.hidden = false; state.settingsOpen = true;
 }
 function closeSettings() { $('#settingsDialog').hidden = true; state.settingsOpen = false; }
@@ -1815,13 +1826,14 @@ document.addEventListener('selectionchange', () => {
 
 $('#bottomNav').addEventListener('click', (event) => {
   const tab = event.target.closest('[data-section]');
-  if (tab) selectSection(tab.dataset.section);
-});
-$('#bottomNav').addEventListener('dblclick', (event) => {
-  const tab = event.target.closest('[data-section]');
-  if (!tab || tab.dataset.section !== 'home') return;
-  if (state.section !== 'home') selectSection('home');
-  loadHomeFeeds(true);
+  if (!tab) return;
+  if (tab.dataset.section === 'home' && event.detail >= 2) {
+    if (state.section !== 'home') selectSection('home');
+    toast(state.language === 'en' ? 'Refreshing home…' : '正在刷新首页…');
+    loadHomeFeeds(true);
+    return;
+  }
+  selectSection(tab.dataset.section);
 });
 $('#brandLink').addEventListener('click', (event) => { event.preventDefault(); selectSection('home'); });
 $('#languagePicker').addEventListener('change', (event) => { state.languageMode = event.target.value; saveThemeLanguage(); applyLanguage(); renderNav(); render(); if (state.settingsOpen) renderSettings(); });
@@ -1833,6 +1845,7 @@ $('main').addEventListener('scroll', (event) => {
   const current = main.scrollTop;
   if (current <= 8 || current < lastMainScrollTop - 4) bottomNav.classList.remove('is-hidden');
   else if (current > lastMainScrollTop + 4) bottomNav.classList.add('is-hidden');
+  main.classList.toggle('bottom-nav-hidden', bottomNav.classList.contains('is-hidden'));
   lastMainScrollTop = current;
 }, { passive: true });
 

@@ -1146,3 +1146,91 @@ main { padding-bottom: calc(94px + env(safe-area-inset-bottom)); }
   #workspace[data-tool="home"] .feed-source-tab { padding-inline: 8px; }
   #workspace[data-tool="home"] .feed-source-mark { width: 20px; height: 20px; }
 }
+
+/* OneBox responsive chrome and settings refinement ---------------------- */
+:root { --app-header-height: 82px; }
+.app-header { min-height: var(--app-header-height); }
+main { padding-top: calc(var(--app-header-height) + 55.5px + 12px); }
+#toolNav { top: var(--app-header-height); }
+main:has(#workspace[data-tool="home"]), main:has(#workspace[data-tool="messages"]), main:has(#workspace[data-tool="mine"]) { padding-top: calc(var(--app-header-height) + 8px); }
+#workspace[data-tool="home"] .feed-source-panel { top: var(--app-header-height); }
+
+#toolNav .tab {
+  min-height: 44px;
+  padding: 10px 11px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+#toolNav .tab > span {
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 19px;
+  width: 19px;
+  height: 19px;
+  margin: 0;
+  font-size: 0;
+}
+#toolNav .tab > span svg { width: 19px; height: 19px; vertical-align: 0; stroke-width: 1.8; }
+
+.feed-item-media {
+  position: relative;
+  display: block;
+  width: 132px;
+  height: 80px;
+  overflow: hidden;
+  border-radius: 10px;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+}
+.feed-item-media .feed-item-image { display: block; width: 100%; height: 100%; border: 0; }
+.feed-image-fallback { position: absolute; inset: 0; display: grid; place-items: center; color: var(--muted); font-size: 12px; font-weight: 800; }
+.feed-refresh-state { display: flex; align-items: center; justify-content: center; gap: 7px; padding: 7px 14px; color: var(--primary); font-size: 12px; font-weight: 750; border-bottom: 1px solid var(--line); }
+.feed-refresh-state span { width: 10px; height: 10px; border: 2px solid color-mix(in srgb, var(--primary) 28%, transparent); border-top-color: var(--primary); border-radius: 50%; animation: feed-spin .75s linear infinite; }
+
+/* When the dynamic bottom navigation hides, the message/content rail fills the freed area. */
+main.bottom-nav-hidden { height: 100dvh; max-height: 100dvh; padding-bottom: 24px; }
+
+#settingsDialog .settings-preferences { width: min(500px, 100%); }
+#settingsDialog .settings-preference-row { display: grid; grid-template-columns: 78px minmax(0, 1fr); gap: 8px; min-height: 54px; }
+#settingsDialog .settings-preference-row h3 { min-width: 0; flex: none; }
+#settingsDialog .settings-preference-control { min-width: 0; justify-content: flex-start; gap: 6px; flex-wrap: nowrap; }
+#settingsDialog .settings-preference-control select { min-width: 124px; height: 36px; padding: 7px 26px 7px 10px; }
+#settingsDialog .settings-message-button { flex: 0 0 auto; padding: 7px 9px; font-size: 11px; }
+#settingsDialog .setting-toggle { flex: 0 0 auto; gap: 5px; font-size: 11px; }
+#settingsDialog .setting-toggle input {
+  appearance: none;
+  -webkit-appearance: none;
+  position: relative;
+  width: 34px;
+  height: 20px;
+  flex: 0 0 34px;
+  margin: 0;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--panel-2);
+  box-shadow: none;
+  accent-color: auto;
+  cursor: pointer;
+  transition: background .16s ease, border-color .16s ease;
+}
+#settingsDialog .setting-toggle input::after { content: ''; position: absolute; top: 3px; left: 3px; width: 12px; height: 12px; border-radius: 50%; background: var(--muted); transition: transform .16s ease, background .16s ease; }
+#settingsDialog .setting-toggle input:checked { border-color: var(--primary); background: var(--primary); }
+#settingsDialog .setting-toggle input:checked::after { transform: translateX(14px); background: #fff; }
+#settingsDialog .settings-update-section { margin-top: 10px; padding-top: 10px; }
+#settingsDialog .settings-update-section .settings-row { align-items: center; }
+#settingsDialog .settings-update-section .settings-row h3 { min-width: 0; flex: 1; }
+#settingsDialog .settings-version { display: inline-flex; align-items: center; gap: 4px; }
+.new-badge { display: inline-grid; place-items: center; width: 16px; height: 16px; color: var(--primary); vertical-align: -3px; }
+.new-badge svg { width: 15px; height: 15px; fill: currentColor; stroke: currentColor; stroke-width: 1.2; }
+#settingsDialog .update-check-button, #settingsDialog [data-apply-update] { flex: 0 0 auto; padding: 7px 12px; border-color: var(--primary); background: var(--primary); color: #fff; font-size: 12px; }
+
+@media (max-width: 760px) {
+  :root { --app-header-height: calc(58px + env(safe-area-inset-top)); }
+  .feed-item-media { width: 76px; height: 58px; }
+  #settingsDialog .settings-preference-row { grid-template-columns: 64px minmax(0, 1fr); gap: 6px; }
+  #settingsDialog .settings-preference-control select { min-width: 112px; }
+  #settingsDialog .settings-message-button { padding-inline: 7px; }
+  #settingsDialog .setting-toggle span { max-width: 52px; overflow: hidden; text-overflow: ellipsis; }
+}
