@@ -996,3 +996,80 @@ main { padding-bottom: calc(94px + env(safe-area-inset-bottom)); }
   #workspace[data-tool="calculator"] .calculator-layout:has(.scientific-bar:not([hidden])) .science-key { height: 27px; min-height: 27px; padding: 3px 1px; border-radius: 9px; }
   #workspace[data-tool="calculator"] .key { min-height: 41px; padding-top: 6px; padding-bottom: 6px; }
 }
+
+/* Home RSS stream -------------------------------------------------------- */
+.feed-home { padding: 0; min-height: 0; background: transparent; border: 0; box-shadow: none; }
+.feed-source-panel, .feed-panel { background: var(--panel); border: 1px solid var(--line); box-shadow: var(--shadow); }
+.feed-source-panel { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 16px; }
+.feed-source-tabs { min-width: 0; flex: 1; display: flex; align-items: center; gap: 5px; overflow-x: auto; scrollbar-width: none; }
+.feed-source-tabs::-webkit-scrollbar { display: none; }
+.feed-source-tab { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 7px; padding: 8px 11px; border: 1px solid transparent; border-radius: 11px; background: transparent; color: var(--muted); font-weight: 700; cursor: pointer; white-space: nowrap; }
+.feed-source-tab.active { background: var(--soft); border-color: var(--primary); color: var(--primary); }
+.feed-source-mark, .feed-source-tag b { display: inline-grid; place-items: center; flex: 0 0 auto; width: 22px; height: 22px; border-radius: 7px; font-size: 10px; font-weight: 850; letter-spacing: -.04em; }
+.feed-source-mark.all, .feed-source-tag.all b { background: var(--primary); color: #fff; }
+.feed-source-mark.ithome, .feed-source-tag.ithome b { background: #d92f36; color: #fff; }
+.feed-source-mark.huxiu, .feed-source-tag.huxiu b { background: #20242b; color: #f1d7a4; }
+.feed-source-mark.zhihu, .feed-source-tag.zhihu b { background: #1677ff; color: #fff; }
+.feed-source-mark.v2ex, .feed-source-tag.v2ex b { background: var(--panel-2); border: 1px solid var(--line); color: var(--ink); }
+.feed-refresh { flex: 0 0 auto; width: 38px; height: 38px; padding: 8px; border-radius: 11px; }
+.feed-refresh svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.feed-refresh:disabled svg { animation: feed-spin .9s linear infinite; }
+@keyframes feed-spin { to { transform: rotate(360deg); } }
+.feed-panel { margin-top: 12px; overflow: hidden; border-radius: 20px; }
+.feed-period-tabs { display: flex; align-items: center; gap: 26px; padding: 0 18px; border-bottom: 1px solid var(--line); }
+.feed-period-tab { position: relative; padding: 14px 2px 11px; border: 0; background: transparent; color: var(--muted); font-size: 15px; cursor: pointer; }
+.feed-period-tab.active { color: var(--primary); font-weight: 800; }
+.feed-period-tab.active::after { content: ''; position: absolute; left: 0; right: 0; bottom: -1px; height: 3px; border-radius: 3px 3px 0 0; background: var(--primary); }
+.feed-list { display: grid; }
+.feed-item { display: grid; grid-template-columns: 32px minmax(0, 1fr) auto; gap: 12px; align-items: start; min-height: 112px; padding: 18px; border-bottom: 1px solid var(--line); color: var(--ink); cursor: pointer; transition: background .15s ease; }
+.feed-item:last-child { border-bottom: 0; }
+.feed-item:hover, .feed-item:focus-visible { background: var(--panel-2); outline: none; }
+.feed-rank { padding-top: 2px; color: var(--warning); font-size: 21px; font-weight: 850; text-align: center; }
+.feed-item-body { min-width: 0; }
+.feed-item h2 { margin: 0; font-size: 17px; line-height: 1.42; letter-spacing: -.02em; }
+.feed-item p { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; margin: 7px 0 10px; color: var(--muted); font-size: 13px; line-height: 1.5; }
+.feed-item-meta { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 12px; }
+.feed-source-tag { display: inline-flex; align-items: center; gap: 5px; min-width: 0; }
+.feed-source-tag b { width: 20px; height: 20px; border-radius: 6px; }
+.feed-item-image { width: 132px; height: 80px; object-fit: cover; border-radius: 10px; background: var(--panel-2); }
+.feed-warning { margin: 0; padding: 9px 18px; color: var(--warning); font-size: 12px; border-bottom: 1px solid var(--line); }
+.feed-hint, .feed-empty { margin: 0; padding: 20px 18px; color: var(--muted); font-size: 12px; text-align: center; }
+.feed-loading { display: grid; gap: 10px; padding: 20px 18px; }
+.feed-loading span { display: block; height: 58px; border-radius: 12px; background: linear-gradient(90deg, var(--panel-2), var(--panel)); background-size: 200% 100%; animation: feed-shimmer 1.2s ease-in-out infinite; }
+@keyframes feed-shimmer { 50% { background-position: -100% 0; } }
+
+/* Scientific keypad controls -------------------------------------------- */
+#workspace[data-tool="calculator"] .science-control-bar { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; margin: 0 0 8px; }
+#workspace[data-tool="calculator"] .science-control-bar[hidden] { display: none; }
+#workspace[data-tool="calculator"] .science-control-key { min-height: 35px; padding: 6px 3px; border: 1px solid var(--primary); border-radius: 11px; background: var(--primary); color: #fff; font-size: 12px; font-weight: 750; cursor: pointer; }
+#workspace[data-tool="calculator"] .calculator-layout:has(.scientific-bar:not([hidden])) .keys { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+#workspace[data-tool="calculator"] .calculator-layout:has(.scientific-bar:not([hidden])) .key { min-height: 46px; }
+
+/* Swipe rows require a deliberate horizontal gesture and share delete styling. */
+.swipe-row { border: 1px solid var(--line); background: var(--panel-2); }
+.swipe-row, .swipe-row .swipe-content { touch-action: pan-y; }
+.swipe-content { background: var(--panel-2) !important; }
+.swipe-delete { width: 72px; background: color-mix(in srgb, var(--danger) 13%, var(--panel)); color: var(--danger); border-left: 1px solid var(--line); }
+
+/* Settings switches use the same compact OneBox control language. */
+.setting-toggle { gap: 8px; color: var(--muted); font-size: 12px; }
+.setting-toggle input { appearance: none; -webkit-appearance: none; position: relative; width: 38px; height: 22px; flex: 0 0 38px; border: 1px solid var(--line); border-radius: 999px; background: var(--panel-2); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--line) 35%, transparent); cursor: pointer; transition: background .15s ease, border-color .15s ease; }
+.setting-toggle input::after { content: ''; position: absolute; top: 3px; left: 3px; width: 14px; height: 14px; border-radius: 50%; background: var(--muted); transition: transform .15s ease, background .15s ease; }
+.setting-toggle input:checked { border-color: var(--primary); background: var(--primary); }
+.setting-toggle input:checked::after { transform: translateX(16px); background: #fff; }
+.setting-toggle input:focus-visible { outline: 3px solid rgba(64, 92, 245, .25); outline-offset: 2px; }
+
+@media (max-width: 600px) {
+  .feed-source-panel { padding: 7px; }
+  .feed-source-tab { padding: 7px 9px; font-size: 12px; }
+  .feed-source-mark { width: 20px; height: 20px; }
+  .feed-period-tabs { gap: 22px; padding-inline: 14px; }
+  .feed-period-tab { font-size: 14px; }
+  .feed-item { grid-template-columns: 24px minmax(0, 1fr) auto; gap: 8px; min-height: 96px; padding: 14px; }
+  .feed-item h2 { font-size: 15px; }
+  .feed-item p { font-size: 12px; margin-top: 5px; }
+  .feed-item-image { width: 76px; height: 58px; }
+  .feed-rank { font-size: 17px; }
+  #workspace[data-tool="calculator"] .science-control-key { min-height: 27px; height: 27px; padding: 3px 1px; border-radius: 9px; font-size: 11px; }
+  #workspace[data-tool="calculator"] .calculator-layout:has(.scientific-bar:not([hidden])) .key { min-height: 41px; padding-top: 6px; padding-bottom: 6px; }
+}

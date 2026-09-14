@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.15.5';
+const APP_VERSION = '2.16.0';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -18,6 +18,7 @@ const STORAGE = {
   notifications: 'onebox.notifications',
   alarms: 'onebox.alarms',
   library: 'onebox.library',
+  homeFeeds: 'onebox.home-feeds',
   headerVisibility: 'onebox.header-visibility',
   bottomNavAutoHide: 'onebox.bottom-nav-auto-hide',
   github: 'onebox.github',
@@ -30,6 +31,14 @@ const TOOL_DEFS = {
   translate: { icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 17 4-11 4 11M5.5 13h5M14 6h6M14 10h5M14 14h6M14 18h4"/></svg>', key: 'translate' },
   reader: { icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4.5A2.5 2.5 0 0 1 7.5 2H19v17H7.5A2.5 2.5 0 0 0 5 21.5zM5 4.5v17M8 6h8M8 10h8M8 14h6"/></svg>', key: 'reader' },
 };
+const RSS_SOURCES = [
+  { id: 'ithome', name: 'IT之家', badge: 'IT', className: 'ithome', urls: ['https://www.ithome.com/rss/'] },
+  { id: 'huxiu', name: '虎嗅', badge: '虎', className: 'huxiu', urls: ['https://www.huxiu.com/rss/0.xml', 'https://feedx.net/rss/huxiu.xml'] },
+  { id: 'zhihu', name: '知乎', badge: '知', className: 'zhihu', urls: ['https://feedx.net/rss/zhihudaily.xml', 'https://rss.mifaw.com/articles/5c8bb11a3c41f61efd36683e/5c919d543882afa09dff3fa4', 'https://rsshub.rssforever.com/zhihu/hotlist', 'https://rsshub.app/zhihu/hotlist'] },
+  { id: 'v2ex', name: 'V2EX', badge: 'V2', className: 'v2ex', urls: ['https://www.v2ex.com/index.xml'] },
+];
+const RSS_JSON_ENDPOINT = 'https://api.rss2json.com/v1/api.json?rss_url=';
+const RSS_REFRESH_INTERVAL = 10 * 60 * 1000;
 const DEFAULT_TOOL_ORDER = Object.keys(TOOL_DEFS);
 const nav = $('#toolNav');
 const workspace = $('#workspace');
@@ -152,6 +161,7 @@ const DICT = {
     commute: '出行', sport: '运动', clothing: '穿衣', sunscreen: '防晒', hiking: '爬山',
     addCard: '添加', noResults: '没有找到匹配地点，请换个关键词。',
     home: '首页', tools: '工具', messages: '消息', mine: '我的', quickTools: '常用工具', openSettings: '打开设置', noMessages: '还没有消息。',
+    allFeeds: '全部', feedRefresh: '刷新', feedLoading: '正在加载信息流…', feedEmpty: '暂时没有可显示的内容。', feedUpdated: '更新于', feedOpen: '打开原文', feedPartial: '部分订阅源暂时不可用', feedProxyHint: '内容来自公开 RSS 订阅，首页只保留最近内容。',
     converterType: '换算类型', from: '从', to: '到', result: '结果', swap: '交换单位', copyResult: '复制结果',
     copied: '已复制', translationInput: '输入待翻译内容', translateNow: '开始翻译', saveTranslation: '保存到本机',
     source: '源语言', target: '目标语言', translationResult: '翻译结果', translationHistory: '最近翻译',
@@ -192,6 +202,7 @@ const DICT = {
     commute: 'Travel', sport: 'Sport', clothing: 'Clothing', sunscreen: 'Sun care', hiking: 'Hiking',
     addCard: 'Add', noResults: 'No matching place. Try another query.',
     home: 'Home', tools: 'Tools', messages: 'Messages', mine: 'Me', quickTools: 'Quick tools', openSettings: 'Open settings', noMessages: 'No messages yet.',
+    allFeeds: 'All', feedRefresh: 'Refresh', feedLoading: 'Loading feeds…', feedEmpty: 'No items to show yet.', feedUpdated: 'Updated', feedOpen: 'Open original', feedPartial: 'Some feeds are temporarily unavailable', feedProxyHint: 'Public RSS subscriptions; only recent items are kept on this device.',
     converterType: 'Conversion', from: 'From', to: 'To', result: 'Result', swap: 'Swap units', copyResult: 'Copy result',
     copied: 'Copied', translationInput: 'Text to translate', translateNow: 'Translate', saveTranslation: 'Save locally',
     source: 'Source', target: 'Target', translationResult: 'Translation', translationHistory: 'Recent translations',
@@ -220,6 +231,7 @@ const DEFAULT_HEADER_VISIBILITY = { notifications: true, theme: true, language: 
 const storedHeaderVisibility = parseStored(STORAGE.headerVisibility, {});
 const storedAlarms = parseStored(STORAGE.alarms, []);
 const storedLibrary = parseStored(STORAGE.library, []);
+const storedHomeFeeds = parseStored(STORAGE.homeFeeds, {}) || {};
 const rawWeatherCards = parseStored(STORAGE.weatherCards, []);
 const legacyWeather = parseStored(STORAGE.legacyWeather, null);
 const normalizeToolOrder = (value) => {
@@ -249,6 +261,8 @@ const state = {
   alarms: Array.isArray(storedAlarms) ? storedAlarms : [],
   library: (Array.isArray(storedLibrary) ? storedLibrary : []).filter((book) => book && book.id && book.name),
   readerBookId: null, readerUrl: '', readerSelectedText: '', annotationBookId: null,
+  homeFeed: { active: 'all', period: 'today', loading: false, errors: {}, updatedAt: Number(storedHomeFeeds.updatedAt || 0), sources: storedHomeFeeds.sources && typeof storedHomeFeeds.sources === 'object' ? storedHomeFeeds.sources : {} },
+  homeFeedRequest: 0,
   notifications: parseStored(STORAGE.notifications, []), notificationOpen: false, settingsOpen: false, githubDialogOpen: false,
   headerVisibility: { ...DEFAULT_HEADER_VISIBILITY, ...(storedHeaderVisibility && typeof storedHeaderVisibility === 'object' ? storedHeaderVisibility : {}) },
   bottomNavAutoHide: Boolean(parseStored(STORAGE.bottomNavAutoHide, false)),
@@ -354,9 +368,75 @@ function swapToolOrder(from, to) {
   toast(state.language === 'en' ? 'Tool order saved' : '工具顺序已保存');
 }
 
+function feedText(value = '') { return String(value).replace(/<[^>]*>/g, ' ').replace(/&nbsp;/gi, ' ').replace(/\s+/g, ' ').trim(); }
+function safeExternalUrl(value = '') {
+  try { const url = new URL(value); return ['http:', 'https:'].includes(url.protocol) ? url.href : ''; } catch { return ''; }
+}
+function feedDate(value) {
+  const date = new Date(value); if (!Number.isFinite(date.getTime())) return '';
+  return new Intl.DateTimeFormat(state.language === 'en' ? 'en-US' : 'zh-CN', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }).format(date);
+}
+function feedItemsForPeriod(items) {
+  const now = new Date(); const start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  if (state.homeFeed.period === 'week') start.setDate(start.getDate() - ((start.getDay() + 6) % 7));
+  if (state.homeFeed.period === 'month') start.setDate(1);
+  const filtered = items.filter((item) => !item.publishedAt || new Date(item.publishedAt).getTime() >= start.getTime());
+  return filtered.length ? filtered : items;
+}
+function normalizeFeedItem(item, source) {
+  const title = feedText(item.title || item.name); const link = safeExternalUrl(item.link || item.guid);
+  if (!title || !link) return null;
+  const thumbnail = safeExternalUrl(item.thumbnail || item.enclosure?.link || item.enclosure?.url);
+  return { id: source.id + ':' + (item.guid || item.link || title), source: source.id, title, link, description: feedText(item.description || item.content || '').slice(0, 180), thumbnail, publishedAt: item.pubDate || item.published || item.isoDate || '' };
+}
+async function fetchFeedSource(source) {
+  let lastError = null;
+  for (const feedUrl of source.urls) {
+    try {
+      const response = await fetchWithTimeout(RSS_JSON_ENDPOINT + encodeURIComponent(feedUrl), { headers: { Accept: 'application/json' } }, 12000);
+      if (!response.ok) throw Error('HTTP ' + response.status);
+      const payload = await response.json();
+      if (payload.status !== 'ok' || !Array.isArray(payload.items)) throw Error('Invalid RSS response');
+      const items = payload.items.map((item) => normalizeFeedItem(item, source)).filter(Boolean).slice(0, 18);
+      if (!items.length) throw Error('Empty RSS feed');
+      return { items, updatedAt: Date.now(), feedUrl };
+    } catch (error) { lastError = error; }
+  }
+  throw lastError || Error('RSS unavailable');
+}
+async function loadHomeFeeds(force = false) {
+  if (state.homeFeed.loading) return;
+  const hasItems = RSS_SOURCES.some((source) => state.homeFeed.sources[source.id]?.items?.length);
+  if (!force && hasItems && Date.now() - state.homeFeed.updatedAt < RSS_REFRESH_INTERVAL) return;
+  state.homeFeed.loading = true; state.homeFeed.errors = {}; const request = ++state.homeFeedRequest;
+  const results = await Promise.all(RSS_SOURCES.map(async (source) => {
+    try { return { source, result: await fetchFeedSource(source) }; }
+    catch (error) { return { source, error: error?.message || 'RSS unavailable' }; }
+  }));
+  if (request !== state.homeFeedRequest) return;
+  results.forEach(({ source, result, error }) => {
+    if (result) state.homeFeed.sources[source.id] = result;
+    else state.homeFeed.errors[source.id] = error;
+  });
+  state.homeFeed.updatedAt = Date.now(); state.homeFeed.loading = false;
+  saveStored(STORAGE.homeFeeds, { updatedAt: state.homeFeed.updatedAt, sources: state.homeFeed.sources });
+  if (state.section === 'home') render();
+}
+function renderFeedItem(item, index) {
+  const source = RSS_SOURCES.find((entry) => entry.id === item.source) || RSS_SOURCES[0];
+  const image = item.thumbnail ? '<img class="feed-item-image" src="' + escapeHtml(item.thumbnail) + '" alt="" loading="lazy">' : '';
+  return '<article class="feed-item" data-feed-link="' + escapeHtml(item.link) + '" tabindex="0" role="link"><span class="feed-rank">' + (index + 1) + '</span><div class="feed-item-body"><h2>' + escapeHtml(item.title) + '</h2>' + (item.description ? '<p>' + escapeHtml(item.description) + '</p>' : '') + '<div class="feed-item-meta"><span class="feed-source-tag ' + source.className + '"><b>' + escapeHtml(source.badge) + '</b>' + escapeHtml(source.name) + '</span><time>' + escapeHtml(feedDate(item.publishedAt)) + '</time></div></div>' + image + '</article>';
+}
 function renderHome() {
-  const tools = state.toolOrder.map((id) => '<button class="home-tool-card" data-home-tool="' + id + '"><span class="home-tool-icon" aria-hidden="true">' + TOOL_DEFS[id].icon + '</span><span><strong>' + toolName(id) + '</strong><small>' + (state.language === 'en' ? 'Open tool' : '打开工具') + '</small></span><span class="home-tool-arrow" aria-hidden="true">›</span></button>').join('');
-  return '<div class="home-page"><div class="home-intro"><span class="section-kicker">ONEBOX</span><h1>' + (state.language === 'en' ? 'Everything you use, in one box.' : '每天要用的工具，都在一个盒子里。') + '</h1><p>' + (state.language === 'en' ? 'A calm workspace for quick calculations, dates, weather and conversions.' : '计算、日历、天气、转换与翻译，打开就能用。') + '</p></div><section class="home-section"><div class="subhead"><h2>' + t('quickTools') + '</h2><button class="text-btn" data-section="tools">' + t('tools') + '</button></div><div class="home-tool-grid">' + tools + '</div></section></div>';
+  const sourceTabs = [{ id: 'all', name: t('allFeeds'), badge: 'R', className: 'all' }].concat(RSS_SOURCES).map((source) => '<button class="feed-source-tab ' + (state.homeFeed.active === source.id ? 'active' : '') + '" data-feed-source="' + source.id + '"><span class="feed-source-mark ' + source.className + '">' + escapeHtml(source.badge) + '</span><span>' + escapeHtml(source.name) + '</span></button>').join('');
+  const periodTabs = [['today', state.language === 'en' ? 'Today' : '今日'], ['week', state.language === 'en' ? 'This week' : '本周'], ['month', state.language === 'en' ? 'This month' : '本月']].map(([id, label]) => '<button class="feed-period-tab ' + (state.homeFeed.period === id ? 'active' : '') + '" data-feed-period="' + id + '">' + label + '</button>').join('');
+  const allItems = RSS_SOURCES.flatMap((source) => (state.homeFeed.sources[source.id]?.items || []).map((item) => ({ ...item, source: source.id }))).sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
+  const sourceItems = state.homeFeed.active === 'all' ? allItems : (state.homeFeed.sources[state.homeFeed.active]?.items || []);
+  const items = feedItemsForPeriod(sourceItems).slice(0, 30);
+  const hasItems = items.length > 0;
+  const errors = Object.keys(state.homeFeed.errors || {}).length;
+  const feedBody = state.homeFeed.loading && !hasItems ? '<div class="feed-loading"><span></span><span></span><span></span></div>' : hasItems ? '<div class="feed-list">' + items.map(renderFeedItem).join('') + '</div>' : '<p class="empty feed-empty">' + t('feedEmpty') + '</p>';
+  return '<div class="home-page feed-home"><section class="feed-source-panel"><div class="feed-source-tabs" role="tablist" aria-label="RSS 来源">' + sourceTabs + '</div><button class="icon-btn feed-refresh" data-refresh-feeds aria-label="' + t('feedRefresh') + '" ' + (state.homeFeed.loading ? 'disabled' : '') + '><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0 2 5M20 5v6h-6"/></svg></button></section><section class="feed-panel"><div class="feed-period-tabs" role="tablist" aria-label="' + t('home') + '">' + periodTabs + '</div>' + (errors ? '<p class="feed-warning">' + t('feedPartial') + '</p>' : '') + feedBody + '<p class="feed-hint">' + t('feedProxyHint') + (state.homeFeed.updatedAt ? ' · ' + t('feedUpdated') + ' ' + escapeHtml(feedDate(state.homeFeed.updatedAt)) : '') + '</p></section></div>';
 }
 function notificationItemsMarkup() {
   const items = [...state.notifications].sort((a, b) => Number(b.at) - Number(a.at));
@@ -698,6 +778,7 @@ function evaluateExpression(input) {
   return Number(result.toPrecision(12));
 }
 const calcKeys = ['AC', '⌫', '(', ')', '7', '8', '9', '÷', '4', '5', '6', '×', '1', '2', '3', '−', '0', '.', '%', '+', '±', '00', '=', 'ƒx'];
+const scientificCalcKeys = ['AC', '⌫', '÷', '×', '7', '8', '9', '−', '4', '5', '6', '+', '1', '2', '3', '=', '0', '.', 'ƒx'];
 const scienceKeys = [['sin', 'sin('], ['cos', 'cos('], ['tan', 'tan('], ['ln', 'ln('], ['log', 'log('], ['√', 'sqrt('], ['x²', '^2'], ['xʸ', '^'], ['π', 'π'], ['e', 'e'], ['sin⁻¹', 'asin('], ['cos⁻¹', 'acos('], ['tan⁻¹', 'atan('], ['abs', 'abs('], ['exp', 'exp('], ['!', '!']];
 const calcPreview = () => { if (!state.calcExpr) return '0'; try { return formatNumber(evaluateExpression(state.calcExpr)); } catch { return '—'; } };
 function saveCalculator() { saveStored(STORAGE.calculator, { expr: state.calcExpr, history: state.calcHistory.slice(0, 30) }); }
@@ -707,12 +788,13 @@ function calculator() {
     return '<div class="swipe-row history-swipe-row" data-swipe-row><button class="history-item swipe-content" data-history-expression="' + escapeHtml(item.expression) + '"><span>' + escapeHtml(item.expression) + '</span><b>' + escapeHtml(item.result) + '</b></button><button class="swipe-delete" data-delete-calc-history="' + escapeHtml(id) + '">' + (state.language === 'en' ? 'Delete' : '删除') + '</button></div>';
   }).join('') : '<p class="empty compact">' + t('ready') + '</p>';
   const science = '<button class="science-key angle-toggle" data-toggle-angle>' + (state.calcAngle === 'deg' ? t('degree') : t('radian')) + '</button>' + scienceKeys.map(([label, key]) => '<button class="science-key" data-science-key="' + escapeHtml(key) + '">' + label + '</button>').join('');
-  const basic = calcKeys.map((key) => key === 'ƒx'
+  const scienceControls = '<div class="science-control-bar" ' + (state.calcScientific ? '' : 'hidden') + '><button class="science-control-key" data-science-key="%">%</button><button class="science-control-key" data-science-key="(">(</button><button class="science-control-key" data-science-key=")">)</button></div>';
+  const basic = (state.calcScientific ? scientificCalcKeys : calcKeys).map((key) => key === 'ƒx'
     ? '<button class="key scientific-toggle" data-toggle-scientific aria-pressed="' + (state.calcScientific ? 'true' : 'false') + '" aria-label="' + t('scientific') + '">ƒx</button>'
     : '<button class="key ' + (/[÷×−+%]/.test(key) ? 'op' : '') + ' ' + (key === '=' ? 'equal' : '') + ' ' + (key === 'AC' ? 'danger' : '') + '" data-key="' + key + '">' + key + '</button>').join('');
   return heading(t('calculator'), t('calculatorDesc')) +
     '<div class="calculator-layout"><div class="calculator-surface"><div class="display" aria-live="polite"><div class="expression">' + (escapeHtml(state.calcExpr) || (state.language === 'en' ? 'Ready' : '准备计算')) + '</div><div class="result">' + calcPreview() + '</div><div class="display-history"><div class="display-history-head"><span>' + t('recentCalculations') + '</span><button class="text-btn" data-clear-calc-history ' + (state.calcHistory.length ? '' : 'disabled') + '>' + t('clear') + '</button></div><div class="display-history-list">' + history + '</div></div></div>' +
-    '<div class="calculator-keyboard"><div class="scientific-bar" ' + (state.calcScientific ? '' : 'hidden') + '>' + science + '</div><div class="keys">' + basic + '</div></div><p class="keyboard-hint">' + t('keyboard') + '</p></div></div>';
+    '<div class="calculator-keyboard"><div class="scientific-bar" ' + (state.calcScientific ? '' : 'hidden') + '>' + science + '</div>' + scienceControls + '<div class="keys">' + basic + '</div></div><p class="keyboard-hint">' + t('keyboard') + '</p></div></div>';
 }
 function calculatorKey(key) {
   if (key === 'AC') { state.calcExpr = ''; state.calcJustEvaluated = false; }
@@ -1410,6 +1492,7 @@ function setupServiceWorker() {
 // Rendering and interaction --------------------------------------------------
 function render() {
   applyLanguage();
+  if (state.section === 'home') loadHomeFeeds();
   const bottomNav = $('#bottomNav');
   if (bottomNav) bottomNav.hidden = false;
   nav.hidden = state.section !== 'tools';
@@ -1430,6 +1513,7 @@ function swapWeatherCards(from, to) {
 let reorderTimer = null;
 let reorderTarget = null;
 let swipeGesture = null;
+let swipeSuppressClickUntil = 0;
 function startLongPress(target, type, index) {
   clearTimeout(reorderTimer);
   reorderTarget = { target, type, index };
@@ -1448,17 +1532,27 @@ function handleReorderClick(target, type, index) {
 
 workspace.addEventListener('pointerdown', (event) => {
   const row = event.target.closest('[data-swipe-row]');
-  if (row) swipeGesture = { row, startX: event.clientX, startY: event.clientY, moved: false };
+  if (!row || event.target.closest('.swipe-delete')) {
+    if (!row) $$('.swipe-row.swiped').forEach((item) => item.classList.remove('swiped'));
+    swipeGesture = null;
+    return;
+  }
+  swipeGesture = { row, startX: event.clientX, startY: event.clientY, dx: 0, dy: 0, dragging: false, cancelled: false };
 });
 workspace.addEventListener('pointermove', (event) => {
   if (!swipeGesture) return;
-  const dx = event.clientX - swipeGesture.startX; const dy = event.clientY - swipeGesture.startY;
-  if (Math.abs(dy) > Math.abs(dx) || Math.abs(dx) < 8) return;
-  swipeGesture.moved = true;
-  if (dx < -28) swipeGesture.row.classList.add('swiped');
-  if (dx > 18) swipeGesture.row.classList.remove('swiped');
+  swipeGesture.dx = event.clientX - swipeGesture.startX; swipeGesture.dy = event.clientY - swipeGesture.startY;
+  if (Math.abs(swipeGesture.dy) > Math.abs(swipeGesture.dx) + 10 && Math.abs(swipeGesture.dy) > 8) { swipeGesture.cancelled = true; return; }
+  if (Math.abs(swipeGesture.dx) > 14) swipeGesture.dragging = true;
 });
-document.addEventListener('pointerup', () => { swipeGesture = null; }, { passive: true });
+document.addEventListener('pointerup', () => {
+  const gesture = swipeGesture; swipeGesture = null;
+  if (!gesture || gesture.cancelled) return;
+  if (gesture.dx < -52 && Math.abs(gesture.dx) > Math.abs(gesture.dy) + 12) {
+    $$('.swipe-row.swiped').forEach((row) => { if (row !== gesture.row) row.classList.remove('swiped'); });
+    gesture.row.classList.add('swiped'); swipeSuppressClickUntil = Date.now() + 350;
+  } else if (gesture.dx > 24) gesture.row.classList.remove('swiped');
+}, { passive: true });
 
 nav.addEventListener('pointerdown', (event) => { const tab = event.target.closest('[data-tool]'); if (tab) startLongPress(tab, 'tool', Number(tab.dataset.toolIndex)); });
 nav.addEventListener('pointerup', endLongPress);
@@ -1479,10 +1573,18 @@ workspace.addEventListener('dragstart', (event) => { const card = event.target.c
 workspace.addEventListener('dragover', (event) => { if (event.target.closest('[data-weather-card]')) event.preventDefault(); });
 workspace.addEventListener('drop', (event) => { event.preventDefault(); const card = event.target.closest('[data-weather-card]'); if (card) swapWeatherCards(Number(event.dataTransfer.getData('text/plain')), Number(card.dataset.weatherIndex)); });
 workspace.addEventListener('click', async (event) => {
+  if (Date.now() < swipeSuppressClickUntil && event.target.closest('[data-swipe-row]')) return;
   const section = event.target.closest('[data-section]');
   if (section) return selectSection(section.dataset.section);
   const homeTool = event.target.closest('[data-home-tool]');
   if (homeTool) return selectTool(homeTool.dataset.homeTool);
+  const feedSource = event.target.closest('[data-feed-source]');
+  if (feedSource) { state.homeFeed.active = feedSource.dataset.feedSource; return render(); }
+  const feedPeriod = event.target.closest('[data-feed-period]');
+  if (feedPeriod) { state.homeFeed.period = feedPeriod.dataset.feedPeriod; return render(); }
+  if (event.target.closest('[data-refresh-feeds]')) return loadHomeFeeds(true);
+  const feedLink = event.target.closest('[data-feed-link]')?.dataset.feedLink;
+  if (feedLink) { window.open(feedLink, '_blank', 'noopener,noreferrer'); return; }
   if (event.target.closest('[data-open-reader-file]')) { $('#readerFileInput')?.click(); return; }
   const openReader = event.target.closest('[data-open-reader]');
   if (openReader) return openReaderBook(openReader.dataset.openReader);
