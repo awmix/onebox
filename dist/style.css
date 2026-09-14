@@ -1521,7 +1521,7 @@ html.standalone-pwa main { padding-bottom: calc(94px + env(safe-area-inset-botto
   box-shadow: none;
 }
 #workspace[data-tool="home"] .feed-panel {
-  margin-top: 2px;
+  margin-top: 4px;
   min-height: calc(100dvh - var(--app-header-height) - 42px - 64px);
   overflow: hidden;
   border: 1px solid var(--line);
