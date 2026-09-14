@@ -1474,7 +1474,7 @@ html.standalone-pwa main { padding-bottom: calc(94px + env(safe-area-inset-botto
 #settingsDialog .setting-toggle input::after { width: 10px; height: 10px; }
 #settingsDialog .setting-toggle input:checked::after { transform: translateX(12px); }
 
-/* 2.18.12 homepage feed: final cascade for compact unified chrome. */
+/* 2.18.14 homepage feed: one rounded content surface, matching tools. */
 #workspace[data-tool="home"] .feed-source-panel {
   position: fixed;
   top: var(--app-header-height);
@@ -1516,25 +1516,23 @@ html.standalone-pwa main { padding-bottom: calc(94px + env(safe-area-inset-botto
   box-sizing: border-box;
   padding-top: 41px;
   padding-bottom: 0;
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-top: 0;
-  border-radius: 0 0 16px 16px;
-  box-shadow: var(--shadow);
+  background: transparent;
+  border: 0;
+  box-shadow: none;
 }
 #workspace[data-tool="home"] .feed-panel {
   margin-top: 2px;
-  overflow: visible;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  box-shadow: none;
+  min-height: calc(100dvh - var(--app-header-height) - 42px - 64px);
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: var(--panel);
+  box-shadow: var(--shadow);
 }
 #workspace[data-tool="home"] .feed-list {
-  overflow: hidden;
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: 14px 14px 0 0;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
 }
 #workspace[data-tool="home"] .feed-item {
   grid-template-columns: minmax(0, 1fr) 150px;
@@ -1563,10 +1561,8 @@ html.standalone-pwa main { padding-bottom: calc(94px + env(safe-area-inset-botto
 #workspace[data-tool="home"] .feed-hint {
   margin: 0;
   padding: 14px 18px 18px;
-  border: 1px solid var(--line);
-  border-top: 0;
-  border-radius: 0 0 14px 14px;
-  background: var(--panel);
+  border-top: 1px solid var(--line);
+  background: transparent;
   text-align: left;
 }
 main:has(#workspace[data-tool="home"]) { padding-top: calc(var(--app-header-height) + 1px); padding-bottom: 64px; }
@@ -1577,6 +1573,7 @@ main:has(#workspace[data-tool="home"]) { padding-top: calc(var(--app-header-heig
   #workspace[data-tool="home"] .feed-source-tab.active { padding: 3px 8px 4px; font-size: 12px; }
   #workspace[data-tool="home"] .feed-source-mark { width: 20px; height: 20px; }
   #workspace[data-tool="home"] .feed-home { min-height: calc(100dvh - var(--app-header-height) - 72px); padding-top: 39px; }
+  #workspace[data-tool="home"] .feed-panel { min-height: calc(100dvh - var(--app-header-height) - 40px - 72px); border-radius: 18px; }
   #workspace[data-tool="home"] .feed-item { grid-template-columns: minmax(0, 1fr) 78px; gap: 10px; padding: 14px 12px 13px; }
   #workspace[data-tool="home"] .feed-item h2 { font-size: 15px; line-height: 1.42; }
   #workspace[data-tool="home"] .feed-item p { margin-top: 5px; margin-bottom: 0; font-size: 12px; line-height: 1.5; }
