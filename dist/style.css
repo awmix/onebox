@@ -1669,3 +1669,38 @@ main:has(#workspace[data-tool="mine"]) { background: var(--panel); }
   border-radius: 2px 2px 0 0;
   z-index: 1;
 }
+
+/* 2.18.21 calculator layout: keep the content surface inside the tool rail,
+   reserve more history space in basic mode, and keep scientific mode compact
+   so its visible keyboard determines the display height. */
+main:not(:has(#workspace[data-tool="home"])):not(:has(#workspace[data-tool="messages"])):not(:has(#workspace[data-tool="mine"])) {
+  padding-top: calc(var(--app-header-height) + 42px + 4px);
+}
+#workspace[data-tool="calculator"] {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  padding-top: 0;
+}
+#workspace[data-tool="calculator"] .calculator-surface {
+  width: 100%;
+  max-width: 560px;
+  margin-inline: auto;
+}
+#workspace[data-tool="calculator"] .calculator-layout:has(.scientific-bar[hidden]) .display {
+  min-height: 212px;
+}
+#workspace[data-tool="calculator"] .calculator-layout:has(.scientific-bar[hidden]) .display-history-list {
+  max-height: 132px;
+}
+#workspace[data-tool="calculator"] .calculator-layout:has(.scientific-bar:not([hidden])) .display {
+  min-height: 0;
+}
+#workspace[data-tool="calculator"] .calculator-layout:has(.scientific-bar:not([hidden])) .display-history-list {
+  max-height: 92px;
+}
+#workspace[data-tool="calculator"] .calculator-layout:has(.scientific-bar:not([hidden])) .display-history-list .empty.compact {
+  margin: 4px 0;
+  padding: 8px 6px;
+}
