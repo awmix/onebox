@@ -1704,3 +1704,74 @@ main:not(:has(#workspace[data-tool="home"])):not(:has(#workspace[data-tool="mess
   margin: 4px 0;
   padding: 8px 6px;
 }
+
+/* 2.18.22 layout modes: classic keeps the current bottom rail and makes its
+   visibility follow scroll direction; simple moves the four main destinations
+   into the header action area. */
+.layout-nav {
+  display: none;
+  align-items: center;
+  gap: 4px;
+  flex: 0 0 auto;
+}
+.layout-nav:not([hidden]) { display: inline-flex; }
+.layout-nav-button {
+  position: relative;
+  width: 32px;
+  min-width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+}
+.layout-nav-button:hover { transform: none; }
+.layout-nav-button.active {
+  border-color: var(--primary);
+  background: var(--soft);
+  color: var(--ink);
+}
+.layout-nav-icon {
+  width: 18px;
+  height: 18px;
+  display: grid;
+  place-items: center;
+}
+.layout-nav-icon svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.layout-nav-button sup {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  min-width: 14px;
+  height: 14px;
+  padding: 0 3px;
+  border-radius: 8px;
+  background: var(--danger);
+  color: #fff;
+  font-size: 8px;
+  line-height: 14px;
+}
+html.layout-simple #bottomNav { display: none !important; }
+html.layout-simple .connection,
+html.layout-simple #notifyBtn,
+html.layout-simple #themeBtn,
+html.layout-simple #settingsBtn,
+html.layout-simple #updateBtn,
+html.layout-simple #languageControl { display: none !important; }
+@media (max-width: 760px) {
+  .layout-nav { gap: 2px; }
+  .layout-nav-button { width: 30px; min-width: 30px; height: 30px; border-radius: 9px; }
+  .layout-nav-icon, .layout-nav-icon svg { width: 17px; height: 17px; }
+}
