@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.6';
+const APP_VERSION = '2.18.8';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -237,6 +237,7 @@ const storedLibrary = parseStored(STORAGE.library, []);
 const storedHomeFeeds = parseStored(STORAGE.homeFeeds, {}) || {};
 const storedHomeFeedOrder = parseStored(STORAGE.homeFeedOrder, DEFAULT_HOME_FEED_ORDER);
 const storedNotificationPreference = parseStored(STORAGE.notificationPreference, 'allow');
+const storedBottomNavAutoHide = parseStored(STORAGE.bottomNavAutoHide, null);
 const rawWeatherCards = parseStored(STORAGE.weatherCards, []);
 const legacyWeather = parseStored(STORAGE.legacyWeather, null);
 const normalizeToolOrder = (value) => {
@@ -277,7 +278,7 @@ const state = {
   homeFeedRequest: 0,
   notifications: parseStored(STORAGE.notifications, []), notificationOpen: false, settingsOpen: false, githubDialogOpen: false,
   headerVisibility: { ...DEFAULT_HEADER_VISIBILITY, ...(storedHeaderVisibility && typeof storedHeaderVisibility === 'object' ? storedHeaderVisibility : {}) },
-  bottomNavAutoHide: Boolean(parseStored(STORAGE.bottomNavAutoHide, false)),
+  bottomNavAutoHide: storedBottomNavAutoHide == null ? !isStandalonePwa() : Boolean(storedBottomNavAutoHide),
   notificationPreference: storedNotificationPreference === 'deny' ? 'deny' : 'allow',
   swRegistration: null, updateAvailable: false, updateChecking: false, updateApplying: false,
   github: (() => { const value = parseStored(STORAGE.github, {}) || {}; return { clientId: value.clientId || '', token: value.token || '', user: value.user || null, gistId: value.gistId || '', deviceCode: '', userCode: '', verificationUri: '', expiresAt: 0, interval: 5 }; })(),
@@ -1331,6 +1332,7 @@ function closeNotifications() {
   $('#notifyBtn')?.setAttribute('aria-expanded', 'false');
 }
 function isStandalonePwa() { return window.matchMedia?.('(display-mode: standalone)').matches || window.navigator.standalone === true; }
+document.documentElement.classList.toggle('standalone-pwa', isStandalonePwa());
 function isIosDevice() { return /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1); }
 async function requestNotifications() {
   if (!('Notification' in window)) return toast(state.language === 'en' ? 'This browser does not support notifications' : '当前浏览器不支持通知', 'error');

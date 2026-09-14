@@ -1362,3 +1362,11 @@ main { padding-top: calc(var(--app-header-height) + 48px + 6px); }
   #toolNav .tab,
   #toolNav .tab.active { min-height: 34px; padding-top: 5px; padding-bottom: 6px; }
 }
+
+/* Safari browser mode has no PWA home indicator to reserve.  Keep the fixed
+   navigation close to the viewport edge there; standalone PWA keeps its safe
+   area offset so the home indicator never covers the tabs. */
+.bottom-nav { bottom: 4px; }
+main { padding-bottom: 78px; }
+html.standalone-pwa .bottom-nav { bottom: max(6px, calc(env(safe-area-inset-bottom) - 16px)); }
+html.standalone-pwa main { padding-bottom: calc(94px + env(safe-area-inset-bottom)); }
