@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.2';
+const APP_VERSION = '2.18.4';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -22,6 +22,7 @@ const STORAGE = {
   homeFeedOrder: 'onebox.home-feed-order',
   headerVisibility: 'onebox.header-visibility',
   bottomNavAutoHide: 'onebox.bottom-nav-auto-hide',
+  notificationPreference: 'onebox.notification-preference',
   github: 'onebox.github',
 };
 const TOOL_DEFS = {
@@ -34,8 +35,8 @@ const TOOL_DEFS = {
 };
 const RSS_SOURCES = [
   { id: 'ithome', name: 'IT之家', badge: 'IT', icon: 'https://www.ithome.com/favicon.ico', className: 'ithome', urls: ['https://www.ithome.com/rss/', 'https://www.ithome.com/rss'] },
-  { id: 'huxiu', name: '虎嗅', badge: 'H', icon: 'https://www.huxiu.com/favicon.ico', className: 'huxiu', urls: ['https://www.huxiu.com/rss/0.xml', 'https://feedx.net/rss/huxiu.xml'] },
-  { id: 'zhihu', name: '知乎', badge: '知', icon: 'https://www.zhihu.com/favicon.ico', className: 'zhihu', urls: ['https://feedx.net/rss/zhihudaily.xml', 'https://rss.mifaw.com/articles/5c8bb11a3c41f61efd36683e/5c919d543882afa09dff3fa4', 'https://rsshub.rssforever.com/zhihu/hotlist', 'https://rsshub.app/zhihu/hotlist'] },
+  { id: 'huxiu', name: '虎嗅', badge: '虎', icon: 'https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/be/4c/7f/be4c7f2c-0ebc-7ba8-a60e-c5707c67b0ee/AppIcon-0-0-1x_U007epad-0-1-0-85-220.png/128x128bb.png', className: 'huxiu', urls: ['https://rss.huxiu.com/', 'https://www.huxiu.com/rss/0.xml'] },
+  { id: 'zhihu', name: '知乎', badge: '知', icon: 'https://www.zhihu.com/favicon.ico', className: 'zhihu', urls: ['https://rss.mifaw.com/articles/5c8bb11a3c41f61efd36683e/5c919d543882afa09dff3fa3', 'https://feedx.net/rss/zhihudaily.xml', 'https://rsshub.rssforever.com/zhihu/hotlist'] },
   { id: 'v2ex', name: 'V2EX', badge: 'V', icon: 'https://www.v2ex.com/favicon.ico', className: 'v2ex', urls: ['https://www.v2ex.com/feed/rss.xml', 'https://www.v2ex.com/index.xml'] },
 ];
 const RSS_JSON_ENDPOINT = 'https://api.rss2json.com/v1/api.json?rss_url=';
@@ -173,7 +174,7 @@ const DICT = {
     githubLogin: '连接 GitHub', githubLogout: '退出 GitHub', upload: '上传到 GitHub', download: '从 GitHub 恢复',
     githubConnected: '已连接', githubNotConnected: '尚未连接', openDevice: '打开验证页面',
     appUpdate: '应用更新', checkUpdate: '更新', updateAvailable: '有新版本可用', upToDate: '已是最新版本', updating: '正在检查…', applyUpdate: '立即更新', topDisplay: '顶部显示',
-    notificationsPermission: '消息通知', enableNotifications: '允许通知', notificationDescription: 'iPhone 需要先将 OneBox 添加到主屏幕并允许消息通知；应用关闭后的后台提醒仍需要 Push 服务端。',
+    notificationsPermission: '消息通知', enableNotifications: '允许通知', disableNotifications: '不允许通知', notificationDescription: 'iPhone 需要先将 OneBox 添加到主屏幕并允许消息通知；应用关闭后的后台提醒仍需要 Push 服务端。',
     userAgreement: '用户协议', viewAgreement: '查看协议', agreementTitle: 'OneBox 用户协议', agreementBody: 'OneBox 是一款本地优先的日常工具应用。计算记录、日程、翻译历史和天气卡片默认保存在当前设备；使用 GitHub 云同步时，数据会写入你自己的私有 Gist。天气和翻译功能会请求对应的开源服务，服务商可能记录必要的请求信息。请在使用提醒、定位和消息通知功能前确认已授予相应权限。',
     addReminder: '添加提醒', reminderText: '提醒内容', remindAt: '提醒时间', noNotifications: '还没有提醒。', alarm: '闹钟', addAlarm: '添加闹钟', alarmContent: '闹钟内容', alarmPlaceholder: '请输入闹钟内容', alarmAt: '提醒时间', alarmRepeat: '重复方式', once: '指定时间', everyDay: '每天', workdays: '工作日', restdays: '非工作日', weekly: '每周', weekdays: '重复星期', noAlarms: '还没有闹钟。', alarmHint: '闹钟支持指定日期、工作日、非工作日和每周重复。', enabled: '已开启', disabled: '已关闭',
     markRead: '全部已读', close: '关闭', system: '跟随系统', light: '浅色', dark: '深色',
@@ -214,7 +215,7 @@ const DICT = {
     githubLogin: 'Connect GitHub', githubLogout: 'Disconnect GitHub', upload: 'Upload to GitHub', download: 'Restore from GitHub',
     githubConnected: 'Connected', githubNotConnected: 'Not connected', openDevice: 'Open verification page',
     appUpdate: 'App update', checkUpdate: 'Update', updateAvailable: 'A new version is ready', upToDate: 'You are up to date', updating: 'Checking…', applyUpdate: 'Update now', topDisplay: 'Show at top',
-    notificationsPermission: 'Message notifications', enableNotifications: 'Allow notifications', notificationDescription: 'On iPhone, add OneBox to the Home Screen and allow notifications first; background alerts after the app is closed still require a Push server.',
+    notificationsPermission: 'Message notifications', enableNotifications: 'Allow notifications', disableNotifications: 'Do not allow notifications', notificationDescription: 'On iPhone, add OneBox to the Home Screen and allow notifications first; background alerts after the app is closed still require a Push server.',
     userAgreement: 'User agreement', viewAgreement: 'View agreement', agreementTitle: 'OneBox user agreement', agreementBody: 'OneBox is a local-first daily tools app. Calculator history, events, translation history and weather cards stay on this device by default; when GitHub sync is enabled, they are written to your own private Gist. Weather and translation features request open-source services, which may record necessary request metadata. Review the permissions before enabling reminders, location or message notifications.',
     addReminder: 'Add reminder', reminderText: 'Reminder', remindAt: 'When', noNotifications: 'No reminders yet.', alarm: 'Alarms', addAlarm: 'Add alarm', alarmContent: 'Alarm label', alarmPlaceholder: 'Enter an alarm label', alarmAt: 'Reminder time', alarmRepeat: 'Repeat', once: 'Once', everyDay: 'Every day', workdays: 'Workdays', restdays: 'Rest days', weekly: 'Weekly', weekdays: 'Weekdays', noAlarms: 'No alarms yet.', alarmHint: 'Alarms support a date, workdays, rest days and weekly repeats.', enabled: 'On', disabled: 'Off',
     markRead: 'Mark all read', close: 'Close', system: 'System', light: 'Light', dark: 'Dark',
@@ -235,6 +236,7 @@ const storedAlarms = parseStored(STORAGE.alarms, []);
 const storedLibrary = parseStored(STORAGE.library, []);
 const storedHomeFeeds = parseStored(STORAGE.homeFeeds, {}) || {};
 const storedHomeFeedOrder = parseStored(STORAGE.homeFeedOrder, DEFAULT_HOME_FEED_ORDER);
+const storedNotificationPreference = parseStored(STORAGE.notificationPreference, 'allow');
 const rawWeatherCards = parseStored(STORAGE.weatherCards, []);
 const legacyWeather = parseStored(STORAGE.legacyWeather, null);
 const normalizeToolOrder = (value) => {
@@ -249,9 +251,12 @@ const initialWeatherCards = (Array.isArray(rawWeatherCards) && rawWeatherCards.l
   ...item,
   isCurrentLocation: Boolean(item.isCurrentLocation || item.name === '当前位置' || item.name === 'Current location'),
 })).filter((item, index, cards) => !item.isCurrentLocation || cards.findIndex((candidate) => candidate.isCurrentLocation) === index);
+const initialHash = location.hash.slice(1);
+const initialTool = Object.keys(TOOL_DEFS).includes(initialHash) ? initialHash : 'calculator';
+const initialSection = ['home', 'messages', 'mine'].includes(initialHash) ? initialHash : Object.keys(TOOL_DEFS).includes(initialHash) ? 'tools' : 'home';
 const state = {
-  tool: Object.keys(TOOL_DEFS).includes(location.hash.slice(1)) ? location.hash.slice(1) : 'calculator',
-  section: location.hash.slice(1) === 'home' ? 'home' : 'tools',
+  tool: initialTool,
+  section: initialSection,
   theme: ['light', 'dark', 'system'].includes(storedTheme) ? storedTheme : 'system',
   languageMode: ['zh', 'en', 'system'].includes(storedLanguage) ? storedLanguage : 'system',
   language: resolveLanguageMode(storedLanguage),
@@ -268,11 +273,12 @@ const state = {
   alarms: Array.isArray(storedAlarms) ? storedAlarms : [],
   library: (Array.isArray(storedLibrary) ? storedLibrary : []).filter((book) => book && book.id && book.name),
   readerBookId: null, readerUrl: '', readerSelectedText: '', annotationBookId: null,
-  homeFeed: { active: DEFAULT_HOME_FEED_ORDER[0], order: normalizeHomeFeedOrder(storedHomeFeedOrder), hasNew: false, loading: false, errors: {}, updatedAt: Number(storedHomeFeeds.updatedAt || 0), sources: storedHomeFeeds.sources && typeof storedHomeFeeds.sources === 'object' ? storedHomeFeeds.sources : {} },
+  homeFeed: { active: DEFAULT_HOME_FEED_ORDER[0], order: normalizeHomeFeedOrder(storedHomeFeedOrder), hasNew: false, loading: false, errors: {}, updatedAt: Number(storedHomeFeeds.updatedAt || 0), cacheVersion: storedHomeFeeds.cacheVersion || '', sources: storedHomeFeeds.sources && typeof storedHomeFeeds.sources === 'object' ? storedHomeFeeds.sources : {} },
   homeFeedRequest: 0,
   notifications: parseStored(STORAGE.notifications, []), notificationOpen: false, settingsOpen: false, githubDialogOpen: false,
   headerVisibility: { ...DEFAULT_HEADER_VISIBILITY, ...(storedHeaderVisibility && typeof storedHeaderVisibility === 'object' ? storedHeaderVisibility : {}) },
   bottomNavAutoHide: Boolean(parseStored(STORAGE.bottomNavAutoHide, false)),
+  notificationPreference: storedNotificationPreference === 'deny' ? 'deny' : 'allow',
   swRegistration: null, updateAvailable: false, updateChecking: false, updateApplying: false,
   github: (() => { const value = parseStored(STORAGE.github, {}) || {}; return { clientId: value.clientId || '', token: value.token || '', user: value.user || null, gistId: value.gistId || '', deviceCode: '', userCode: '', verificationUri: '', expiresAt: 0, interval: 5 }; })(),
 };
@@ -372,6 +378,8 @@ function selectSection(section) {
   state.section = section;
   if (section === 'home') state.homeFeed.hasNew = false;
   if (section === 'tools' && !TOOL_DEFS[state.tool]) state.tool = 'calculator';
+  const route = section === 'tools' ? state.tool : section;
+  if (location.hash.slice(1) !== route) history.replaceState(null, '', '#' + route);
   if (unchanged) { renderBottomNav(); return; }
   renderNav(); renderBottomNav(); render();
 }
@@ -417,7 +425,7 @@ async function fetchFeedSource(source) {
   let lastError = null;
   for (const feedUrl of source.urls) {
     try {
-      const response = await fetchWithTimeout(RSS_JSON_ENDPOINT + encodeURIComponent(feedUrl), { headers: { Accept: 'application/json' } }, 12000);
+      const response = await fetchWithTimeout(RSS_JSON_ENDPOINT + encodeURIComponent(feedUrl) + '&_=' + Date.now(), { cache: 'no-store', headers: { Accept: 'application/json' } }, 12000);
       if (!response.ok) throw Error('HTTP ' + response.status);
       const payload = await response.json();
       if (payload.status !== 'ok' || !Array.isArray(payload.items)) throw Error('Invalid RSS response');
@@ -431,7 +439,8 @@ async function fetchFeedSource(source) {
 async function loadHomeFeeds(force = false) {
   if (state.homeFeed.loading) return;
   const hasItems = RSS_SOURCES.some((source) => state.homeFeed.sources[source.id]?.items?.length);
-  if (!force && hasItems && Date.now() - state.homeFeed.updatedAt < RSS_REFRESH_INTERVAL) return;
+  const cacheIsCurrent = state.homeFeed.cacheVersion === APP_VERSION;
+  if (!force && cacheIsCurrent && hasItems && Date.now() - state.homeFeed.updatedAt < RSS_REFRESH_INTERVAL) return;
   state.homeFeed.loading = true; state.homeFeed.errors = {}; const request = ++state.homeFeedRequest;
   if (state.section === 'home') render();
   const hadCachedItems = hasItems;
@@ -450,7 +459,8 @@ async function loadHomeFeeds(force = false) {
   });
   state.homeFeed.updatedAt = Date.now(); state.homeFeed.loading = false;
   state.homeFeed.hasNew = state.section === 'home' ? false : state.homeFeed.hasNew || discoveredNewItems;
-  saveStored(STORAGE.homeFeeds, { updatedAt: state.homeFeed.updatedAt, sources: state.homeFeed.sources });
+  state.homeFeed.cacheVersion = APP_VERSION;
+  saveStored(STORAGE.homeFeeds, { cacheVersion: APP_VERSION, updatedAt: state.homeFeed.updatedAt, sources: state.homeFeed.sources });
   if (state.section === 'home') render(); else renderBottomNav();
 }
 function renderFeedItem(item, index) {
@@ -1326,6 +1336,8 @@ async function requestNotifications() {
   if (!('Notification' in window)) return toast(state.language === 'en' ? 'This browser does not support notifications' : '当前浏览器不支持通知', 'error');
   if (isIosDevice() && !isStandalonePwa()) return toast(state.language === 'en' ? 'Add OneBox to the Home Screen before enabling iPhone notifications' : '请先将 OneBox 添加到主屏幕，再开启 iPhone 消息通知', 'error');
   const permission = await Notification.requestPermission();
+  state.notificationPreference = permission === 'granted' ? 'allow' : permission === 'denied' ? 'deny' : state.notificationPreference;
+  saveStored(STORAGE.notificationPreference, state.notificationPreference);
   if (permission === 'granted') await showNativeNotification({ id: 'permission-test', text: state.language === 'en' ? 'OneBox notifications are enabled.' : 'OneBox 消息通知已开启。' });
   toast(permission === 'granted' ? (state.language === 'en' ? 'Notifications enabled' : '通知已开启') : (state.language === 'en' ? 'Notification permission was not granted' : '通知权限未开启'), permission === 'granted' ? 'info' : 'error');
   if (state.settingsOpen) renderSettings();
@@ -1456,12 +1468,13 @@ function renderGithubDialog() {
 function closeGithubDialog() { const dialog = $('#githubDialog'); if (dialog) dialog.hidden = true; state.githubDialogOpen = false; }
 function renderSettings() {
   const dialog = $('#settingsDialog');
-  const updateStatus = state.updateAvailable ? t('updateAvailable') : (state.updateChecking ? t('updating') : t('upToDate'));
+  const updateStatus = state.updateAvailable ? ' · ' + t('updateAvailable') : (state.updateChecking ? ' · ' + t('updating') : '');
   const updateAction = state.updateAvailable ? '<button class="primary" data-apply-update>' + t('applyUpdate') + '</button>' : '';
   const newBadge = '<span class="new-badge" title="New" aria-label="New"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.2 5.1 5.6.7-4.1 3.8 1.1 5.5-4.8-2.8-4.8 2.8 1.1-5.5-4.1-3.8 5.6-.7L12 3Z"/></svg></span>';
+  const notificationPreference = state.notificationPreference === 'deny' ? 'deny' : 'allow';
   dialog.innerHTML = '<div class="dialog-card settings-dialog-card" role="dialog" aria-modal="true"><div class="dialog-head"><h2>' + t('settings') + '</h2><button class="icon-btn small" data-close-settings aria-label="' + t('close') + '">×</button></div>' +
-    '<div class="settings-preferences"><div class="settings-preference-row"><h3>' + t('theme') + '</h3><div class="settings-preference-control"><select id="settingsTheme"><option value="system" ' + (state.theme === 'system' ? 'selected' : '') + '>' + t('system') + '</option><option value="light" ' + (state.theme === 'light' ? 'selected' : '') + '>' + t('light') + '</option><option value="dark" ' + (state.theme === 'dark' ? 'selected' : '') + '>' + t('dark') + '</option></select>' + headerVisibilityToggle('theme') + '</div></div><div class="settings-preference-row"><h3>' + t('language') + '</h3><div class="settings-preference-control"><select id="settingsLanguage"><option value="system" ' + (state.languageMode === 'system' ? 'selected' : '') + '>' + t('system') + '</option><option value="zh" ' + (state.languageMode === 'zh' ? 'selected' : '') + '>中文</option><option value="en" ' + (state.languageMode === 'en' ? 'selected' : '') + '>English</option></select>' + headerVisibilityToggle('language') + '</div></div><div class="settings-preference-row"><h3>' + t('messages') + '</h3><div class="settings-preference-control"><button class="secondary settings-message-button" data-request-notifications>' + t('enableNotifications') + '</button>' + headerVisibilityToggle('notifications') + '</div></div><div class="settings-preference-row"><h3>' + t('bottomTab') + '</h3><div class="settings-preference-control"><label class="setting-toggle"><input type="checkbox" id="bottomNavAutoHide" ' + (state.bottomNavAutoHide ? 'checked' : '') + '><span>' + t('autoHideBottomNav') + '</span></label></div></div></div>' +
-    '<section class="settings-section settings-update-section"><div class="settings-row"><h3>' + t('appUpdate') + ' <small class="settings-version">v' + APP_VERSION + ' ' + newBadge + ' · ' + updateStatus + '</small></h3><div class="settings-preference-control"><button class="primary update-check-button" data-check-update ' + (state.updateChecking ? 'disabled' : '') + '>' + t('checkUpdate') + '</button>' + updateAction + '</div></div></section></div>';
+    '<div class="settings-preferences"><div class="settings-preference-row"><h3>' + t('theme') + '</h3><div class="settings-preference-control"><select id="settingsTheme"><option value="system" ' + (state.theme === 'system' ? 'selected' : '') + '>' + t('system') + '</option><option value="light" ' + (state.theme === 'light' ? 'selected' : '') + '>' + t('light') + '</option><option value="dark" ' + (state.theme === 'dark' ? 'selected' : '') + '>' + t('dark') + '</option></select>' + headerVisibilityToggle('theme') + '</div></div><div class="settings-preference-row"><h3>' + t('language') + '</h3><div class="settings-preference-control"><select id="settingsLanguage"><option value="system" ' + (state.languageMode === 'system' ? 'selected' : '') + '>' + t('system') + '</option><option value="zh" ' + (state.languageMode === 'zh' ? 'selected' : '') + '>中文</option><option value="en" ' + (state.languageMode === 'en' ? 'selected' : '') + '>English</option></select>' + headerVisibilityToggle('language') + '</div></div><div class="settings-preference-row"><h3>' + t('messages') + '</h3><div class="settings-preference-control"><select id="settingsNotifications"><option value="allow" ' + (notificationPreference === 'allow' ? 'selected' : '') + '>' + t('enableNotifications') + '</option><option value="deny" ' + (notificationPreference === 'deny' ? 'selected' : '') + '>' + t('disableNotifications') + '</option></select>' + headerVisibilityToggle('notifications') + '</div></div><div class="settings-preference-row"><h3>' + t('bottomTab') + '</h3><div class="settings-preference-control"><label class="setting-toggle"><input type="checkbox" id="bottomNavAutoHide" ' + (state.bottomNavAutoHide ? 'checked' : '') + '><span>' + t('autoHideBottomNav') + '</span></label></div></div>' +
+    '<section class="settings-section settings-update-section"><div class="settings-row"><h3>' + t('appUpdate') + ' <small class="settings-version">v' + APP_VERSION + ' ' + newBadge + updateStatus + '</small></h3><div class="settings-preference-control"><button class="primary update-check-button" data-check-update ' + (state.updateChecking ? 'disabled' : '') + '>' + t('checkUpdate') + '</button>' + updateAction + '</div></div></section></div>';
   dialog.hidden = false; state.settingsOpen = true;
 }
 function closeSettings() { $('#settingsDialog').hidden = true; state.settingsOpen = false; }
@@ -1880,6 +1893,7 @@ $('#settingsDialog').addEventListener('click', (event) => {
 $('#settingsDialog').addEventListener('change', (event) => {
   if (event.target.id === 'settingsTheme') { state.theme = event.target.value; saveThemeLanguage(); applyTheme(); render(); }
   if (event.target.id === 'settingsLanguage') { state.languageMode = event.target.value; saveThemeLanguage(); applyLanguage(); renderNav(); render(); renderSettings(); }
+  if (event.target.id === 'settingsNotifications') { state.notificationPreference = event.target.value; saveStored(STORAGE.notificationPreference, state.notificationPreference); if (state.notificationPreference === 'allow') requestNotifications(); }
   const visibility = event.target.dataset.headerVisibility;
   if (visibility) { state.headerVisibility[visibility] = event.target.checked; saveHeaderPreferences(); renderHeaderControls(); }
   if (event.target.id === 'bottomNavAutoHide') { state.bottomNavAutoHide = event.target.checked; saveHeaderPreferences(); renderBottomNav(); }
@@ -1910,7 +1924,11 @@ window.addEventListener('pagehide', () => { clearTimeout(persistenceTimer); writ
 window.addEventListener('beforeinstallprompt', (event) => { event.preventDefault(); window.installPrompt = event; $('#installBtn').hidden = false; });
 window.addEventListener('online', () => { $('#connectionStatus').textContent = t('online'); toast(state.language === 'en' ? 'Back online' : '网络已恢复'); });
 window.addEventListener('offline', () => { $('#connectionStatus').textContent = t('offline'); toast(state.language === 'en' ? 'Offline mode' : '已切换到离线模式'); });
-window.addEventListener('hashchange', () => selectTool(location.hash.slice(1)));
+window.addEventListener('hashchange', () => {
+  const route = location.hash.slice(1);
+  if (['home', 'messages', 'mine'].includes(route)) selectSection(route);
+  else selectTool(route);
+});
 window.matchMedia?.('(prefers-color-scheme: dark)').addEventListener?.('change', () => { if (state.theme === 'system') applyTheme(); });
 document.addEventListener('visibilitychange', () => { if (!document.hidden) state.swRegistration?.update().catch(() => {}); });
 window.addEventListener('focus', () => state.swRegistration?.update().catch(() => {}));

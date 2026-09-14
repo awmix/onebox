@@ -1234,3 +1234,100 @@ main.bottom-nav-hidden { height: 100dvh; max-height: 100dvh; padding-bottom: 24p
   #settingsDialog .settings-message-button { padding-inline: 7px; }
   #settingsDialog .setting-toggle span { max-width: 52px; overflow: hidden; text-overflow: ellipsis; }
 }
+
+/* Shared source/tool navigation rail: the tools use the same quiet underline
+   treatment as the homepage feed sources. */
+main { padding-top: calc(var(--app-header-height) + 48px + 6px); }
+#toolNav {
+  width: min(1104px, calc(100% - 24px));
+  margin: 0 auto 6px;
+  padding: 5px 8px 4px;
+  gap: 2px;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0 0 14px 14px;
+  background: color-mix(in srgb, var(--panel) 92%, transparent);
+  box-shadow: 0 8px 18px color-mix(in srgb, var(--ink) 8%, transparent);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+}
+#toolNav .tab,
+#toolNav .tab.active {
+  position: relative;
+  min-width: 0;
+  min-height: 38px;
+  padding: 7px 10px 8px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  box-shadow: none;
+  color: var(--muted);
+}
+#toolNav .tab.active { color: var(--ink); }
+#toolNav .tab.active::after {
+  content: '';
+  position: absolute;
+  left: 6px;
+  right: 6px;
+  bottom: 1px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--primary);
+}
+#toolNav .tab > span { flex-basis: 18px; width: 18px; height: 18px; }
+#toolNav .tab > span svg { width: 18px; height: 18px; }
+#workspace[data-tool="home"] .feed-home { padding-top: 30px; }
+#workspace[data-tool="home"] .feed-panel { margin-top: 4px; }
+
+/* The desktop message rail is the same 680px width as the message list. */
+.bottom-nav { width: min(680px, calc(100% - 24px)); }
+
+/* Use the current Huxiu app mark instead of the old single-glyph favicon. */
+#workspace[data-tool="home"] .feed-source-mark.huxiu,
+#workspace[data-tool="home"] .feed-source-tag.huxiu b {
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid color-mix(in srgb, var(--line) 82%, #000 18%);
+}
+
+/* Settings controls stay centered, compact and evenly spaced. */
+#settingsDialog .settings-preference-control { gap: 12px; align-items: center; }
+#settingsDialog .settings-preference-control select { min-width: 132px; }
+#settingsDialog .setting-toggle { gap: 6px; align-items: center; }
+#settingsDialog .setting-toggle input { width: 30px !important; height: 18px !important; flex-basis: 30px; padding: 0 !important; line-height: 18px; }
+#settingsDialog .setting-toggle input::after { top: 3px; left: 3px; width: 10px; height: 10px; }
+#settingsDialog .setting-toggle input:checked::after { transform: translateX(12px); }
+#settingsDialog .settings-preference-row:last-of-type { border-bottom: 0; }
+#settingsDialog .settings-update-section { margin: 0; padding: 10px 0 0; border-top: 0; }
+#settingsDialog .settings-update-section .settings-row { min-height: 40px; }
+#settingsDialog .settings-update-section .settings-row h3 { font-size: 15px; }
+
+@media (max-width: 760px) {
+  main { padding-top: calc(var(--app-header-height) + 44px + 6px); }
+  #toolNav { width: calc(100% - 12px); padding-inline: 5px; }
+  #toolNav .tab { padding-inline: 8px; font-size: 12px; }
+  .bottom-nav { width: calc(100% - 24px); }
+  #settingsDialog .settings-preference-control { gap: 9px; }
+  #settingsDialog .settings-preference-control select { min-width: 118px; }
+}
+
+/* Keep the brand header and the active navigation rail as one continuous
+   chrome surface.  The rail only gets a bottom divider, so it never reads
+   as a second floating card below the header. */
+.app-header,
+#toolNav,
+#workspace[data-tool="home"] .feed-source-panel {
+  background: var(--bg);
+  box-shadow: none;
+}
+.app-header { border-bottom: 0; }
+#toolNav,
+#workspace[data-tool="home"] .feed-source-panel {
+  border-top: 0;
+  border-left-color: transparent;
+  border-right-color: transparent;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+}
+#workspace[data-tool="home"] .feed-source-panel { padding-top: 5px; padding-bottom: 4px; }
+#workspace[data-tool="home"] .feed-home { padding-top: 40px; }
