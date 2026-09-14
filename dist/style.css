@@ -1331,3 +1331,34 @@ main { padding-top: calc(var(--app-header-height) + 48px + 6px); }
 }
 #workspace[data-tool="home"] .feed-source-panel { padding-top: 5px; padding-bottom: 4px; }
 #workspace[data-tool="home"] .feed-home { padding-top: 40px; }
+
+/* Desktop keeps the same unified chrome, but does not reserve a tall mobile
+   header.  The 64px rail leaves room for the controls while removing the
+   large band of empty space above the source/tool tabs. */
+@media (min-width: 761px) {
+  :root { --app-header-height: 64px; }
+}
+
+/* Compact mobile chrome: keep the safe-area inset, while removing the extra
+   vertical band between the brand row, source/tool tabs and content. */
+@media (max-width: 760px) {
+  :root { --app-header-height: calc(50px + env(safe-area-inset-top)); }
+  .app-header {
+    min-height: var(--app-header-height);
+    padding-top: calc(env(safe-area-inset-top) + 8px);
+    padding-bottom: 8px;
+  }
+  #workspace[data-tool="home"] .feed-source-panel {
+    padding-top: 3px;
+    padding-bottom: 2px;
+  }
+  #workspace[data-tool="home"] .feed-source-tab { padding-top: 5px; padding-bottom: 6px; }
+  #workspace[data-tool="home"] .feed-home { padding-top: 32px; }
+  main { padding-top: calc(var(--app-header-height) + 40px + 4px); }
+  main:has(#workspace[data-tool="home"]),
+  main:has(#workspace[data-tool="messages"]),
+  main:has(#workspace[data-tool="mine"]) { padding-top: calc(var(--app-header-height) + 6px); }
+  #toolNav { padding-top: 3px; padding-bottom: 3px; }
+  #toolNav .tab,
+  #toolNav .tab.active { min-height: 34px; padding-top: 5px; padding-bottom: 6px; }
+}
