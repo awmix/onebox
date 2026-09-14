@@ -312,6 +312,41 @@ textarea { min-height: 130px; resize: vertical; }
   .popover { top: calc(63px + env(safe-area-inset-top)); right: 14px; }
 }
 
+/* 2.18.10: read state, recent reading and shared row controls. */
+.feed-item.is-read {
+  background: color-mix(in srgb, var(--primary) 6%, var(--panel));
+}
+.feed-item.is-read h2 { color: var(--ink); font-weight: 750; }
+.feed-item.is-read .feed-rank { color: var(--muted); }
+.feed-item.is-read:hover { background: color-mix(in srgb, var(--primary) 10%, var(--panel-2)); }
+.feed-read-label { display: none; }
+.notification-swipe-row { border-radius: 12px; }
+.notification-swipe-row .notification-item { width: 100%; min-height: 56px; border-radius: 11px; }
+.notification-swipe-row .swipe-delete { display: grid; place-items: center; }
+.message-panel .notification-swipe-row { background: var(--panel-2); }
+.recent-reading-dialog-card { width: min(760px, 100%); }
+.recent-reading-list { max-height: min(62vh, 560px); overflow: auto; padding-right: 2px; }
+.recent-reading-list .feed-item { border: 1px solid var(--line); border-radius: 14px; }
+.mine-page .page-title-row h1 { margin-top: 0; }
+.mine-row-icon { border: 1px solid var(--line); box-shadow: none; }
+.mine-row-icon svg { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+/* The display switches and selects share the same control height and rhythm. */
+#settingsDialog .settings-preference-control { gap: 10px; align-items: center; }
+#settingsDialog .settings-preference-control select { height: 36px; min-width: 132px; flex: 1 1 132px; }
+#settingsDialog .setting-toggle { min-height: 36px; gap: 7px; font-size: 12px; }
+#settingsDialog .setting-toggle input { width: 30px !important; height: 18px !important; flex-basis: 30px; }
+#settingsDialog .setting-toggle input::after { width: 10px; height: 10px; }
+#settingsDialog .setting-toggle input:checked::after { transform: translateX(12px); }
+#settingsDialog .settings-update-section .settings-preference-control { flex-wrap: nowrap; }
+#settingsDialog .settings-update-section .setting-toggle span { white-space: nowrap; }
+
+@media (max-width: 760px) {
+  #settingsDialog .settings-preference-control { gap: 8px; }
+  #settingsDialog .settings-preference-control select { min-width: 116px; }
+  #settingsDialog .settings-update-section .settings-preference-control { flex-wrap: wrap; justify-content: flex-end; }
+}
+
 /* iPhone 14 / compact touch surface ------------------------------------- */
 html, body { overflow-x: hidden; overscroll-behavior-x: none; }
 body { overscroll-behavior-y: none; }
@@ -1426,3 +1461,14 @@ html.standalone-pwa main { padding-bottom: calc(94px + env(safe-area-inset-botto
   main:has(#workspace[data-tool="mine"]) { padding-top: calc(var(--app-header-height) + 4px); }
   main:not(:has(#workspace[data-tool="home"])):not(:has(#workspace[data-tool="messages"])):not(:has(#workspace[data-tool="mine"])) { padding-top: calc(var(--app-header-height) + 40px + 4px); }
 }
+
+/* 2.18.10 final visual state. */
+.feed-read-label { display: none !important; }
+.feed-item.is-read { background: color-mix(in srgb, var(--primary) 6%, var(--panel)); }
+.feed-item.is-read h2 { color: var(--ink); font-weight: 750; }
+.feed-item.is-read .feed-rank { color: var(--muted); }
+.feed-item.is-read:hover { background: color-mix(in srgb, var(--primary) 10%, var(--panel-2)); }
+#settingsDialog .setting-toggle { min-height: 36px; gap: 7px; font-size: 12px; }
+#settingsDialog .setting-toggle input { width: 30px !important; height: 18px !important; flex-basis: 30px; }
+#settingsDialog .setting-toggle input::after { width: 10px; height: 10px; }
+#settingsDialog .setting-toggle input:checked::after { transform: translateX(12px); }

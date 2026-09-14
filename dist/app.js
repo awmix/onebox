@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.9';
+const APP_VERSION = '2.18.10';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -233,7 +233,7 @@ const storedTheme = localStorage.getItem(STORAGE.theme);
 const storedLanguage = localStorage.getItem(STORAGE.language) || 'system';
 const resolveLanguageMode = (mode) => mode === 'en' || mode === 'zh' ? mode : ((navigator.language || '').toLowerCase().startsWith('en') ? 'en' : 'zh');
 const storedCalculator = parseStored(STORAGE.calculator, { expr: '', history: [] });
-const DEFAULT_HEADER_VISIBILITY = { notifications: true, theme: true, language: false, settings: true, update: false };
+const DEFAULT_HEADER_VISIBILITY = { notifications: false, theme: false, language: false, settings: false, update: false };
 const storedHeaderVisibility = parseStored(STORAGE.headerVisibility, {});
 const storedAlarms = parseStored(STORAGE.alarms, []);
 const storedLibrary = parseStored(STORAGE.library, []);
@@ -281,7 +281,7 @@ const state = {
   homeFeed: { active: DEFAULT_HOME_FEED_ORDER[0], order: normalizeHomeFeedOrder(storedHomeFeedOrder), hasNew: false, loading: false, errors: {}, updatedAt: Number(storedHomeFeeds.updatedAt || 0), cacheVersion: storedHomeFeeds.cacheVersion || '', sources: storedHomeFeeds.sources && typeof storedHomeFeeds.sources === 'object' ? storedHomeFeeds.sources : {} },
   homeFeedRead: storedHomeFeedRead && typeof storedHomeFeedRead === 'object' ? storedHomeFeedRead : {},
   homeFeedRequest: 0,
-  notifications: parseStored(STORAGE.notifications, []), notificationOpen: false, settingsOpen: false, githubDialogOpen: false,
+  notifications: parseStored(STORAGE.notifications, []), notificationOpen: false, settingsOpen: false, githubDialogOpen: false, recentReadingOpen: false,
   headerVisibility: { ...DEFAULT_HEADER_VISIBILITY, ...(storedHeaderVisibility && typeof storedHeaderVisibility === 'object' ? storedHeaderVisibility : {}) },
   bottomNavAutoHide: storedBottomNavAutoHide == null ? !isStandalonePwa() : Boolean(storedBottomNavAutoHide),
   notificationPreference: storedNotificationPreference === 'deny' ? 'deny' : 'allow',
@@ -516,7 +516,7 @@ function renderFeedItem(item, index) {
   const thumbnail = feedImageUrl(item.thumbnail);
   const image = thumbnail ? '<span class="feed-item-media"><img class="feed-item-image" src="' + escapeHtml(thumbnail) + '" alt="" loading="lazy" onerror="this.hidden=true;this.nextElementSibling.hidden=false"><span class="feed-image-fallback" hidden aria-hidden="true">' + escapeHtml(source.badge) + '</span></span>' : '';
   const read = Boolean(state.homeFeedRead[item.id]);
-  return '<article class="feed-item ' + (read ? 'is-read' : '') + '" data-feed-id="' + escapeHtml(item.id) + '" data-feed-link="' + escapeHtml(item.link) + '" tabindex="0" role="link"><span class="feed-rank">' + (index + 1) + '</span><div class="feed-item-body"><h2>' + escapeHtml(item.title) + '</h2>' + (item.description ? '<p>' + escapeHtml(item.description) + '</p>' : '') + '<div class="feed-item-meta"><span class="feed-source-tag ' + source.className + '"><b><img src="' + escapeHtml(source.icon) + '" alt="" loading="lazy" onerror="this.hidden=true;this.nextElementSibling.style.display=\'inline\'"><span class="feed-source-fallback">' + escapeHtml(source.badge) + '</span></b>' + escapeHtml(source.name) + '</span><time datetime="' + escapeHtml(new Date(feedItemTimestamp(item) || Date.now()).toISOString()) + '">' + escapeHtml(feedDate(item)) + '</time>' + (read ? '<span class="feed-read-label">' + (state.language === 'en' ? 'Read' : '已读') + '</span>' : '') + '</div></div>' + image + '</article>';
+  return '<article class="feed-item ' + (read ? 'is-read' : '') + '" data-feed-id="' + escapeHtml(item.id) + '" data-feed-link="' + escapeHtml(item.link) + '" tabindex="0" role="link"><span class="feed-rank">' + (index + 1) + '</span><div class="feed-item-body"><h2>' + escapeHtml(item.title) + '</h2>' + (item.description ? '<p>' + escapeHtml(item.description) + '</p>' : '') + '<div class="feed-item-meta"><span class="feed-source-tag ' + source.className + '"><b><img src="' + escapeHtml(source.icon) + '" alt="" loading="lazy" onerror="this.hidden=true;this.nextElementSibling.style.display=\'inline\'"><span class="feed-source-fallback">' + escapeHtml(source.badge) + '</span></b>' + escapeHtml(source.name) + '</span><time datetime="' + escapeHtml(new Date(feedItemTimestamp(item) || Date.now()).toISOString()) + '">' + escapeHtml(feedDate(item)) + '</time></div></div>' + image + '</article>';
 }
 function renderHome() {
   const sources = homeFeedSources();
@@ -530,17 +530,51 @@ function renderHome() {
   const refreshState = state.homeFeed.loading ? '<div class="feed-refresh-state" role="status"><span></span>' + (state.language === 'en' ? 'Refreshing' : '正在刷新') + '</div>' : '';
   return '<div class="home-page feed-home"><section class="feed-source-panel"><div class="feed-source-tabs" role="tablist" aria-label="RSS 来源">' + sourceTabs + '</div></section><section class="feed-panel">' + refreshState + (errors ? '<p class="feed-warning">' + t('feedPartial') + '</p>' : '') + feedBody + '<p class="feed-hint">' + t('feedProxyHint') + (state.homeFeed.updatedAt ? ' · ' + t('feedUpdated') + ' ' + escapeHtml(feedDate(state.homeFeed.updatedAt)) : '') + '</p></section></div>';
 }
+function notificationRowMarkup(item) {
+  return '<div class="swipe-row notification-swipe-row" data-swipe-row><div class="notification-item swipe-content ' + (item.read ? '' : 'unread') + '"><div><strong>' + escapeHtml(item.text) + '</strong><small>' + new Intl.DateTimeFormat(state.language === 'en' ? 'en-US' : 'zh-CN', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(item.at)) + '</small></div></div><button class="swipe-delete" data-delete-notification="' + escapeHtml(item.id) + '" aria-label="' + t('close') + '">' + (state.language === 'en' ? 'Delete' : '删除') + '</button></div>';
+}
 function notificationItemsMarkup() {
   const items = [...state.notifications].sort((a, b) => Number(b.at) - Number(a.at));
   if (!items.length) return '<p class="empty compact">' + t('noMessages') + '</p>';
-  return items.map((item) => '<div class="notification-item ' + (item.read ? '' : 'unread') + '"><div><strong>' + escapeHtml(item.text) + '</strong><small>' + new Intl.DateTimeFormat(state.language === 'en' ? 'en-US' : 'zh-CN', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(item.at)) + '</small></div><button class="icon-btn small" data-delete-notification="' + escapeHtml(item.id) + '" aria-label="' + t('close') + '">×</button></div>').join('');
+  return items.map(notificationRowMarkup).join('');
 }
 function renderMessages() {
-  return '<div class="section-page message-page"><div class="page-title-row"><div><span class="section-kicker">ONEBOX</span><h1>' + t('messages') + '</h1></div><button class="secondary" data-mark-notifications-read>' + t('markRead') + '</button></div><div class="message-panel"><div class="notification-list">' + notificationItemsMarkup() + '</div></div></div>';
+  return '<div class="section-page message-page"><div class="page-title-row"><div><h1>' + t('messages') + '</h1></div><button class="secondary" data-mark-notifications-read>' + t('markRead') + '</button></div><div class="message-panel"><div class="notification-list">' + notificationItemsMarkup() + '</div></div></div>';
 }
+
 function renderMine() {
   const githubStatus = state.github.user ? (state.github.user.login || 'GitHub') : t('githubNotConnected');
-  return '<div class="section-page mine-page"><div class="page-title-row"><div><span class="section-kicker">ONEBOX</span><h1>' + t('mine') + '</h1></div></div><div class="mine-list"><button class="mine-row" data-open-settings-page><span class="mine-row-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6 7 7M17 17l1.4 1.4M18.4 5.6 17 7M7 17l-1.4 1.4"/><circle cx="12" cy="12" r="4"/></svg></span><span><strong>' + t('settings') + '</strong><small>' + (state.language === 'en' ? 'Theme, language, updates and display' : '主题、语言、更新与显示设置') + '</small></span><span>›</span></button><button class="mine-row" data-open-github-page><span class="mine-row-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 0 0-2.8 17.55c.45.08.62-.2.62-.43v-1.52c-2.52.55-3.05-1.06-3.05-1.06-.41-1.05-1-1.33-1-1.33-.82-.56.06-.55.06-.55.9.06 1.37.93 1.37.93.8 1.37 2.1.98 2.61.75.08-.58.31-.98.57-1.2-2.01-.23-4.13-1-4.13-4.45 0-.98.35-1.77.93-2.39-.09-.23-.4-1.13.09-2.36 0 0 .76-.24 2.48.91a8.6 8.6 0 0 1 4.5 0c1.72-1.15 2.48-.91 2.48-.91.49 1.23.18 2.13.09 2.36.58.62.93 1.41.93 2.39 0 3.46-2.12 4.22-4.14 4.45.32.27.6.8.6 1.61v2.38c0 .23.16.51.62.42A9 9 0 0 0 12 3Z"/></svg></span><span><strong>GitHub</strong><small>' + escapeHtml(githubStatus) + '</small></span><span>›</span></button><button class="mine-row" data-open-agreement-page><span class="mine-row-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l3 3v15H6zM15 3v4h4M9 12h6M9 16h6"/></svg></span><span><strong>' + t('userAgreement') + '</strong><small>' + (state.language === 'en' ? 'Learn how OneBox handles data' : '了解 OneBox 如何处理数据') + '</small></span><span>›</span></button></div></div>';
+  const icon = (name) => ({
+    settings: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 12h2M10 12h10M4 17h10M18 17h2"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="12" r="2"/><circle cx="16" cy="17" r="2"/></svg>',
+    github: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 18h10a3.5 3.5 0 0 0 .5-6.96A5.5 5.5 0 0 0 7 9.5a4.25 4.25 0 0 0 0 8.5Z"/><path d="m12 12 2-2m-2 2-2-2m2 2v4"/></svg>',
+    reading: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4h8l3 3v5M14 4v4h4M9 12h3M9 16h3"/><circle cx="16.5" cy="16.5" r="3.5"/><path d="M16.5 14.8v1.9l1.2.7"/></svg>',
+    agreement: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l3 3v15H6zM15 3v4h4M9 12h6M9 16h6"/></svg>',
+  })[name];
+  const row = (action, glyph, title, description) => '<button class="mine-row" ' + action + '><span class="mine-row-icon">' + icon(glyph) + '</span><span><strong>' + title + '</strong><small>' + description + '</small></span><span>›</span></button>';
+  return '<div class="section-page mine-page"><div class="page-title-row"><div><h1>' + t('mine') + '</h1></div></div><div class="mine-list">' + row('data-open-settings-page', 'settings', t('settings'), state.language === 'en' ? 'Theme, language, updates and display' : '主题、语言、更新与显示设置') + row('data-open-github-page', 'github', 'GitHub', escapeHtml(githubStatus)) + row('data-open-recent-reading', 'reading', state.language === 'en' ? 'Recent reading' : '最近阅读', state.language === 'en' ? 'Articles you have opened' : '查看首页阅读过的消息') + row('data-open-agreement-page', 'agreement', t('userAgreement'), state.language === 'en' ? 'Learn how OneBox handles data' : '了解 OneBox 如何处理数据') + '</div></div>';
+}
+
+function recentFeedItems() {
+  const items = new Map();
+  Object.values(state.homeFeed.sources || {}).forEach((source) => (source.items || []).forEach((item) => {
+    const readAt = Number(state.homeFeedRead[item.id] || 0);
+    if (readAt && !items.has(item.id)) items.set(item.id, { item, readAt });
+  }));
+  return [...items.values()].sort((a, b) => b.readAt - a.readAt).map(({ item }) => item);
+}
+function renderRecentReading() {
+  const dialog = $('#recentReadingDialog');
+  if (!dialog) return;
+  const items = recentFeedItems();
+  const body = items.length ? '<div class="feed-list recent-reading-list">' + items.map(renderFeedItem).join('') + '</div>' : '<p class="empty compact">' + (state.language === 'en' ? 'No articles read yet.' : '还没有阅读过首页消息。') + '</p>';
+  dialog.innerHTML = '<div class="dialog-card recent-reading-dialog-card" role="dialog" aria-modal="true"><div class="dialog-head"><h2>' + (state.language === 'en' ? 'Recent reading' : '最近阅读') + '</h2><button class="icon-btn small" data-close-recent-reading aria-label="' + t('close') + '">×</button></div>' + body + '</div>';
+  dialog.hidden = false;
+  state.recentReadingOpen = true;
+}
+function closeRecentReading() {
+  const dialog = $('#recentReadingDialog');
+  if (dialog) dialog.hidden = true;
+  state.recentReadingOpen = false;
 }
 
 // Reader --------------------------------------------------------------------
@@ -1371,7 +1405,7 @@ function updateNotificationBadge() {
 function renderNotifications() {
   const panel = $('#notificationPanel');
   const items = [...state.notifications].sort((a, b) => Number(b.at) - Number(a.at));
-  const list = items.length ? items.map((item) => '<div class="notification-item ' + (item.read ? '' : 'unread') + '"><div><strong>' + escapeHtml(item.text) + '</strong><small>' + new Intl.DateTimeFormat(state.language === 'en' ? 'en-US' : 'zh-CN', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(item.at)) + '</small></div><button class="icon-btn small" data-delete-notification="' + escapeHtml(item.id) + '" aria-label="Delete">×</button></div>').join('') : '<p class="empty compact">' + t('noNotifications') + '</p>';
+  const list = items.length ? items.map(notificationRowMarkup).join('') : '<p class="empty compact">' + t('noNotifications') + '</p>';
   panel.innerHTML = '<div class="notification-dialog-card" role="dialog" aria-modal="true" aria-label="' + t('notifications') + '"><div class="dialog-head notification-head"><h2>' + t('notifications') + '</h2><div class="notification-head-actions"><button class="text-btn" data-mark-notifications-read>' + t('markRead') + '</button><button class="icon-btn small" data-close-notifications aria-label="' + t('close') + '">×</button></div></div><div class="notification-list">' + list + '</div></div>';
   panel.hidden = false;
 }
@@ -1525,7 +1559,7 @@ function renderSettings() {
   const notificationPreference = state.notificationPreference === 'deny' ? 'deny' : 'allow';
   dialog.innerHTML = '<div class="dialog-card settings-dialog-card" role="dialog" aria-modal="true"><div class="dialog-head"><h2>' + t('settings') + '</h2><button class="icon-btn small" data-close-settings aria-label="' + t('close') + '">×</button></div>' +
     '<div class="settings-preferences"><div class="settings-preference-row"><h3>' + t('theme') + '</h3><div class="settings-preference-control"><select id="settingsTheme"><option value="system" ' + (state.theme === 'system' ? 'selected' : '') + '>' + t('system') + '</option><option value="light" ' + (state.theme === 'light' ? 'selected' : '') + '>' + t('light') + '</option><option value="dark" ' + (state.theme === 'dark' ? 'selected' : '') + '>' + t('dark') + '</option></select>' + headerVisibilityToggle('theme') + '</div></div><div class="settings-preference-row"><h3>' + t('language') + '</h3><div class="settings-preference-control"><select id="settingsLanguage"><option value="system" ' + (state.languageMode === 'system' ? 'selected' : '') + '>' + t('system') + '</option><option value="zh" ' + (state.languageMode === 'zh' ? 'selected' : '') + '>中文</option><option value="en" ' + (state.languageMode === 'en' ? 'selected' : '') + '>English</option></select>' + headerVisibilityToggle('language') + '</div></div><div class="settings-preference-row"><h3>' + t('messages') + '</h3><div class="settings-preference-control"><select id="settingsNotifications"><option value="allow" ' + (notificationPreference === 'allow' ? 'selected' : '') + '>' + t('enableNotifications') + '</option><option value="deny" ' + (notificationPreference === 'deny' ? 'selected' : '') + '>' + t('disableNotifications') + '</option></select>' + headerVisibilityToggle('notifications') + '</div></div><div class="settings-preference-row"><h3>' + t('bottomTab') + '</h3><div class="settings-preference-control"><label class="setting-toggle"><input type="checkbox" id="bottomNavAutoHide" ' + (state.bottomNavAutoHide ? 'checked' : '') + '><span>' + t('autoHideBottomNav') + '</span></label></div></div>' +
-    '<section class="settings-section settings-update-section"><div class="settings-row"><h3>' + t('appUpdate') + ' <small class="settings-version">v' + APP_VERSION + ' ' + newBadge + updateStatus + '</small></h3><div class="settings-preference-control"><button class="primary update-check-button" data-check-update ' + (state.updateChecking ? 'disabled' : '') + '>' + t('checkUpdate') + '</button>' + updateAction + '</div></div></section></div>';
+    '<section class="settings-section settings-update-section"><div class="settings-row"><h3>' + t('appUpdate') + ' <small class="settings-version">v' + APP_VERSION + ' ' + newBadge + updateStatus + '</small></h3><div class="settings-preference-control"><button class="primary update-check-button" data-check-update ' + (state.updateChecking ? 'disabled' : '') + '>' + t('checkUpdate') + '</button>' + updateAction + headerVisibilityToggle('update') + '</div></div></section></div>';
   dialog.hidden = false; state.settingsOpen = true;
 }
 function closeSettings() { $('#settingsDialog').hidden = true; state.settingsOpen = false; }
@@ -1597,6 +1631,7 @@ function render() {
   if (state.section === 'tools' && state.tool === 'calendar') ensureHolidayYear(state.month.getFullYear());
   renderBottomNav();
   updateNotificationBadge();
+  if (state.recentReadingOpen) renderRecentReading();
 }
 function swapWeatherCards(from, to) {
   if (from === to || from == null || to == null) return;
@@ -1632,6 +1667,11 @@ workspace.addEventListener('pointerdown', (event) => {
     swipeGesture = null;
     return;
   }
+  swipeGesture = { row, startX: event.clientX, startY: event.clientY, dx: 0, dy: 0, dragging: false, cancelled: false };
+});
+$('#notificationPanel').addEventListener('pointerdown', (event) => {
+  const row = event.target.closest('[data-swipe-row]');
+  if (!row || event.target.closest('.swipe-delete')) { if (!row) $$('.swipe-row.swiped').forEach((item) => item.classList.remove('swiped')); swipeGesture = null; return; }
   swipeGesture = { row, startX: event.clientX, startY: event.clientY, dx: 0, dy: 0, dragging: false, cancelled: false };
 });
 workspace.addEventListener('pointermove', (event) => {
@@ -1685,7 +1725,7 @@ workspace.addEventListener('click', async (event) => {
   if (event.target.closest('[data-refresh-feeds]')) return loadHomeFeeds(true);
   const feedItem = event.target.closest('[data-feed-link]');
   const feedLink = feedItem?.dataset.feedLink;
-  if (feedLink) { markFeedRead(feedItem.dataset.feedId); feedItem.classList.add('is-read'); if (!feedItem.querySelector('.feed-read-label')) { const meta = $('.feed-item-meta', feedItem); if (meta) meta.insertAdjacentHTML('beforeend', '<span class="feed-read-label">' + (state.language === 'en' ? 'Read' : '已读') + '</span>'); } window.open(feedLink, '_blank', 'noopener,noreferrer'); return; }
+  if (feedLink) { markFeedRead(feedItem.dataset.feedId); feedItem.classList.add('is-read'); window.open(feedLink, '_blank', 'noopener,noreferrer'); return; }
   if (event.target.closest('[data-open-reader-file]')) { $('#readerFileInput')?.click(); return; }
   const openReader = event.target.closest('[data-open-reader]');
   if (openReader) return openReaderBook(openReader.dataset.openReader);
@@ -1702,6 +1742,7 @@ workspace.addEventListener('click', async (event) => {
   }
   if (event.target.closest('[data-open-settings-page]')) return renderSettings();
   if (event.target.closest('[data-open-github-page]')) return renderGithubDialog();
+  if (event.target.closest('[data-open-recent-reading]')) return renderRecentReading();
   if (event.target.closest('[data-open-agreement-page]')) return renderAgreementDialog();
   const messageDelete = event.target.closest('[data-delete-notification]');
   if (messageDelete) { state.notifications = state.notifications.filter((item) => item.id !== messageDelete.dataset.deleteNotification); saveNotifications(); render(); return; }
@@ -1953,6 +1994,14 @@ $('#settingsDialog').addEventListener('change', (event) => {
 $('#settingsDialog').addEventListener('input', () => {});
 $('#agreementDialog').addEventListener('click', (event) => {
   if (event.target === $('#agreementDialog') || event.target.closest('[data-close-agreement]')) closeAgreementDialog();
+});
+$('#recentReadingDialog').addEventListener('click', (event) => {
+  if (event.target === $('#recentReadingDialog') || event.target.closest('[data-close-recent-reading]')) return closeRecentReading();
+  const feedItem = event.target.closest('[data-feed-link]');
+  if (!feedItem) return;
+  markFeedRead(feedItem.dataset.feedId);
+  feedItem.classList.add('is-read');
+  window.open(feedItem.dataset.feedLink, '_blank', 'noopener,noreferrer');
 });
 $('#githubDialog').addEventListener('click', (event) => {
   if (event.target === $('#githubDialog') || event.target.closest('[data-close-github]')) return closeGithubDialog();
