@@ -1612,3 +1612,7 @@ main:has(#workspace[data-tool="mine"]),
 html.standalone-pwa main:has(#workspace[data-tool="home"]),
 html.standalone-pwa main:has(#workspace[data-tool="messages"]),
 html.standalone-pwa main:has(#workspace[data-tool="mine"]) { padding-bottom: 0; }
+main { height: 100dvh; max-height: 100dvh; }
+main:has(#workspace[data-tool="home"]),
+main:has(#workspace[data-tool="messages"]),
+main:has(#workspace[data-tool="mine"]) { background: var(--panel); }
