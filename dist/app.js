@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.22';
+const APP_VERSION = '2.18.24';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -230,7 +230,7 @@ const t = (key) => DICT[state.language]?.[key] || DICT.zh[key] || key;
 const toolName = (id) => t(TOOL_DEFS[id]?.key || id);
 const storedTheme = localStorage.getItem(STORAGE.theme);
 const storedLanguage = localStorage.getItem(STORAGE.language) || 'system';
-const storedLayout = localStorage.getItem(STORAGE.layout) || 'classic';
+const storedLayout = localStorage.getItem(STORAGE.layout);
 const resolveLanguageMode = (mode) => mode === 'en' || mode === 'zh' ? mode : ((navigator.language || '').toLowerCase().startsWith('en') ? 'en' : 'zh');
 const storedCalculator = parseStored(STORAGE.calculator, { expr: '', history: [] });
 const storedAlarms = parseStored(STORAGE.alarms, []);
@@ -262,7 +262,7 @@ const state = {
   theme: ['light', 'dark', 'system'].includes(storedTheme) ? storedTheme : 'system',
   languageMode: ['zh', 'en', 'system'].includes(storedLanguage) ? storedLanguage : 'system',
   language: resolveLanguageMode(storedLanguage),
-  layoutMode: storedLayout === 'simple' ? 'simple' : 'classic',
+  layoutMode: storedLayout === 'classic' ? 'classic' : 'simple',
   toolOrder: normalizeToolOrder(parseStored(STORAGE.toolOrder, DEFAULT_TOOL_ORDER)),
   calcExpr: storedCalculator.expr || '', calcHistory: Array.isArray(storedCalculator.history) ? storedCalculator.history : [],
   calcJustEvaluated: false, calcScientific: false, calcAngle: 'deg',
@@ -350,11 +350,12 @@ function heading(title, subtitle, actions = '') {
   return actions ? '<div class="tool-head"><div class="tool-actions">' + actions + '</div></div>' : '';
 }
 const SECTION_DEFS = {
-  home: { key: 'home', icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1V10Z"/></svg>' },
-  tools: { key: 'tools', icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/></svg>' },
-  messages: { key: 'messages', icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg>' },
-  mine: { key: 'mine', icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5 20a7 7 0 0 1 14 0"/></svg>' },
+  home: { key: 'home', icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1V10Z"/></svg>', activeIcon: '<svg class="filled-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.2 12 3l9 7.2V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1V10.2Z"/></svg>' },
+  tools: { key: 'tools', icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/></svg>', activeIcon: '<svg class="filled-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/></svg>' },
+  messages: { key: 'messages', icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg>', activeIcon: '<svg class="filled-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M18.3 9.4c0-3.7-2.4-6.2-6.3-6.2s-6.3 2.5-6.3 6.2c0 7-2.7 7.3-2.7 9.3 0 .6.4 1 1 1h16c.6 0 1-.4 1-1 0-2-2.7-2.3-2.7-9.3ZM9.6 21h4.8"/></svg>' },
+  mine: { key: 'mine', icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5 20a7 7 0 0 1 14 0"/></svg>', activeIcon: '<svg class="filled-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.6a4.2 4.2 0 1 1 0 8.4 4.2 4.2 0 0 1 0-8.4ZM4.1 20.4c.7-4.3 3.3-6.6 7.9-6.6s7.2 2.3 7.9 6.6H4.1Z"/></svg>' },
 };
+const sectionIcon = (item, active) => active ? item.activeIcon : item.icon;
 function renderNav() {
   nav.innerHTML = state.toolOrder.map((id, index) => {
     const item = TOOL_DEFS[id];
@@ -370,7 +371,7 @@ function renderTopNav() {
   layoutNav.innerHTML = Object.values(SECTION_DEFS).map((item) => {
     const active = state.section === item.key;
     const isHomeRefresh = item.key === 'home' && state.homeFeed.hasNew;
-    return '<button class="layout-nav-button ' + (active ? 'active' : '') + '" data-section="' + item.key + '" aria-current="' + (active ? 'page' : 'false') + '" aria-label="' + (isHomeRefresh ? (state.language === 'en' ? 'Refresh home' : '刷新首页') : t(item.key)) + '" title="' + t(item.key) + '"><span class="layout-nav-icon" aria-hidden="true">' + (isHomeRefresh ? refreshIcon : item.icon) + '</span>' + (item.key === 'messages' && unread ? '<sup>' + (unread > 99 ? '99+' : unread) + '</sup>' : '') + '</button>';
+    return '<button class="layout-nav-button ' + (active ? 'active' : '') + '" data-section="' + item.key + '" aria-current="' + (active ? 'page' : 'false') + '" aria-label="' + (isHomeRefresh ? (state.language === 'en' ? 'Refresh home' : '刷新首页') : t(item.key)) + '" title="' + t(item.key) + '"><span class="layout-nav-icon" aria-hidden="true">' + (isHomeRefresh ? refreshIcon : sectionIcon(item, active)) + '</span>' + (item.key === 'messages' && unread ? '<sup>' + (unread > 99 ? '99+' : unread) + '</sup>' : '') + '</button>';
   }).join('');
 }
 function renderBottomNav() {
@@ -389,7 +390,8 @@ function renderBottomNav() {
   const refreshIcon = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0 2 5M20 5v6h-6"/></svg>';
   bottomNav.innerHTML = Object.values(SECTION_DEFS).map((item) => {
     const isHomeRefresh = item.key === 'home' && state.homeFeed.hasNew;
-    return '<button class="bottom-tab ' + (state.section === item.key ? 'active' : '') + '" data-section="' + item.key + '" aria-current="' + (state.section === item.key ? 'page' : 'false') + '" aria-label="' + (isHomeRefresh ? (state.language === 'en' ? 'Refresh home' : '刷新首页') : t(item.key)) + '"><span class="bottom-tab-icon" aria-hidden="true">' + (isHomeRefresh ? refreshIcon : item.icon) + '</span><span>' + t(item.key) + '</span>' + (item.key === 'messages' && unread ? '<sup>' + (unread > 99 ? '99+' : unread) + '</sup>' : '') + '</button>';
+    const active = state.section === item.key;
+    return '<button class="bottom-tab ' + (active ? 'active' : '') + '" data-section="' + item.key + '" aria-current="' + (active ? 'page' : 'false') + '" aria-label="' + (isHomeRefresh ? (state.language === 'en' ? 'Refresh home' : '刷新首页') : t(item.key)) + '"><span class="bottom-tab-icon" aria-hidden="true">' + (isHomeRefresh ? refreshIcon : sectionIcon(item, active)) + '</span><span>' + t(item.key) + '</span>' + (item.key === 'messages' && unread ? '<sup>' + (unread > 99 ? '99+' : unread) + '</sup>' : '') + '</button>';
   }).join('');
   $('main')?.classList.toggle('bottom-nav-hidden', Boolean(classic && bottomNav.classList.contains('is-hidden')));
   renderTopNav();
@@ -1595,6 +1597,31 @@ function markUpdateAvailable() {
   refreshUpdateIndicator();
   if (state.settingsOpen) renderSettings();
 }
+function observeUpdateWorker(registration) {
+  return new Promise((resolve) => {
+    let settled = false;
+    let timeout = null;
+    const finish = (worker) => {
+      if (settled) return;
+      settled = true;
+      if (timeout) clearTimeout(timeout);
+      resolve(worker || registration.waiting || null);
+    };
+    const watch = (worker) => {
+      if (!worker) return;
+      if (worker.state === 'installed') return finish(worker);
+      if (worker.state === 'redundant' || worker.state === 'activated') return finish(null);
+      worker.addEventListener('statechange', () => {
+        if (worker.state === 'installed') finish(worker);
+        else if (worker.state === 'redundant' || worker.state === 'activated') finish(null);
+      }, { once: false });
+    };
+    if (registration.waiting) return finish(registration.waiting);
+    if (registration.installing?.state === 'installed') finish(registration.installing);
+    registration.addEventListener('updatefound', () => watch(registration.installing), { once: true });
+    timeout = setTimeout(() => finish(registration.waiting), 15000);
+  });
+}
 async function checkForUpdate() {
   const registration = state.swRegistration || await navigator.serviceWorker?.getRegistration();
   if (!registration) return toast(state.language === 'en' ? 'Updates are unavailable in this browser' : '当前浏览器暂不支持更新检查', 'error');
@@ -1602,8 +1629,15 @@ async function checkForUpdate() {
   state.updateChecking = true;
   if (state.settingsOpen) renderSettings();
   try {
+    const installingBeforeCheck = registration.installing;
+    const workerPromise = observeUpdateWorker(registration);
     await registration.update();
-    if (registration.waiting) markUpdateAvailable();
+    let worker = registration.waiting;
+    if (!worker) {
+      const newWorkerStarted = registration.installing && registration.installing !== installingBeforeCheck;
+      worker = await Promise.race([workerPromise, sleep(newWorkerStarted ? 15000 : 900).then(() => null)]);
+    }
+    if (worker || registration.waiting) markUpdateAvailable();
     else { state.updateAvailable = false; refreshUpdateIndicator(); if (state.settingsOpen) renderSettings(); toast(t('upToDate')); }
   } catch { toast(state.language === 'en' ? 'Update check failed' : '更新检查失败', 'error'); }
   finally { state.updateChecking = false; if (state.settingsOpen) renderSettings(); }
@@ -1612,6 +1646,7 @@ function applyUpdate() {
   const worker = state.swRegistration?.waiting;
   if (!worker) return checkForUpdate();
   state.updateApplying = true;
+  if (state.settingsOpen) renderSettings();
   worker.postMessage({ type: 'SKIP_WAITING' });
 }
 function setupServiceWorker() {
