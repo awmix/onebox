@@ -3928,7 +3928,8 @@ html[data-theme="dark"][data-color="mono"] #settingsDialog .setting-toggle input
   background: #000;
 }
 
-/* 2.18.53: navigation rails and page content support touch swipes. */
+/* 2.18.54: page swipes use a two-panel track so the next view follows the
+   current view instead of exposing a blank strip during the gesture. */
 #toolNav,
 #workspace[data-tool="home"] .feed-source-tabs {
   touch-action: pan-x;
@@ -3939,13 +3940,36 @@ html[data-theme="dark"][data-color="mono"] #settingsDialog .setting-toggle input
      to the page-level swipe controller. */
   touch-action: pan-y;
 }
-#workspace.page-swipe-dragging {
+#pageSwipeStage {
+  min-width: 0;
+  width: 100%;
+  position: relative;
+}
+#pageSwipeStage.is-active {
+  display: flex;
+  width: 200%;
+  align-items: flex-start;
+}
+#pageSwipeStage.is-active > #workspace {
+  flex: 0 0 50%;
+  width: 50%;
+  min-width: 0;
+}
+#pageSwipeStage.is-active .page-swipe-preview {
+  order: 1;
+  pointer-events: none;
+}
+#pageSwipeStage.is-active.backward .page-swipe-preview {
+  order: -1;
+}
+#pageSwipeStage.page-swipe-dragging {
   will-change: transform;
   transition: none !important;
   user-select: none;
   cursor: grabbing;
 }
-#workspace.page-swipe-settling {
+#pageSwipeStage.page-swipe-settling {
   will-change: transform;
   transition: transform .28s cubic-bezier(.22, .8, .22, 1) !important;
 }
+main { overflow-x: hidden; }

@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.53';
+const APP_VERSION = '2.18.54';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -53,6 +53,11 @@ const DEFAULT_HOME_FEED_ORDER = RSS_SOURCES.map((source) => source.id);
 const DEFAULT_TOOL_ORDER = Object.keys(TOOL_DEFS);
 const nav = $('#toolNav');
 const workspace = $('#workspace');
+const pageSwipeStage = document.createElement('div');
+pageSwipeStage.id = 'pageSwipeStage';
+pageSwipeStage.className = 'page-swipe-stage';
+workspace.parentNode.insertBefore(pageSwipeStage, workspace);
+pageSwipeStage.appendChild(workspace);
 const parseStored = (key, fallback) => {
   try { return JSON.parse(localStorage.getItem(key)) ?? fallback; } catch { return fallback; }
 };
@@ -2196,6 +2201,7 @@ let tabSwipeSuppressClickUntil = 0;
 let pageSwipeGesture = null;
 let pageSwipeAnimationToken = 0;
 let pageSwipeSuppressClickUntil = 0;
+let pageSwipeTrackState = null;
 let readerSurfaceGesture = null;
 function startLongPress(target, type, index) {
   clearTimeout(reorderTimer);
@@ -2272,20 +2278,76 @@ function pageSwipeTarget(event) {
 function beginPageSwipe(event) {
   pageSwipeGesture = pageSwipeTarget(event);
 }
-function resetPageSwipeTransform() {
-  workspace.classList.remove('page-swipe-dragging');
+function pageSwipeMarkup(item) {
+  if (item.kind === 'home') {
+    const previousSource = state.homeFeed.active;
+    state.homeFeed.active = item.id;
+    const markup = renderHome();
+    state.homeFeed.active = previousSource;
+    return { tool: 'home', markup };
+  }
+  const previousTool = state.tool;
+  state.tool = item.id;
+  const renderers = { calculator, calendar, weather, convert, translate: translateConvertView, reader };
+  const markup = (renderers[item.id] || calculator)();
+  state.tool = previousTool;
+  return { tool: item.id, markup };
+}
+function clearPageSwipeTrack() {
+  pageSwipeStage.querySelector('.page-swipe-preview')?.remove();
+  pageSwipeStage.className = 'page-swipe-stage';
+  pageSwipeStage.style.transform = '';
+  workspace.classList.remove('page-swipe-dragging', 'page-swipe-settling');
   workspace.style.transform = '';
+  pageSwipeTrackState = null;
+}
+function preparePageSwipeTrack(gesture, direction) {
+  const nextIndex = gesture.index + direction;
+  if (nextIndex < 0 || nextIndex >= gesture.items.length) {
+    clearPageSwipeTrack();
+    return null;
+  }
+  const target = gesture.items[nextIndex];
+  if (pageSwipeTrackState?.target?.id === target.id && pageSwipeTrackState.direction === direction) return pageSwipeTrackState;
+  clearPageSwipeTrack();
+  const rendered = pageSwipeMarkup(target);
+  const preview = document.createElement('section');
+  preview.id = 'workspace';
+  preview.className = 'workspace page-swipe-preview';
+  preview.dataset.tool = rendered.tool;
+  preview.setAttribute('aria-hidden', 'true');
+  preview.innerHTML = rendered.markup;
+  preview.scrollTop = workspace.scrollTop;
+  pageSwipeStage.appendChild(preview);
+  const pageWidth = Math.max(1, workspace.getBoundingClientRect().width);
+  pageSwipeStage.classList.add('is-active', direction === 1 ? 'forward' : 'backward');
+  pageSwipeStage.style.transform = 'translate3d(' + (direction === 1 ? 0 : -pageWidth) + 'px, 0, 0)';
+  pageSwipeTrackState = { target, direction, pageWidth };
+  return pageSwipeTrackState;
+}
+function resetPageSwipeTransform() {
+  if (pageSwipeTrackState) clearPageSwipeTrack();
+  else {
+    workspace.classList.remove('page-swipe-dragging');
+    workspace.style.transform = '';
+  }
 }
 function settlePageSwipeBack() {
   const token = ++pageSwipeAnimationToken;
-  workspace.classList.remove('page-swipe-dragging');
-  workspace.classList.add('page-swipe-settling');
-  workspace.style.transform = 'translate3d(0, 0, 0)';
+  const track = pageSwipeTrackState;
+  if (track) {
+    pageSwipeStage.classList.remove('page-swipe-dragging');
+    pageSwipeStage.classList.add('page-swipe-settling');
+    pageSwipeStage.style.transform = 'translate3d(' + (track.direction === 1 ? 0 : -track.pageWidth) + 'px, 0, 0)';
+  } else {
+    workspace.classList.remove('page-swipe-dragging');
+    workspace.classList.add('page-swipe-settling');
+    workspace.style.transform = 'translate3d(0, 0, 0)';
+  }
   window.setTimeout(() => {
     if (token !== pageSwipeAnimationToken) return;
     pageSwipeAnimationToken = 0;
-    workspace.classList.remove('page-swipe-settling');
-    workspace.style.transform = '';
+    clearPageSwipeTrack();
   }, 300);
 }
 function selectPageSwipeItem(item) {
@@ -2294,15 +2356,16 @@ function selectPageSwipeItem(item) {
 }
 function settlePageSwipe(target, direction) {
   const token = ++pageSwipeAnimationToken;
-  workspace.classList.remove('page-swipe-dragging');
-  workspace.classList.add('page-swipe-settling');
-  workspace.style.transform = 'translate3d(' + (direction * 100) + '%, 0, 0)';
+  const track = pageSwipeTrackState;
+  if (!track) return settlePageSwipeBack();
+  pageSwipeStage.classList.remove('page-swipe-dragging');
+  pageSwipeStage.classList.add('page-swipe-settling');
+  pageSwipeStage.style.transform = 'translate3d(' + (direction === 1 ? -track.pageWidth : 0) + 'px, 0, 0)';
   window.setTimeout(() => {
     if (token !== pageSwipeAnimationToken) return;
     pageSwipeAnimationToken = 0;
-    workspace.classList.remove('page-swipe-settling');
+    clearPageSwipeTrack();
     selectPageSwipeItem(target);
-    workspace.style.transform = '';
   }, 300);
 }
 function updatePageSwipe(event) {
@@ -2321,11 +2384,16 @@ function updatePageSwipe(event) {
   endLongPress();
   if (event.cancelable) event.preventDefault();
   const direction = gesture.dx < 0 ? 1 : -1;
-  const nextIndex = gesture.index + direction;
-  const canNavigate = nextIndex >= 0 && nextIndex < gesture.items.length;
-  const visualDx = canNavigate ? gesture.dx : gesture.dx * 0.2;
-  workspace.classList.add('page-swipe-dragging');
-  workspace.style.transform = 'translate3d(' + visualDx + 'px, 0, 0)';
+  const track = preparePageSwipeTrack(gesture, direction);
+  if (!track) {
+    const visualDx = gesture.dx * 0.2;
+    workspace.classList.add('page-swipe-dragging');
+    workspace.style.transform = 'translate3d(' + visualDx + 'px, 0, 0)';
+    return;
+  }
+  pageSwipeStage.classList.add('page-swipe-dragging');
+  const baseOffset = direction === 1 ? 0 : -track.pageWidth;
+  pageSwipeStage.style.transform = 'translate3d(' + (baseOffset + gesture.dx) + 'px, 0, 0)';
 }
 function finishPageSwipe(event) {
   const gesture = pageSwipeGesture;
@@ -2334,10 +2402,10 @@ function finishPageSwipe(event) {
   if (gesture.cancelled || !gesture.dragging) return;
   pageSwipeSuppressClickUntil = Date.now() + 460;
   const direction = gesture.dx < 0 ? 1 : -1;
-  const nextIndex = gesture.index + direction;
   const distance = Math.abs(gesture.dx);
   const threshold = Math.max(56, Math.min(112, window.innerWidth * 0.18));
-  const target = nextIndex >= 0 && nextIndex < gesture.items.length && distance >= threshold ? gesture.items[nextIndex] : null;
+  const track = pageSwipeTrackState;
+  const target = track?.direction === direction && distance >= threshold ? track.target : null;
   if (target) settlePageSwipe(target, direction);
   else settlePageSwipeBack();
 }
