@@ -2150,3 +2150,156 @@ main:has(#workspace[data-tool="mine"]) { background: transparent; }
   #settingsDialog .settings-top-display-control { gap: 4px; }
   #settingsDialog .settings-top-display-control .setting-toggle { padding-inline: 3px; font-size: 10px; }
 }
+
+/* 2.18.29: weather selection is identified by its outline only. */
+#workspace[data-tool="weather"] .weather-location-button {
+  display: grid;
+  place-items: center;
+  margin: 0;
+  line-height: 0;
+  top: 50%;
+  transform: translateY(-50%);
+}
+#workspace[data-tool="weather"] .weather-location-button svg { display: block; }
+#workspace[data-tool="weather"] .weather-card.active {
+  background: var(--panel-2);
+  border-color: var(--primary);
+  box-shadow: none;
+}
+#workspace[data-tool="weather"] .hour-card,
+#workspace[data-tool="weather"] .forecast {
+  border: 1px solid var(--line);
+}
+#workspace[data-tool="weather"] .hour-card.current,
+#workspace[data-tool="weather"] .forecast.current {
+  background: var(--bg);
+  border-color: var(--primary);
+  box-shadow: none;
+}
+
+/* Messages and Mine use a quiet framed surface, while their individual rows
+   keep their own card backgrounds and spacing. */
+#workspace[data-tool="messages"] .message-panel,
+#workspace[data-tool="mine"] .mine-list {
+  padding: 16px;
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 28px;
+  box-shadow: var(--shadow);
+}
+
+/* Keep settings labels and controls on the same alignment grid. */
+#settingsDialog .settings-preference-row:not(.settings-top-display-row) { gap: 12px; }
+#settingsDialog .settings-preference-row:not(.settings-top-display-row) h3 { flex: 0 0 78px; }
+#settingsDialog .settings-preference-row:not(.settings-top-display-row) .settings-preference-control { flex: 1 1 auto; min-width: 0; justify-content: flex-start; }
+#settingsDialog .settings-preference-row:not(.settings-top-display-row) .settings-preference-control select { width: 100%; min-width: 0; }
+#settingsDialog .settings-top-display-row {
+  display: grid;
+  grid-template-columns: 78px minmax(0, 1fr);
+  gap: 12px;
+}
+#settingsDialog .settings-top-display-row h3 { min-width: 0; }
+#settingsDialog .settings-top-display-control {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  justify-content: flex-start;
+  padding: 0;
+}
+#settingsDialog .settings-top-display-control .setting-toggle { min-height: 36px; padding: 0; }
+
+/* Translation and conversion are two clear cards with compact one-line
+   headings. Translation history lives below the current result. */
+.language-tool-head { align-items: baseline; }
+.language-tool-head h2 { flex: 0 0 auto; margin: 0; }
+.language-tool-head p { min-width: 0; margin: 0 !important; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.language-tool-card .translation-layout { display: block; }
+.language-tool-card .translation-card {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.language-tool-card .translation-history { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--line); }
+.language-tool-card .translation-history-list { max-height: 260px; }
+.converter-card { max-width: none; }
+.converter-category { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 10px; margin-bottom: 14px; }
+.converter-category label { margin: 0; }
+.converter-category select { min-width: 0; width: 100%; }
+.conversion-row { grid-template-columns: minmax(0, 1fr) 40px minmax(0, 1fr); gap: 10px; align-items: end; }
+.conversion-field { display: grid; gap: 6px; min-width: 0; margin: 0; }
+.conversion-field label { margin: 0; }
+.conversion-field select,
+.conversion-field input,
+.conversion-field .conversion-result { width: 100%; min-width: 0; box-sizing: border-box; }
+.conversion-field input { margin-top: 0; }
+.converter-footer { display: flex; align-items: center; gap: 10px; margin-top: 14px; }
+.converter-footer .copy-button { margin: 0; }
+
+/* Reader library and immersive reading mode. */
+.reader-empty-card {
+  position: relative;
+  width: min(420px, 100%);
+  min-height: 230px;
+  margin: 26px auto 0;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 8px;
+  padding: 26px;
+  border: 1px dashed color-mix(in srgb, var(--primary) 55%, var(--line));
+  border-radius: 24px;
+  background: color-mix(in srgb, var(--soft) 52%, var(--panel));
+  color: var(--ink);
+  cursor: pointer;
+}
+.reader-empty-card:hover { border-color: var(--primary); }
+.reader-empty-book { width: 76px; height: 76px; display: grid; place-items: center; color: var(--primary); border-radius: 22px; background: var(--soft); }
+.reader-empty-book svg { width: 52px; height: 52px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.reader-empty-card strong { font-size: 17px; }
+.reader-empty-card small { max-width: 280px; color: var(--muted); text-align: center; line-height: 1.5; }
+.reader-empty-plus { position: absolute; right: 18px; top: 16px; font-size: 25px; color: var(--primary); }
+html.reader-focus #toolNav { display: none; }
+html.reader-focus main:has(#workspace[data-tool="reader"]) { padding-top: calc(var(--app-header-height) + 4px); }
+.reader-reading-shell { height: calc(100dvh - var(--app-header-height) - 8px); min-height: 0; display: flex; flex-direction: column; max-width: 900px; margin: 0 auto; padding: 8px 0 22px; box-sizing: border-box; overflow: hidden; }
+.reader-reading-head { display: flex; align-items: center; gap: 12px; padding: 4px 2px 12px; }
+.reader-back-button { flex: 0 0 auto; padding: 7px 0; border: 0; background: transparent; color: var(--primary); font-weight: 750; cursor: pointer; }
+.reader-reading-title { min-width: 0; flex: 1 1 auto; }
+.reader-reading-title h1 { margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 20px; }
+.reader-reading-title small { display: block; margin-top: 3px; color: var(--muted); font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.reader-reading-head .reader-annotate-button { flex: 0 0 auto; }
+.reader-reading-controls { display: flex; justify-content: flex-end; min-height: 32px; margin-bottom: 8px; }
+.reader-view-switch { display: inline-flex; padding: 2px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel-2); }
+.reader-view-button { padding: 5px 10px; border: 0; border-radius: 8px; background: transparent; color: var(--muted); font-size: 11px; cursor: pointer; }
+.reader-view-button.active { background: var(--primary); color: #fff; }
+.reader-reading-shell .reader-content { width: 100%; box-sizing: border-box; min-height: 0; flex: 1 1 auto; background: var(--panel); border: 1px solid var(--line); border-radius: 24px; box-shadow: var(--shadow); }
+.reader-scroll-content { overflow: auto; padding: 28px clamp(20px, 6vw, 76px); }
+.reader-page-viewport { overflow-x: hidden; overflow-y: hidden; padding: 0; scroll-behavior: smooth; }
+.reader-page-flow { height: 100%; padding: 28px clamp(20px, 6vw, 76px); box-sizing: border-box; column-width: calc(100% - 0px); column-gap: 0; column-fill: auto; }
+.reader-page-flow > * { break-inside: avoid; }
+.reader-page-viewport.reader-turn-forward { animation: reader-page-turn-forward .28s ease; }
+.reader-page-viewport.reader-turn-back { animation: reader-page-turn-back .28s ease; }
+@keyframes reader-page-turn-forward { 50% { transform: translateX(-8px); opacity: .65; } }
+@keyframes reader-page-turn-back { 50% { transform: translateX(8px); opacity: .65; } }
+.reader-pdf-content { overflow: hidden; padding: 0; }
+.reader-reading-shell .reader-pdf { height: 100%; min-height: 560px; }
+.reader-pager { display: flex; align-items: center; justify-content: center; gap: 14px; padding: 10px 0 2px; color: var(--muted); font-size: 12px; }
+.reader-pager button:disabled { opacity: .35; cursor: default; }
+.reader-reading-shell .reader-annotations { flex: 0 0 auto; max-height: 160px; margin-top: 12px; padding: 12px 0 0; overflow: auto; border-top: 1px solid var(--line); }
+
+@media (max-width: 760px) {
+  #settingsDialog .settings-top-display-row { grid-template-columns: 70px minmax(0, 1fr); gap: 9px; }
+  #settingsDialog .settings-preference-row:not(.settings-top-display-row) h3 { flex-basis: 70px; }
+  .language-tool-head { gap: 8px; }
+  .language-tool-head p { font-size: 11px; }
+  .converter-category { grid-template-columns: 1fr; gap: 5px; }
+  .conversion-row { grid-template-columns: 1fr; gap: 10px; }
+  .conversion-row .swap { width: 100%; height: 34px; margin: 0; }
+  .reader-reading-shell { padding-top: 2px; }
+  .reader-reading-head { gap: 7px; }
+  .reader-reading-title h1 { font-size: 17px; }
+  .reader-reading-head .reader-annotate-button { padding: 6px 7px; font-size: 10px; }
+  .reader-scroll-content { padding: 22px 17px; border-radius: 18px !important; }
+  .reader-page-flow { padding: 22px 17px; }
+  .reader-reading-shell .reader-pdf { min-height: calc(100dvh - 180px); }
+  .reader-reading-shell .reader-annotations { max-height: 130px; }
+}

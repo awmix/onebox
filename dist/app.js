@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.28';
+const APP_VERSION = '2.18.29';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -32,7 +32,7 @@ const TOOL_DEFS = {
   calculator: { icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="3"/><path d="M8 7h8M8 11h.01M12 11h.01M16 11h.01M8 15h.01M12 15h.01M16 15h.01M8 18h8"/></svg>', key: 'calculator' },
   calendar: { icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="16" rx="3"/><path d="M8 3v4M16 3v4M4 9h16M8 13h.01M12 13h.01M16 13h.01M8 17h.01M12 17h.01M16 17h.01"/></svg>', key: 'calendar' },
   weather: { icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.5"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>', key: 'weather' },
-  translate: { icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 18 8 6l4 12M5.5 14h5M14 8h6M17 5v3M14 16h6M17 13v3"/></svg>', key: 'translateConvert' },
+  translate: { icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 18 8 6l4 12M5.5 14h5M14 8h6M17 5v3M14 16h6M17 13v3"/></svg>', key: 'convert' },
   reader: { icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4h12v17H7.5A1.5 1.5 0 0 1 6 19.5V4Z"/><path d="M6 5.5A2.5 2.5 0 0 1 8.5 3H18M9 8h6M9 12h6M9 16h4"/></svg>', key: 'reader' },
 };
 const RSS_SOURCES = [
@@ -146,14 +146,14 @@ const toast = (message, kind = 'info') => {
 
 const DICT = {
   zh: {
-    calculator: '计算', calendar: '日历', weather: '天气', convert: '转换', translate: '翻译', translateConvert: '翻译 / 转换', reader: '阅读',
+    calculator: '计算', calendar: '日历', weather: '天气', convert: '转换', translate: '翻译', translateConvert: '转换', reader: '阅读',
     online: '在线', offline: '离线', install: '安装应用', settings: '设置', notifications: '消息提示',
     heroSubtitle: '快速、清爽、可离线。你的数据优先保存在当前设备。',
     calculatorDesc: '支持括号、百分比、科学函数和键盘输入，并自动保留最近计算记录。',
     calendarDesc: '公历、农历、节气、节假日、补班和个人日程集中查看。',
     weatherDesc: '搜索区县，查看实时、小时级和未来 15 天天气趋势。',
-    convertDesc: '覆盖长度、重量、面积、体积、速度、时间、数据和温度。',
-    translateDesc: '使用开源 LibreTranslate 接口，翻译结果可保存在本机。',
+    convertDesc: '常用单位换算',
+    translateDesc: '快速翻译，结果保存在本机',
     recentCalculations: '最近计算', clear: '清除', ready: '完成的计算会显示在这里。',
     scientific: '科学计算', collapse: '收起', expand: '展开', degree: '度', radian: '弧度',
     keyboard: '键盘：数字、+ − × ÷、括号、Enter 等号、Esc 清空',
@@ -187,14 +187,14 @@ const DICT = {
     bookshelf: '书架', addBook: '添加文档', noBooks: '还没有本地文档。', readerHint: '支持 Markdown、PDF、EPUB；文档仅保存在当前设备。', openBook: '打开阅读', deleteBook: '删除文档', annotations: '标注', addAnnotation: '添加标注', annotationPlaceholder: '写下你的标注…', saveAnnotation: '保存标注', annotationHint: '选择文字后长按或点击标注按钮。', noAnnotations: '还没有标注。', reading: '正在阅读', closeReader: '关闭阅读', unsupportedFile: '请选择 .md、.markdown、.pdf 或 .epub 文件。', importFailed: '文档读取失败，请重试。', deleteConfirm: '确定删除这本文档吗？', pdfHint: 'PDF 使用浏览器原生阅读器打开。', epubHint: 'EPUB 已转换为适合 OneBox 的连续阅读视图。',
   },
   en: {
-    calculator: 'Calculator', calendar: 'Calendar', weather: 'Weather', convert: 'Convert', translate: 'Translate', translateConvert: 'Translate / Convert', reader: 'Reader',
+    calculator: 'Calculator', calendar: 'Calendar', weather: 'Weather', convert: 'Convert', translate: 'Translate', translateConvert: 'Convert', reader: 'Reader',
     online: 'Online', offline: 'Offline', install: 'Install', settings: 'Settings', notifications: 'Notifications',
     heroSubtitle: 'Fast, calm and offline-ready. Your data stays on this device first.',
     calculatorDesc: 'Parentheses, percentages, scientific functions, keyboard input and history.',
     calendarDesc: 'Gregorian, lunar, solar terms, holidays, make-up workdays and personal events.',
     weatherDesc: 'Search cities and districts for current, hourly and 15-day forecasts.',
-    convertDesc: 'Length, weight, area, volume, speed, time, data and temperature.',
-    translateDesc: 'Powered by an open-source LibreTranslate endpoint; results can be saved locally.',
+    convertDesc: 'Common unit conversion',
+    translateDesc: 'Fast translation, saved locally',
     recentCalculations: 'Recent calculations', clear: 'Clear', ready: 'Completed calculations appear here.',
     scientific: 'Scientific', collapse: 'Hide', expand: 'Show', degree: 'DEG', radian: 'RAD',
     keyboard: 'Keyboard: numbers, + − × ÷, parentheses, Enter and Escape',
@@ -281,7 +281,7 @@ const state = {
   translation: { source: 'auto', target: 'zh', input: '', result: '', loading: false, error: '' },
   translationHistory: parseStored(STORAGE.translationHistory, []),
   library: (Array.isArray(storedLibrary) ? storedLibrary : []).filter((book) => book && book.id && book.name),
-  readerBookId: null, readerUrl: '', readerSelectedText: '', annotationBookId: null,
+  readerBookId: null, readerUrl: '', readerContent: '', readerHint: '', readerMode: 'library', readerReadingMode: 'scroll', readerPage: 0, readerSelectedText: '', annotationBookId: null,
   homeFeed: { active: DEFAULT_HOME_FEED_ORDER[0], order: normalizeHomeFeedOrder(storedHomeFeedOrder), hasNew: false, loading: false, errors: {}, updatedAt: Number(storedHomeFeeds.updatedAt || 0), cacheVersion: storedHomeFeeds.cacheVersion || '', sources: storedHomeFeeds.sources && typeof storedHomeFeeds.sources === 'object' ? storedHomeFeeds.sources : {} },
   homeFeedRead: storedHomeFeedRead && typeof storedHomeFeedRead === 'object' ? storedHomeFeedRead : {},
   homeFeedRequest: 0,
@@ -752,10 +752,38 @@ function readerAnnotationMarkup(book) {
   if (!notes.length) return '<p class="empty compact">' + t('noAnnotations') + '</p>';
   return notes.map((note) => '<div class="reader-note"><blockquote>' + escapeHtml(note.quote) + '</blockquote><p>' + escapeHtml(note.note) + '</p><button class="icon-btn small" data-delete-annotation="' + escapeHtml(note.id) + '" aria-label="' + t('close') + '">×</button></div>').join('');
 }
-function renderReaderDialog(content, hint = '') {
-  const book = readerBookById(state.readerBookId); const dialog = $('#readerDialog'); if (!book || !dialog) return;
-  dialog.innerHTML = '<div class="reader-dialog-card" role="dialog" aria-modal="true"><div class="dialog-head"><div><h2>' + escapeHtml(book.name) + '</h2><small class="reader-file-meta">' + escapeHtml(hint || (book.type.toUpperCase() + ' · ' + Math.max(1, Math.round(book.size / 1024)) + ' KB')) + '</small></div><div class="reader-head-actions"><button class="secondary reader-annotate-button" data-annotate-selection hidden>' + t('addAnnotation') + '</button><button class="icon-btn small" data-close-reader aria-label="' + t('closeReader') + '">×</button></div></div><article class="reader-content" data-reader-content>' + content + '</article><section class="reader-annotations"><div class="subhead"><h3>' + t('annotations') + '</h3><small>' + t('annotationHint') + '</small></div><div class="reader-note-list">' + readerAnnotationMarkup(book) + '</div></section></div>';
-  dialog.hidden = false;
+function updateReaderPager() {
+  const viewport = $('.reader-page-viewport'); if (!viewport) return;
+  const flow = $('.reader-page-flow');
+  if (flow) { flow.style.columnWidth = viewport.clientWidth + 'px'; flow.style.height = viewport.clientHeight + 'px'; }
+  const count = Math.max(1, Math.ceil(viewport.scrollWidth / Math.max(1, viewport.clientWidth)));
+  state.readerPage = Math.min(Math.max(0, Math.round(viewport.scrollLeft / Math.max(1, viewport.clientWidth))), count - 1);
+  const current = $('[data-reader-page-current]'); const total = $('[data-reader-page-count]');
+  if (current) current.textContent = String(state.readerPage + 1);
+  if (total) total.textContent = String(count);
+  const previous = $('[data-reader-page-prev]'); const next = $('[data-reader-page-next]');
+  if (previous) previous.disabled = state.readerPage <= 0;
+  if (next) next.disabled = state.readerPage >= count - 1;
+}
+function restoreReaderPosition() {
+  const book = readerBookById(state.readerBookId); const content = $('[data-reader-content]'); if (!book || !content) return;
+  if (state.readerReadingMode === 'pages' && content.classList.contains('reader-page-viewport')) {
+    const count = Math.max(1, Math.ceil(content.scrollWidth / Math.max(1, content.clientWidth)));
+    const page = state.readerPage || Math.round((book.progress || 0) * Math.max(0, count - 1));
+    content.scrollLeft = Math.min(Math.max(0, page), count - 1) * content.clientWidth;
+    updateReaderPager();
+  } else if (book.progress) {
+    content.scrollTop = content.scrollHeight * book.progress;
+  }
+}
+function renderReaderView(content, hint = '') {
+  state.readerContent = content;
+  state.readerHint = hint;
+  state.readerMode = 'reading';
+  state.readerReadingMode = 'scroll';
+  state.readerPage = 0;
+  render();
+  requestAnimationFrame(restoreReaderPosition);
 }
 async function openReaderBook(id) {
   const book = readerBookById(id); if (!book) return;
@@ -769,14 +797,13 @@ async function openReaderBook(id) {
       if (book.type === 'epub') { const parsed = await epubToHtml(bytes); content = parsed.html; hint = parsed.title ? parsed.title + ' · ' + t('epubHint') : t('epubHint'); }
       else { state.readerUrl = URL.createObjectURL(new Blob([bytes], { type: 'application/pdf' })); content = '<iframe class="reader-pdf" title="' + escapeHtml(book.name) + '" src="' + state.readerUrl + '"></iframe>'; hint = t('pdfHint'); }
     }
-    renderReaderDialog(content, hint);
-    setTimeout(() => { const node = $('[data-reader-content]'); if (node && book.progress) node.scrollTop = node.scrollHeight * book.progress; }, 0);
+    renderReaderView(content, hint);
   } catch { toast(t('importFailed'), 'error'); state.readerBookId = null; }
 }
 function closeReader() {
   if (state.readerUrl) URL.revokeObjectURL(state.readerUrl);
-  state.readerUrl = ''; state.readerBookId = null; state.readerSelectedText = '';
-  const dialog = $('#readerDialog'); if (dialog) dialog.hidden = true;
+  state.readerUrl = ''; state.readerBookId = null; state.readerContent = ''; state.readerHint = ''; state.readerMode = 'library'; state.readerReadingMode = 'scroll'; state.readerPage = 0; state.readerSelectedText = '';
+  render();
 }
 function renderAnnotationDialog() {
   if (!state.readerSelectedText) return;
@@ -784,10 +811,23 @@ function renderAnnotationDialog() {
   dialog.innerHTML = '<div class="dialog-card annotation-dialog-card" role="dialog" aria-modal="true"><div class="dialog-head"><h2>' + t('addAnnotation') + '</h2><button class="icon-btn small" data-close-annotation aria-label="' + t('close') + '">×</button></div><blockquote class="annotation-quote">' + escapeHtml(state.readerSelectedText) + '</blockquote><textarea id="annotationText" maxlength="500" placeholder="' + t('annotationPlaceholder') + '"></textarea><button class="primary full-width" data-save-annotation>' + t('saveAnnotation') + '</button></div>';
   dialog.hidden = false;
 }
+function readerReadingView(book) {
+  const isPdf = book.type === 'pdf';
+  const hint = state.readerHint || (book.type.toUpperCase() + ' · ' + Math.max(1, Math.round(book.size / 1024)) + ' KB');
+  const contentClass = isPdf ? 'reader-content reader-pdf-content' : state.readerReadingMode === 'pages' ? 'reader-content reader-page-viewport' : 'reader-content reader-scroll-content';
+  const content = state.readerReadingMode === 'pages' && !isPdf ? '<div class="reader-page-flow">' + state.readerContent + '</div>' : state.readerContent;
+  const modeControls = isPdf ? '' : '<div class="reader-view-switch" role="group" aria-label="阅读方式"><button class="reader-view-button ' + (state.readerReadingMode === 'scroll' ? 'active' : '') + '" data-reader-mode="scroll">' + (state.language === 'en' ? 'Scroll' : '滚动') + '</button><button class="reader-view-button ' + (state.readerReadingMode === 'pages' ? 'active' : '') + '" data-reader-mode="pages">' + (state.language === 'en' ? 'Pages' : '翻页') + '</button></div>';
+  const pager = !isPdf && state.readerReadingMode === 'pages' ? '<div class="reader-pager"><button class="icon-btn small" data-reader-page-prev aria-label="' + (state.language === 'en' ? 'Previous page' : '上一页') + '">‹</button><span><b data-reader-page-current>1</b> / <span data-reader-page-count>1</span></span><button class="icon-btn small" data-reader-page-next aria-label="' + (state.language === 'en' ? 'Next page' : '下一页') + '">›</button></div>' : '';
+  return '<div class="reader-reading-shell"><header class="reader-reading-head"><button class="reader-back-button" data-close-reader>‹ ' + t('bookshelf') + '</button><div class="reader-reading-title"><h1>' + escapeHtml(book.name) + '</h1><small>' + escapeHtml(hint) + '</small></div><button class="secondary reader-annotate-button" data-annotate-selection hidden>' + t('addAnnotation') + '</button></header><div class="reader-reading-controls">' + modeControls + '</div><article class="' + contentClass + '" data-reader-content>' + content + '</article>' + pager + '<section class="reader-annotations"><div class="subhead"><h3>' + t('annotations') + '</h3><small>' + t('annotationHint') + '</small></div><div class="reader-note-list">' + readerAnnotationMarkup(book) + '</div></section></div>';
+}
 function reader() {
+  const activeBook = readerBookById(state.readerBookId);
+  if (state.readerMode === 'reading' && activeBook) return readerReadingView(activeBook);
   const books = [...state.library].sort((a, b) => Number(b.lastOpenedAt || b.createdAt) - Number(a.lastOpenedAt || a.createdAt));
-  const cards = books.length ? books.map((book) => '<article class="book-card"><button class="book-open" data-open-reader="' + escapeHtml(book.id) + '"><span class="book-cover ' + book.type + '">' + book.type.toUpperCase() + '</span><span class="book-copy"><strong>' + escapeHtml(book.name) + '</strong><small>' + (book.lastOpenedAt ? t('reading') : t('openBook')) + ' · ' + Math.max(1, Math.round(book.size / 1024)) + ' KB</small></span></button><button class="icon-btn small book-delete" data-delete-book="' + escapeHtml(book.id) + '" aria-label="' + t('deleteBook') + '">×</button></article>').join('') : '<p class="empty compact">' + t('noBooks') + '</p>';
-  return heading(t('reader'), t('readerHint')) + '<div class="reader-shell"><div class="reader-toolbar"><div><h2>' + t('bookshelf') + '</h2><p>' + t('readerHint') + '</p></div><button class="primary" data-open-reader-file>＋ ' + t('addBook') + '</button><input id="readerFileInput" type="file" hidden multiple accept=".md,.markdown,.pdf,.epub,text/markdown,application/pdf,application/epub+zip"></div><div class="bookshelf-grid">' + cards + '</div></div>';
+  const cards = books.map((book) => '<article class="book-card"><button class="book-open" data-open-reader="' + escapeHtml(book.id) + '"><span class="book-cover ' + book.type + '">' + book.type.toUpperCase() + '</span><span class="book-copy"><strong>' + escapeHtml(book.name) + '</strong><small>' + (book.lastOpenedAt ? t('reading') : t('openBook')) + ' · ' + Math.max(1, Math.round(book.size / 1024)) + ' KB</small></span></button><button class="icon-btn small book-delete" data-delete-book="' + escapeHtml(book.id) + '" aria-label="' + t('deleteBook') + '">×</button></article>').join('');
+  const empty = '<button class="reader-empty-card" data-open-reader-file><span class="reader-empty-book"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M8 10.5c7-2.5 12-1 16 2v25c-4-3-9-4.5-16-2v-25ZM40 10.5c-7-2.5-12-1-16 2v25c4-3 9-4.5 16-2v-25Z"/><path d="M24 12.5v25"/></svg></span><strong>' + t('addBook') + '</strong><small>' + t('readerHint') + '</small><span class="reader-empty-plus">＋</span></button>';
+  const libraryBody = books.length ? '<div class="bookshelf-grid">' + cards + '</div>' : empty;
+  return '<div class="reader-shell"><div class="reader-toolbar"><div><h2>' + t('bookshelf') + '</h2><p>' + t('readerHint') + '</p></div>' + (books.length ? '<button class="secondary" data-open-reader-file>＋ ' + t('addBook') + '</button>' : '') + '<input id="readerFileInput" type="file" hidden multiple accept=".md,.markdown,.pdf,.epub,text/markdown,application/pdf,application/epub+zip"></div>' + libraryBody + '</div>';
 }
 
 // Calendar data --------------------------------------------------------------
@@ -1184,8 +1224,8 @@ function weather() {
   const hourlyTimes = active.hourly?.time || [];
   const selectedHour = currentHourIndex(active);
   const currentHour = selectedHour >= 0 ? selectedHour : 0;
-  const hourlyStart = Math.max(0, currentHour - 12);
-  const hourlyEnd = Math.min(hourlyTimes.length, currentHour + 12);
+  const hourlyStart = Math.min(Math.max(0, currentHour - 12), Math.max(0, hourlyTimes.length - 24));
+  const hourlyEnd = Math.min(hourlyTimes.length, hourlyStart + 24);
   const hourly = hourlyTimes.slice(hourlyStart, hourlyEnd).map((time, offset) => {
     const index = hourlyStart + offset; const item = weatherCode(active.hourly.weather_code[index]); const date = new Date(time); const isCurrent = index === currentHour;
     const label = isCurrent ? (state.language === 'en' ? 'Now' : '现在') : new Intl.DateTimeFormat(state.language === 'en' ? 'en-US' : 'zh-CN', { hour: '2-digit', minute: '2-digit' }).format(date);
@@ -1240,12 +1280,12 @@ function unitOptions(category, selected) {
 function conversionMarkup() {
   const category = units[conversion.category];
   const categories = Object.entries(units).map(([key, item]) => '<option value="' + key + '" ' + (key === conversion.category ? 'selected' : '') + '>' + item.name + '</option>').join('');
-  return '<div class="converter-card"><div class="field field-inline"><label for="conversionCategory">' + t('converterType') + '</label><select id="conversionCategory">' + categories + '</select></div><div class="conversion-row">' +
-    '<div class="field field-inline"><label for="fromUnit">' + t('from') + '</label><select id="fromUnit">' + unitOptions(category, conversion.from) + '</select><input id="conversionValue" type="number" step="any" inputmode="decimal" value="' + escapeHtml(conversion.value) + '" aria-label="' + t('from') + '"></div>' +
-    '<button class="swap" data-swap aria-label="' + t('swap') + '">⇄</button><div class="field field-inline"><label for="toUnit">' + t('to') + '</label><select id="toUnit">' + unitOptions(category, conversion.to) + '</select><div class="conversion-result" aria-live="polite"><small>' + t('result') + '</small><strong>' + formatNumber(convertedValue()) + '</strong><span>' + category.units[conversion.to][1] + '</span></div></div></div>' +
-    '<button class="secondary copy-button" data-copy-conversion>' + t('copyResult') + '</button><span class="copy-status" id="copyStatus"></span></div>';
+  return '<div class="converter-card"><div class="converter-category field"><label for="conversionCategory">' + t('converterType') + '</label><select id="conversionCategory">' + categories + '</select></div><div class="conversion-row">' +
+    '<div class="conversion-field field"><label for="fromUnit">' + t('from') + '</label><select id="fromUnit">' + unitOptions(category, conversion.from) + '</select><input id="conversionValue" type="number" step="any" inputmode="decimal" value="' + escapeHtml(conversion.value) + '" aria-label="' + t('from') + '"></div>' +
+    '<button class="swap" data-swap aria-label="' + t('swap') + '">⇄</button><div class="conversion-field field"><label for="toUnit">' + t('to') + '</label><select id="toUnit">' + unitOptions(category, conversion.to) + '</select><div class="conversion-result" aria-live="polite"><small>' + t('result') + '</small><strong>' + formatNumber(convertedValue()) + '</strong><span>' + category.units[conversion.to][1] + '</span></div></div></div>' +
+    '<div class="converter-footer"><button class="secondary copy-button" data-copy-conversion>' + t('copyResult') + '</button><span class="copy-status" id="copyStatus"></span></div></div>';
 }
-function convert() { return '<section class="language-tool-card converter-panel"><div class="language-tool-head"><div><p class="section-kicker">' + t('convert') + '</p><h2>' + t('convert') + '</h2><p>' + t('convertDesc') + '</p></div></div>' + conversionMarkup() + '</section>'; }
+function convert() { return '<section class="language-tool-card converter-panel"><div class="language-tool-head"><h2>' + t('convert') + '</h2><p>' + t('convertDesc') + '</p></div>' + conversionMarkup() + '</section>'; }
 
 // Translation ---------------------------------------------------------------
 const languageOptions = [['auto', '自动检测 / Auto'], ['zh', '中文 / Chinese'], ['en', 'English'], ['ja', '日本語 / Japanese'], ['ko', '한국어 / Korean']];
@@ -1290,13 +1330,12 @@ function translateView() {
     : '<p class="empty compact">' + t('noHistory') + '</p>';
   const options = (selected) => languageOptions.map(([value, label]) => '<option value="' + value + '" ' + (selected === value ? 'selected' : '') + '>' + label + '</option>').join('');
   const result = state.translation.loading ? (state.language === 'en' ? 'Translating…' : '翻译中…') : state.translation.result || t('noTranslation');
-  return heading(t('translate'), t('translateDesc')) +
-    '<div class="translation-layout"><div class="translation-card"><div class="translation-toolbar"><div class="field field-inline"><label for="translationSource">' + t('source') + '</label><select id="translationSource">' + options(state.translation.source) + '</select></div><button class="swap" data-swap-language aria-label="' + t('swap') + '">⇄</button><div class="field field-inline"><label for="translationTarget">' + t('target') + '</label><select id="translationTarget">' + options(state.translation.target) + '</select></div></div>' +
-    '<div class="field"><label for="translationInput">' + t('translationInput') + '</label><div class="translation-input-wrap"><textarea id="translationInput" maxlength="5000" placeholder="' + (state.language === 'en' ? 'Type or paste text here…' : '输入或粘贴文字…') + '">' + escapeHtml(state.translation.input) + '</textarea><div class="translation-input-actions"><button class="input-action" data-translate-submit ' + (state.translation.loading ? 'disabled' : '') + ' aria-label="' + t('translateNow') + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 12 16-8-5 16-3-6-8-2Z"/><path d="m12 14 4-4"/></svg></button><button class="input-action" data-save-translation aria-label="' + t('saveTranslation') + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h11l3 3v13H5zM8 4v6h8V4M8 16h8"/></svg></button></div></div></div><h3 class="weather-section-title">' + t('translationResult') + '</h3><div class="translation-result ' + (state.translation.result ? '' : 'placeholder') + '">' + escapeHtml(result) + '</div>' + (state.translation.error ? '<p class="inline-alert">' + escapeHtml(state.translation.error) + '</p>' : '') + '</div>' +
-    '<aside class="translation-history"><div class="subhead"><h3>' + t('translationHistory') + '</h3><button class="text-btn" data-clear-translation-history>' + t('clear') + '</button></div><div class="translation-history-list">' + history + '</div></aside></div>';
+  return '<div class="translation-layout"><div class="translation-card"><div class="translation-toolbar"><div class="field field-inline"><label for="translationSource">' + t('source') + '</label><select id="translationSource">' + options(state.translation.source) + '</select></div><button class="swap" data-swap-language aria-label="' + t('swap') + '">⇄</button><div class="field field-inline"><label for="translationTarget">' + t('target') + '</label><select id="translationTarget">' + options(state.translation.target) + '</select></div></div>' +
+    '<div class="field"><label for="translationInput">' + t('translationInput') + '</label><div class="translation-input-wrap"><textarea id="translationInput" maxlength="5000" placeholder="' + (state.language === 'en' ? 'Type or paste text here…' : '输入或粘贴文字…') + '">' + escapeHtml(state.translation.input) + '</textarea><div class="translation-input-actions"><button class="input-action" data-translate-submit ' + (state.translation.loading ? 'disabled' : '') + ' aria-label="' + t('translateNow') + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 12 16-8-5 16-3-6-8-2Z"/><path d="m12 14 4-4"/></svg></button><button class="input-action" data-save-translation aria-label="' + t('saveTranslation') + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h11l3 3v13H5zM8 4v6h8V4M8 16h8"/></svg></button></div></div></div><h3 class="weather-section-title">' + t('translationResult') + '</h3><div class="translation-result ' + (state.translation.result ? '' : 'placeholder') + '">' + escapeHtml(result) + '</div>' + (state.translation.error ? '<p class="inline-alert">' + escapeHtml(state.translation.error) + '</p>' : '') +
+    '<div class="translation-history"><div class="subhead"><h3>' + t('translationHistory') + '</h3><button class="text-btn" data-clear-translation-history>' + t('clear') + '</button></div><div class="translation-history-list">' + history + '</div></div></div></div>';
 }
 function translateConvertView() {
-  return '<div class="translate-convert-page"><section class="language-tool-card translation-panel"><div class="language-tool-head"><div><p class="section-kicker">' + t('translate') + '</p><h2>' + t('translate') + '</h2><p>' + t('translateDesc') + '</p></div></div>' + translateView() + '</section>' + convert() + '</div>';
+  return '<div class="translate-convert-page"><section class="language-tool-card translation-panel"><div class="language-tool-head"><h2>' + t('translate') + '</h2><p>' + t('translateDesc') + '</p></div>' + translateView() + '</section>' + convert() + '</div>';
 }
 
 // Notifications and calendar reminders -------------------------------------
@@ -1635,6 +1674,7 @@ function render() {
   const renderers = { calculator, calendar, weather, convert, translate: translateConvertView, reader };
   workspace.dataset.tool = state.section === 'tools' ? state.tool : state.section;
   workspace.innerHTML = state.section === 'home' ? renderHome() : state.section === 'messages' ? renderMessages() : state.section === 'mine' ? renderMine() : (renderers[state.tool] || calculator)();
+  document.documentElement.classList.toggle('reader-focus', state.section === 'tools' && state.tool === 'reader' && state.readerMode === 'reading');
   if (state.section === 'tools' && state.tool === 'calendar') ensureHolidayYear(state.month.getFullYear());
   renderBottomNav();
   updateNotificationBadge();
@@ -1735,6 +1775,27 @@ workspace.addEventListener('click', async (event) => {
   const feedLink = feedItem?.dataset.feedLink;
   if (feedLink) { markFeedRead(feedItem.dataset.feedId); feedItem.classList.add('is-read'); window.open(feedLink, '_blank', 'noopener,noreferrer'); return; }
   if (event.target.closest('[data-open-reader-file]')) { $('#readerFileInput')?.click(); return; }
+  if (event.target.closest('[data-close-reader]')) return closeReader();
+  const readerMode = event.target.closest('[data-reader-mode]');
+  if (readerMode) {
+    state.readerReadingMode = readerMode.dataset.readerMode === 'pages' ? 'pages' : 'scroll';
+    state.readerPage = 0;
+    render(); requestAnimationFrame(restoreReaderPosition); return;
+  }
+  const readerPageButton = event.target.closest('[data-reader-page-prev], [data-reader-page-next]');
+  if (readerPageButton) {
+    const viewport = $('.reader-page-viewport'); if (!viewport) return;
+    updateReaderPager();
+    const count = Math.max(1, Math.ceil(viewport.scrollWidth / Math.max(1, viewport.clientWidth)));
+    const direction = readerPageButton.hasAttribute('data-reader-page-next') ? 1 : -1;
+    state.readerPage = Math.min(Math.max(0, state.readerPage + direction), count - 1);
+    viewport.classList.remove('reader-turn-forward', 'reader-turn-back');
+    void viewport.offsetWidth;
+    viewport.classList.add(direction > 0 ? 'reader-turn-forward' : 'reader-turn-back');
+    viewport.scrollTo({ left: state.readerPage * viewport.clientWidth, behavior: 'smooth' });
+    setTimeout(updateReaderPager, 260);
+    return;
+  }
   const openReader = event.target.closest('[data-open-reader]');
   if (openReader) return openReaderBook(openReader.dataset.openReader);
   const deleteBook = event.target.closest('[data-delete-book]');
@@ -1745,7 +1806,7 @@ workspace.addEventListener('click', async (event) => {
   if (event.target.closest('[data-annotate-selection]')) return renderAnnotationDialog();
   const deleteAnnotation = event.target.closest('[data-delete-annotation]');
   if (deleteAnnotation) {
-    const book = readerBookById(state.readerBookId); if (book) { book.annotations = (book.annotations || []).filter((note) => note.id !== deleteAnnotation.dataset.deleteAnnotation); saveLibrary(); renderReaderDialog($('[data-reader-content]')?.innerHTML || ''); }
+    const book = readerBookById(state.readerBookId); if (book) { book.annotations = (book.annotations || []).filter((note) => note.id !== deleteAnnotation.dataset.deleteAnnotation); saveLibrary(); render(); }
     return;
   }
   if (event.target.closest('[data-open-settings-page]')) return renderSettings();
@@ -1891,26 +1952,32 @@ $('#readerDialog').addEventListener('click', (event) => {
   if (event.target.closest('[data-annotate-selection]')) return renderAnnotationDialog();
   const deleteAnnotation = event.target.closest('[data-delete-annotation]');
   if (deleteAnnotation) {
-    const book = readerBookById(state.readerBookId); if (book) { book.annotations = (book.annotations || []).filter((note) => note.id !== deleteAnnotation.dataset.deleteAnnotation); saveLibrary(); renderReaderDialog($('[data-reader-content]')?.innerHTML || ''); }
+    const book = readerBookById(state.readerBookId); if (book) { book.annotations = (book.annotations || []).filter((note) => note.id !== deleteAnnotation.dataset.deleteAnnotation); saveLibrary(); render(); }
   }
 });
-$('#readerDialog').addEventListener('scroll', (event) => {
+workspace.addEventListener('scroll', (event) => {
   const book = readerBookById(state.readerBookId); const content = event.target.closest('[data-reader-content]');
   if (!book || !content || !content.scrollHeight) return;
-  book.progress = Math.min(1, content.scrollTop / Math.max(1, content.scrollHeight - content.clientHeight)); saveLibrary();
+  if (state.readerReadingMode === 'pages' && content.classList.contains('reader-page-viewport')) {
+    const max = Math.max(1, content.scrollWidth - content.clientWidth);
+    book.progress = Math.min(1, content.scrollLeft / max); updateReaderPager();
+  } else {
+    book.progress = Math.min(1, content.scrollTop / Math.max(1, content.scrollHeight - content.clientHeight));
+  }
+  saveLibrary();
 }, true);
 $('#annotationDialog').addEventListener('click', (event) => {
   if (event.target === $('#annotationDialog') || event.target.closest('[data-close-annotation]')) { $('#annotationDialog').hidden = true; return; }
   if (!event.target.closest('[data-save-annotation]')) return;
   const book = readerBookById(state.readerBookId); const note = $('#annotationText')?.value.trim();
   if (!book || !state.readerSelectedText || !note) return toast(state.language === 'en' ? 'Write a note first' : '请先写下标注内容', 'error');
-  book.annotations ||= []; book.annotations.push({ id: uid(), quote: state.readerSelectedText, note, createdAt: Date.now() }); saveLibrary(); $('#annotationDialog').hidden = true; renderReaderDialog($('[data-reader-content]')?.innerHTML || '');
+  book.annotations ||= []; book.annotations.push({ id: uid(), quote: state.readerSelectedText, note, createdAt: Date.now() }); saveLibrary(); $('#annotationDialog').hidden = true; render();
 });
 document.addEventListener('selectionchange', () => {
   if (!state.readerBookId) return;
   const selection = window.getSelection(); const text = selection?.toString().trim() || '';
   if (text) state.readerSelectedText = text.slice(0, 1000);
-  const button = $('[data-annotate-selection]', $('#readerDialog'));
+  const button = $('.reader-annotate-button');
   if (button) button.hidden = !state.readerSelectedText;
 });
 
