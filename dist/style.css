@@ -3928,7 +3928,7 @@ html[data-theme="dark"][data-color="mono"] #settingsDialog .setting-toggle input
   background: #000;
 }
 
-/* 2.18.56: page swipes keep the source/tool rail outside the moving content
+/* 2.18.57: page swipes keep the source/tool rail outside the moving content
    track, while its active underline follows the finger between adjacent tabs. */
 #homeSourceNav {
   display: block;
@@ -4034,7 +4034,8 @@ html[data-theme="dark"][data-color="mono"] #settingsDialog .setting-toggle input
   border-radius: 2px 2px 0 0;
   background: var(--primary);
   pointer-events: none;
-  will-change: left, width;
+  transition: none !important;
+  will-change: transform, width;
 }
 #toolNav,
 #workspace[data-tool="home"] .feed-source-tabs {

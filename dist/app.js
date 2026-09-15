@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.56';
+const APP_VERSION = '2.18.57';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -2249,13 +2249,15 @@ function setPageSwipeNavProgress(progress) {
   const swipe = pageSwipeNavState;
   if (!swipe) return;
   const amount = Math.max(0, Math.min(1, progress));
-  const containerRect = swipe.container.getBoundingClientRect();
-  const fromRect = swipe.from.getBoundingClientRect();
-  const toRect = swipe.to.getBoundingClientRect();
-  const left = fromRect.left + (toRect.left - fromRect.left) * amount - containerRect.left + swipe.container.scrollLeft;
-  const width = fromRect.width + (toRect.width - fromRect.width) * amount;
-  swipe.indicator.style.left = Math.round(left) + 'px';
-  swipe.indicator.style.width = Math.max(8, Math.round(width)) + 'px';
+  // The rail stays outside the moving page stage. Capture its geometry once
+  // when the gesture starts; reading layout on every pointermove can cause
+  // Safari to reflow the rail and make the underline wobble after direction
+  // has already been established.
+  const left = swipe.fromLeft + (swipe.toLeft - swipe.fromLeft) * amount;
+  const width = swipe.fromWidth + (swipe.toWidth - swipe.fromWidth) * amount;
+  swipe.indicator.style.transition = 'none';
+  swipe.indicator.style.transform = `translate3d(${left - swipe.fromLeft}px, 0, 0)`;
+  swipe.indicator.style.width = Math.max(8, width) + 'px';
 }
 function beginPageSwipeNav(container, direction) {
   if (!container) return null;
@@ -2264,18 +2266,38 @@ function beginPageSwipeNav(container, direction) {
   const currentIndex = tabs.findIndex((tab) => tab.classList.contains('active'));
   const targetIndex = currentIndex + direction;
   if (currentIndex < 0 || targetIndex < 0 || targetIndex >= tabs.length) return null;
+  const containerRect = container.getBoundingClientRect();
+  const fromRect = tabs[currentIndex].getBoundingClientRect();
+  const toRect = tabs[targetIndex].getBoundingClientRect();
+  const fromLeft = fromRect.left - containerRect.left + container.scrollLeft;
+  const toLeft = toRect.left - containerRect.left + container.scrollLeft;
   const indicator = document.createElement('i');
   indicator.className = 'page-swipe-nav-indicator';
   indicator.setAttribute('aria-hidden', 'true');
+  indicator.style.transition = 'none';
+  indicator.style.left = fromLeft + 'px';
+  indicator.style.width = Math.max(8, fromRect.width) + 'px';
   container.classList.add('page-swipe-nav-dragging');
   container.appendChild(indicator);
-  pageSwipeNavState = { container, from: tabs[currentIndex], to: tabs[targetIndex], indicator };
+  pageSwipeNavState = {
+    container,
+    from: tabs[currentIndex],
+    to: tabs[targetIndex],
+    indicator,
+    fromLeft,
+    toLeft,
+    fromWidth: fromRect.width,
+    toWidth: toRect.width
+  };
   setPageSwipeNavProgress(0);
   return pageSwipeNavState;
 }
 function settlePageSwipeNav(committed) {
   if (!pageSwipeNavState) return;
-  pageSwipeNavState.indicator.style.transition = 'left .28s cubic-bezier(.22,.8,.22,1), width .28s cubic-bezier(.22,.8,.22,1)';
+  // The page itself has the settle animation. The underline should snap to
+  // the resolved tab once, instead of running a second animation that can
+  // continue to move after the page has landed.
+  pageSwipeNavState.indicator.style.transition = 'none';
   setPageSwipeNavProgress(committed ? 1 : 0);
 }
 function beginTabSwipe(container, event) {
