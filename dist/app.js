@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.57';
+const APP_VERSION = '2.18.58';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -702,7 +702,7 @@ function readerTextToc(source) {
     if (!trimmed) return;
     const markdown = trimmed.match(/^(#{1,6})\s+(.+?)\s*#*$/);
     if (markdown) {
-      items.push({ id: readerHeadingId(items.length), label: markdown[2].trim(), depth: Math.min(3, markdown[1].length - 1), line: index });
+      items.push({ id: readerHeadingId(items.length), label: markdown[2].trim(), depth: Math.min(3, markdown[1].length - 1), line: index, markdown: true });
       return;
     }
     if (trimmed.length <= 48 && chapterPattern.test(trimmed)) items.push({ id: readerHeadingId(items.length), label: trimmed, depth: 0, line: index });
@@ -716,12 +716,14 @@ function readerDecodeText(bytes) {
 }
 function markdownToHtml(source) {
   const sourceToc = readerTextToc(source);
+  const markdownToc = sourceToc.filter((item) => item.markdown);
+  let markdownHeadingIndex = 0;
   const blocks = String(source || '').replace(/\r\n?/g, '\n').split(/\n{2,}/).map((rawBlock, blockIndex) => {
     const block = escapeHtml(rawBlock);
     if (/^```/.test(rawBlock)) return '<pre><code>' + block.replace(/^```[^\n]*\n?/, '').replace(/```$/, '') + '</code></pre>';
     const heading = rawBlock.match(/^(#{1,6})\s+(.+?)\s*#*$/);
     if (heading) {
-      const tocItem = sourceToc.find((item) => item.label === heading[2].trim()) || { id: readerHeadingId(blockIndex) };
+      const tocItem = markdownToc[markdownHeadingIndex++] || { id: readerHeadingId(blockIndex) };
       return '<h' + Math.min(3, heading[1].length) + ' id="' + tocItem.id + '">' + escapeHtml(heading[2].trim()) + '</h' + Math.min(3, heading[1].length) + '>';
     }
     if (/^> /.test(rawBlock)) return '<blockquote>' + block.replace(/^&gt; /gm, '') + '</blockquote>';
@@ -1039,8 +1041,11 @@ function exitReaderFullscreen() {
 }
 function updateReaderFullscreenControl() {
   const button = $('.reader-fullscreen-tool') || $('[data-reader-fullscreen]'); if (!button) return;
-  const active = Boolean(readerFullscreenElement());
-  button.innerHTML = active ? '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4H4v5M15 4h5v5M9 20H4v-5M15 20h5v-5"/></svg><span>' + t('readerExitFullscreen') + '</span>' : '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 4H4v4M16 4h4v4M8 20H4v-4M16 20h4v-4"/></svg><span>' + t('readerFullscreen') + '</span>';
+  const active = state.readerImmersive || Boolean(readerFullscreenElement());
+  const icon = active
+    ? '<svg class="reader-fullscreen-icon reader-fullscreen-exit" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4v5H4M15 4v5h5M20 15h-5v5M9 20v-5H4"/></svg>'
+    : '<svg class="reader-fullscreen-icon reader-fullscreen-enter" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/></svg>';
+  button.innerHTML = icon + '<span>' + (active ? t('readerExitFullscreen') : t('readerFullscreen')) + '</span>';
   button.setAttribute('aria-label', active ? t('readerExitFullscreen') : t('readerFullscreen'));
 }
 function ensureReaderFullscreenTool() {
@@ -1127,19 +1132,20 @@ function applyReaderPreferences() {
 function readerDialogMarkup(kind) {
   const dialog = $('#readerDialog'); if (!dialog) return;
   const prefs = state.readerPreferences;
+  const closeButton = '<button class="reader-dialog-close" data-close-reader-dialog aria-label="' + t('close') + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 7 10 10M17 7 7 17"/></svg></button>';
+  const title = (heading, hint) => '<div class="reader-dialog-title"><h2>' + heading + '</h2><small>' + hint + '</small></div>';
+  const themeButton = (id, label) => '<button class="reader-theme-choice ' + (prefs.theme === id ? 'active' : '') + '" data-reader-theme="' + id + '"><span class="reader-theme-dot theme-' + id + '"></span>' + label + '</button>';
   if (kind === 'toc') {
     const items = state.readerToc || [];
     const body = items.length ? items.map((item) => '<button class="reader-toc-item depth-' + Math.min(3, Number(item.depth) || 0) + '" data-reader-toc-id="' + escapeHtml(item.id || '') + '" data-reader-toc-section="' + (item.section == null ? '' : item.section) + '" data-reader-toc-anchor="' + escapeHtml(item.anchor || '') + '"><span>' + escapeHtml(item.label || '—') + '</span></button>').join('') : '<p class="empty compact reader-dialog-empty">' + t('readerNoContents') + '</p>';
-    dialog.innerHTML = '<div class="reader-dialog-card reader-panel-card" role="dialog" aria-modal="true"><div class="dialog-head reader-drawer-head"><button class="reader-drawer-back" data-close-reader aria-label="' + t('bookshelf') + '">‹ <span>' + t('bookshelf') + '</span></button><div><h2>' + t('readerContents') + '</h2><small>' + t('readerTocHint') + '</small></div><button class="icon-btn small" data-close-reader-dialog aria-label="' + t('close') + '">×</button></div><div class="reader-toc-list">' + body + '</div></div>';
+    dialog.innerHTML = '<div class="reader-dialog-card reader-panel-card" role="dialog" aria-modal="true"><div class="dialog-head reader-dialog-head">' + title(t('readerContents'), t('readerTocHint')) + closeButton + '</div><div class="reader-toc-list">' + body + '</div></div>';
   } else if (kind === 'background') {
-    const themeButton = (id, label) => '<button class="reader-theme-choice ' + (prefs.theme === id ? 'active' : '') + '" data-reader-theme="' + id + '"><span class="reader-theme-dot theme-' + id + '"></span>' + label + '</button>';
-    dialog.innerHTML = '<div class="reader-dialog-card reader-panel-card reader-sheet-card" role="dialog" aria-modal="true"><div class="dialog-head"><div><h2>' + t('readerTheme') + '</h2><small>' + t('readerSettingsHint') + '</small></div><button class="icon-btn small" data-close-reader-dialog aria-label="' + t('close') + '">×</button></div><div class="reader-sheet-body"><div class="reader-theme-grid reader-theme-grid-large">' + themeButton('paper', t('readerThemePaper')) + themeButton('sepia', t('readerThemeSepia')) + themeButton('green', t('readerThemeGreen')) + themeButton('dark', t('readerThemeDark')) + '</div></div></div>';
+    dialog.innerHTML = '<div class="reader-dialog-card reader-panel-card reader-sheet-card" role="dialog" aria-modal="true"><div class="dialog-head reader-dialog-head">' + title(t('readerTheme'), t('readerSettingsHint')) + closeButton + '</div><div class="reader-sheet-body"><div class="reader-theme-grid reader-theme-grid-large">' + themeButton('paper', t('readerThemePaper')) + themeButton('sepia', t('readerThemeSepia')) + themeButton('green', t('readerThemeGreen')) + themeButton('dark', t('readerThemeDark')) + '</div></div></div>';
   } else if (kind === 'animation') {
     const option = (value, label) => '<button class="reader-sheet-choice ' + (prefs.pageAnimation === value ? 'active' : '') + '" data-reader-animation="' + value + '"><span>' + label + '</span><i>' + (prefs.pageAnimation === value ? '✓' : '') + '</i></button>';
-    dialog.innerHTML = '<div class="reader-dialog-card reader-panel-card reader-sheet-card" role="dialog" aria-modal="true"><div class="dialog-head"><div><h2>' + t('readerAnimation') + '</h2><small>' + t('readerSettingsHint') + '</small></div><button class="icon-btn small" data-close-reader-dialog aria-label="' + t('close') + '">×</button></div><div class="reader-sheet-body reader-choice-list">' + option('slide', t('readerAnimationSlide')) + option('cover', t('readerAnimationCover')) + option('none', t('readerAnimationNone')) + '</div></div>';
+    dialog.innerHTML = '<div class="reader-dialog-card reader-panel-card reader-sheet-card" role="dialog" aria-modal="true"><div class="dialog-head reader-dialog-head">' + title(t('readerAnimation'), t('readerSettingsHint')) + closeButton + '</div><div class="reader-sheet-body reader-choice-list">' + option('slide', t('readerAnimationSlide')) + option('cover', t('readerAnimationCover')) + option('none', t('readerAnimationNone')) + '</div></div>';
   } else {
-    const themeButton = (id, label) => '<button class="reader-theme-choice ' + (prefs.theme === id ? 'active' : '') + '" data-reader-theme="' + id + '"><span class="reader-theme-dot theme-' + id + '"></span>' + label + '</button>';
-    dialog.innerHTML = '<div class="reader-dialog-card reader-panel-card" role="dialog" aria-modal="true"><div class="dialog-head reader-drawer-head"><div><h2>' + t('readerSettings') + '</h2><small>' + t('readerSettingsHint') + '</small></div><span class="reader-settings-progress" data-reader-progress-label>0%</span><button class="icon-btn small" data-close-reader-dialog aria-label="' + t('close') + '">×</button></div><div class="reader-settings-body"><div class="reader-setting-group"><h3>' + t('readerTheme') + '</h3><div class="reader-theme-grid">' + themeButton('paper', t('readerThemePaper')) + themeButton('sepia', t('readerThemeSepia')) + themeButton('green', t('readerThemeGreen')) + themeButton('dark', t('readerThemeDark')) + '</div></div><label class="reader-select-row"><span>阅读方式</span><select data-reader-reading-mode><option value="scroll" ' + (state.readerReadingMode === 'scroll' ? 'selected' : '') + '>' + t('readerScroll') + '</option><option value="pages" ' + (state.readerReadingMode === 'pages' ? 'selected' : '') + '>' + t('readerPages') + '</option></select></label><label class="reader-range-row"><span>' + t('readerFontSize') + '<b data-reader-value="fontSize">' + prefs.fontSize + 'px</b></span><input type="range" min="15" max="26" step="1" value="' + prefs.fontSize + '" data-reader-preference="fontSize"></label><label class="reader-select-row"><span>' + t('readerFontFamily') + '</span><select data-reader-preference="fontFamily"><option value="system" ' + (prefs.fontFamily === 'system' ? 'selected' : '') + '>系统无衬线</option><option value="serif" ' + (prefs.fontFamily === 'serif' ? 'selected' : '') + '>阅读衬线</option><option value="mono" ' + (prefs.fontFamily === 'mono' ? 'selected' : '') + '>等宽字体</option></select></label><label class="reader-range-row"><span>' + t('readerLineHeight') + '<b data-reader-value="lineHeight">' + Number(prefs.lineHeight).toFixed(2) + '</b></span><input type="range" min="1.35" max="2.2" step="0.05" value="' + prefs.lineHeight + '" data-reader-preference="lineHeight"></label><label class="reader-range-row"><span>' + t('readerParagraphSpacing') + '<b data-reader-value="paragraphSpacing">' + prefs.paragraphSpacing + 'px</b></span><input type="range" min="6" max="28" step="1" value="' + prefs.paragraphSpacing + '" data-reader-preference="paragraphSpacing"></label><label class="reader-range-row"><span>' + t('readerLetterSpacing') + '<b data-reader-value="letterSpacing">' + Number(prefs.letterSpacing).toFixed(1) + 'px</b></span><input type="range" min="0" max="2" step="0.1" value="' + prefs.letterSpacing + '" data-reader-preference="letterSpacing"></label><label class="reader-select-row"><span>' + t('readerAnimation') + '</span><select data-reader-preference="pageAnimation"><option value="slide" ' + (prefs.pageAnimation === 'slide' ? 'selected' : '') + '>' + t('readerAnimationSlide') + '</option><option value="cover" ' + (prefs.pageAnimation === 'cover' ? 'selected' : '') + '>' + t('readerAnimationCover') + '</option><option value="none" ' + (prefs.pageAnimation === 'none' ? 'selected' : '') + '>' + t('readerAnimationNone') + '</option></select></label></div></div>';
+    dialog.innerHTML = '<div class="reader-dialog-card reader-panel-card" role="dialog" aria-modal="true"><div class="dialog-head reader-dialog-head">' + title(t('settings'), t('readerSettingsHint')) + closeButton + '</div><div class="reader-settings-body"><div class="reader-setting-group"><h3>' + t('readerTheme') + '</h3><div class="reader-theme-grid">' + themeButton('paper', t('readerThemePaper')) + themeButton('sepia', t('readerThemeSepia')) + themeButton('green', t('readerThemeGreen')) + themeButton('dark', t('readerThemeDark')) + '</div></div><label class="reader-select-row"><span>阅读方式</span><select data-reader-reading-mode><option value="scroll" ' + (state.readerReadingMode === 'scroll' ? 'selected' : '') + '>' + t('readerScroll') + '</option><option value="pages" ' + (state.readerReadingMode === 'pages' ? 'selected' : '') + '>' + t('readerPages') + '</option></select></label><label class="reader-range-row"><span>' + t('readerFontSize') + '<b data-reader-value="fontSize">' + prefs.fontSize + 'px</b></span><input type="range" min="15" max="26" step="1" value="' + prefs.fontSize + '" data-reader-preference="fontSize"></label><label class="reader-select-row"><span>' + t('readerFontFamily') + '</span><select data-reader-preference="fontFamily"><option value="system" ' + (prefs.fontFamily === 'system' ? 'selected' : '') + '>系统无衬线</option><option value="serif" ' + (prefs.fontFamily === 'serif' ? 'selected' : '') + '>阅读衬线</option><option value="mono" ' + (prefs.fontFamily === 'mono' ? 'selected' : '') + '>等宽字体</option></select></label><label class="reader-range-row"><span>' + t('readerLineHeight') + '<b data-reader-value="lineHeight">' + Number(prefs.lineHeight).toFixed(2) + '</b></span><input type="range" min="1.35" max="2.2" step="0.05" value="' + prefs.lineHeight + '" data-reader-preference="lineHeight"></label><label class="reader-range-row"><span>' + t('readerParagraphSpacing') + '<b data-reader-value="paragraphSpacing">' + prefs.paragraphSpacing + 'px</b></span><input type="range" min="6" max="28" step="1" value="' + prefs.paragraphSpacing + '" data-reader-preference="paragraphSpacing"></label><label class="reader-range-row"><span>' + t('readerLetterSpacing') + '<b data-reader-value="letterSpacing">' + Number(prefs.letterSpacing).toFixed(1) + 'px</b></span><input type="range" min="0" max="2" step="0.1" value="' + prefs.letterSpacing + '" data-reader-preference="letterSpacing"></label><label class="reader-select-row"><span>' + t('readerAnimation') + '</span><select data-reader-preference="pageAnimation"><option value="slide" ' + (prefs.pageAnimation === 'slide' ? 'selected' : '') + '>' + t('readerAnimationSlide') + '</option><option value="cover" ' + (prefs.pageAnimation === 'cover' ? 'selected' : '') + '>' + t('readerAnimationCover') + '</option><option value="none" ' + (prefs.pageAnimation === 'none' ? 'selected' : '') + '>' + t('readerAnimationNone') + '</option></select></label></div></div>';
   }
   dialog.hidden = false;
 }
@@ -1167,7 +1173,13 @@ function jumpToReaderToc(item) {
   if (state.readerReadingMode === 'pages' && content.classList.contains('reader-page-viewport')) {
     const page = Math.max(0, Math.floor(target.offsetLeft / Math.max(1, content.clientWidth)));
     state.readerPage = page; content.scrollTo({ left: page * content.clientWidth, behavior: 'smooth' }); setTimeout(updateReaderPager, 260);
-  } else target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  } else {
+    const contentRect = content.getBoundingClientRect();
+    const targetRect = target.getBoundingClientRect();
+    const top = content.scrollTop + targetRect.top - contentRect.top - 12;
+    content.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+    setTimeout(updateReaderReferenceChrome, 260);
+  }
 }
 function readerTocTarget(item) {
   if (!item) return null;
@@ -1206,9 +1218,16 @@ function updateReaderReferenceChrome() {
   progress = Math.min(1, Math.max(0, progress));
   if (label) label.textContent = Math.round(progress * 100) + '%';
   if (slider && document.activeElement !== slider) slider.value = String(Math.round(progress * 100));
+  const percent = Math.round(progress * 100);
   const pageInfo = $('[data-reader-page-info]');
-  if (pageInfo) pageInfo.textContent = state.readerReadingMode === 'pages' && content?.classList.contains('reader-page-viewport') ? (state.readerPage + 1) + ' / ' + pageCount : Math.round(progress * 100) + '%';
-  $$('[data-reader-progress-label]').forEach((node) => { node.textContent = Math.round(progress * 100) + '%'; });
+  if (pageInfo) pageInfo.textContent = state.readerReadingMode === 'pages' && content?.classList.contains('reader-page-viewport') ? (state.readerPage + 1) + ' / ' + pageCount : percent + '%';
+  $$('[data-reader-progress-label]').forEach((node) => { node.textContent = percent + '%'; });
+  $$('[data-reader-progress-ring]').forEach((ring) => {
+    ring.style.setProperty('--reader-progress', percent + '%');
+    const value = ring.querySelector('[data-reader-progress-value]');
+    if (value) value.style.strokeDashoffset = String(56.55 * (1 - progress));
+    ring.setAttribute('aria-label', t('readerProgress') + ' ' + percent + '%');
+  });
   const fill = $('[data-reader-progress-fill]'); if (fill) fill.style.width = Math.round(progress * 100) + '%';
   if (chapterIndex) chapterIndex.textContent = state.readerReadingMode === 'pages' && content?.classList.contains('reader-page-viewport') ? (state.readerPage + 1) + ' / ' + pageCount : state.readerToc.length ? (index + 1) + ' / ' + state.readerToc.length : '—';
   const previous = $('[data-reader-chapter-prev]'); const next = $('[data-reader-chapter-next]');
@@ -1266,10 +1285,10 @@ function readerReadingView(book) {
   const tool = (action, path, label) => '<button class="reader-reference-tool" data-' + action + '>' + icon(path) + '<span>' + label + '</span></button>';
   const chromeClass = (state.readerChromeHidden ? ' chrome-hidden' : '') + (state.readerImmersive ? '' : ' reader-windowed');
   return '<div class="reader-reference-shell' + chromeClass + '" data-reader-theme="' + escapeHtml(state.readerPreferences.theme) + '">' +
-    '<header class="reader-reference-top"><span class="reader-reference-spacer" aria-hidden="true"></span><div class="reader-reference-title"><strong>' + escapeHtml(book.name) + '</strong><small>' + escapeHtml(hint) + '</small></div><button class="reader-ref-icon reader-fullscreen-button" data-reader-fullscreen aria-label="' + t('readerFullscreen') + '"></button></header>' +
+    '<header class="reader-reference-top"><div class="reader-reference-title"><strong>' + escapeHtml(book.name) + '</strong><small>' + escapeHtml(hint) + '</small></div></header>' +
     '<main class="reader-reference-body"><article class="' + contentClass + ' reader-reference-viewer" data-reader-content data-reader-surface>' + content + '</article></main>' +
     '<footer class="reader-reference-bottom"><div class="reader-reference-chapter"><span class="reader-reference-chapter-name" data-reader-chapter-name>' + escapeHtml(chapter) + '</span><span class="reader-reference-chapter-index" data-reader-chapter-index>' + (state.readerToc.length ? '1 / ' + state.readerToc.length : '—') + '</span></div>' +
-    '<div class="reader-reference-tool-row"><button class="reader-reference-tool reader-shelf-tool" data-close-reader aria-label="' + t('bookshelf') + '">' + icon('<path d="m15 5-7 7 7 7"/>') + '<span>' + t('bookshelf') + '</span></button>' + tool('reader-toc', '<path d="M5 5h14M5 12h14M5 19h9"/>', t('readerContents')) + tool('reader-background', '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4-1.4"/>', t('readerTheme')) + tool('reader-animation', '<path d="M5 6h14M5 12h14M5 18h14"/><path d="m9 9 3 3-3 3"/>', t('readerAnimation')) + '<button class="reader-reference-tool reader-settings-tool" data-reader-settings>' + icon('<path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1-2.1"/><circle cx="12" cy="12" r="3.5"/>') + '<span>' + t('readerSettings') + '</span></button>' + '<button class="reader-reference-tool reader-progress-tool" aria-label="' + t('readerProgress') + '"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 7v5l3 2"/></svg><span>' + t('readerProgress') + '</span><em data-reader-progress-label>0%</em></button>' + '<button class="reader-reference-tool reader-annotate-button" data-annotate-selection hidden>' + icon('<path d="m5 19 1-4L16.5 4.5a2.1 2.1 0 0 1 3 3L9 18zM14 7l3 3"/>') + '<span>' + t('addAnnotation') + '</span></button></div></footer></div>';
+    '<div class="reader-reference-tool-row"><button class="reader-reference-tool reader-shelf-tool" data-close-reader aria-label="' + t('bookshelf') + '">' + icon('<path d="m15 5-7 7 7 7"/>') + '<span>' + t('bookshelf') + '</span></button>' + tool('reader-toc', '<path d="M5 5h14M5 12h14M5 19h9"/>', t('readerContents')) + '<button class="reader-reference-tool reader-settings-tool" data-reader-settings>' + icon('<path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1-2.1"/><circle cx="12" cy="12" r="3.5"/>') + '<span>' + t('settings') + '</span></button>' + '<button class="reader-reference-tool reader-progress-tool" aria-label="' + t('readerProgress') + '"><span class="reader-progress-ring" data-reader-progress-ring><svg viewBox="0 0 24 24" aria-hidden="true"><circle class="reader-progress-track" cx="12" cy="12" r="9"/><circle class="reader-progress-value" data-reader-progress-value cx="12" cy="12" r="9"/></svg><b data-reader-progress-label>0%</b></span><span>' + t('readerProgress') + '</span></button>' + '<button class="reader-reference-tool reader-fullscreen-tool" data-reader-fullscreen aria-label="' + t('readerFullscreen') + '"></button>' + '<button class="reader-reference-tool reader-annotate-button" data-annotate-selection hidden>' + icon('<path d="m5 19 1-4L16.5 4.5a2.1 2.1 0 0 1 3 3L9 18zM14 7l3 3"/>') + '<span>' + t('addAnnotation') + '</span></button></div></footer></div>';
 }
 function readerFormatCoverMarkup(type) {
   const icons = {
