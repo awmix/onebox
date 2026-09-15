@@ -2303,3 +2303,105 @@ html.reader-focus main:has(#workspace[data-tool="reader"]) { padding-top: calc(v
   .reader-reading-shell .reader-pdf { min-height: calc(100dvh - 180px); }
   .reader-reading-shell .reader-annotations { max-height: 130px; }
 }
+
+/* 2.18.30: translation history is part of the result surface, while the
+   converter and translation keep their own cards without a shared frame. */
+.translate-convert-page { gap: 12px; }
+#workspace[data-tool="translate"] {
+  padding: 0;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+.translation-result-panel {
+  min-height: 0 !important;
+  padding: 14px !important;
+}
+.translation-result-current { min-height: 72px; white-space: pre-wrap; }
+.translation-result-current.placeholder { color: var(--muted); }
+.translation-result-history {
+  margin-top: 14px;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+  text-align: left;
+}
+.translation-result-history .translation-history-list {
+  max-height: 176px;
+  overflow: auto;
+  overscroll-behavior: contain;
+  display: grid;
+  gap: 0;
+}
+.translation-result-history .translation-history-item {
+  min-height: 0;
+  padding: 9px 0;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  background: transparent;
+}
+.translation-result-history .translation-history-item b,
+.translation-result-history .translation-history-item small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.translation-result-history .translation-history-item small { margin-top: 2px; }
+
+/* A new feed keeps the normal home icon and adds only a small accent dot. */
+.layout-nav-icon, .bottom-tab-icon { position: relative; }
+.nav-update-dot {
+  position: absolute;
+  top: -3px;
+  right: -4px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--primary);
+  box-shadow: 0 0 0 2px var(--panel);
+}
+
+/* The local-only bookshelf note stays beside the title. */
+.reader-title-line { display: flex; align-items: baseline; gap: 9px; min-width: 0; }
+.reader-title-line h2 { flex: 0 0 auto; }
+.reader-title-line small { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted); font-size: 11px; }
+.reader-toolbar { margin-bottom: 14px; }
+.reader-add-card {
+  width: auto;
+  min-height: 92px;
+  margin: 0;
+  padding: 12px 16px;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  justify-content: start;
+  text-align: left;
+  gap: 8px;
+  border-radius: 16px;
+}
+.reader-add-card .reader-empty-book { width: 42px; height: 42px; border-radius: 12px; }
+.reader-add-card .reader-empty-book svg { width: 29px; height: 29px; }
+.reader-add-card strong { font-size: 14px; }
+.reader-add-card small { max-width: none; text-align: left; font-size: 10px; }
+.reader-add-card .reader-empty-plus { position: static; font-size: 22px; margin-left: auto; }
+
+/* The add-event action stays pinned to the agenda card header. */
+#workspace[data-tool="calendar"] .agenda-panel { position: relative; }
+#workspace[data-tool="calendar"] .agenda-panel > .subhead { padding-right: 112px; }
+#workspace[data-tool="calendar"] .agenda-panel > .calendar-add-event {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  display: inline-flex;
+  width: auto;
+  margin: 0;
+}
+
+/* Only the Mine update action follows the configured accent. */
+.mine-update-button.primary { background: var(--primary); color: #fff; }
+
+@media (max-width: 760px) {
+  .reader-title-line { gap: 6px; }
+  .reader-title-line small { font-size: 10px; }
+  .reader-add-card { min-height: 78px; padding: 9px 12px; }
+  #workspace[data-tool="calendar"] .agenda-panel > .subhead { padding-right: 100px; }
+  #workspace[data-tool="calendar"] .agenda-panel > .calendar-add-event { top: 14px; right: 14px; }
+}

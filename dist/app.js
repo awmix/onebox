@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.29';
+const APP_VERSION = '2.18.30';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -396,11 +396,10 @@ function renderTopNav() {
   const layoutNav = $('#layoutNav');
   if (!layoutNav) return;
   const unread = state.notifications.filter((item) => !item.read).length;
-  const refreshIcon = '<svg class="refresh-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0 2 5M20 5v6h-6M4 13a8 8 0 1 0-2-5M4 19v-6h6"/></svg>';
   layoutNav.innerHTML = Object.values(SECTION_DEFS).map((item) => {
     const active = state.section === item.key;
-    const isHomeRefresh = item.key === 'home' && state.homeFeed.hasNew;
-    return '<button class="layout-nav-button ' + (active ? 'active' : '') + '" data-section="' + item.key + '" aria-current="' + (active ? 'page' : 'false') + '" aria-label="' + (isHomeRefresh ? (state.language === 'en' ? 'Refresh home' : '刷新首页') : t(item.key)) + '" title="' + t(item.key) + '"><span class="layout-nav-icon" aria-hidden="true">' + (isHomeRefresh ? refreshIcon : sectionIcon(item, active)) + '</span>' + (item.key === 'messages' && unread ? '<sup>' + (unread > 99 ? '99+' : unread) + '</sup>' : '') + '</button>';
+    const homeUpdateDot = item.key === 'home' && state.homeFeed.hasNew ? '<i class="nav-update-dot" aria-label="' + (state.language === 'en' ? 'New updates' : '有新内容') + '"></i>' : '';
+    return '<button class="layout-nav-button ' + (active ? 'active' : '') + '" data-section="' + item.key + '" aria-current="' + (active ? 'page' : 'false') + '" aria-label="' + t(item.key) + '" title="' + t(item.key) + '"><span class="layout-nav-icon" aria-hidden="true">' + sectionIcon(item, active) + homeUpdateDot + '</span>' + (item.key === 'messages' && unread ? '<sup>' + (unread > 99 ? '99+' : unread) + '</sup>' : '') + '</button>';
   }).join('');
 }
 function renderBottomNav() {
@@ -416,11 +415,10 @@ function renderBottomNav() {
   } else if ($('main')?.scrollTop <= 8) {
     bottomNav.classList.remove('is-blurred');
   }
-  const refreshIcon = '<svg class="refresh-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0 2 5M20 5v6h-6M4 13a8 8 0 1 0-2-5M4 19v-6h6"/></svg>';
   bottomNav.innerHTML = Object.values(SECTION_DEFS).map((item) => {
-    const isHomeRefresh = item.key === 'home' && state.homeFeed.hasNew;
     const active = state.section === item.key;
-    return '<button class="bottom-tab ' + (active ? 'active' : '') + '" data-section="' + item.key + '" aria-current="' + (active ? 'page' : 'false') + '" aria-label="' + (isHomeRefresh ? (state.language === 'en' ? 'Refresh home' : '刷新首页') : t(item.key)) + '"><span class="bottom-tab-icon" aria-hidden="true">' + (isHomeRefresh ? refreshIcon : sectionIcon(item, active)) + '</span><span>' + t(item.key) + '</span>' + (item.key === 'messages' && unread ? '<sup>' + (unread > 99 ? '99+' : unread) + '</sup>' : '') + '</button>';
+    const homeUpdateDot = item.key === 'home' && state.homeFeed.hasNew ? '<i class="nav-update-dot" aria-label="' + (state.language === 'en' ? 'New updates' : '有新内容') + '"></i>' : '';
+    return '<button class="bottom-tab ' + (active ? 'active' : '') + '" data-section="' + item.key + '" aria-current="' + (active ? 'page' : 'false') + '" aria-label="' + t(item.key) + '"><span class="bottom-tab-icon" aria-hidden="true">' + sectionIcon(item, active) + homeUpdateDot + '</span><span>' + t(item.key) + '</span>' + (item.key === 'messages' && unread ? '<sup>' + (unread > 99 ? '99+' : unread) + '</sup>' : '') + '</button>';
   }).join('');
   $('main')?.classList.toggle('bottom-nav-blurred', Boolean(classic && bottomNav.classList.contains('is-blurred')));
   renderTopNav();
@@ -539,7 +537,7 @@ async function fetchFeedSource(source) {
   }
   throw lastError || Error('RSS unavailable');
 }
-async function loadHomeFeeds(force = false) {
+async function loadHomeFeeds(force = false, sourceId = '') {
   if (state.homeFeed.loading) return;
   const hasItems = RSS_SOURCES.some((source) => state.homeFeed.sources[source.id]?.items?.length);
   const cacheIsCurrent = state.homeFeed.cacheVersion === APP_VERSION;
@@ -548,7 +546,8 @@ async function loadHomeFeeds(force = false) {
   if (state.section === 'home') render();
   const hadCachedItems = hasItems;
   let discoveredNewItems = false;
-  const results = await Promise.all(RSS_SOURCES.map(async (source) => {
+  const sourcesToLoad = sourceId && sourceId !== 'footprint' ? RSS_SOURCES.filter((source) => source.id === sourceId) : RSS_SOURCES;
+  const results = await Promise.all(sourcesToLoad.map(async (source) => {
     try { return { source, result: await fetchFeedSource(source) }; }
     catch (error) { return { source, error: error?.message || 'RSS unavailable' }; }
   }));
@@ -611,7 +610,7 @@ function renderMine() {
   })[name];
   const row = (action, glyph, title, description) => '<button class="mine-row" ' + action + '><span class="mine-row-icon">' + icon(glyph) + '</span><span class="mine-row-copy"><strong>' + title + '</strong><small class="mine-row-description">' + description + '</small></span><span>›</span></button>';
   const updateStatus = state.updateAvailable ? t('updateAvailable') : state.updateChecking ? t('updating') : t('upToDate');
-  const updateButton = state.updateAvailable ? '<button class="primary mine-update-button" data-apply-update>' + t('applyUpdate') + '</button>' : '<button class="secondary mine-update-button" data-check-update ' + (state.updateChecking ? 'disabled' : '') + '>' + t('checkUpdate') + '</button>';
+  const updateButton = state.updateAvailable ? '<button class="primary mine-update-button" data-apply-update>' + t('applyUpdate') + '</button>' : '<button class="primary mine-update-button" data-check-update ' + (state.updateChecking ? 'disabled' : '') + '>' + t('checkUpdate') + '</button>';
   const updateRow = '<div class="mine-row mine-update-row"><span class="mine-row-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v10M8 10l4 4 4-4M5 19h14"/></svg></span><span class="mine-row-copy mine-update-copy"><strong>' + t('appUpdate') + '</strong><small class="mine-row-description">v' + APP_VERSION + ' · ' + updateStatus + '</small></span><span class="mine-row-action">' + updateButton + '</span></div>';
   return '<div class="section-page mine-page"><div class="mine-list">' + row('data-open-settings-page', 'settings', t('settings'), state.language === 'en' ? 'Theme, language, color and display' : '主题、语言、颜色与显示设置') + row('data-open-github-page', 'github', 'GitHub', escapeHtml(githubStatus)) + updateRow + row('data-open-agreement-page', 'agreement', t('userAgreement'), state.language === 'en' ? 'Learn how OneBox handles data' : '了解 OneBox 如何处理数据') + '</div></div>';
 }
@@ -820,14 +819,17 @@ function readerReadingView(book) {
   const pager = !isPdf && state.readerReadingMode === 'pages' ? '<div class="reader-pager"><button class="icon-btn small" data-reader-page-prev aria-label="' + (state.language === 'en' ? 'Previous page' : '上一页') + '">‹</button><span><b data-reader-page-current>1</b> / <span data-reader-page-count>1</span></span><button class="icon-btn small" data-reader-page-next aria-label="' + (state.language === 'en' ? 'Next page' : '下一页') + '">›</button></div>' : '';
   return '<div class="reader-reading-shell"><header class="reader-reading-head"><button class="reader-back-button" data-close-reader>‹ ' + t('bookshelf') + '</button><div class="reader-reading-title"><h1>' + escapeHtml(book.name) + '</h1><small>' + escapeHtml(hint) + '</small></div><button class="secondary reader-annotate-button" data-annotate-selection hidden>' + t('addAnnotation') + '</button></header><div class="reader-reading-controls">' + modeControls + '</div><article class="' + contentClass + '" data-reader-content>' + content + '</article>' + pager + '<section class="reader-annotations"><div class="subhead"><h3>' + t('annotations') + '</h3><small>' + t('annotationHint') + '</small></div><div class="reader-note-list">' + readerAnnotationMarkup(book) + '</div></section></div>';
 }
+function readerAddCardMarkup(compact = false) {
+  return '<button class="reader-empty-card ' + (compact ? 'reader-add-card' : '') + '" data-open-reader-file><span class="reader-empty-book"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M8 10.5c7-2.5 12-1 16 2v25c-4-3-9-4.5-16-2v-25ZM40 10.5c-7-2.5-12-1-16 2v25c4-3 9-4.5 16-2v-25Z"/><path d="M24 12.5v25"/></svg></span><strong>' + t('addBook') + '</strong><small>' + t('readerHint') + '</small><span class="reader-empty-plus">＋</span></button>';
+}
 function reader() {
   const activeBook = readerBookById(state.readerBookId);
   if (state.readerMode === 'reading' && activeBook) return readerReadingView(activeBook);
   const books = [...state.library].sort((a, b) => Number(b.lastOpenedAt || b.createdAt) - Number(a.lastOpenedAt || a.createdAt));
   const cards = books.map((book) => '<article class="book-card"><button class="book-open" data-open-reader="' + escapeHtml(book.id) + '"><span class="book-cover ' + book.type + '">' + book.type.toUpperCase() + '</span><span class="book-copy"><strong>' + escapeHtml(book.name) + '</strong><small>' + (book.lastOpenedAt ? t('reading') : t('openBook')) + ' · ' + Math.max(1, Math.round(book.size / 1024)) + ' KB</small></span></button><button class="icon-btn small book-delete" data-delete-book="' + escapeHtml(book.id) + '" aria-label="' + t('deleteBook') + '">×</button></article>').join('');
-  const empty = '<button class="reader-empty-card" data-open-reader-file><span class="reader-empty-book"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M8 10.5c7-2.5 12-1 16 2v25c-4-3-9-4.5-16-2v-25ZM40 10.5c-7-2.5-12-1-16 2v25c4-3 9-4.5 16-2v-25Z"/><path d="M24 12.5v25"/></svg></span><strong>' + t('addBook') + '</strong><small>' + t('readerHint') + '</small><span class="reader-empty-plus">＋</span></button>';
-  const libraryBody = books.length ? '<div class="bookshelf-grid">' + cards + '</div>' : empty;
-  return '<div class="reader-shell"><div class="reader-toolbar"><div><h2>' + t('bookshelf') + '</h2><p>' + t('readerHint') + '</p></div>' + (books.length ? '<button class="secondary" data-open-reader-file>＋ ' + t('addBook') + '</button>' : '') + '<input id="readerFileInput" type="file" hidden multiple accept=".md,.markdown,.pdf,.epub,text/markdown,application/pdf,application/epub+zip"></div>' + libraryBody + '</div>';
+  const empty = readerAddCardMarkup();
+  const libraryBody = books.length ? '<div class="bookshelf-grid">' + cards + readerAddCardMarkup(true) + '</div>' : empty;
+  return '<div class="reader-shell"><div class="reader-toolbar"><div class="reader-title-line"><h2>' + t('bookshelf') + '</h2><small>' + t('readerHint') + '</small></div><input id="readerFileInput" type="file" hidden multiple accept=".md,.markdown,.pdf,.epub,text/markdown,application/pdf,application/epub+zip"></div>' + libraryBody + '</div>';
 }
 
 // Calendar data --------------------------------------------------------------
@@ -1331,8 +1333,7 @@ function translateView() {
   const options = (selected) => languageOptions.map(([value, label]) => '<option value="' + value + '" ' + (selected === value ? 'selected' : '') + '>' + label + '</option>').join('');
   const result = state.translation.loading ? (state.language === 'en' ? 'Translating…' : '翻译中…') : state.translation.result || t('noTranslation');
   return '<div class="translation-layout"><div class="translation-card"><div class="translation-toolbar"><div class="field field-inline"><label for="translationSource">' + t('source') + '</label><select id="translationSource">' + options(state.translation.source) + '</select></div><button class="swap" data-swap-language aria-label="' + t('swap') + '">⇄</button><div class="field field-inline"><label for="translationTarget">' + t('target') + '</label><select id="translationTarget">' + options(state.translation.target) + '</select></div></div>' +
-    '<div class="field"><label for="translationInput">' + t('translationInput') + '</label><div class="translation-input-wrap"><textarea id="translationInput" maxlength="5000" placeholder="' + (state.language === 'en' ? 'Type or paste text here…' : '输入或粘贴文字…') + '">' + escapeHtml(state.translation.input) + '</textarea><div class="translation-input-actions"><button class="input-action" data-translate-submit ' + (state.translation.loading ? 'disabled' : '') + ' aria-label="' + t('translateNow') + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 12 16-8-5 16-3-6-8-2Z"/><path d="m12 14 4-4"/></svg></button><button class="input-action" data-save-translation aria-label="' + t('saveTranslation') + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h11l3 3v13H5zM8 4v6h8V4M8 16h8"/></svg></button></div></div></div><h3 class="weather-section-title">' + t('translationResult') + '</h3><div class="translation-result ' + (state.translation.result ? '' : 'placeholder') + '">' + escapeHtml(result) + '</div>' + (state.translation.error ? '<p class="inline-alert">' + escapeHtml(state.translation.error) + '</p>' : '') +
-    '<div class="translation-history"><div class="subhead"><h3>' + t('translationHistory') + '</h3><button class="text-btn" data-clear-translation-history>' + t('clear') + '</button></div><div class="translation-history-list">' + history + '</div></div></div></div>';
+    '<div class="field"><label for="translationInput">' + t('translationInput') + '</label><div class="translation-input-wrap"><textarea id="translationInput" maxlength="5000" placeholder="' + (state.language === 'en' ? 'Type or paste text here…' : '输入或粘贴文字…') + '">' + escapeHtml(state.translation.input) + '</textarea><div class="translation-input-actions"><button class="input-action" data-translate-submit ' + (state.translation.loading ? 'disabled' : '') + ' aria-label="' + t('translateNow') + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 12 16-8-5 16-3-6-8-2Z"/><path d="m12 14 4-4"/></svg></button><button class="input-action" data-save-translation aria-label="' + t('saveTranslation') + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h11l3 3v13H5zM8 4v6h8V4M8 16h8"/></svg></button></div></div></div><h3 class="weather-section-title">' + t('translationResult') + '</h3><div class="translation-result translation-result-panel"><div class="translation-result-current ' + (state.translation.result ? '' : 'placeholder') + '">' + escapeHtml(result) + '</div><div class="translation-result-history"><div class="display-history-head"><span>' + t('translationHistory') + '</span><button class="text-btn" data-clear-translation-history ' + (state.translationHistory.length ? '' : 'disabled') + '>' + t('clear') + '</button></div><div class="translation-history-list">' + history + '</div></div></div>' + (state.translation.error ? '<p class="inline-alert">' + escapeHtml(state.translation.error) + '</p>' : '') + '</div></div>';
 }
 function translateConvertView() {
   return '<div class="translate-convert-page"><section class="language-tool-card translation-panel"><div class="language-tool-head"><h2>' + t('translate') + '</h2><p>' + t('translateDesc') + '</p></div>' + translateView() + '</section>' + convert() + '</div>';
@@ -1697,7 +1698,7 @@ function startLongPress(target, type, index) {
   reorderTimer = setTimeout(() => {
     target.classList.add('reorder-hold'); target.dataset.longPressed = 'true';
     if (type === 'weather') target.classList.add('weather-delete-ready');
-    toast(type === 'weather' ? (state.language === 'en' ? 'Delete control is ready at the top right' : '右上角已显示删除按钮') : (state.language === 'en' ? 'Reorder mode: tap another item' : '排序模式：再点一下目标位置'));
+    if (type !== 'weather') toast(state.language === 'en' ? 'Reorder mode: tap another item' : '排序模式：再点一下目标位置');
   }, 520);
 }
 function endLongPress() { clearTimeout(reorderTimer); reorderTimer = null; }
@@ -1768,7 +1769,11 @@ workspace.addEventListener('click', async (event) => {
   const feedSource = event.target.closest('[data-feed-source]');
   if (feedSource) {
     if (feedSource.dataset.feedSourceIndex != null && handleReorderClick(feedSource, 'feed', Number(feedSource.dataset.feedSourceIndex))) { event.preventDefault(); return; }
-    state.homeFeed.active = feedSource.dataset.feedSource; return render();
+    const sourceId = feedSource.dataset.feedSource;
+    const isCurrentSource = state.homeFeed.active === sourceId;
+    state.homeFeed.active = sourceId;
+    if (isCurrentSource && sourceId !== 'footprint') return loadHomeFeeds(true, sourceId);
+    return render();
   }
   if (event.target.closest('[data-refresh-feeds]')) return loadHomeFeeds(true);
   const feedItem = event.target.closest('[data-feed-link]');
