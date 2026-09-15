@@ -3148,3 +3148,66 @@ main:has(#workspace[data-tool="calculator"]) {
   stroke-linejoin: round;
   stroke-width: 1.7;
 }
+
+/* 2.18.37: keep mobile utility controls within the iPhone 14 viewport. */
+#workspace[data-tool="weather"] .weather-section-heading {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-width: 0;
+  margin-top: 22px;
+}
+#workspace[data-tool="weather"] .weather-section-heading .weather-section-title {
+  flex: 0 0 auto;
+  margin: 0;
+}
+#workspace[data-tool="weather"] .weather-section-heading .weather-data-note {
+  min-width: 0;
+  flex: 1 1 220px;
+  margin: 0;
+  overflow: visible;
+  text-overflow: clip;
+  white-space: normal;
+}
+#workspace[data-tool="translate"] .translation-result-head {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 2;
+  min-height: 0;
+}
+#workspace[data-tool="translate"] .translation-result-current {
+  padding-right: 34px;
+}
+#workspace[data-tool="calendar"] .agenda-panel .event-list {
+  min-height: 0;
+}
+
+@media (max-width: 600px) {
+  /* The first five rows are function controls; keep numeric touch targets large. */
+  #workspace[data-tool="calculator"] .calculator-mobile-grid .key:nth-child(-n + 19) {
+    min-height: 38px;
+    padding-block: 4px;
+    border-radius: 14px;
+  }
+  #workspace[data-tool="calculator"] .calculator-mobile-grid .angle-toggle i {
+    height: 14px;
+  }
+  #workspace[data-tool="translate"] .translation-input-pane,
+  #workspace[data-tool="translate"] .translation-result-pane,
+  #workspace[data-tool="translate"] .translation-input-wrap,
+  #workspace[data-tool="translate"] .translation-result-pane .translation-result-panel {
+    height: 156px;
+    min-height: 156px !important;
+  }
+  #workspace[data-tool="translate"] .translation-result-pane .translation-result-panel {
+    padding-top: 8px !important;
+  }
+  #workspace[data-tool="calendar"] .agenda-panel .event-list {
+    max-height: min(420px, calc(100dvh - 420px));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+  }
+}
