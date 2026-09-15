@@ -3535,3 +3535,134 @@ html.reader-focus .shell { width: 100%; padding: 0; }
   .reader-reference-tool svg { width: 19px; height: 19px; }
   .reader-reference-shell.reader-windowed { height: calc(100dvh - var(--app-header-height) - 48px); min-height: 420px; }
 }
+
+/* Keep the legacy reader-add-card selector from shrinking the centered tile. */
+#workspace[data-tool="reader"] .reader-empty-card.reader-add-card {
+  display: flex;
+  min-height: 230px;
+}
+#workspace[data-tool="reader"] .reader-book-grid .reader-add-card {
+  display: flex;
+  min-height: 150px;
+}
+#workspace[data-tool="reader"] .reader-book-grid.reader-book-list .reader-add-card {
+  min-height: 76px;
+  padding: 10px;
+}
+@media (max-width: 600px) {
+  #workspace[data-tool="reader"] .reader-empty-card.reader-add-card { min-height: 210px; }
+  #workspace[data-tool="reader"] .reader-book-grid .reader-add-card { min-height: 132px; }
+  #workspace[data-tool="reader"] .reader-book-grid.reader-book-list .reader-add-card { min-height: 76px; }
+}
+
+/* 2.18.43: the shelf add tile is a single centered action. Covers stay
+   local: real EPUB/Markdown covers use their stored image, other files use
+   a compact OneBox format cover that remains readable offline. */
+.reader-empty-card .reader-empty-hint,
+.reader-empty-card .reader-empty-plus { display: none !important; }
+.reader-book-grid .reader-add-card {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-height: 150px;
+  padding: 18px;
+  text-align: center;
+}
+.reader-book-grid .reader-add-card .reader-empty-book {
+  width: 58px;
+  height: 58px;
+  border-radius: 17px;
+}
+.reader-book-grid .reader-add-card .reader-empty-book svg { width: 37px; height: 37px; }
+.reader-book-grid .reader-add-card strong { font-size: 14px; }
+.reader-book-list .reader-add-card {
+  min-height: 76px;
+  aspect-ratio: auto;
+  padding: 10px;
+}
+.reader-book-list .reader-add-card .reader-empty-book { width: 42px; height: 42px; border-radius: 12px; }
+.reader-book-list .reader-add-card .reader-empty-book svg { width: 28px; height: 28px; }
+.reader-book-list .reader-add-card strong { font-size: 13px; }
+
+.reader-book-cover { isolation: isolate; }
+.reader-book-cover-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.reader-cover-fallback {
+  position: relative;
+  display: flex;
+  width: 100%;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  color: #fff;
+  text-align: center;
+}
+.reader-cover-fallback::after {
+  position: absolute;
+  right: -16%;
+  bottom: -20%;
+  width: 76%;
+  height: 58%;
+  border: 1px solid rgba(255,255,255,.24);
+  border-radius: 50%;
+  content: '';
+  transform: rotate(-25deg);
+}
+.reader-cover-fallback svg {
+  position: relative;
+  z-index: 1;
+  width: 30%;
+  min-width: 24px;
+  height: auto;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.45;
+  opacity: .9;
+}
+.reader-cover-fallback b {
+  position: absolute;
+  right: 10%;
+  bottom: 9%;
+  z-index: 1;
+  font-size: clamp(15px, 4vw, 24px);
+  font-weight: 850;
+  letter-spacing: .06em;
+}
+.reader-cover-fallback small {
+  position: absolute;
+  top: 9%;
+  left: 10%;
+  z-index: 1;
+  font-size: 7px;
+  font-weight: 800;
+  letter-spacing: .16em;
+  opacity: .72;
+}
+.reader-cover-md { background: linear-gradient(145deg, #3f51db, #8f9bff); }
+.reader-cover-txt { background: linear-gradient(145deg, #3c6d8f, #93c6d8); }
+.reader-cover-pdf { background: linear-gradient(145deg, #b34c5d, #ed9b8d); }
+.reader-cover-epub { background: linear-gradient(145deg, #2f796d, #86c8a6); }
+.reader-book-list .reader-cover-fallback b { font-size: 14px; }
+.reader-book-list .reader-cover-fallback small { font-size: 5px; }
+.reader-book-list .reader-cover-fallback svg { min-width: 20px; }
+
+@media (max-width: 600px) {
+  #workspace[data-tool="reader"] .reader-empty-card.reader-add-card {
+    display: flex;
+    min-height: 210px;
+  }
+  #workspace[data-tool="reader"] .reader-book-grid .reader-add-card {
+    display: flex;
+    min-height: 132px;
+  }
+  .reader-book-grid .reader-add-card { min-height: 132px; }
+  .reader-empty-card.reader-add-card { min-height: 210px; }
+}

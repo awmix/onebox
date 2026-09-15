@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.42';
+const APP_VERSION = '2.18.43';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -61,11 +61,12 @@ let oneBoxDbPromise = null;
 function openOneBoxDb() {
   if (oneBoxDbPromise || !window.indexedDB) return oneBoxDbPromise;
   oneBoxDbPromise = new Promise((resolve, reject) => {
-    const request = indexedDB.open('onebox-local-data', 1);
+    const request = indexedDB.open('onebox-local-data', 2);
     request.onupgradeneeded = () => {
       const db = request.result;
       if (!db.objectStoreNames.contains('snapshot')) db.createObjectStore('snapshot');
       if (!db.objectStoreNames.contains('books')) db.createObjectStore('books');
+      if (!db.objectStoreNames.contains('book-covers')) db.createObjectStore('book-covers');
     };
     request.onsuccess = () => resolve(request.result);
     request.onerror = () => reject(request.error || Error('IndexedDB unavailable'));
@@ -233,6 +234,8 @@ const DICT = {
   },
 };
 const t = (key) => DICT[state.language]?.[key] || DICT.zh[key] || key;
+DICT.zh.readerHint = '支持 md、txt、pdf、epub本地阅读';
+DICT.en.readerHint = 'Read md, txt, pdf and epub files locally.';
 const toolName = (id) => t(TOOL_DEFS[id]?.key || id);
 const storedTheme = localStorage.getItem(STORAGE.theme);
 const storedLanguage = localStorage.getItem(STORAGE.language) || 'system';
@@ -791,6 +794,82 @@ function readerHrefParts(href) {
   return { path: hashIndex < 0 ? value : value.slice(0, hashIndex), anchor };
 }
 function readerStripTags(value) { return String(value || '').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim(); }
+const READER_COVER_MAX_BYTES = 180 * 1024;
+function readerBytesToBase64(bytes) {
+  let value = '';
+  for (let index = 0; index < bytes.length; index += 0x8000) value += String.fromCharCode(...bytes.subarray(index, index + 0x8000));
+  return btoa(value);
+}
+function readerImageDataUrl(bytes, media = '') {
+  if (!bytes?.length || bytes.length > READER_COVER_MAX_BYTES) return '';
+  const head = bytes.subarray(0, 16);
+  let detected = '';
+  if (head[0] === 0xff && head[1] === 0xd8 && head[2] === 0xff) detected = 'image/jpeg';
+  else if (head[0] === 0x89 && head[1] === 0x50 && head[2] === 0x4e && head[3] === 0x47) detected = 'image/png';
+  else if (head[0] === 0x47 && head[1] === 0x49 && head[2] === 0x46) detected = 'image/gif';
+  else if (head[0] === 0x52 && head[1] === 0x49 && head[2] === 0x46 && head[8] === 0x57 && head[9] === 0x45 && head[10] === 0x42 && head[11] === 0x50) detected = 'image/webp';
+  else if (/^\s*(?:<\?xml[^>]*>\s*)?<svg\b/i.test(new TextDecoder().decode(bytes.subarray(0, 600)))) detected = 'image/svg+xml';
+  const mime = /^image\//i.test(media) ? media : detected;
+  return mime ? 'data:' + mime + ';base64,' + readerBytesToBase64(bytes) : '';
+}
+function readerDefineCover(book, data) {
+  if (!book || !data) return;
+  Object.defineProperty(book, '_coverData', { value: data, writable: true, configurable: true, enumerable: false });
+}
+function readerMarkdownCover(source) {
+  const value = String(source || '');
+  const data = value.match(/(?:!\[[^\]]*\]\(|<img\b[^>]*src\s*=\s*["'])(data:image\/[a-z0-9.+-]+;base64,[^\s)"']+)/i)?.[1] || '';
+  return /^data:image\//i.test(data) && data.length <= Math.ceil(READER_COVER_MAX_BYTES * 1.38) ? data : '';
+}
+async function epubCoverData(bytes) {
+  try {
+    const entries = zipEntries(bytes); const decoder = new TextDecoder();
+    const container = decoder.decode(await readZipEntry(bytes, entries, 'META-INF/container.xml') || new Uint8Array());
+    const opfPath = container.match(/full-path\s*=\s*["']([^"']+)["']/i)?.[1];
+    if (!opfPath) return '';
+    const opf = decoder.decode(await readZipEntry(bytes, entries, opfPath) || new Uint8Array());
+    const base = opfPath.includes('/') ? opfPath.slice(0, opfPath.lastIndexOf('/') + 1) : '';
+    const manifest = {};
+    [...opf.matchAll(/<item\b[^>]*>/gi)].forEach((match) => {
+      const tag = match[0]; const id = xmlAttribute(tag, 'id');
+      if (id) manifest[id] = { href: decodeURIComponent(xmlAttribute(tag, 'href')), media: xmlAttribute(tag, 'media-type'), properties: xmlAttribute(tag, 'properties') };
+    });
+    const coverId = opf.match(/<meta\b[^>]*name\s*=\s*["']cover["'][^>]*content\s*=\s*["']([^"']+)["'][^>]*>/i)?.[1];
+    const candidates = [manifest[coverId], ...Object.values(manifest).filter((item) => /cover-image/i.test(item.properties || '') || /image\//i.test(item.media || '') && /cover|title/i.test(item.href || ''))].filter(Boolean);
+    const seen = new Set();
+    for (const item of candidates) {
+      if (seen.has(item.href) || !/^image\//i.test(item.media || '')) continue;
+      seen.add(item.href);
+      const data = await readZipEntry(bytes, entries, readerPath(base, item.href));
+      const url = readerImageDataUrl(data, item.media);
+      if (url) return url;
+    }
+  } catch { /* an unsupported cover should not block importing the book */ }
+  return '';
+}
+async function hydrateReaderBookCover(book) {
+  if (!book || book.hasCover === false || book._coverData) return;
+  if (book.type === 'md') {
+    const markdownCover = readerMarkdownCover(book.content);
+    if (markdownCover) { readerDefineCover(book, markdownCover); await oneBoxDbPut('book-covers', book.id, markdownCover); }
+    book.hasCover = Boolean(markdownCover);
+    saveLibrary();
+    if (state.tool === 'reader' && state.readerMode === 'library') render();
+    return;
+  }
+  const stored = await oneBoxDbGet('book-covers', book.id);
+  if (stored) readerDefineCover(book, stored);
+  if (!stored && book.type === 'epub') {
+    const binary = await oneBoxDbGet('books', book.id);
+    if (binary) {
+      const cover = await epubCoverData(new Uint8Array(binary));
+      if (cover) { readerDefineCover(book, cover); await oneBoxDbPut('book-covers', book.id, cover); }
+    }
+  }
+  book.hasCover = Boolean(book._coverData);
+  saveLibrary();
+  if (state.tool === 'reader' && state.readerMode === 'library') render();
+}
 async function epubToHtml(bytes) {
   const entries = zipEntries(bytes); const decoder = new TextDecoder();
   const container = decoder.decode(await readZipEntry(bytes, entries, 'META-INF/container.xml') || new Uint8Array());
@@ -859,9 +938,17 @@ async function importReaderFiles(fileList) {
     const extension = file.name.split('.').pop()?.toLowerCase();
     if (!['md', 'markdown', 'txt', 'pdf', 'epub'].includes(extension)) { toast(t('unsupportedFile'), 'error'); continue; }
     try {
-      const id = uid(); const book = { id, name: file.name, type: extension === 'markdown' ? 'md' : extension, size: file.size, createdAt: Date.now(), lastOpenedAt: 0, progress: 0, annotations: [] };
-      if (book.type === 'md') book.content = await file.text();
-      else await oneBoxDbPut('books', id, await file.arrayBuffer());
+      const id = uid(); const type = extension === 'markdown' ? 'md' : extension; const book = { id, name: file.name, type, size: file.size, createdAt: Date.now(), lastOpenedAt: 0, progress: 0, annotations: [], hasCover: false };
+      let cover = '';
+      if (book.type === 'md') {
+        book.content = await file.text();
+        cover = readerMarkdownCover(book.content);
+      } else {
+        const binary = await file.arrayBuffer();
+        await oneBoxDbPut('books', id, binary);
+        if (book.type === 'epub') cover = await epubCoverData(new Uint8Array(binary));
+      }
+      if (cover) { book.hasCover = true; readerDefineCover(book, cover); await oneBoxDbPut('book-covers', id, cover); }
       state.library.unshift(book); saveLibrary();
     } catch { toast(t('importFailed'), 'error'); }
   }
@@ -1149,21 +1236,34 @@ function readerReadingView(book) {
     '<footer class="reader-reference-bottom"><div class="reader-reference-chapter"><span class="reader-reference-chapter-name" data-reader-chapter-name>' + escapeHtml(chapter) + '</span><span class="reader-reference-chapter-index" data-reader-chapter-index>' + (state.readerToc.length ? '1 / ' + state.readerToc.length : '—') + '</span></div>' +
     '<div class="reader-reference-tool-row"><button class="reader-reference-tool reader-shelf-tool" data-close-reader aria-label="' + t('bookshelf') + '">' + icon('<path d="m15 5-7 7 7 7"/>') + '<span>' + t('bookshelf') + '</span></button>' + tool('reader-toc', '<path d="M5 5h14M5 12h14M5 19h9"/>', t('readerContents')) + tool('reader-background', '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4-1.4"/>', t('readerTheme')) + tool('reader-animation', '<path d="M5 6h14M5 12h14M5 18h14"/><path d="m9 9 3 3-3 3"/>', t('readerAnimation')) + '<button class="reader-reference-tool reader-settings-tool" data-reader-settings>' + icon('<path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1-2.1"/><circle cx="12" cy="12" r="3.5"/>') + '<span>' + t('readerSettings') + '</span></button>' + '<button class="reader-reference-tool reader-progress-tool" aria-label="' + t('readerProgress') + '"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 7v5l3 2"/></svg><span>' + t('readerProgress') + '</span><em data-reader-progress-label>0%</em></button>' + '<button class="reader-reference-tool reader-annotate-button" data-annotate-selection hidden>' + icon('<path d="m5 19 1-4L16.5 4.5a2.1 2.1 0 0 1 3 3L9 18zM14 7l3 3"/>') + '<span>' + t('addAnnotation') + '</span></button></div></footer></div>';
 }
-function readerAddCardMarkup(compact = false) {
-  const hint = compact ? (state.language === 'en' ? 'Add a local document' : '添加本机文档') : t('readerHint');
-  return '<button class="reader-empty-card ' + (compact ? 'reader-add-card' : '') + '" data-open-reader-file><span class="reader-empty-book"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M9 7h23v31l-11.5-6L9 38V7Z"/><path d="M16 16h9M20.5 11.5v9"/><path d="M34 13h5v28l-5-2.6"/></svg></span><strong>' + t('addBook') + '</strong><span class="reader-empty-hint">' + hint + '</span><span class="reader-empty-plus">＋</span></button>';
+function readerFormatCoverMarkup(type) {
+  const icons = {
+    md: '<path d="M7 4.5h7l4 4v11H7z"/><path d="M14 4.5v4h4M9.5 12h5M9.5 15h5M9.5 18h3"/>',
+    txt: '<path d="M6.5 4.5h11v15h-11z"/><path d="M9 9h6M9 12.5h6M9 16h4"/>',
+    pdf: '<path d="M7 4.5h7l4 4v11H7z"/><path d="M14 4.5v4h4M9 15h2.5a1.5 1.5 0 0 0 0-3H9v5M13.5 12v5h1.2a2.5 2.5 0 0 0 0-5z"/>',
+    epub: '<path d="M5.5 5.5c2.3-.9 4.3-.6 6.5 1v13c-2.2-1.6-4.2-1.9-6.5-1zM18.5 5.5c-2.3-.9-4.3-.6-6.5 1v13c2.2-1.6 4.2-1.9 6.5-1z"/><path d="M12 6.5v13"/>',
+  };
+  const key = icons[type] ? type : 'txt';
+  return '<span class="reader-cover-fallback reader-cover-' + key + '"><svg viewBox="0 0 24 24" aria-hidden="true">' + icons[key] + '</svg><b>' + key.toUpperCase() + '</b><small>LOCAL</small></span>';
+}
+function readerBookCoverMarkup(book) {
+  if (book._coverData && /^data:image\//i.test(book._coverData)) return '<img class="reader-book-cover-image" src="' + escapeHtml(book._coverData) + '" alt="" loading="lazy">';
+  return readerFormatCoverMarkup(book.type);
+}
+function readerAddCardMarkup() {
+  return '<button class="reader-empty-card reader-add-card" data-open-reader-file><span class="reader-empty-book"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M10 8.5h18.5l6 6v24H10z"/><path d="M28.5 8.5v7h6M16 24h13M16 30h9M16 36h6"/><path d="M37 24v10M32 29h10"/></svg></span><strong>' + t('addBook') + '</strong></button>';
 }
 function reader() {
   const activeBook = readerBookById(state.readerBookId);
   if (state.readerMode === 'reading' && activeBook) return readerReadingView(activeBook);
   const books = [...state.library].sort((a, b) => Number(b.lastOpenedAt || b.createdAt) - Number(a.lastOpenedAt || a.createdAt));
+  books.forEach((book) => { if (book.hasCover !== false && !book._coverData) hydrateReaderBookCover(book); });
   const cards = books.map((book) => {
     const progress = typeof book.progress === 'number' ? book.progress : Number(book.progress?.percent || 0);
-    const coverLetter = book.type === 'epub' ? 'E' : book.type === 'pdf' ? 'P' : book.type === 'txt' ? 'T' : 'M';
-    return '<article class="book-card reader-book-card" data-reader-book-card data-reader-book-index="' + books.indexOf(book) + '" data-id="' + escapeHtml(book.id) + '"><button class="book-open reader-book-open" data-open-reader="' + escapeHtml(book.id) + '"><span class="book-cover reader-book-cover ' + book.type + '"><span class="reader-cover-letter">' + coverLetter + '</span></span><span class="book-copy reader-book-copy"><strong>' + escapeHtml(book.name) + '</strong><span class="reader-book-meta"><span>' + book.type.toUpperCase() + '</span><i></i><span>' + Math.max(1, Math.round(book.size / 1024)) + ' KB</span></span>' + (progress > 0 ? '<span class="prog-bar"><i style="width:' + Math.round(progress * 100) + '%"></i></span>' : '') + '</span></button><button class="icon-btn small book-delete reader-book-delete" data-delete-book="' + escapeHtml(book.id) + '" aria-label="' + t('deleteBook') + '">×</button></article>';
+    return '<article class="book-card reader-book-card" data-reader-book-card data-reader-book-index="' + books.indexOf(book) + '" data-id="' + escapeHtml(book.id) + '"><button class="book-open reader-book-open" data-open-reader="' + escapeHtml(book.id) + '"><span class="book-cover reader-book-cover ' + book.type + '">' + readerBookCoverMarkup(book) + '</span><span class="book-copy reader-book-copy"><strong>' + escapeHtml(book.name) + '</strong><span class="reader-book-meta"><span>' + book.type.toUpperCase() + '</span><i></i><span>' + Math.max(1, Math.round(book.size / 1024)) + ' KB</span></span>' + (progress > 0 ? '<span class="prog-bar"><i style="width:' + Math.round(progress * 100) + '%"></i></span>' : '') + '</span></button><button class="icon-btn small book-delete reader-book-delete" data-delete-book="' + escapeHtml(book.id) + '" aria-label="' + t('deleteBook') + '">×</button></article>';
   }).join('');
   const empty = readerAddCardMarkup();
-  const libraryBody = books.length ? '<div class="reader-book-grid ' + (state.readerLayout === 'list' ? 'reader-book-list' : 'reader-book-grid-cards') + '">' + cards + readerAddCardMarkup(true) + '</div>' : empty;
+  const libraryBody = books.length ? '<div class="reader-book-grid ' + (state.readerLayout === 'list' ? 'reader-book-list' : 'reader-book-grid-cards') + '">' + cards + readerAddCardMarkup() + '</div>' : empty;
   const layoutIcon = state.readerLayout === 'list' ? '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 6h14M5 12h14M5 18h14"/><path d="M5 6h.01M5 12h.01M5 18h.01"/></svg><span>宫格</span>' : '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/></svg><span>列表</span>';
   return '<div class="reader-library-view"><section class="reader-library-panel"><div class="reader-library-head"><div class="reader-library-title-row"><h2>' + t('bookshelf') + '</h2><span class="reader-book-count">' + books.length + '</span><small>' + t('readerHint') + '</small></div><button class="reader-layout-toggle" data-reader-layout-toggle aria-label="切换书架布局">' + layoutIcon + '</button></div>' + libraryBody + '</section><input id="readerFileInput" type="file" hidden multiple accept=".md,.markdown,.txt,.pdf,.epub,text/markdown,text/plain,application/pdf,application/epub+zip"></div>';
 }
