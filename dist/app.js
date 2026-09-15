@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.38';
+const APP_VERSION = '2.18.39';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -18,6 +18,7 @@ const STORAGE = {
   translationHistory: 'onebox.translation-history',
   notifications: 'onebox.notifications',
   library: 'onebox.library',
+  readerPreferences: 'onebox.reader-preferences',
   homeFeeds: 'onebox.home-feeds',
   homeFeedRead: 'onebox.home-feed-read',
   homeFeedOrder: 'onebox.home-feed-order',
@@ -186,7 +187,7 @@ const DICT = {
     markRead: '全部已读', close: '关闭', system: '跟随系统', light: '浅色', dark: '深色',
     layout: '布局', classicLayout: '经典布局', simpleLayout: '简约布局', openMode: '打开方式', openCurrent: '当前页打开', openNewTab: '新标签页打开', language: '语言', theme: '主题', color: '颜色', blackWhite: '黑白配', noblePurple: '贵族紫', skyBlue: '天空蓝', notBananaGreen: '不蕉绿', meituanYellow: '美团黄', topDisplay: '顶部显示', footprint: '足迹', showFootprint: '在首页显示', hideFootprint: '不在首页显示', reorderHint: '长按工具标签可以调整顺序',
     languagePending: '日语、韩语语言包已预留，当前版本先提供中文和英文。',
-    bookshelf: '书架', addBook: '添加文档', noBooks: '还没有本地文档。', readerHint: '支持 Markdown、PDF、EPUB；文档仅保存在当前设备。', openBook: '打开阅读', deleteBook: '删除文档', annotations: '标注', addAnnotation: '添加标注', annotationPlaceholder: '写下你的标注…', saveAnnotation: '保存标注', annotationHint: '选择文字后长按或点击标注按钮。', noAnnotations: '还没有标注。', reading: '正在阅读', closeReader: '关闭阅读', unsupportedFile: '请选择 .md、.markdown、.pdf 或 .epub 文件。', importFailed: '文档读取失败，请重试。', deleteConfirm: '确定删除这本文档吗？', pdfHint: 'PDF 使用浏览器原生阅读器打开。', epubHint: 'EPUB 已转换为适合 OneBox 的连续阅读视图。',
+    bookshelf: '书架', addBook: '添加文档', noBooks: '还没有本地文档。', readerHint: '支持 Markdown、TXT、PDF、EPUB；文档仅保存在当前设备。', openBook: '打开阅读', deleteBook: '删除文档', annotations: '标注', addAnnotation: '添加标注', annotationPlaceholder: '写下你的标注…', saveAnnotation: '保存标注', annotationHint: '选择文字后长按或点击标注按钮。', noAnnotations: '还没有标注。', reading: '正在阅读', closeReader: '关闭阅读', unsupportedFile: '请选择 .md、.markdown、.txt、.pdf 或 .epub 文件。', importFailed: '文档读取失败，请重试。', deleteConfirm: '确定删除这本文档吗？', pdfHint: 'PDF 使用浏览器原生阅读器打开。', epubHint: 'EPUB 已转换为适合 OneBox 的连续阅读视图。', readerContents: '目录', readerSettings: '阅读设置', readerTheme: '阅读背景', readerThemePaper: '纸张', readerThemeSepia: '暖白', readerThemeGreen: '护眼绿', readerThemeDark: '夜间', readerFontSize: '字号', readerFontFamily: '字体', readerLineHeight: '行距', readerParagraphSpacing: '段落间距', readerLetterSpacing: '字间距', readerAnimation: '翻页动画', readerAnimationSlide: '滑动', readerAnimationCover: '覆盖', readerAnimationNone: '无', readerScroll: '滚动', readerPages: '翻页', readerNoContents: '暂无章节目录。', readerSettingsHint: '设置仅作用于当前设备上的阅读内容。', readerTocHint: '选择章节后跳转到对应位置。',
   },
   en: {
     calculator: 'Calculator', calendar: 'Calendar', weather: 'Weather', convert: 'Convert', unitConvert: 'Convert', translate: 'Translate', translateConvert: 'Convert', reader: 'Reader',
@@ -227,7 +228,7 @@ const DICT = {
     markRead: 'Mark all read', close: 'Close', system: 'System', light: 'Light', dark: 'Dark',
     layout: 'Layout', classicLayout: 'Classic layout', simpleLayout: 'Simple layout', openMode: 'Open links', openCurrent: 'Current page', openNewTab: 'New tab', theme: 'Theme', language: 'Language', color: 'Color', blackWhite: 'Black and white', noblePurple: 'Noble purple', skyBlue: 'Sky blue', notBananaGreen: 'WeChat green', meituanYellow: 'Meituan yellow', topDisplay: 'Show at top', footprint: 'Footprints', showFootprint: 'Show on Home', hideFootprint: 'Hide from Home', reorderHint: 'Long-press a tool tab to reorder',
     languagePending: 'Japanese and Korean are reserved for a future language pack. Chinese and English are available now.',
-    bookshelf: 'Bookshelf', addBook: 'Add document', noBooks: 'No local documents yet.', readerHint: 'Supports Markdown, PDF and EPUB. Files stay on this device.', openBook: 'Open', deleteBook: 'Delete', annotations: 'Notes', addAnnotation: 'Add note', annotationPlaceholder: 'Write a note…', saveAnnotation: 'Save note', annotationHint: 'Select text, long-press or use the note button.', noAnnotations: 'No notes yet.', reading: 'Reading', closeReader: 'Close reader', unsupportedFile: 'Choose a .md, .markdown, .pdf or .epub file.', importFailed: 'Could not read this document.', deleteConfirm: 'Delete this document?', pdfHint: 'PDF opens in the browser native reader.', epubHint: 'EPUB is converted into a continuous OneBox reading view.',
+    bookshelf: 'Bookshelf', addBook: 'Add document', noBooks: 'No local documents yet.', readerHint: 'Supports Markdown, TXT, PDF and EPUB. Files stay on this device.', openBook: 'Open', deleteBook: 'Delete', annotations: 'Notes', addAnnotation: 'Add note', annotationPlaceholder: 'Write a note…', saveAnnotation: 'Save note', annotationHint: 'Select text, long-press or use the note button.', noAnnotations: 'No notes yet.', reading: 'Reading', closeReader: 'Close reader', unsupportedFile: 'Choose a .md, .markdown, .txt, .pdf or .epub file.', importFailed: 'Could not read this document.', deleteConfirm: 'Delete this document?', pdfHint: 'PDF opens in the browser native reader.', epubHint: 'EPUB is converted into a continuous OneBox reading view.', readerContents: 'Contents', readerSettings: 'Reading settings', readerTheme: 'Reading background', readerThemePaper: 'Paper', readerThemeSepia: 'Warm', readerThemeGreen: 'Green', readerThemeDark: 'Night', readerFontSize: 'Font size', readerFontFamily: 'Font', readerLineHeight: 'Line height', readerParagraphSpacing: 'Paragraph spacing', readerLetterSpacing: 'Letter spacing', readerAnimation: 'Page animation', readerAnimationSlide: 'Slide', readerAnimationCover: 'Cover', readerAnimationNone: 'None', readerScroll: 'Scroll', readerPages: 'Pages', readerNoContents: 'No chapter contents.', readerSettingsHint: 'These settings apply only to reading on this device.', readerTocHint: 'Choose a chapter to jump to it.',
   },
 };
 const t = (key) => DICT[state.language]?.[key] || DICT.zh[key] || key;
@@ -241,6 +242,7 @@ const resolveLanguageMode = (mode) => mode === 'en' || mode === 'zh' ? mode : ((
 const storedCalculator = parseStored(STORAGE.calculator, { expr: '', history: [], historyOpen: false });
 const storedTranslationHistoryOpen = parseStored(STORAGE.translationHistoryOpen, false) === true;
 const storedLibrary = parseStored(STORAGE.library, []);
+const storedReaderPreferences = parseStored(STORAGE.readerPreferences, {}) || {};
 const storedHomeFeeds = parseStored(STORAGE.homeFeeds, {}) || {};
 const storedHomeFeedRead = parseStored(STORAGE.homeFeedRead, {}) || {};
 const storedHomeFeedOrder = parseStored(STORAGE.homeFeedOrder, DEFAULT_HOME_FEED_ORDER);
@@ -286,7 +288,8 @@ const state = {
   translationHistory: parseStored(STORAGE.translationHistory, []),
   translationHistoryOpen: storedTranslationHistoryOpen,
   library: (Array.isArray(storedLibrary) ? storedLibrary : []).filter((book) => book && book.id && book.name),
-  readerBookId: null, readerUrl: '', readerContent: '', readerHint: '', readerMode: 'library', readerReadingMode: 'scroll', readerPage: 0, readerSelectedText: '', annotationBookId: null,
+  readerBookId: null, readerUrl: '', readerContent: '', readerHint: '', readerToc: [], readerDialog: '', readerMode: 'library', readerReadingMode: 'scroll', readerPage: 0, readerSelectedText: '', annotationBookId: null,
+  readerPreferences: { theme: ['paper', 'sepia', 'green', 'dark'].includes(storedReaderPreferences.theme) ? storedReaderPreferences.theme : 'paper', fontSize: Number.isFinite(Number(storedReaderPreferences.fontSize)) ? Math.min(26, Math.max(15, Number(storedReaderPreferences.fontSize))) : 18, fontFamily: ['system', 'serif', 'mono'].includes(storedReaderPreferences.fontFamily) ? storedReaderPreferences.fontFamily : 'system', lineHeight: Number.isFinite(Number(storedReaderPreferences.lineHeight)) ? Math.min(2.2, Math.max(1.35, Number(storedReaderPreferences.lineHeight))) : 1.8, paragraphSpacing: Number.isFinite(Number(storedReaderPreferences.paragraphSpacing)) ? Math.min(28, Math.max(6, Number(storedReaderPreferences.paragraphSpacing))) : 14, letterSpacing: Number.isFinite(Number(storedReaderPreferences.letterSpacing)) ? Math.min(2, Math.max(0, Number(storedReaderPreferences.letterSpacing))) : 0, pageAnimation: ['slide', 'cover', 'none'].includes(storedReaderPreferences.pageAnimation) ? storedReaderPreferences.pageAnimation : 'slide' },
   homeFeed: { active: DEFAULT_HOME_FEED_ORDER[0], order: normalizeHomeFeedOrder(storedHomeFeedOrder), hasNew: false, loading: false, errors: {}, updatedAt: Number(storedHomeFeeds.updatedAt || 0), cacheVersion: storedHomeFeeds.cacheVersion || '', sources: storedHomeFeeds.sources && typeof storedHomeFeeds.sources === 'object' ? storedHomeFeeds.sources : {} },
   homeFeedRead: storedHomeFeedRead && typeof storedHomeFeedRead === 'object' ? storedHomeFeedRead : {},
   homeFeedRequest: 0,
@@ -662,21 +665,62 @@ function closeRecentReading() {
 // Reader --------------------------------------------------------------------
 function saveLibrary() { saveStored(STORAGE.library, state.library.slice(0, 80)); }
 function readerBookById(id) { return state.library.find((book) => book.id === id); }
+function readerHeadingId(index) { return 'reader-heading-' + index; }
+function readerTextToc(source) {
+  const lines = String(source || '').replace(/\r\n?/g, '\n').split('\n');
+  const items = [];
+  const chapterPattern = /^(?:第\s*[0-9０-９零〇一二三四五六七八九十百千万两]+\s*[章回节卷部篇集话]|chapter\s+\d+|part\s+[0-9ivxlc]+|序章|序言|前言|引子|楔子|尾声|后记|番外|附录)(?:\s+|[:：、.．-])?.{0,42}$/i;
+  lines.forEach((line, index) => {
+    const trimmed = line.trim();
+    if (!trimmed) return;
+    const markdown = trimmed.match(/^(#{1,6})\s+(.+?)\s*#*$/);
+    if (markdown) {
+      items.push({ id: readerHeadingId(items.length), label: markdown[2].trim(), depth: Math.min(3, markdown[1].length - 1), line: index });
+      return;
+    }
+    if (trimmed.length <= 48 && chapterPattern.test(trimmed)) items.push({ id: readerHeadingId(items.length), label: trimmed, depth: 0, line: index });
+  });
+  return items;
+}
+function readerDecodeText(bytes) {
+  try { return new TextDecoder('utf-8', { fatal: true }).decode(bytes); } catch {
+    try { return new TextDecoder('gb18030').decode(bytes); } catch { return new TextDecoder().decode(bytes); }
+  }
+}
 function markdownToHtml(source) {
-  const safe = escapeHtml(String(source || '').replace(/\r\n?/g, '\n'));
-  const blocks = safe.split(/\n{2,}/).map((block) => {
-    if (/^```/.test(block)) return '<pre><code>' + block.replace(/^```[^\n]*\n?/, '').replace(/```$/, '') + '</code></pre>';
-    if (/^### /.test(block)) return '<h3>' + block.slice(4) + '</h3>';
-    if (/^## /.test(block)) return '<h2>' + block.slice(3) + '</h2>';
-    if (/^# /.test(block)) return '<h1>' + block.slice(2) + '</h1>';
-    if (/^> /.test(block)) return '<blockquote>' + block.replace(/^> /gm, '') + '</blockquote>';
+  const sourceToc = readerTextToc(source);
+  const blocks = String(source || '').replace(/\r\n?/g, '\n').split(/\n{2,}/).map((rawBlock, blockIndex) => {
+    const block = escapeHtml(rawBlock);
+    if (/^```/.test(rawBlock)) return '<pre><code>' + block.replace(/^```[^\n]*\n?/, '').replace(/```$/, '') + '</code></pre>';
+    const heading = rawBlock.match(/^(#{1,6})\s+(.+?)\s*#*$/);
+    if (heading) {
+      const tocItem = sourceToc.find((item) => item.label === heading[2].trim()) || { id: readerHeadingId(blockIndex) };
+      return '<h' + Math.min(3, heading[1].length) + ' id="' + tocItem.id + '">' + escapeHtml(heading[2].trim()) + '</h' + Math.min(3, heading[1].length) + '>';
+    }
+    if (/^> /.test(rawBlock)) return '<blockquote>' + block.replace(/^&gt; /gm, '') + '</blockquote>';
     if (/^(?:[-*] |\d+\. )/.test(block)) {
-      const ordered = /^\d+\. /.test(block);
+      const ordered = /^\d+\. /.test(rawBlock);
       const items = block.split('\n').map((line) => '<li>' + line.replace(/^(?:[-*] |\d+\. )/, '') + '</li>').join('');
       return '<' + (ordered ? 'ol' : 'ul') + '>' + items + '</' + (ordered ? 'ol' : 'ul') + '>';
     }
     return '<p>' + block.replace(/\n/g, '<br>') + '</p>';
   });
+  return blocks.join('');
+}
+function textToHtml(source) {
+  const lines = String(source || '').replace(/\r\n?/g, '\n').split('\n');
+  const toc = readerTextToc(source);
+  const chapters = new Map(toc.map((item) => [item.line, item]));
+  const blocks = [];
+  let paragraph = [];
+  const flush = () => { if (paragraph.length) { blocks.push('<p>' + escapeHtml(paragraph.join('\n')).replace(/\n/g, '<br>') + '</p>'); paragraph = []; } };
+  lines.forEach((line, index) => {
+    const chapter = chapters.get(index);
+    if (chapter) { flush(); blocks.push('<h2 id="' + chapter.id + '">' + escapeHtml(chapter.label) + '</h2>'); return; }
+    if (!line.trim()) { flush(); return; }
+    paragraph.push(line);
+  });
+  flush();
   return blocks.join('');
 }
 function sanitizeReaderMarkup(markup) {
@@ -727,6 +771,13 @@ async function readZipEntry(bytes, entries, name) {
 function xmlAttribute(tag, name) {
   return tag.match(new RegExp(`${name}\\s*=\\s*["']([^"']+)`, 'i'))?.[1] || '';
 }
+function readerPath(dir, href) {
+  const parts = (String(dir || '') + String(href || '').split('#')[0]).split('/');
+  const resolved = [];
+  parts.forEach((part) => { if (!part || part === '.') return; if (part === '..') resolved.pop(); else resolved.push(part); });
+  return resolved.join('/');
+}
+function readerStripTags(value) { return String(value || '').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim(); }
 async function epubToHtml(bytes) {
   const entries = zipEntries(bytes); const decoder = new TextDecoder();
   const container = decoder.decode(await readZipEntry(bytes, entries, 'META-INF/container.xml') || new Uint8Array());
@@ -737,26 +788,53 @@ async function epubToHtml(bytes) {
   const manifest = {};
   [...opf.matchAll(/<item\b[^>]*>/gi)].forEach((match) => {
     const tag = match[0]; const id = xmlAttribute(tag, 'id');
-    if (id) manifest[id] = { href: decodeURIComponent(xmlAttribute(tag, 'href')), media: xmlAttribute(tag, 'media-type') };
+    if (id) manifest[id] = { href: decodeURIComponent(xmlAttribute(tag, 'href')), media: xmlAttribute(tag, 'media-type'), properties: xmlAttribute(tag, 'properties') };
   });
   const spine = [...opf.matchAll(/<itemref\b[^>]*>/gi)].map((match) => xmlAttribute(match[0], 'idref')).map((id) => manifest[id]).filter(Boolean);
+  const spineEntries = [];
   const parts = [];
   for (const item of spine) {
     if (!/html|xhtml/i.test(item.media)) continue;
-    const path = base + item.href.replace(/^\.\//, '');
+    const path = readerPath(base, item.href);
     const html = decoder.decode(await readZipEntry(bytes, entries, path) || new Uint8Array());
     const body = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i)?.[1] || html;
-    parts.push('<section>' + sanitizeReaderMarkup(body) + '</section>');
+    const section = spineEntries.length;
+    spineEntries.push({ item, path, section });
+    parts.push('<section id="reader-epub-section-' + section + '">' + sanitizeReaderMarkup(body) + '</section>');
   }
   if (!parts.length) throw Error('EPUB has no readable chapters');
+  const toc = [];
+  const navItem = Object.values(manifest).find((item) => /\bnav\b/i.test(item.properties || ''));
+  const ncxItem = spine.find((item) => /ncx/i.test(item.media || '')) || Object.values(manifest).find((item) => /ncx/i.test(item.media || ''));
+  const tocFilePath = navItem ? readerPath(base, navItem.href) : ncxItem ? readerPath(base, ncxItem.href) : base;
+  const tocDir = tocFilePath.replace(/[^/]*$/, '');
+  const addTocLink = (label, href, depth = 0) => {
+    const targetPath = readerPath(tocDir, href);
+    const match = spineEntries.find((entry) => entry.path === targetPath || entry.path.endsWith('/' + targetPath));
+    if (!label || !match) return;
+    const key = match.section + ':' + label;
+    if (toc.some((item) => item.key === key)) return;
+    toc.push({ id: readerHeadingId(toc.length), key, label, depth: Math.min(3, Number(depth) || 0), section: match.section });
+  };
+  if (navItem) {
+    const navPath = readerPath(base, navItem.href);
+    const navHtml = decoder.decode(await readZipEntry(bytes, entries, navPath) || new Uint8Array());
+    const navBody = navHtml.match(/<nav\b[\s\S]*?<\/nav>/i)?.[0] || navHtml;
+    [...navBody.matchAll(/<a\b[^>]*href\s*=\s*["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi)].forEach((match) => addTocLink(readerStripTags(match[2]), match[1], (match[0].match(/data-depth\s*=\s*["'](\d+)/i) || [])[1] || 0));
+  }
+  if (!toc.length && ncxItem) {
+    const ncxPath = readerPath(base, ncxItem.href);
+    const ncx = decoder.decode(await readZipEntry(bytes, entries, ncxPath) || new Uint8Array());
+    [...ncx.matchAll(/<navPoint\b[^>]*>[\s\S]*?<text>([\s\S]*?)<\/text>[\s\S]*?<content\b[^>]*src\s*=\s*["']([^"']+)["'][\s\S]*?<\/navPoint>/gi)].forEach((match) => addTocLink(readerStripTags(match[1]), match[2]));
+  }
   const title = opf.match(/<dc:title[^>]*>([\s\S]*?)<\/dc:title>/i)?.[1]?.replace(/<[^>]+>/g, '').trim();
-  return { title, html: parts.join('<hr>') };
+  return { title, html: parts.join('<hr>'), toc: toc.map(({ key, ...item }) => item) };
 }
 async function importReaderFiles(fileList) {
   const files = [...(fileList || [])]; if (!files.length) return;
   for (const file of files) {
     const extension = file.name.split('.').pop()?.toLowerCase();
-    if (!['md', 'markdown', 'pdf', 'epub'].includes(extension)) { toast(t('unsupportedFile'), 'error'); continue; }
+    if (!['md', 'markdown', 'txt', 'pdf', 'epub'].includes(extension)) { toast(t('unsupportedFile'), 'error'); continue; }
     try {
       const id = uid(); const book = { id, name: file.name, type: extension === 'markdown' ? 'md' : extension, size: file.size, createdAt: Date.now(), lastOpenedAt: 0, progress: 0, annotations: [] };
       if (book.type === 'md') book.content = await file.text();
@@ -796,9 +874,10 @@ function restoreReaderPosition() {
     content.scrollTop = content.scrollHeight * book.progress;
   }
 }
-function renderReaderView(content, hint = '') {
+function renderReaderView(content, hint = '', toc = []) {
   state.readerContent = content;
   state.readerHint = hint;
+  state.readerToc = Array.isArray(toc) ? toc : [];
   state.readerMode = 'reading';
   state.readerReadingMode = 'scroll';
   state.readerPage = 0;
@@ -809,21 +888,85 @@ async function openReaderBook(id) {
   const book = readerBookById(id); if (!book) return;
   state.readerBookId = id; state.readerSelectedText = ''; book.lastOpenedAt = Date.now(); saveLibrary();
   try {
-    let content = ''; let hint = '';
-    if (book.type === 'md') content = markdownToHtml(book.content);
+    let content = ''; let hint = ''; let toc = [];
+    if (book.type === 'md') { content = markdownToHtml(book.content); toc = readerTextToc(book.content).map((item) => ({ ...item })); }
+    else if (book.type === 'txt' && typeof book.content === 'string') { content = textToHtml(book.content); toc = readerTextToc(book.content).map((item) => ({ ...item })); hint = 'TXT · ' + Math.max(1, Math.round(book.size / 1024)) + ' KB'; }
     else {
       const data = await oneBoxDbGet('books', id); if (!data) throw Error();
       const bytes = new Uint8Array(data);
-      if (book.type === 'epub') { const parsed = await epubToHtml(bytes); content = parsed.html; hint = parsed.title ? parsed.title + ' · ' + t('epubHint') : t('epubHint'); }
+      if (book.type === 'txt') { const source = readerDecodeText(bytes); content = textToHtml(source); toc = readerTextToc(source).map((item) => ({ ...item })); hint = 'TXT · ' + Math.max(1, Math.round(book.size / 1024)) + ' KB'; }
+      else if (book.type === 'epub') { const parsed = await epubToHtml(bytes); content = parsed.html; toc = parsed.toc || []; hint = parsed.title ? parsed.title + ' · ' + t('epubHint') : t('epubHint'); }
       else { state.readerUrl = URL.createObjectURL(new Blob([bytes], { type: 'application/pdf' })); content = '<iframe class="reader-pdf" title="' + escapeHtml(book.name) + '" src="' + state.readerUrl + '"></iframe>'; hint = t('pdfHint'); }
     }
-    renderReaderView(content, hint);
+    renderReaderView(content, hint, toc);
   } catch { toast(t('importFailed'), 'error'); state.readerBookId = null; }
 }
 function closeReader() {
   if (state.readerUrl) URL.revokeObjectURL(state.readerUrl);
-  state.readerUrl = ''; state.readerBookId = null; state.readerContent = ''; state.readerHint = ''; state.readerMode = 'library'; state.readerReadingMode = 'scroll'; state.readerPage = 0; state.readerSelectedText = '';
+  state.readerUrl = ''; state.readerBookId = null; state.readerContent = ''; state.readerHint = ''; state.readerToc = []; state.readerDialog = ''; state.readerMode = 'library'; state.readerReadingMode = 'scroll'; state.readerPage = 0; state.readerSelectedText = '';
   render();
+}
+const READER_THEME_VALUES = {
+  paper: { bg: '#ffffff', panel: '#ffffff', ink: '#161a22', muted: '#6f7788', line: '#dfe4ee' },
+  sepia: { bg: '#f6f0e5', panel: '#fffaf1', ink: '#403a32', muted: '#7e7467', line: '#e3d8c8' },
+  green: { bg: '#edf4ed', panel: '#f8fcf8', ink: '#263b2e', muted: '#65756a', line: '#d5e3d7' },
+  dark: { bg: '#171a21', panel: '#20252e', ink: '#e8ebf2', muted: '#9da7b8', line: '#343b49' },
+};
+const READER_FONT_VALUES = { system: 'var(--font-sans)', serif: 'Georgia, "Times New Roman", serif', mono: 'ui-monospace, SFMono-Regular, Menlo, monospace' };
+function saveReaderPreferences() { saveStored(STORAGE.readerPreferences, state.readerPreferences); }
+function applyReaderPreferences() {
+  const shell = $('.reader-reading-shell'); if (!shell) return;
+  const prefs = state.readerPreferences; const palette = READER_THEME_VALUES[prefs.theme] || READER_THEME_VALUES.paper;
+  shell.dataset.readerTheme = prefs.theme;
+  shell.style.setProperty('--reader-bg', palette.bg);
+  shell.style.setProperty('--reader-panel', palette.panel);
+  shell.style.setProperty('--reader-ink', palette.ink);
+  shell.style.setProperty('--reader-muted', palette.muted);
+  shell.style.setProperty('--reader-line', palette.line);
+  shell.style.setProperty('--reader-font', READER_FONT_VALUES[prefs.fontFamily] || READER_FONT_VALUES.system);
+  shell.style.setProperty('--reader-size', prefs.fontSize + 'px');
+  shell.style.setProperty('--reader-line-height', prefs.lineHeight);
+  shell.style.setProperty('--reader-paragraph-spacing', prefs.paragraphSpacing + 'px');
+  shell.style.setProperty('--reader-letter-spacing', prefs.letterSpacing + 'px');
+}
+function readerDialogMarkup(kind) {
+  const dialog = $('#readerDialog'); if (!dialog) return;
+  const prefs = state.readerPreferences;
+  if (kind === 'toc') {
+    const items = state.readerToc || [];
+    const body = items.length ? items.map((item) => '<button class="reader-toc-item depth-' + Math.min(3, Number(item.depth) || 0) + '" data-reader-toc-id="' + escapeHtml(item.id || '') + '" data-reader-toc-section="' + (item.section == null ? '' : item.section) + '"><span>' + escapeHtml(item.label || '—') + '</span></button>').join('') : '<p class="empty compact reader-dialog-empty">' + t('readerNoContents') + '</p>';
+    dialog.innerHTML = '<div class="reader-dialog-card reader-panel-card" role="dialog" aria-modal="true"><div class="dialog-head"><div><h2>' + t('readerContents') + '</h2><small>' + t('readerTocHint') + '</small></div><button class="icon-btn small" data-close-reader-dialog aria-label="' + t('close') + '">×</button></div><div class="reader-toc-list">' + body + '</div></div>';
+  } else {
+    const themeButton = (id, label) => '<button class="reader-theme-choice ' + (prefs.theme === id ? 'active' : '') + '" data-reader-theme="' + id + '"><span class="reader-theme-dot theme-' + id + '"></span>' + label + '</button>';
+    dialog.innerHTML = '<div class="reader-dialog-card reader-panel-card" role="dialog" aria-modal="true"><div class="dialog-head"><div><h2>' + t('readerSettings') + '</h2><small>' + t('readerSettingsHint') + '</small></div><button class="icon-btn small" data-close-reader-dialog aria-label="' + t('close') + '">×</button></div><div class="reader-settings-body"><div class="reader-setting-group"><h3>' + t('readerTheme') + '</h3><div class="reader-theme-grid">' + themeButton('paper', t('readerThemePaper')) + themeButton('sepia', t('readerThemeSepia')) + themeButton('green', t('readerThemeGreen')) + themeButton('dark', t('readerThemeDark')) + '</div></div><label class="reader-range-row"><span>' + t('readerFontSize') + '<b data-reader-value="fontSize">' + prefs.fontSize + 'px</b></span><input type="range" min="15" max="26" step="1" value="' + prefs.fontSize + '" data-reader-preference="fontSize"></label><label class="reader-select-row"><span>' + t('readerFontFamily') + '</span><select data-reader-preference="fontFamily"><option value="system" ' + (prefs.fontFamily === 'system' ? 'selected' : '') + '>系统无衬线</option><option value="serif" ' + (prefs.fontFamily === 'serif' ? 'selected' : '') + '>阅读衬线</option><option value="mono" ' + (prefs.fontFamily === 'mono' ? 'selected' : '') + '>等宽字体</option></select></label><label class="reader-range-row"><span>' + t('readerLineHeight') + '<b data-reader-value="lineHeight">' + Number(prefs.lineHeight).toFixed(2) + '</b></span><input type="range" min="1.35" max="2.2" step="0.05" value="' + prefs.lineHeight + '" data-reader-preference="lineHeight"></label><label class="reader-range-row"><span>' + t('readerParagraphSpacing') + '<b data-reader-value="paragraphSpacing">' + prefs.paragraphSpacing + 'px</b></span><input type="range" min="6" max="28" step="1" value="' + prefs.paragraphSpacing + '" data-reader-preference="paragraphSpacing"></label><label class="reader-range-row"><span>' + t('readerLetterSpacing') + '<b data-reader-value="letterSpacing">' + Number(prefs.letterSpacing).toFixed(1) + 'px</b></span><input type="range" min="0" max="2" step="0.1" value="' + prefs.letterSpacing + '" data-reader-preference="letterSpacing"></label><label class="reader-select-row"><span>' + t('readerAnimation') + '</span><select data-reader-preference="pageAnimation"><option value="slide" ' + (prefs.pageAnimation === 'slide' ? 'selected' : '') + '>' + t('readerAnimationSlide') + '</option><option value="cover" ' + (prefs.pageAnimation === 'cover' ? 'selected' : '') + '>' + t('readerAnimationCover') + '</option><option value="none" ' + (prefs.pageAnimation === 'none' ? 'selected' : '') + '>' + t('readerAnimationNone') + '</option></select></label></div></div>';
+  }
+  dialog.hidden = false;
+}
+function closeReaderDialog() { const dialog = $('#readerDialog'); if (dialog) dialog.hidden = true; state.readerDialog = ''; }
+function openReaderDialog(kind) { state.readerDialog = kind; readerDialogMarkup(kind); }
+function readerPreferenceLabel(key, value) {
+  if (key === 'fontSize' || key === 'paragraphSpacing') return value + 'px';
+  if (key === 'lineHeight') return Number(value).toFixed(2);
+  if (key === 'letterSpacing') return Number(value).toFixed(1) + 'px';
+  return String(value);
+}
+function readerPreferenceChanged(input) {
+  const key = input.dataset.readerPreference; if (!key) return;
+  const numeric = ['fontSize', 'lineHeight', 'paragraphSpacing', 'letterSpacing'].includes(key);
+  state.readerPreferences[key] = numeric ? Number(input.value) : input.value;
+  saveReaderPreferences(); applyReaderPreferences();
+  const value = $('[data-reader-value="' + key + '"]', $('#readerDialog'));
+  if (value) value.textContent = readerPreferenceLabel(key, state.readerPreferences[key]);
+}
+function jumpToReaderToc(item) {
+  closeReaderDialog();
+  const content = $('[data-reader-content]'); if (!content || !item) return;
+  const target = item.section != null ? document.getElementById('reader-epub-section-' + item.section) : document.getElementById(item.id);
+  if (!target) return;
+  if (state.readerReadingMode === 'pages' && content.classList.contains('reader-page-viewport')) {
+    const page = Math.max(0, Math.floor(target.offsetLeft / Math.max(1, content.clientWidth)));
+    state.readerPage = page; content.scrollTo({ left: page * content.clientWidth, behavior: 'smooth' }); setTimeout(updateReaderPager, 260);
+  } else target.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 function renderAnnotationDialog() {
   if (!state.readerSelectedText) return;
@@ -836,9 +979,10 @@ function readerReadingView(book) {
   const hint = state.readerHint || (book.type.toUpperCase() + ' · ' + Math.max(1, Math.round(book.size / 1024)) + ' KB');
   const contentClass = isPdf ? 'reader-content reader-pdf-content' : state.readerReadingMode === 'pages' ? 'reader-content reader-page-viewport' : 'reader-content reader-scroll-content';
   const content = state.readerReadingMode === 'pages' && !isPdf ? '<div class="reader-page-flow">' + state.readerContent + '</div>' : state.readerContent;
-  const modeControls = isPdf ? '' : '<div class="reader-view-switch" role="group" aria-label="阅读方式"><button class="reader-view-button ' + (state.readerReadingMode === 'scroll' ? 'active' : '') + '" data-reader-mode="scroll">' + (state.language === 'en' ? 'Scroll' : '滚动') + '</button><button class="reader-view-button ' + (state.readerReadingMode === 'pages' ? 'active' : '') + '" data-reader-mode="pages">' + (state.language === 'en' ? 'Pages' : '翻页') + '</button></div>';
+  const modeControls = (isPdf ? '' : '<div class="reader-view-switch" role="group" aria-label="阅读方式"><button class="reader-view-button ' + (state.readerReadingMode === 'scroll' ? 'active' : '') + '" data-reader-mode="scroll">' + t('readerScroll') + '</button><button class="reader-view-button ' + (state.readerReadingMode === 'pages' ? 'active' : '') + '" data-reader-mode="pages">' + t('readerPages') + '</button></div>');
   const pager = !isPdf && state.readerReadingMode === 'pages' ? '<div class="reader-pager"><button class="icon-btn small" data-reader-page-prev aria-label="' + (state.language === 'en' ? 'Previous page' : '上一页') + '">‹</button><span><b data-reader-page-current>1</b> / <span data-reader-page-count>1</span></span><button class="icon-btn small" data-reader-page-next aria-label="' + (state.language === 'en' ? 'Next page' : '下一页') + '">›</button></div>' : '';
-  return '<div class="reader-reading-shell"><header class="reader-reading-head"><button class="reader-back-button" data-close-reader>‹ ' + t('bookshelf') + '</button><div class="reader-reading-title"><h1>' + escapeHtml(book.name) + '</h1><small>' + escapeHtml(hint) + '</small></div><button class="secondary reader-annotate-button" data-annotate-selection hidden>' + t('addAnnotation') + '</button></header><div class="reader-reading-controls">' + modeControls + '</div><article class="' + contentClass + '" data-reader-content>' + content + '</article>' + pager + '<section class="reader-annotations"><div class="subhead"><h3>' + t('annotations') + '</h3><small>' + t('annotationHint') + '</small></div><div class="reader-note-list">' + readerAnnotationMarkup(book) + '</div></section></div>';
+  const tools = '<div class="reader-head-actions"><button class="secondary reader-annotate-button" data-annotate-selection hidden>' + t('addAnnotation') + '</button></div>';
+  return '<div class="reader-reading-shell"><header class="reader-reading-head"><button class="reader-back-button" data-close-reader>‹ ' + t('bookshelf') + '</button><div class="reader-reading-title"><h1>' + escapeHtml(book.name) + '</h1><small>' + escapeHtml(hint) + '</small></div>' + tools + '</header><div class="reader-reading-controls"><div class="reader-reading-tools"><button class="reader-tool-button" data-reader-toc><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h14M5 12h14M5 19h9"/></svg>' + t('readerContents') + '</button><button class="reader-tool-button" data-reader-settings><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/><circle cx="12" cy="12" r="3.5"/></svg>' + t('readerSettings') + '</button></div>' + modeControls + '</div><article class="' + contentClass + '" data-reader-content>' + content + '</article>' + pager + '<section class="reader-annotations"><div class="subhead"><h3>' + t('annotations') + '</h3><small>' + t('annotationHint') + '</small></div><div class="reader-note-list">' + readerAnnotationMarkup(book) + '</div></section></div>';
 }
 function readerAddCardMarkup(compact = false) {
   return '<button class="reader-empty-card ' + (compact ? 'reader-add-card' : '') + '" data-open-reader-file><span class="reader-empty-book"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M8 10.5c7-2.5 12-1 16 2v25c-4-3-9-4.5-16-2v-25ZM40 10.5c-7-2.5-12-1-16 2v25c4-3 9-4.5 16-2v-25Z"/><path d="M24 12.5v25"/></svg></span><strong>' + t('addBook') + '</strong><small>' + t('readerHint') + '</small><span class="reader-empty-plus">＋</span></button>';
@@ -850,7 +994,7 @@ function reader() {
   const cards = books.map((book) => '<article class="book-card"><button class="book-open" data-open-reader="' + escapeHtml(book.id) + '"><span class="book-cover ' + book.type + '">' + book.type.toUpperCase() + '</span><span class="book-copy"><strong>' + escapeHtml(book.name) + '</strong><small>' + (book.lastOpenedAt ? t('reading') : t('openBook')) + ' · ' + Math.max(1, Math.round(book.size / 1024)) + ' KB</small></span></button><button class="icon-btn small book-delete" data-delete-book="' + escapeHtml(book.id) + '" aria-label="' + t('deleteBook') + '">×</button></article>').join('');
   const empty = readerAddCardMarkup();
   const libraryBody = books.length ? '<div class="bookshelf-grid">' + cards + readerAddCardMarkup(true) + '</div>' : empty;
-  return '<div class="reader-shell"><div class="reader-toolbar"><div class="reader-title-line"><h2>' + t('bookshelf') + '</h2><small>' + t('readerHint') + '</small></div><input id="readerFileInput" type="file" hidden multiple accept=".md,.markdown,.pdf,.epub,text/markdown,application/pdf,application/epub+zip"></div>' + libraryBody + '</div>';
+  return '<div class="reader-shell"><div class="reader-toolbar"><div class="reader-title-line"><h2>' + t('bookshelf') + '</h2><small>' + t('readerHint') + '</small></div><input id="readerFileInput" type="file" hidden multiple accept=".md,.markdown,.txt,.pdf,.epub,text/markdown,text/plain,application/pdf,application/epub+zip"></div>' + libraryBody + '</div>';
 }
 
 // Calendar data --------------------------------------------------------------
@@ -1737,6 +1881,11 @@ function render() {
   workspace.dataset.tool = state.section === 'tools' ? state.tool : state.section;
   workspace.innerHTML = state.section === 'home' ? renderHome() : state.section === 'messages' ? renderMessages() : state.section === 'mine' ? renderMine() : (renderers[state.tool] || calculator)();
   document.documentElement.classList.toggle('reader-focus', state.section === 'tools' && state.tool === 'reader' && state.readerMode === 'reading');
+  if (state.section === 'tools' && state.tool === 'reader' && state.readerMode === 'reading') {
+    requestAnimationFrame(() => { applyReaderPreferences(); if (state.readerDialog) readerDialogMarkup(state.readerDialog); });
+  } else if (!state.readerDialog) {
+    const readerDialog = $('#readerDialog'); if (readerDialog) readerDialog.hidden = true;
+  }
   if (state.section === 'tools' && state.tool === 'calendar') ensureHolidayYear(state.month.getFullYear());
   renderBottomNav();
   updateNotificationBadge();
@@ -1840,6 +1989,8 @@ workspace.addEventListener('click', async (event) => {
   const feedLink = feedItem?.dataset.feedLink;
   if (feedLink) { markFeedRead(feedItem.dataset.feedId); feedItem.classList.add('is-read'); openFeedLink(feedLink); return; }
   if (event.target.closest('[data-open-reader-file]')) { $('#readerFileInput')?.click(); return; }
+  if (event.target.closest('[data-reader-toc]')) { openReaderDialog('toc'); return; }
+  if (event.target.closest('[data-reader-settings]')) { openReaderDialog('settings'); return; }
   if (event.target.closest('[data-close-reader]')) return closeReader();
   const readerMode = event.target.closest('[data-reader-mode]');
   if (readerMode) {
@@ -1854,9 +2005,12 @@ workspace.addEventListener('click', async (event) => {
     const count = Math.max(1, Math.ceil(viewport.scrollWidth / Math.max(1, viewport.clientWidth)));
     const direction = readerPageButton.hasAttribute('data-reader-page-next') ? 1 : -1;
     state.readerPage = Math.min(Math.max(0, state.readerPage + direction), count - 1);
-    viewport.classList.remove('reader-turn-forward', 'reader-turn-back');
-    void viewport.offsetWidth;
-    viewport.classList.add(direction > 0 ? 'reader-turn-forward' : 'reader-turn-back');
+    viewport.classList.remove('reader-turn-forward', 'reader-turn-back', 'reader-turn-cover-forward', 'reader-turn-cover-back');
+    if (state.readerPreferences.pageAnimation !== 'none') {
+      void viewport.offsetWidth;
+      const animationClass = state.readerPreferences.pageAnimation === 'cover' ? (direction > 0 ? 'reader-turn-cover-forward' : 'reader-turn-cover-back') : (direction > 0 ? 'reader-turn-forward' : 'reader-turn-back');
+      viewport.classList.add(animationClass);
+    }
     viewport.scrollTo({ left: state.readerPage * viewport.clientWidth, behavior: 'smooth' });
     setTimeout(updateReaderPager, 260);
     return;
@@ -2016,13 +2170,23 @@ $('#lunarDialog').addEventListener('click', (event) => {
 });
 
 $('#readerDialog').addEventListener('click', (event) => {
-  if (event.target === $('#readerDialog') || event.target.closest('[data-close-reader]')) return closeReader();
+  if (event.target === $('#readerDialog')) return closeReaderDialog();
+  if (event.target.closest('[data-close-reader-dialog]')) return closeReaderDialog();
+  const tocItem = event.target.closest('[data-reader-toc-id]');
+  if (tocItem) {
+    const item = (state.readerToc || []).find((entry) => entry.id === tocItem.dataset.readerTocId && String(entry.section ?? '') === String(tocItem.dataset.readerTocSection ?? '')) || (state.readerToc || []).find((entry) => entry.id === tocItem.dataset.readerTocId);
+    return jumpToReaderToc(item);
+  }
+  const theme = event.target.closest('[data-reader-theme]');
+  if (theme) { state.readerPreferences.theme = theme.dataset.readerTheme; saveReaderPreferences(); applyReaderPreferences(); return readerDialogMarkup('settings'); }
   if (event.target.closest('[data-annotate-selection]')) return renderAnnotationDialog();
   const deleteAnnotation = event.target.closest('[data-delete-annotation]');
   if (deleteAnnotation) {
     const book = readerBookById(state.readerBookId); if (book) { book.annotations = (book.annotations || []).filter((note) => note.id !== deleteAnnotation.dataset.deleteAnnotation); saveLibrary(); render(); }
   }
 });
+$('#readerDialog').addEventListener('input', (event) => { if (event.target.matches('[data-reader-preference]')) readerPreferenceChanged(event.target); });
+$('#readerDialog').addEventListener('change', (event) => { if (event.target.matches('[data-reader-preference]')) readerPreferenceChanged(event.target); });
 workspace.addEventListener('scroll', (event) => {
   const book = readerBookById(state.readerBookId); const content = event.target.closest('[data-reader-content]');
   if (!book || !content || !content.scrollHeight) return;

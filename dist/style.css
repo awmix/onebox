@@ -3267,3 +3267,83 @@ main:has(#workspace[data-tool="calculator"]) {
   #workspace[data-tool="reader"] .reader-add-card strong { font-size: 14px; }
   #workspace[data-tool="reader"] .reader-add-card small { font-size: 10px; }
 }
+
+/* 2.18.39: the reader borrows the reference app's useful reading controls,
+   but keeps OneBox's quiet panels, primary accent and compact mobile rhythm. */
+.reader-reading-shell {
+  --reader-bg: var(--panel);
+  --reader-panel: var(--panel);
+  --reader-ink: var(--ink);
+  --reader-muted: var(--muted);
+  --reader-line: var(--line);
+  --reader-font: var(--font-sans);
+  --reader-size: 18px;
+  --reader-line-height: 1.8;
+  --reader-paragraph-spacing: 14px;
+  --reader-letter-spacing: 0px;
+  color: var(--reader-ink);
+  font-family: var(--reader-font);
+}
+.reader-reading-shell .reader-reading-head { border-bottom: 1px solid var(--reader-line); }
+.reader-reading-shell .reader-reading-title small,
+.reader-reading-shell .reader-annotations .subhead small { color: var(--reader-muted); }
+.reader-reading-shell .reader-reading-controls { align-items: center; justify-content: space-between; gap: 10px; min-height: 34px; margin: 8px 0; }
+.reader-reading-tools { display: flex; align-items: center; gap: 5px; }
+.reader-tool-button { display: inline-flex; align-items: center; gap: 5px; min-height: 30px; padding: 5px 8px; border: 1px solid var(--reader-line); border-radius: 10px; background: color-mix(in srgb, var(--reader-panel) 85%, var(--soft)); color: var(--reader-muted); font-size: 11px; cursor: pointer; }
+.reader-tool-button:hover, .reader-tool-button:focus-visible { color: var(--primary); border-color: color-mix(in srgb, var(--primary) 45%, var(--reader-line)); }
+.reader-tool-button svg, .reader-head-actions svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.reader-reading-shell .reader-view-switch { border-color: var(--reader-line); background: color-mix(in srgb, var(--reader-panel) 86%, var(--soft)); }
+.reader-reading-shell .reader-view-button { color: var(--reader-muted); }
+.reader-reading-shell .reader-view-button.active { background: var(--primary); color: #fff; }
+.reader-reading-shell .reader-content { background: var(--reader-panel); border-color: var(--reader-line); color: var(--reader-ink); font-family: var(--reader-font); font-size: var(--reader-size); line-height: var(--reader-line-height); letter-spacing: var(--reader-letter-spacing); }
+.reader-reading-shell .reader-scroll-content { background: var(--reader-bg); }
+.reader-reading-shell .reader-page-flow { background: var(--reader-bg); }
+.reader-reading-shell .reader-content p { margin-bottom: var(--reader-paragraph-spacing); }
+.reader-reading-shell .reader-content h1,
+.reader-reading-shell .reader-content h2,
+.reader-reading-shell .reader-content h3 { color: var(--reader-ink); }
+.reader-reading-shell .reader-content blockquote,
+.reader-reading-shell .reader-content pre { background: color-mix(in srgb, var(--reader-panel) 80%, var(--reader-bg)); border-color: var(--reader-line); }
+.reader-reading-shell .reader-content hr { border-color: var(--reader-line); }
+.reader-reading-shell .reader-annotations { border-color: var(--reader-line); }
+.reader-reading-shell[data-reader-theme="dark"] .reader-pdf { filter: invert(.92) hue-rotate(180deg); }
+.reader-panel-card { width: min(560px, 100%); max-height: min(720px, calc(100dvh - 36px)); }
+.reader-panel-card .dialog-head { gap: 14px; }
+.reader-panel-card .dialog-head > div { min-width: 0; }
+.reader-panel-card .dialog-head small { display: block; margin-top: 3px; color: var(--muted); font-size: 11px; }
+.reader-toc-list { overflow: auto; padding: 8px 10px 14px; }
+.reader-toc-item { display: flex; width: 100%; align-items: center; min-height: 42px; padding: 9px 10px; border: 0; border-bottom: 1px solid var(--line); background: transparent; color: var(--ink); text-align: left; cursor: pointer; }
+.reader-toc-item:hover, .reader-toc-item:focus-visible { background: var(--soft); color: var(--primary); }
+.reader-toc-item.depth-1 { padding-left: 24px; font-size: 13px; }
+.reader-toc-item.depth-2, .reader-toc-item.depth-3 { padding-left: 38px; color: var(--muted); font-size: 12px; }
+.reader-dialog-empty { padding: 34px 10px; }
+.reader-settings-body { overflow: auto; padding: 12px 16px 18px; }
+.reader-setting-group h3 { margin: 0 0 9px; font-size: 13px; }
+.reader-theme-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 7px; }
+.reader-theme-choice { display: flex; align-items: center; justify-content: center; gap: 6px; min-height: 38px; padding: 7px 5px; border: 1px solid var(--line); border-radius: 11px; background: var(--panel-2); color: var(--muted); font-size: 11px; cursor: pointer; }
+.reader-theme-choice.active { border-color: var(--primary); color: var(--primary); box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary) 14%, transparent); }
+.reader-theme-dot { width: 14px; height: 14px; flex: 0 0 14px; border: 1px solid rgba(0,0,0,.12); border-radius: 50%; }
+.reader-theme-dot.theme-paper { background: #fff; }
+.reader-theme-dot.theme-sepia { background: #f6f0e5; }
+.reader-theme-dot.theme-green { background: #edf4ed; }
+.reader-theme-dot.theme-dark { background: #171a21; border-color: #4b5566; }
+.reader-range-row, .reader-select-row { display: grid; gap: 6px; margin-top: 14px; color: var(--muted); font-size: 12px; }
+.reader-range-row > span, .reader-select-row > span { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.reader-range-row b { color: var(--ink); font-variant-numeric: tabular-nums; font-weight: 700; }
+.reader-settings-body input[type="range"] { width: 100%; accent-color: var(--primary); }
+.reader-settings-body select { width: 100%; min-height: 38px; padding: 7px 10px; border-color: var(--line); border-radius: 10px; background: var(--panel-2); color: var(--ink); }
+.reader-turn-cover-forward { animation: reader-page-cover-forward .34s ease; }
+.reader-turn-cover-back { animation: reader-page-cover-back .34s ease; }
+@keyframes reader-page-cover-forward { 0% { transform: perspective(900px) rotateY(0); opacity: 1; } 50% { transform: perspective(900px) rotateY(-5deg) translateX(-5px); opacity: .7; } 100% { transform: perspective(900px) rotateY(0); opacity: 1; } }
+@keyframes reader-page-cover-back { 0% { transform: perspective(900px) rotateY(0); opacity: 1; } 50% { transform: perspective(900px) rotateY(5deg) translateX(5px); opacity: .7; } 100% { transform: perspective(900px) rotateY(0); opacity: 1; } }
+
+@media (max-width: 600px) {
+  .reader-reading-shell { height: calc(100dvh - var(--app-header-height) - 4px); padding-bottom: 10px; }
+  .reader-reading-shell .reader-reading-controls { align-items: stretch; flex-wrap: wrap; }
+  .reader-reading-tools { flex: 1 1 100%; justify-content: flex-start; }
+  .reader-reading-shell .reader-view-switch { margin-left: auto; }
+  .reader-tool-button { min-height: 32px; }
+  .reader-theme-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .reader-panel-card { max-height: calc(100dvh - 18px); border-radius: 20px; }
+  .reader-settings-body { padding: 10px 14px 16px; }
+}
