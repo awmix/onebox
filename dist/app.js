@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.41';
+const APP_VERSION = '2.18.42';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -19,6 +19,7 @@ const STORAGE = {
   notifications: 'onebox.notifications',
   library: 'onebox.library',
   readerPreferences: 'onebox.reader-preferences',
+  readerLayout: 'onebox.reader-layout',
   homeFeeds: 'onebox.home-feeds',
   homeFeedRead: 'onebox.home-feed-read',
   homeFeedOrder: 'onebox.home-feed-order',
@@ -187,7 +188,7 @@ const DICT = {
     markRead: '全部已读', close: '关闭', system: '跟随系统', light: '浅色', dark: '深色',
     layout: '布局', classicLayout: '经典布局', simpleLayout: '简约布局', openMode: '打开方式', openCurrent: '当前页打开', openNewTab: '新标签页打开', language: '语言', theme: '主题', color: '颜色', blackWhite: '黑白配', noblePurple: '贵族紫', skyBlue: '天空蓝', notBananaGreen: '不蕉绿', meituanYellow: '美团黄', topDisplay: '顶部显示', footprint: '足迹', showFootprint: '在首页显示', hideFootprint: '不在首页显示', reorderHint: '长按工具标签可以调整顺序',
     languagePending: '日语、韩语语言包已预留，当前版本先提供中文和英文。',
-    bookshelf: '书架', addBook: '添加文档', noBooks: '还没有本地文档。', readerHint: '支持 Markdown、TXT、PDF、EPUB；文档仅保存在当前设备。', openBook: '打开阅读', deleteBook: '删除文档', annotations: '标注', addAnnotation: '添加标注', annotationPlaceholder: '写下你的标注…', saveAnnotation: '保存标注', annotationHint: '选择文字后长按或点击标注按钮。', noAnnotations: '还没有标注。', reading: '正在阅读', closeReader: '关闭阅读', unsupportedFile: '请选择 .md、.markdown、.txt、.pdf 或 .epub 文件。', importFailed: '文档读取失败，请重试。', deleteConfirm: '确定删除这本文档吗？', pdfHint: 'PDF 使用浏览器原生阅读器打开。', epubHint: 'EPUB 已转换为适合 OneBox 的连续阅读视图。', readerContents: '目录', readerSettings: '阅读设置', readerTheme: '阅读背景', readerThemePaper: '纸张', readerThemeSepia: '暖白', readerThemeGreen: '护眼绿', readerThemeDark: '夜间', readerFontSize: '字号', readerFontFamily: '字体', readerLineHeight: '行距', readerParagraphSpacing: '段落间距', readerLetterSpacing: '字间距', readerAnimation: '翻页动画', readerAnimationSlide: '滑动', readerAnimationCover: '覆盖', readerAnimationNone: '无', readerScroll: '滚动', readerPages: '翻页', readerNoContents: '暂无章节目录。', readerSettingsHint: '设置仅作用于当前设备上的阅读内容。', readerTocHint: '选择章节后跳转到对应位置。',
+    bookshelf: '书架', addBook: '添加文档', noBooks: '还没有本地文档。', readerHint: '支持 Markdown、TXT、PDF、EPUB；文档仅保存在当前设备。', openBook: '打开阅读', deleteBook: '删除文档', annotations: '标注', addAnnotation: '添加标注', annotationPlaceholder: '写下你的标注…', saveAnnotation: '保存标注', annotationHint: '选择文字后长按或点击标注按钮。', noAnnotations: '还没有标注。', reading: '正在阅读', closeReader: '关闭阅读', unsupportedFile: '请选择 .md、.markdown、.txt、.pdf 或 .epub 文件。', importFailed: '文档读取失败，请重试。', deleteConfirm: '确定删除这本文档吗？', pdfHint: 'PDF 使用浏览器原生阅读器打开。', epubHint: 'EPUB 已转换为适合 OneBox 的连续阅读视图。', readerContents: '目录', readerSettings: '阅读设置', readerTheme: '阅读背景', readerThemePaper: '纸张', readerThemeSepia: '暖白', readerThemeGreen: '护眼绿', readerThemeDark: '夜间', readerFontSize: '字号', readerFontFamily: '字体', readerLineHeight: '行距', readerParagraphSpacing: '段落间距', readerLetterSpacing: '字间距', readerAnimation: '翻页动画', readerAnimationSlide: '滑动', readerAnimationCover: '覆盖', readerAnimationNone: '无', readerScroll: '滚动', readerPages: '翻页', readerProgress: '进度', readerFullscreen: '全屏', readerExitFullscreen: '退出全屏', readerNoContents: '暂无章节目录。', readerSettingsHint: '设置仅作用于当前设备上的阅读内容。', readerTocHint: '选择章节后跳转到对应位置。',
   },
   en: {
     calculator: 'Calculator', calendar: 'Calendar', weather: 'Weather', convert: 'Convert', unitConvert: 'Convert', translate: 'Translate', translateConvert: 'Convert', reader: 'Reader',
@@ -228,7 +229,7 @@ const DICT = {
     markRead: 'Mark all read', close: 'Close', system: 'System', light: 'Light', dark: 'Dark',
     layout: 'Layout', classicLayout: 'Classic layout', simpleLayout: 'Simple layout', openMode: 'Open links', openCurrent: 'Current page', openNewTab: 'New tab', theme: 'Theme', language: 'Language', color: 'Color', blackWhite: 'Black and white', noblePurple: 'Noble purple', skyBlue: 'Sky blue', notBananaGreen: 'WeChat green', meituanYellow: 'Meituan yellow', topDisplay: 'Show at top', footprint: 'Footprints', showFootprint: 'Show on Home', hideFootprint: 'Hide from Home', reorderHint: 'Long-press a tool tab to reorder',
     languagePending: 'Japanese and Korean are reserved for a future language pack. Chinese and English are available now.',
-    bookshelf: 'Bookshelf', addBook: 'Add document', noBooks: 'No local documents yet.', readerHint: 'Supports Markdown, TXT, PDF and EPUB. Files stay on this device.', openBook: 'Open', deleteBook: 'Delete', annotations: 'Notes', addAnnotation: 'Add note', annotationPlaceholder: 'Write a note…', saveAnnotation: 'Save note', annotationHint: 'Select text, long-press or use the note button.', noAnnotations: 'No notes yet.', reading: 'Reading', closeReader: 'Close reader', unsupportedFile: 'Choose a .md, .markdown, .txt, .pdf or .epub file.', importFailed: 'Could not read this document.', deleteConfirm: 'Delete this document?', pdfHint: 'PDF opens in the browser native reader.', epubHint: 'EPUB is converted into a continuous OneBox reading view.', readerContents: 'Contents', readerSettings: 'Reading settings', readerTheme: 'Reading background', readerThemePaper: 'Paper', readerThemeSepia: 'Warm', readerThemeGreen: 'Green', readerThemeDark: 'Night', readerFontSize: 'Font size', readerFontFamily: 'Font', readerLineHeight: 'Line height', readerParagraphSpacing: 'Paragraph spacing', readerLetterSpacing: 'Letter spacing', readerAnimation: 'Page animation', readerAnimationSlide: 'Slide', readerAnimationCover: 'Cover', readerAnimationNone: 'None', readerScroll: 'Scroll', readerPages: 'Pages', readerNoContents: 'No chapter contents.', readerSettingsHint: 'These settings apply only to reading on this device.', readerTocHint: 'Choose a chapter to jump to it.',
+    bookshelf: 'Bookshelf', addBook: 'Add document', noBooks: 'No local documents yet.', readerHint: 'Supports Markdown, TXT, PDF and EPUB. Files stay on this device.', openBook: 'Open', deleteBook: 'Delete', annotations: 'Notes', addAnnotation: 'Add note', annotationPlaceholder: 'Write a note…', saveAnnotation: 'Save note', annotationHint: 'Select text, long-press or use the note button.', noAnnotations: 'No notes yet.', reading: 'Reading', closeReader: 'Close reader', unsupportedFile: 'Choose a .md, .markdown, .txt, .pdf or .epub file.', importFailed: 'Could not read this document.', deleteConfirm: 'Delete this document?', pdfHint: 'PDF opens in the browser native reader.', epubHint: 'EPUB is converted into a continuous OneBox reading view.', readerContents: 'Contents', readerSettings: 'Reading settings', readerTheme: 'Reading background', readerThemePaper: 'Paper', readerThemeSepia: 'Warm', readerThemeGreen: 'Green', readerThemeDark: 'Night', readerFontSize: 'Font size', readerFontFamily: 'Font', readerLineHeight: 'Line height', readerParagraphSpacing: 'Paragraph spacing', readerLetterSpacing: 'Letter spacing', readerAnimation: 'Page animation', readerAnimationSlide: 'Slide', readerAnimationCover: 'Cover', readerAnimationNone: 'None', readerScroll: 'Scroll', readerPages: 'Pages', readerProgress: 'Progress', readerFullscreen: 'Fullscreen', readerExitFullscreen: 'Exit fullscreen', readerNoContents: 'No chapter contents.', readerSettingsHint: 'These settings apply only to reading on this device.', readerTocHint: 'Choose a chapter to jump to it.',
   },
 };
 const t = (key) => DICT[state.language]?.[key] || DICT.zh[key] || key;
@@ -243,6 +244,7 @@ const storedCalculator = parseStored(STORAGE.calculator, { expr: '', history: []
 const storedTranslationHistoryOpen = parseStored(STORAGE.translationHistoryOpen, false) === true;
 const storedLibrary = parseStored(STORAGE.library, []);
 const storedReaderPreferences = parseStored(STORAGE.readerPreferences, {}) || {};
+const storedReaderLayout = localStorage.getItem(STORAGE.readerLayout) || 'grid';
 const storedHomeFeeds = parseStored(STORAGE.homeFeeds, {}) || {};
 const storedHomeFeedRead = parseStored(STORAGE.homeFeedRead, {}) || {};
 const storedHomeFeedOrder = parseStored(STORAGE.homeFeedOrder, DEFAULT_HOME_FEED_ORDER);
@@ -288,7 +290,7 @@ const state = {
   translationHistory: parseStored(STORAGE.translationHistory, []),
   translationHistoryOpen: storedTranslationHistoryOpen,
   library: (Array.isArray(storedLibrary) ? storedLibrary : []).filter((book) => book && book.id && book.name),
-  readerBookId: null, readerUrl: '', readerContent: '', readerHint: '', readerToc: [], readerDialog: '', readerChromeHidden: false, readerMode: 'library', readerReadingMode: 'scroll', readerPage: 0, readerSelectedText: '', annotationBookId: null,
+  readerBookId: null, readerUrl: '', readerContent: '', readerHint: '', readerToc: [], readerDialog: '', readerChromeHidden: false, readerImmersive: false, readerMode: 'library', readerReadingMode: 'scroll', readerPage: 0, readerSelectedText: '', readerLayout: storedReaderLayout === 'list' ? 'list' : 'grid', annotationBookId: null,
   readerPreferences: { theme: ['paper', 'sepia', 'green', 'dark'].includes(storedReaderPreferences.theme) ? storedReaderPreferences.theme : 'paper', fontSize: Number.isFinite(Number(storedReaderPreferences.fontSize)) ? Math.min(26, Math.max(15, Number(storedReaderPreferences.fontSize))) : 18, fontFamily: ['system', 'serif', 'mono'].includes(storedReaderPreferences.fontFamily) ? storedReaderPreferences.fontFamily : 'system', lineHeight: Number.isFinite(Number(storedReaderPreferences.lineHeight)) ? Math.min(2.2, Math.max(1.35, Number(storedReaderPreferences.lineHeight))) : 1.8, paragraphSpacing: Number.isFinite(Number(storedReaderPreferences.paragraphSpacing)) ? Math.min(28, Math.max(6, Number(storedReaderPreferences.paragraphSpacing))) : 14, letterSpacing: Number.isFinite(Number(storedReaderPreferences.letterSpacing)) ? Math.min(2, Math.max(0, Number(storedReaderPreferences.letterSpacing))) : 0, pageAnimation: ['slide', 'cover', 'none'].includes(storedReaderPreferences.pageAnimation) ? storedReaderPreferences.pageAnimation : 'slide' },
   homeFeed: { active: DEFAULT_HOME_FEED_ORDER[0], order: normalizeHomeFeedOrder(storedHomeFeedOrder), hasNew: false, loading: false, errors: {}, updatedAt: Number(storedHomeFeeds.updatedAt || 0), cacheVersion: storedHomeFeeds.cacheVersion || '', sources: storedHomeFeeds.sources && typeof storedHomeFeeds.sources === 'object' ? storedHomeFeeds.sources : {} },
   homeFeedRead: storedHomeFeedRead && typeof storedHomeFeedRead === 'object' ? storedHomeFeedRead : {},
@@ -664,6 +666,7 @@ function closeRecentReading() {
 
 // Reader --------------------------------------------------------------------
 function saveLibrary() { saveStored(STORAGE.library, state.library.slice(0, 80)); }
+function saveReaderLayout() { localStorage.setItem(STORAGE.readerLayout, state.readerLayout); }
 function readerBookById(id) { return state.library.find((book) => book.id === id); }
 function readerHeadingId(index) { return 'reader-heading-' + index; }
 function readerTextToc(source) {
@@ -913,6 +916,30 @@ function restoreReaderPosition() {
   }
   updateReaderReferenceChrome();
 }
+function readerFullscreenElement() { return document.fullscreenElement || document.webkitFullscreenElement || null; }
+function requestReaderFullscreen() {
+  if (readerFullscreenElement()) return Promise.resolve();
+  const root = document.documentElement;
+  const request = root.requestFullscreen || root.webkitRequestFullscreen;
+  if (!request) return Promise.resolve();
+  try { return Promise.resolve(request.call(root, { navigationUI: 'hide' })).catch(() => {}); } catch { return Promise.resolve(); }
+}
+function exitReaderFullscreen() {
+  const exit = document.exitFullscreen || document.webkitExitFullscreen;
+  if (!readerFullscreenElement() || !exit) return Promise.resolve();
+  try { return Promise.resolve(exit.call(document)).catch(() => {}); } catch { return Promise.resolve(); }
+}
+function updateReaderFullscreenControl() {
+  const button = $('[data-reader-fullscreen]'); if (!button) return;
+  const active = Boolean(readerFullscreenElement());
+  button.innerHTML = active ? '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4H4v5M15 4h5v5M9 20H4v-5M15 20h5v-5"/></svg><span>' + t('readerExitFullscreen') + '</span>' : '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 4H4v4M16 4h4v4M8 20H4v-4M16 20h4v-4"/></svg><span>' + t('readerFullscreen') + '</span>';
+  button.setAttribute('aria-label', active ? t('readerExitFullscreen') : t('readerFullscreen'));
+}
+function toggleReaderFullscreen() {
+  state.readerImmersive = !state.readerImmersive;
+  if (state.readerImmersive) requestReaderFullscreen(); else exitReaderFullscreen();
+  render();
+}
 function renderReaderView(content, hint = '', toc = [], readingMode = 'pages') {
   state.readerContent = content;
   state.readerHint = hint;
@@ -926,6 +953,8 @@ function renderReaderView(content, hint = '', toc = [], readingMode = 'pages') {
 }
 async function openReaderBook(id) {
   const book = readerBookById(id); if (!book) return;
+  state.readerImmersive = true;
+  requestReaderFullscreen();
   state.readerBookId = id; state.readerSelectedText = ''; book.lastOpenedAt = Date.now(); saveLibrary();
   try {
     let content = ''; let hint = ''; let toc = [];
@@ -945,8 +974,9 @@ async function openReaderBook(id) {
   } catch { toast(t('importFailed'), 'error'); state.readerBookId = null; }
 }
 function closeReader() {
+  exitReaderFullscreen();
   if (state.readerUrl) URL.revokeObjectURL(state.readerUrl);
-  state.readerUrl = ''; state.readerBookId = null; state.readerContent = ''; state.readerHint = ''; state.readerToc = []; state.readerDialog = ''; state.readerChromeHidden = false; state.readerMode = 'library'; state.readerReadingMode = 'scroll'; state.readerPage = 0; state.readerSelectedText = '';
+  state.readerUrl = ''; state.readerBookId = null; state.readerContent = ''; state.readerHint = ''; state.readerToc = []; state.readerDialog = ''; state.readerChromeHidden = false; state.readerImmersive = false; state.readerMode = 'library'; state.readerReadingMode = 'scroll'; state.readerPage = 0; state.readerSelectedText = '';
   render();
 }
 const READER_THEME_VALUES = {
@@ -1112,16 +1142,16 @@ function readerReadingView(book) {
   const pageLabel = isPdf ? hint : (state.readerReadingMode === 'pages' ? '1 / 1' : hint);
   const icon = (path) => '<svg viewBox="0 0 24 24" aria-hidden="true">' + path + '</svg>';
   const tool = (action, path, label) => '<button class="reader-reference-tool" data-' + action + '>' + icon(path) + '<span>' + label + '</span></button>';
-  const chromeClass = state.readerChromeHidden ? ' chrome-hidden' : '';
+  const chromeClass = (state.readerChromeHidden ? ' chrome-hidden' : '') + (state.readerImmersive ? '' : ' reader-windowed');
   return '<div class="reader-reference-shell' + chromeClass + '" data-reader-theme="' + escapeHtml(state.readerPreferences.theme) + '">' +
-    '<header class="reader-reference-top"><button class="reader-ref-icon" data-close-reader aria-label="' + t('closeReader') + '">' + icon('<path d="m15 5-7 7 7 7"/>') + '</button><div class="reader-reference-title"><strong>' + escapeHtml(book.name) + '</strong><small>' + escapeHtml(hint) + '</small></div><span class="reader-reference-page" data-reader-page-info>' + escapeHtml(pageLabel) + '</span></header>' +
+    '<header class="reader-reference-top"><span class="reader-reference-spacer" aria-hidden="true"></span><div class="reader-reference-title"><strong>' + escapeHtml(book.name) + '</strong><small>' + escapeHtml(hint) + '</small></div><button class="reader-ref-icon reader-fullscreen-button" data-reader-fullscreen aria-label="' + t('readerFullscreen') + '"></button></header>' +
     '<main class="reader-reference-body"><article class="' + contentClass + ' reader-reference-viewer" data-reader-content data-reader-surface>' + content + '</article></main>' +
     '<footer class="reader-reference-bottom"><div class="reader-reference-chapter"><span class="reader-reference-chapter-name" data-reader-chapter-name>' + escapeHtml(chapter) + '</span><span class="reader-reference-chapter-index" data-reader-chapter-index>' + (state.readerToc.length ? '1 / ' + state.readerToc.length : '—') + '</span></div>' +
-    '<div class="reader-reference-tool-row">' + tool('reader-toc', '<path d="M5 5h14M5 12h14M5 19h9"/>', t('readerContents')) + tool('reader-background', '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4"/>', t('readerTheme')) + tool('reader-animation', '<path d="M5 6h14M5 12h14M5 18h14"/><path d="m9 9 3 3-3 3"/>', t('readerAnimation')) + '<button class="reader-reference-tool reader-settings-tool" data-reader-settings>' + icon('<path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/><circle cx="12" cy="12" r="3.5"/>') + '<span>' + t('readerSettings') + '</span><em data-reader-progress-label>0%</em></button>' + '<button class="reader-reference-tool reader-annotate-button" data-annotate-selection hidden>' + icon('<path d="m5 19 1-4L16.5 4.5a2.1 2.1 0 0 1 3 3L9 18zM14 7l3 3"/>') + '<span>' + t('addAnnotation') + '</span></button></div></footer></div>';
+    '<div class="reader-reference-tool-row"><button class="reader-reference-tool reader-shelf-tool" data-close-reader aria-label="' + t('bookshelf') + '">' + icon('<path d="m15 5-7 7 7 7"/>') + '<span>' + t('bookshelf') + '</span></button>' + tool('reader-toc', '<path d="M5 5h14M5 12h14M5 19h9"/>', t('readerContents')) + tool('reader-background', '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4-1.4"/>', t('readerTheme')) + tool('reader-animation', '<path d="M5 6h14M5 12h14M5 18h14"/><path d="m9 9 3 3-3 3"/>', t('readerAnimation')) + '<button class="reader-reference-tool reader-settings-tool" data-reader-settings>' + icon('<path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1-2.1"/><circle cx="12" cy="12" r="3.5"/>') + '<span>' + t('readerSettings') + '</span></button>' + '<button class="reader-reference-tool reader-progress-tool" aria-label="' + t('readerProgress') + '"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 7v5l3 2"/></svg><span>' + t('readerProgress') + '</span><em data-reader-progress-label>0%</em></button>' + '<button class="reader-reference-tool reader-annotate-button" data-annotate-selection hidden>' + icon('<path d="m5 19 1-4L16.5 4.5a2.1 2.1 0 0 1 3 3L9 18zM14 7l3 3"/>') + '<span>' + t('addAnnotation') + '</span></button></div></footer></div>';
 }
 function readerAddCardMarkup(compact = false) {
   const hint = compact ? (state.language === 'en' ? 'Add a local document' : '添加本机文档') : t('readerHint');
-  return '<button class="reader-empty-card ' + (compact ? 'reader-add-card' : '') + '" data-open-reader-file><span class="reader-empty-book"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M8 10.5c7-2.5 12-1 16 2v25c-4-3-9-4.5-16-2v-25ZM40 10.5c-7-2.5-12-1-16 2v25c4-3-9-4.5-16-2v-25Z"/><path d="M24 12.5v25"/></svg></span><strong>' + t('addBook') + '</strong><span class="reader-empty-hint">' + hint + '</span><span class="reader-empty-plus">＋</span></button>';
+  return '<button class="reader-empty-card ' + (compact ? 'reader-add-card' : '') + '" data-open-reader-file><span class="reader-empty-book"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M9 7h23v31l-11.5-6L9 38V7Z"/><path d="M16 16h9M20.5 11.5v9"/><path d="M34 13h5v28l-5-2.6"/></svg></span><strong>' + t('addBook') + '</strong><span class="reader-empty-hint">' + hint + '</span><span class="reader-empty-plus">＋</span></button>';
 }
 function reader() {
   const activeBook = readerBookById(state.readerBookId);
@@ -1130,11 +1160,12 @@ function reader() {
   const cards = books.map((book) => {
     const progress = typeof book.progress === 'number' ? book.progress : Number(book.progress?.percent || 0);
     const coverLetter = book.type === 'epub' ? 'E' : book.type === 'pdf' ? 'P' : book.type === 'txt' ? 'T' : 'M';
-    return '<article class="book-card reader-book-card" data-id="' + escapeHtml(book.id) + '"><button class="book-open reader-book-open" data-open-reader="' + escapeHtml(book.id) + '"><span class="book-cover reader-book-cover ' + book.type + '"><span class="reader-cover-letter">' + coverLetter + '</span></span><span class="book-copy reader-book-copy"><strong>' + escapeHtml(book.name) + '</strong><span class="reader-book-meta"><span>' + book.type.toUpperCase() + '</span><i></i><span>' + Math.max(1, Math.round(book.size / 1024)) + ' KB</span></span>' + (progress > 0 ? '<span class="prog-bar"><i style="width:' + Math.round(progress * 100) + '%"></i></span>' : '') + '</span></button><button class="icon-btn small book-delete reader-book-delete" data-delete-book="' + escapeHtml(book.id) + '" aria-label="' + t('deleteBook') + '">×</button></article>';
+    return '<article class="book-card reader-book-card" data-reader-book-card data-reader-book-index="' + books.indexOf(book) + '" data-id="' + escapeHtml(book.id) + '"><button class="book-open reader-book-open" data-open-reader="' + escapeHtml(book.id) + '"><span class="book-cover reader-book-cover ' + book.type + '"><span class="reader-cover-letter">' + coverLetter + '</span></span><span class="book-copy reader-book-copy"><strong>' + escapeHtml(book.name) + '</strong><span class="reader-book-meta"><span>' + book.type.toUpperCase() + '</span><i></i><span>' + Math.max(1, Math.round(book.size / 1024)) + ' KB</span></span>' + (progress > 0 ? '<span class="prog-bar"><i style="width:' + Math.round(progress * 100) + '%"></i></span>' : '') + '</span></button><button class="icon-btn small book-delete reader-book-delete" data-delete-book="' + escapeHtml(book.id) + '" aria-label="' + t('deleteBook') + '">×</button></article>';
   }).join('');
   const empty = readerAddCardMarkup();
-  const libraryBody = books.length ? '<div class="reader-book-grid">' + cards + readerAddCardMarkup(true) + '</div>' : empty;
-  return '<div class="reader-library-view"><div class="reader-library-head"><div><p class="reader-library-kicker">ONEBOX READER</p><div class="reader-library-title-row"><h2>' + t('bookshelf') + '</h2><span class="reader-book-count">' + books.length + '</span></div><small>' + t('readerHint') + '</small></div><input id="readerFileInput" type="file" hidden multiple accept=".md,.markdown,.txt,.pdf,.epub,text/markdown,text/plain,application/pdf,application/epub+zip"></div>' + libraryBody + '</div>';
+  const libraryBody = books.length ? '<div class="reader-book-grid ' + (state.readerLayout === 'list' ? 'reader-book-list' : 'reader-book-grid-cards') + '">' + cards + readerAddCardMarkup(true) + '</div>' : empty;
+  const layoutIcon = state.readerLayout === 'list' ? '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 6h14M5 12h14M5 18h14"/><path d="M5 6h.01M5 12h.01M5 18h.01"/></svg><span>宫格</span>' : '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/></svg><span>列表</span>';
+  return '<div class="reader-library-view"><section class="reader-library-panel"><div class="reader-library-head"><div class="reader-library-title-row"><h2>' + t('bookshelf') + '</h2><span class="reader-book-count">' + books.length + '</span><small>' + t('readerHint') + '</small></div><button class="reader-layout-toggle" data-reader-layout-toggle aria-label="切换书架布局">' + layoutIcon + '</button></div>' + libraryBody + '</section><input id="readerFileInput" type="file" hidden multiple accept=".md,.markdown,.txt,.pdf,.epub,text/markdown,text/plain,application/pdf,application/epub+zip"></div>';
 }
 
 // Calendar data --------------------------------------------------------------
@@ -2020,9 +2051,9 @@ function render() {
   const renderers = { calculator, calendar, weather, convert, translate: translateConvertView, reader };
   workspace.dataset.tool = state.section === 'tools' ? state.tool : state.section;
   workspace.innerHTML = state.section === 'home' ? renderHome() : state.section === 'messages' ? renderMessages() : state.section === 'mine' ? renderMine() : (renderers[state.tool] || calculator)();
-  document.documentElement.classList.toggle('reader-focus', state.section === 'tools' && state.tool === 'reader' && state.readerMode === 'reading');
+  document.documentElement.classList.toggle('reader-focus', state.section === 'tools' && state.tool === 'reader' && state.readerMode === 'reading' && state.readerImmersive);
   if (state.section === 'tools' && state.tool === 'reader' && state.readerMode === 'reading') {
-    requestAnimationFrame(() => { applyReaderPreferences(); if (state.readerDialog) readerDialogMarkup(state.readerDialog); });
+    requestAnimationFrame(() => { applyReaderPreferences(); updateReaderFullscreenControl(); if (state.readerDialog) { readerDialogMarkup(state.readerDialog); updateReaderReferenceChrome(); } });
   } else if (!state.readerDialog) {
     const readerDialog = $('#readerDialog'); if (readerDialog) readerDialog.hidden = true;
   }
@@ -2049,12 +2080,17 @@ function startLongPress(target, type, index) {
   reorderTimer = setTimeout(() => {
     target.classList.add('reorder-hold'); target.dataset.longPressed = 'true';
     if (type === 'weather') target.classList.add('weather-delete-ready');
-    if (type !== 'weather') toast(state.language === 'en' ? 'Reorder mode: tap another item' : '排序模式：再点一下目标位置');
+    else if (type === 'book') target.classList.add('reader-delete-ready');
+    if (type !== 'weather' && type !== 'book') toast(state.language === 'en' ? 'Reorder mode: tap another item' : '排序模式：再点一下目标位置');
   }, 520);
 }
 function endLongPress() { clearTimeout(reorderTimer); reorderTimer = null; }
 function handleReorderClick(target, type, index) {
   if (!reorderTarget || reorderTarget.type !== type || !reorderTarget.target.dataset.longPressed) return false;
+  if (type === 'book') {
+    target.classList.add('reader-delete-ready'); delete target.dataset.longPressed; reorderTarget = null;
+    return true;
+  }
   if (reorderTarget.index !== index) type === 'tool' ? swapToolOrder(reorderTarget.index, index) : type === 'feed' ? swapHomeFeedSources(reorderTarget.index, index) : swapWeatherCards(reorderTarget.index, index);
   reorderTarget.target.classList.remove('reorder-hold'); delete reorderTarget.target.dataset.longPressed; reorderTarget = null;
   return true;
@@ -2103,6 +2139,7 @@ nav.addEventListener('dragover', (event) => { if (event.target.closest('[data-to
 
 workspace.addEventListener('pointerdown', (event) => { const card = event.target.closest('[data-weather-card]'); if (card) startLongPress(card, 'weather', Number(card.dataset.weatherIndex)); });
 workspace.addEventListener('pointerdown', (event) => { const source = event.target.closest('[data-feed-source]'); if (source) startLongPress(source, 'feed', Number(source.dataset.feedSourceIndex)); });
+workspace.addEventListener('pointerdown', (event) => { const book = event.target.closest('[data-reader-book-card]'); if (book && !event.target.closest('[data-delete-book]')) startLongPress(book, 'book', Number(book.dataset.readerBookIndex)); });
 workspace.addEventListener('pointerup', endLongPress);
 workspace.addEventListener('pointercancel', endLongPress);
 workspace.addEventListener('pointerdown', (event) => {
@@ -2130,6 +2167,10 @@ workspace.addEventListener('click', async (event) => {
   if (section) return selectSection(section.dataset.section);
   const homeTool = event.target.closest('[data-home-tool]');
   if (homeTool) return selectTool(homeTool.dataset.homeTool);
+  if (event.target.closest('[data-reader-layout-toggle]')) {
+    state.readerLayout = state.readerLayout === 'list' ? 'grid' : 'list';
+    saveReaderLayout(); return render();
+  }
   const feedSource = event.target.closest('[data-feed-source]');
   if (feedSource) {
     if (feedSource.dataset.feedSourceIndex != null && handleReorderClick(feedSource, 'feed', Number(feedSource.dataset.feedSourceIndex))) { event.preventDefault(); return; }
@@ -2147,6 +2188,7 @@ workspace.addEventListener('click', async (event) => {
     if (event.target.closest('[data-reader-chapter-next]')) { goReaderChapter(1); return; }
     if (event.target.closest('[data-reader-background]')) { openReaderDialog('background'); return; }
     if (event.target.closest('[data-reader-animation]')) { openReaderDialog('animation'); return; }
+    if (event.target.closest('[data-reader-fullscreen]')) { toggleReaderFullscreen(); return; }
     const surface = event.target.closest('[data-reader-surface]');
     if (surface && !event.target.closest('a,button,input,textarea,select')) {
       if (Date.now() < swipeSuppressClickUntil) return;
@@ -2175,13 +2217,15 @@ workspace.addEventListener('click', async (event) => {
     turnReaderPage(direction);
     return;
   }
-  const openReader = event.target.closest('[data-open-reader]');
-  if (openReader) return openReaderBook(openReader.dataset.openReader);
   const deleteBook = event.target.closest('[data-delete-book]');
   if (deleteBook) {
     if (!window.confirm(t('deleteConfirm'))) return;
     state.library = state.library.filter((book) => book.id !== deleteBook.dataset.deleteBook); await oneBoxDbDelete('books', deleteBook.dataset.deleteBook); saveLibrary(); render(); return;
   }
+  const bookCard = event.target.closest('[data-reader-book-card]');
+  if (bookCard && handleReorderClick(bookCard, 'book', Number(bookCard.dataset.readerBookIndex))) { event.preventDefault(); return; }
+  const openReader = event.target.closest('[data-open-reader]');
+  if (openReader) return openReaderBook(openReader.dataset.openReader);
   if (event.target.closest('[data-annotate-selection]')) return renderAnnotationDialog();
   const deleteAnnotation = event.target.closest('[data-delete-annotation]');
   if (deleteAnnotation) {
@@ -2493,6 +2537,13 @@ window.addEventListener('hashchange', () => {
 window.matchMedia?.('(prefers-color-scheme: dark)').addEventListener?.('change', () => { if (state.theme === 'system') applyTheme(); });
 document.addEventListener('visibilitychange', () => { if (!document.hidden) state.swRegistration?.update().catch(() => {}); });
 window.addEventListener('focus', () => state.swRegistration?.update().catch(() => {}));
+const handleReaderFullscreenChange = () => {
+  if (!readerFullscreenElement() && state.readerMode === 'reading' && state.readerImmersive) {
+    state.readerImmersive = false; render();
+  } else updateReaderFullscreenControl();
+};
+document.addEventListener('fullscreenchange', handleReaderFullscreenChange);
+document.addEventListener('webkitfullscreenchange', handleReaderFullscreenChange);
 let homeFeedPollTimer = null;
 function scheduleHomeFeedPolling() {
   if (homeFeedPollTimer) return;

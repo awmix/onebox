@@ -3469,3 +3469,69 @@ main:has(#workspace[data-tool="calculator"]) {
 .reader-reference-viewer .reader-page-flow.reader-turn-cover-back { animation: reader-reference-page-cover-back .38s ease; }
 @keyframes reader-reference-page-forward { 0% { transform: translateX(0); opacity: 1; } 48% { transform: translateX(-12px); opacity: .55; } 100% { transform: translateX(0); opacity: 1; } }
 @keyframes reader-reference-page-back { 0% { transform: translateX(0); opacity: 1; } 48% { transform: translateX(12px); opacity: .55; } 100% { transform: translateX(0); opacity: 1; } }
+
+/* 2.18.42: make the shelf a bordered workspace and keep all reader actions
+   in one evenly spaced footer row. The fixed reader remains a CSS fullscreen
+   fallback when the browser does not expose the Fullscreen API. */
+html.reader-focus,
+html.reader-focus body { overflow: hidden; }
+html.reader-focus .app-header,
+html.reader-focus #toolNav,
+html.reader-focus #bottomNav { visibility: hidden; pointer-events: none; }
+html.reader-focus main:has(#workspace[data-tool="reader"]) { height: 100dvh; max-height: 100dvh; padding: 0; overflow: hidden; }
+html.reader-focus .shell { width: 100%; padding: 0; }
+
+.reader-library-view { width: min(760px, 100%); padding: 18px clamp(12px, 4vw, 28px) 34px; }
+.reader-library-panel { padding: 16px; border: 1px solid var(--line); border-radius: 24px; background: var(--panel); box-shadow: var(--shadow); }
+.reader-library-head { align-items: center; padding: 0 0 14px; border-bottom: 1px solid var(--line); }
+.reader-library-title-row { min-width: 0; align-items: baseline; gap: 7px; flex-wrap: nowrap; overflow: hidden; }
+.reader-library-title-row h2 { font-size: 22px; }
+.reader-library-title-row small { display: block; min-width: 0; max-width: none; margin: 0; overflow: hidden; color: var(--muted); font-size: 10px; line-height: 1.3; text-overflow: ellipsis; white-space: nowrap; }
+.reader-library-kicker { display: none; }
+.reader-layout-toggle { display: inline-flex; align-items: center; justify-content: center; gap: 5px; min-width: 58px; min-height: 34px; padding: 6px 9px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel-2); color: var(--muted); font-size: 11px; cursor: pointer; }
+.reader-layout-toggle:hover, .reader-layout-toggle:focus-visible { border-color: var(--primary); color: var(--primary); }
+.reader-layout-toggle svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.7; }
+.reader-book-grid { padding-top: 15px; }
+.reader-book-delete { display: none; }
+.reader-book-card.reader-delete-ready .reader-book-delete { display: grid; }
+.reader-book-card.reader-delete-ready .reader-book-open { filter: brightness(.9); }
+.reader-book-list { grid-template-columns: 1fr; gap: 8px; }
+.reader-book-list .reader-book-card { display: flex; align-items: center; min-height: 76px; padding: 8px; border: 1px solid var(--line); border-radius: 15px; background: var(--panel-2); }
+.reader-book-list .reader-book-open { display: grid; grid-template-columns: 52px minmax(0, 1fr); align-items: center; gap: 11px; padding: 0; }
+.reader-book-list .reader-book-cover { width: 52px; height: 62px; aspect-ratio: auto; border-radius: 9px; }
+.reader-book-list .reader-cover-letter { font-size: 23px; }
+.reader-book-list .reader-book-copy { margin: 0; }
+.reader-book-list .reader-book-copy strong { font-size: 13px; }
+.reader-book-list .reader-book-meta { margin-top: 5px; }
+.reader-book-list .reader-book-delete { top: 50%; right: 9px; transform: translateY(-50%); }
+.reader-book-list .reader-empty-card { min-height: 68px; aspect-ratio: auto; padding: 8px 12px; border-style: dashed; }
+.reader-book-list .reader-empty-card .reader-empty-book { width: 42px; height: 42px; border-radius: 11px; }
+.reader-book-list .reader-empty-card .reader-empty-book svg { width: 28px; height: 28px; }
+.reader-book-list .reader-empty-card strong { font-size: 13px; }
+.reader-book-list .reader-empty-hint { font-size: 9px; }
+.reader-book-list .reader-empty-plus { top: 50%; right: 12px; transform: translateY(-50%); }
+
+.reader-reference-top { display: grid; grid-template-columns: 36px minmax(0, 1fr) 36px; }
+.reader-reference-spacer { width: 36px; height: 36px; }
+.reader-fullscreen-button { display: flex; flex-direction: column; gap: 0; width: 36px; height: 36px; padding: 0; font-size: 0; }
+.reader-fullscreen-button svg { width: 21px; height: 21px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.8; }
+.reader-reference-tool-row { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 0; justify-content: initial; }
+.reader-reference-tool { width: 100%; min-width: 0; padding-inline: 2px; }
+.reader-reference-tool em { color: currentColor; font-size: 9px; font-style: normal; font-variant-numeric: tabular-nums; }
+.reader-shelf-tool svg { width: 21px; height: 21px; }
+.reader-progress-tool { cursor: default; }
+.reader-reference-shell.reader-windowed { position: relative; inset: auto; z-index: auto; width: 100%; height: calc(100dvh - var(--app-header-height) - 52px); min-height: 460px; margin: 0 auto; }
+.reader-reference-shell.reader-windowed .reader-reference-top,
+.reader-reference-shell.reader-windowed .reader-reference-bottom { border-color: var(--line); }
+
+@media (max-width: 600px) {
+  .reader-library-panel { padding: 12px; border-radius: 20px; }
+  .reader-library-head { gap: 8px; }
+  .reader-library-title-row { gap: 5px; }
+  .reader-library-title-row h2 { font-size: 20px; }
+  .reader-layout-toggle { min-width: 54px; min-height: 32px; padding-inline: 7px; }
+  .reader-reference-bottom { padding-left: 5px; padding-right: 5px; }
+  .reader-reference-tool span { font-size: 9px; }
+  .reader-reference-tool svg { width: 19px; height: 19px; }
+  .reader-reference-shell.reader-windowed { height: calc(100dvh - var(--app-header-height) - 48px); min-height: 420px; }
+}
