@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.34';
+const APP_VERSION = '2.18.35';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -146,7 +146,7 @@ const toast = (message, kind = 'info') => {
 
 const DICT = {
   zh: {
-    calculator: '计算', calendar: '日历', weather: '天气', convert: '转换', translate: '翻译', translateConvert: '转换', reader: '阅读',
+    calculator: '计算', calendar: '日历', weather: '天气', convert: '转换', unitConvert: '换算', translate: '翻译', translateConvert: '转换', reader: '阅读',
     online: '在线', offline: '离线', install: '安装应用', settings: '设置', notifications: '消息提示',
     heroSubtitle: '快速、清爽、可离线。你的数据优先保存在当前设备。',
     calculatorDesc: '支持括号、百分比、科学函数和键盘输入，并自动保留最近计算记录。',
@@ -187,7 +187,7 @@ const DICT = {
     bookshelf: '书架', addBook: '添加文档', noBooks: '还没有本地文档。', readerHint: '支持 Markdown、PDF、EPUB；文档仅保存在当前设备。', openBook: '打开阅读', deleteBook: '删除文档', annotations: '标注', addAnnotation: '添加标注', annotationPlaceholder: '写下你的标注…', saveAnnotation: '保存标注', annotationHint: '选择文字后长按或点击标注按钮。', noAnnotations: '还没有标注。', reading: '正在阅读', closeReader: '关闭阅读', unsupportedFile: '请选择 .md、.markdown、.pdf 或 .epub 文件。', importFailed: '文档读取失败，请重试。', deleteConfirm: '确定删除这本文档吗？', pdfHint: 'PDF 使用浏览器原生阅读器打开。', epubHint: 'EPUB 已转换为适合 OneBox 的连续阅读视图。',
   },
   en: {
-    calculator: 'Calculator', calendar: 'Calendar', weather: 'Weather', convert: 'Convert', translate: 'Translate', translateConvert: 'Convert', reader: 'Reader',
+    calculator: 'Calculator', calendar: 'Calendar', weather: 'Weather', convert: 'Convert', unitConvert: 'Convert', translate: 'Translate', translateConvert: 'Convert', reader: 'Reader',
     online: 'Online', offline: 'Offline', install: 'Install', settings: 'Settings', notifications: 'Notifications',
     heroSubtitle: 'Fast, calm and offline-ready. Your data stays on this device first.',
     calculatorDesc: 'Parentheses, percentages, scientific functions, keyboard input and history.',
@@ -236,7 +236,7 @@ const storedLayout = localStorage.getItem(STORAGE.layout);
 const storedColor = localStorage.getItem(STORAGE.color);
 const storedColorExplicit = localStorage.getItem(STORAGE.colorExplicit) === 'true';
 const resolveLanguageMode = (mode) => mode === 'en' || mode === 'zh' ? mode : ((navigator.language || '').toLowerCase().startsWith('en') ? 'en' : 'zh');
-const storedCalculator = parseStored(STORAGE.calculator, { expr: '', history: [] });
+const storedCalculator = parseStored(STORAGE.calculator, { expr: '', history: [], historyOpen: false });
 const storedLibrary = parseStored(STORAGE.library, []);
 const storedHomeFeeds = parseStored(STORAGE.homeFeeds, {}) || {};
 const storedHomeFeedRead = parseStored(STORAGE.homeFeedRead, {}) || {};
@@ -272,7 +272,7 @@ const state = {
   layoutMode: storedLayout === 'classic' ? 'classic' : 'simple',
   toolOrder: normalizeToolOrder(parseStored(STORAGE.toolOrder, DEFAULT_TOOL_ORDER)),
   calcExpr: storedCalculator.expr || '', calcHistory: Array.isArray(storedCalculator.history) ? storedCalculator.history : [],
-  calcJustEvaluated: false, calcScientific: false, calcInverse: false, calcHistoryOpen: false, calcAngle: 'deg',
+  calcJustEvaluated: false, calcInverse: false, calcHistoryOpen: storedCalculator.historyOpen === true, calcAngle: 'deg',
   month: new Date(today.getFullYear(), today.getMonth(), 1), selectedDate: dateKey(today),
   events: parseStored(STORAGE.events, {}) || {},
   weatherCards: initialWeatherCards.map((item) => ({ ...item, id: item.id || uid() })),
@@ -1007,11 +1007,8 @@ function evaluateExpression(input) {
   if (position !== tokens.length || !Number.isFinite(result)) throw Error(state.language === 'en' ? 'Expression cannot be evaluated' : '表达式无法计算');
   return Number(result.toPrecision(12));
 }
-const calcKeys = ['AC', '⌫', '(', ')', '7', '8', '9', '÷', '4', '5', '6', '×', '1', '2', '3', '−', '0', '.', '%', '+', '±', '00', '=', 'ƒx'];
-const scientificCalcKeys = ['AC', '⌫', '÷', '×', '7', '8', '9', '−', '4', '5', '6', '+', '1', '2', '3', '=', '0', '.', 'ƒx'];
-const scienceKeys = [['sin', 'sin('], ['cos', 'cos('], ['tan', 'tan('], ['ln', 'ln('], ['log', 'log('], ['√', 'sqrt('], ['x²', '^2'], ['xʸ', '^'], ['π', 'π'], ['e', 'e'], ['sin⁻¹', 'asin('], ['cos⁻¹', 'acos('], ['tan⁻¹', 'atan('], ['abs', 'abs('], ['exp', 'exp('], ['!', '!'], ['%', '%'], ['(', '('], [')', ')']];
 const calcPreview = () => { if (!state.calcExpr) return '0'; try { return formatNumber(evaluateExpression(state.calcExpr)); } catch { return '—'; } };
-function saveCalculator() { saveStored(STORAGE.calculator, { expr: state.calcExpr, history: state.calcHistory.slice(0, 30) }); }
+function saveCalculator() { saveStored(STORAGE.calculator, { expr: state.calcExpr, history: state.calcHistory.slice(0, 30), historyOpen: state.calcHistoryOpen === true }); }
 function calculator() {
   const history = state.calcHistory.length ? state.calcHistory.slice(0, 8).map((item) => {
     const id = item.id || String(item.at || item.expression);
@@ -1029,7 +1026,7 @@ function calculator() {
     '<button class="key calc-science-key" data-answer>Ans</button>', '<button class="key calc-science-key" data-key="EXP">EXP</button>', scienceButton('xʸ', '^'), normalButton('0'), normalButton('.'), normalButton('='), normalButton('+'),
   ].join('');
   const answer = state.calcHistory[0]?.result || '0';
-  return '<div class="calculator-layout"><div class="calculator-surface"><div class="display" aria-live="polite"><div class="display-meta"><button class="display-history-toggle" data-toggle-calc-history aria-expanded="' + (state.calcHistoryOpen ? 'true' : 'false') + '" aria-label="' + t('recentCalculations') + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.3-5.7"/><path d="M4 5v5h5"/></svg></button><span>Ans = ' + escapeHtml(String(answer)) + '</span></div><div class="expression">' + (escapeHtml(state.calcExpr) || (state.language === 'en' ? 'Ready' : '准备计算')) + '</div><div class="result" aria-hidden="true">' + calcPreview() + '</div><div class="display-history" ' + (state.calcHistoryOpen ? '' : 'hidden') + '><div class="display-history-head"><span>' + t('recentCalculations') + '</span><button class="text-btn" data-clear-calc-history ' + (state.calcHistory.length ? '' : 'disabled') + '>' + t('clear') + '</button></div><div class="display-history-list">' + history + '</div></div></div>' +
+  return '<div class="calculator-layout"><div class="calculator-surface"><div class="display" aria-live="polite"><div class="display-meta"><button class="display-history-toggle" data-toggle-calc-history aria-expanded="' + (state.calcHistoryOpen ? 'true' : 'false') + '" aria-label="' + t('recentCalculations') + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 12a8.5 8.5 0 1 0 2.5-6.4"/><path d="M3.5 4.5v5h5"/><path d="M12 7.5v4.8l3 1.8"/></svg></button><span>Ans = ' + escapeHtml(String(answer)) + '</span></div><div class="expression">' + (escapeHtml(state.calcExpr) || (state.language === 'en' ? 'Ready' : '准备计算')) + '</div><div class="result" aria-hidden="true">' + calcPreview() + '</div><div class="display-history" ' + (state.calcHistoryOpen ? '' : 'hidden') + '><div class="display-history-head"><span>' + t('recentCalculations') + '</span><button class="text-btn" data-clear-calc-history ' + (state.calcHistory.length ? '' : 'disabled') + '>' + t('clear') + '</button></div><div class="display-history-list">' + history + '</div></div></div>' +
     '<div class="calculator-keyboard"><div class="keys calculator-grid">' + keys + '</div></div></div></div>';
 }
 function calculatorKey(key) {
@@ -1264,13 +1261,20 @@ function weather() {
 
 // Converter ------------------------------------------------------------------
 const units = {
-  length: { name: '长度 / Length', units: [['米', 'm', 1], ['千米', 'km', 1000], ['厘米', 'cm', .01], ['毫米', 'mm', .001], ['英寸', 'in', .0254], ['英尺', 'ft', .3048], ['英里', 'mi', 1609.344]] },
-  weight: { name: '重量 / Weight', units: [['克', 'g', 1], ['千克', 'kg', 1000], ['斤', '斤', 500], ['磅', 'lb', 453.59237], ['盎司', 'oz', 28.349523125]] },
-  area: { name: '面积 / Area', units: [['平方米', 'm²', 1], ['平方千米', 'km²', 1e6], ['公顷', 'ha', 1e4], ['亩', '亩', 2000 / 3], ['平方英尺', 'ft²', .09290304]] },
-  volume: { name: '体积 / Volume', units: [['升', 'L', 1], ['毫升', 'mL', .001], ['立方米', 'm³', 1000], ['美制加仑', 'gal', 3.785411784]] },
-  speed: { name: '速度 / Speed', units: [['米/秒', 'm/s', 1], ['千米/时', 'km/h', 1 / 3.6], ['英里/时', 'mph', .44704], ['节', 'kn', .514444]] },
-  time: { name: '时间 / Time', units: [['秒', 's', 1], ['分钟', 'min', 60], ['小时', 'h', 3600], ['天', 'd', 86400], ['周', 'wk', 604800]] },
-  data: { name: '数据 / Data', units: [['字节', 'B', 1], ['千字节', 'KB', 1024], ['兆字节', 'MB', 1024 ** 2], ['吉字节', 'GB', 1024 ** 3], ['太字节', 'TB', 1024 ** 4]] },
+  length: { name: '长度 / Length', units: [['米', 'm', 1], ['千米', 'km', 1000], ['厘米', 'cm', .01], ['毫米', 'mm', .001], ['微米', 'μm', 1e-6], ['纳米', 'nm', 1e-9], ['英寸', 'in', .0254], ['英尺', 'ft', .3048], ['码', 'yd', .9144], ['英里', 'mi', 1609.344], ['海里', 'nmi', 1852]] },
+  weight: { name: '重量 / Weight', units: [['克', 'g', 1], ['毫克', 'mg', .001], ['千克', 'kg', 1000], ['吨', 't', 1e6], ['斤', '斤', 500], ['磅', 'lb', 453.59237], ['盎司', 'oz', 28.349523125], ['英石', 'st', 6350.29318]] },
+  area: { name: '面积 / Area', units: [['平方米', 'm²', 1], ['平方千米', 'km²', 1e6], ['平方厘米', 'cm²', 1e-4], ['平方毫米', 'mm²', 1e-6], ['公顷', 'ha', 1e4], ['亩', '亩', 2000 / 3], ['平方英尺', 'ft²', .09290304], ['平方码', 'yd²', .83612736], ['英亩', 'acre', 4046.8564224], ['平方英里', 'mi²', 2589988.110336]] },
+  volume: { name: '体积 / Volume', units: [['升', 'L', 1], ['微升', 'μL', 1e-6], ['毫升', 'mL', .001], ['立方厘米', 'cm³', .001], ['立方米', 'm³', 1000], ['茶匙', 'tsp', .00492892159375], ['汤匙', 'tbsp', .01478676478125], ['杯', 'cup', .2365882365], ['品脱', 'pt', .473176473], ['夸脱', 'qt', .946352946], ['美制加仑', 'gal', 3.785411784]] },
+  speed: { name: '速度 / Speed', units: [['米/秒', 'm/s', 1], ['厘米/秒', 'cm/s', .01], ['千米/秒', 'km/s', 1000], ['千米/时', 'km/h', 1 / 3.6], ['英尺/秒', 'ft/s', .3048], ['英里/时', 'mph', .44704], ['节', 'kn', .514444444]] },
+  time: { name: '时间 / Time', units: [['纳秒', 'ns', 1e-9], ['微秒', 'μs', 1e-6], ['毫秒', 'ms', .001], ['秒', 's', 1], ['分钟', 'min', 60], ['小时', 'h', 3600], ['天', 'd', 86400], ['周', 'wk', 604800]] },
+  data: { name: '数据 / Data', units: [['比特', 'bit', .125], ['字节', 'B', 1], ['千字节', 'kB', 1000], ['千字节', 'KiB', 1024], ['兆字节', 'MB', 1e6], ['兆字节', 'MiB', 1024 ** 2], ['吉字节', 'GB', 1e9], ['吉字节', 'GiB', 1024 ** 3], ['太字节', 'TB', 1e12], ['太字节', 'TiB', 1024 ** 4], ['拍字节', 'PB', 1e15]] },
+  pressure: { name: '压强 / Pressure', units: [['帕斯卡', 'Pa', 1], ['千帕', 'kPa', 1000], ['兆帕', 'MPa', 1e6], ['巴', 'bar', 100000], ['标准大气压', 'atm', 101325], ['毫米汞柱', 'mmHg', 133.322387415], ['磅力/平方英寸', 'psi', 6894.757293168]] },
+  energy: { name: '能量 / Energy', units: [['焦耳', 'J', 1], ['千焦', 'kJ', 1000], ['卡路里', 'cal', 4.184], ['千卡', 'kcal', 4184], ['瓦时', 'Wh', 3600], ['千瓦时', 'kWh', 3600000], ['电子伏', 'eV', 1.602176634e-19]] },
+  power: { name: '功率 / Power', units: [['瓦', 'W', 1], ['千瓦', 'kW', 1000], ['兆瓦', 'MW', 1e6], ['马力', 'hp', 745.699871582]] },
+  force: { name: '力 / Force', units: [['牛顿', 'N', 1], ['千牛', 'kN', 1000], ['千克力', 'kgf', 9.80665], ['磅力', 'lbf', 4.4482216152605]] },
+  angle: { name: '角度 / Angle', units: [['弧度', 'rad', 1], ['度', '°', Math.PI / 180], ['百分度', 'grad', Math.PI / 200], ['角分', 'arcmin', Math.PI / 10800], ['角秒', 'arcsec', Math.PI / 648000]] },
+  frequency: { name: '频率 / Frequency', units: [['赫兹', 'Hz', 1], ['千赫兹', 'kHz', 1000], ['兆赫兹', 'MHz', 1e6], ['吉赫兹', 'GHz', 1e9]] },
+  torque: { name: '扭矩 / Torque', units: [['牛顿·米', 'N·m', 1], ['千克力·米', 'kgf·m', 9.80665], ['磅力·英尺', 'lbf·ft', 1.355817948]] },
   temperature: { name: '温度 / Temperature', units: [['摄氏度', '°C', 'C'], ['华氏度', '°F', 'F'], ['开尔文', 'K', 'K']] },
 };
 const conversion = { category: 'length', from: 0, to: 1, value: '1' };
@@ -1290,12 +1294,11 @@ function unitOptions(category, selected) {
 function conversionMarkup() {
   const category = units[conversion.category];
   const categories = Object.entries(units).map(([key, item]) => '<option value="' + key + '" ' + (key === conversion.category ? 'selected' : '') + '>' + item.name + '</option>').join('');
-  return '<div class="converter-card"><div class="converter-category field"><label for="conversionCategory">' + t('converterType') + '</label><select id="conversionCategory">' + categories + '</select></div><div class="conversion-layout">' +
+  return '<div class="converter-card"><div class="converter-category field"><select id="conversionCategory" aria-label="' + t('converterType') + '">' + categories + '</select></div><div class="conversion-layout">' +
     '<div class="conversion-pane conversion-source-pane"><label for="fromUnit">' + t('from') + '</label><select id="fromUnit" aria-label="' + t('from') + '">' + unitOptions(category, conversion.from) + '</select><input id="conversionValue" type="number" step="any" inputmode="decimal" value="' + escapeHtml(conversion.value) + '" aria-label="' + t('from') + '"></div>' +
-    '<button class="swap" data-swap aria-label="' + t('swap') + '">⇄</button><div class="conversion-pane conversion-target-pane"><label for="toUnit">' + t('to') + '</label><select id="toUnit" aria-label="' + t('to') + '">' + unitOptions(category, conversion.to) + '</select><div class="conversion-result" aria-live="polite"><small>' + t('result') + '</small><strong>' + formatNumber(convertedValue()) + '</strong><span>' + category.units[conversion.to][1] + '</span></div></div></div>' +
-    '<div class="converter-footer"><button class="secondary copy-button" data-copy-conversion>' + t('copyResult') + '</button><span class="copy-status" id="copyStatus"></span></div></div>';
+    '<button class="swap" data-swap aria-label="' + t('swap') + '">⇄</button><div class="conversion-pane conversion-target-pane"><label for="toUnit">' + t('to') + '</label><select id="toUnit" aria-label="' + t('to') + '">' + unitOptions(category, conversion.to) + '</select><div class="conversion-result" aria-live="polite"><small>' + t('result') + '</small><strong>' + formatNumber(convertedValue()) + '</strong><span>' + category.units[conversion.to][1] + '</span><button class="conversion-copy" data-copy-conversion aria-label="' + t('copyResult') + '" title="' + t('copyResult') + '"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="11" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h2"/></svg></button></div></div></div><span class="copy-status sr-only" id="copyStatus" aria-live="polite"></span></div>';
 }
-function convert() { return '<section class="language-tool-card converter-panel"><div class="language-tool-head"><h2>' + t('convert') + '</h2><p>' + t('convertDesc') + '</p></div>' + conversionMarkup() + '</section>'; }
+function convert() { return '<section class="language-tool-card converter-panel"><div class="language-tool-head"><h2>' + t('unitConvert') + '</h2><p>' + t('convertDesc') + '</p></div>' + conversionMarkup() + '</section>'; }
 
 // Translation ---------------------------------------------------------------
 const languageOptions = [['auto', '自动检测 / Auto'], ['zh', '中文 / Chinese'], ['en', 'English'], ['ja', '日本語 / Japanese'], ['ko', '한국어 / Korean']];
@@ -1837,8 +1840,7 @@ workspace.addEventListener('click', async (event) => {
   if (scienceKey) { state.calcJustEvaluated = false; state.calcExpr += scienceKey.dataset.scienceKey; saveCalculator(); return render(); }
   if (event.target.closest('[data-answer]')) { state.calcJustEvaluated = false; state.calcExpr += state.calcHistory[0]?.result || calcPreview(); saveCalculator(); return render(); }
   if (event.target.closest('[data-toggle-inverse]')) { state.calcInverse = !state.calcInverse; return render(); }
-  if (event.target.closest('[data-toggle-calc-history]')) { state.calcHistoryOpen = !state.calcHistoryOpen; return render(); }
-  if (event.target.closest('[data-toggle-scientific]')) { state.calcScientific = !state.calcScientific; return render(); }
+  if (event.target.closest('[data-toggle-calc-history]')) { state.calcHistoryOpen = !state.calcHistoryOpen; saveCalculator(); return render(); }
   if (event.target.closest('[data-toggle-angle]')) { state.calcAngle = state.calcAngle === 'deg' ? 'rad' : 'deg'; return render(); }
   const history = event.target.closest('[data-history-expression]');
   if (history) { state.calcExpr = history.dataset.historyExpression || ''; state.calcJustEvaluated = false; saveCalculator(); return render(); }
@@ -1895,7 +1897,7 @@ workspace.addEventListener('click', async (event) => {
   }
   if (event.target.closest('[data-copy-conversion]')) {
     const value = formatNumber(convertedValue()) + ' ' + units[conversion.category].units[conversion.to][1];
-    try { await navigator.clipboard.writeText(value); $('#copyStatus').textContent = t('copied'); } catch { toast(state.language === 'en' ? 'Clipboard access was denied' : '浏览器不允许访问剪贴板，请手动复制', 'error'); }
+    try { await navigator.clipboard.writeText(value); const copyStatus = $('#copyStatus'); if (copyStatus) copyStatus.textContent = t('copied'); } catch { toast(state.language === 'en' ? 'Clipboard access was denied' : '浏览器不允许访问剪贴板，请手动复制', 'error'); }
     return;
   }
   if (event.target.closest('[data-translate-submit]')) return translateText();

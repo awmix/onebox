@@ -2865,3 +2865,134 @@ main:has(#workspace[data-tool="calculator"]) {
     height: 14px;
   }
 }
+
+/* 2.18.35: polish the calculator touch targets and the shared converter panes. */
+#workspace[data-tool="calculator"] .display-history-toggle[aria-expanded="true"] {
+  color: var(--primary);
+  background: var(--soft);
+}
+#workspace[data-tool="translate"] .translation-toolbar .swap {
+  display: grid;
+  place-items: center;
+  align-self: center;
+  padding: 0;
+  margin: 0;
+  line-height: 1;
+}
+#workspace[data-tool="translate"] .translation-input-pane,
+#workspace[data-tool="translate"] .translation-input-pane > .field {
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+  flex: 1 1 auto;
+}
+#workspace[data-tool="translate"] .translation-input-wrap,
+#workspace[data-tool="translate"] .translation-result-pane .translation-result-panel {
+  height: 156px;
+  min-height: 156px !important;
+  box-sizing: border-box;
+}
+#workspace[data-tool="translate"] .translation-input-pane,
+#workspace[data-tool="translate"] .translation-result-pane {
+  height: 156px;
+  align-self: start;
+  min-height: 0;
+}
+#workspace[data-tool="translate"] .translation-input-wrap textarea {
+  height: 100%;
+  min-height: 0;
+  max-height: none;
+  box-sizing: border-box;
+}
+#workspace[data-tool="translate"] .translation-result-pane .translation-result-panel {
+  display: flex;
+  overflow: hidden;
+  flex-direction: column;
+}
+#workspace[data-tool="translate"] .translation-result-pane .translation-result-current {
+  min-height: 0;
+  flex: 1 1 auto;
+  overflow: auto;
+}
+#workspace[data-tool="translate"] .translation-result-pane .translation-result-history {
+  min-height: 0;
+  flex: 0 1 auto;
+  overflow: hidden;
+}
+#workspace[data-tool="translate"] .translation-result-pane .translation-history-list {
+  max-height: 72px;
+}
+#workspace[data-tool="translate"] .converter-panel .converter-category {
+  grid-template-columns: 1fr;
+}
+#workspace[data-tool="translate"] .converter-panel .conversion-layout {
+  grid-template-columns: minmax(0, .82fr) 32px minmax(0, 1.18fr);
+}
+#workspace[data-tool="translate"] .converter-panel .conversion-pane .conversion-result {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 6px;
+  overflow: hidden;
+}
+#workspace[data-tool="translate"] .converter-panel .conversion-result strong {
+  min-width: 0;
+}
+#workspace[data-tool="translate"] .converter-panel .conversion-copy {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+}
+#workspace[data-tool="translate"] .converter-panel .conversion-copy:hover {
+  color: var(--primary);
+  background: var(--soft);
+}
+#workspace[data-tool="translate"] .converter-panel .conversion-copy svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.7;
+}
+
+@media (max-width: 760px) {
+  #workspace[data-tool="calculator"] .calculator-grid {
+    gap: 6px;
+  }
+  #workspace[data-tool="calculator"] .calculator-grid .key {
+    min-height: 46px;
+    font-size: 13px;
+  }
+  #workspace[data-tool="calculator"] .display-history-toggle {
+    width: 25px;
+    height: 25px;
+  }
+  #workspace[data-tool="calculator"] .display-history-toggle svg {
+    width: 22px;
+    height: 22px;
+  }
+  #workspace[data-tool="translate"] .translation-input-wrap,
+  #workspace[data-tool="translate"] .translation-result-pane .translation-result-panel {
+    height: 134px;
+    min-height: 134px !important;
+  }
+  #workspace[data-tool="translate"] .translation-input-pane,
+  #workspace[data-tool="translate"] .translation-result-pane {
+    height: 134px;
+  }
+  #workspace[data-tool="translate"] .translation-result-pane .translation-history-list {
+    max-height: 58px;
+  }
+  #workspace[data-tool="translate"] .converter-panel .conversion-layout {
+    grid-template-columns: minmax(0, .82fr) 28px minmax(0, 1.18fr);
+  }
+}
