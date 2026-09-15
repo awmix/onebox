@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.24';
+const APP_VERSION = '2.18.25';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -16,7 +16,6 @@ const STORAGE = {
   legacyWeather: 'onebox.weather',
   translationHistory: 'onebox.translation-history',
   notifications: 'onebox.notifications',
-  alarms: 'onebox.alarms',
   library: 'onebox.library',
   homeFeeds: 'onebox.home-feeds',
   homeFeedRead: 'onebox.home-feed-read',
@@ -178,7 +177,7 @@ const DICT = {
     appUpdate: '应用更新', checkUpdate: '更新', updateAvailable: '有新版本可用', upToDate: '已是最新版本', updating: '正在检查…', applyUpdate: '立即更新',
     notificationsPermission: '消息通知', enableNotifications: '允许通知', disableNotifications: '不允许通知', notificationDescription: 'iPhone 需要先将 OneBox 添加到主屏幕并允许消息通知；应用关闭后的后台提醒仍需要 Push 服务端。',
     userAgreement: '用户协议', viewAgreement: '查看协议', agreementTitle: 'OneBox 用户协议', agreementBody: 'OneBox 是一款本地优先的日常工具应用。计算记录、日程、翻译历史和天气卡片默认保存在当前设备；使用 GitHub 云同步时，数据会写入你自己的私有 Gist。天气和翻译功能会请求对应的开源服务，服务商可能记录必要的请求信息。请在使用提醒、定位和消息通知功能前确认已授予相应权限。',
-    addReminder: '添加提醒', reminderText: '提醒内容', remindAt: '提醒时间', noNotifications: '还没有提醒。', alarm: '闹钟', addAlarm: '添加闹钟', alarmContent: '闹钟内容', alarmPlaceholder: '请输入闹钟内容', alarmAt: '提醒时间', alarmRepeat: '重复方式', once: '指定时间', everyDay: '每天', workdays: '工作日', restdays: '非工作日', weekly: '每周', weekdays: '重复星期', noAlarms: '还没有闹钟。', alarmHint: '闹钟支持指定日期、工作日、非工作日和每周重复。', enabled: '已开启', disabled: '已关闭',
+    addReminder: '添加提醒', reminderText: '提醒内容', remindAt: '提醒时间', noNotifications: '还没有提醒。', once: '指定时间', everyDay: '每天', workdays: '工作日', restdays: '非工作日', weekly: '每周', weekdays: '重复星期',
     markRead: '全部已读', close: '关闭', system: '跟随系统', light: '浅色', dark: '深色',
     layout: '布局', classicLayout: '经典布局', simpleLayout: '简约布局', language: '语言', theme: '主题', reorderHint: '长按工具标签可以调整顺序',
     languagePending: '日语、韩语语言包已预留，当前版本先提供中文和英文。',
@@ -219,7 +218,7 @@ const DICT = {
     appUpdate: 'App update', checkUpdate: 'Update', updateAvailable: 'A new version is ready', upToDate: 'You are up to date', updating: 'Checking…', applyUpdate: 'Update now',
     notificationsPermission: 'Message notifications', enableNotifications: 'Allow notifications', disableNotifications: 'Do not allow notifications', notificationDescription: 'On iPhone, add OneBox to the Home Screen and allow notifications first; background alerts after the app is closed still require a Push server.',
     userAgreement: 'User agreement', viewAgreement: 'View agreement', agreementTitle: 'OneBox user agreement', agreementBody: 'OneBox is a local-first daily tools app. Calculator history, events, translation history and weather cards stay on this device by default; when GitHub sync is enabled, they are written to your own private Gist. Weather and translation features request open-source services, which may record necessary request metadata. Review the permissions before enabling reminders, location or message notifications.',
-    addReminder: 'Add reminder', reminderText: 'Reminder', remindAt: 'When', noNotifications: 'No reminders yet.', alarm: 'Alarms', addAlarm: 'Add alarm', alarmContent: 'Alarm label', alarmPlaceholder: 'Enter an alarm label', alarmAt: 'Reminder time', alarmRepeat: 'Repeat', once: 'Once', everyDay: 'Every day', workdays: 'Workdays', restdays: 'Rest days', weekly: 'Weekly', weekdays: 'Weekdays', noAlarms: 'No alarms yet.', alarmHint: 'Alarms support a date, workdays, rest days and weekly repeats.', enabled: 'On', disabled: 'Off',
+    addReminder: 'Add reminder', reminderText: 'Reminder', remindAt: 'When', noNotifications: 'No reminders yet.', once: 'Once', everyDay: 'Every day', workdays: 'Workdays', restdays: 'Rest days', weekly: 'Weekly', weekdays: 'Weekdays',
     markRead: 'Mark all read', close: 'Close', system: 'System', light: 'Light', dark: 'Dark',
     layout: 'Layout', classicLayout: 'Classic layout', simpleLayout: 'Simple layout', language: 'Language', theme: 'Theme', reorderHint: 'Long-press a tool tab to reorder',
     languagePending: 'Japanese and Korean are reserved for a future language pack. Chinese and English are available now.',
@@ -233,7 +232,6 @@ const storedLanguage = localStorage.getItem(STORAGE.language) || 'system';
 const storedLayout = localStorage.getItem(STORAGE.layout);
 const resolveLanguageMode = (mode) => mode === 'en' || mode === 'zh' ? mode : ((navigator.language || '').toLowerCase().startsWith('en') ? 'en' : 'zh');
 const storedCalculator = parseStored(STORAGE.calculator, { expr: '', history: [] });
-const storedAlarms = parseStored(STORAGE.alarms, []);
 const storedLibrary = parseStored(STORAGE.library, []);
 const storedHomeFeeds = parseStored(STORAGE.homeFeeds, {}) || {};
 const storedHomeFeedRead = parseStored(STORAGE.homeFeedRead, {}) || {};
@@ -273,7 +271,6 @@ const state = {
   lunarDialogDate: null, lastCalendarTap: { key: '', at: 0 },
   translation: { source: 'auto', target: 'zh', input: '', result: '', loading: false, error: '' },
   translationHistory: parseStored(STORAGE.translationHistory, []),
-  alarms: Array.isArray(storedAlarms) ? storedAlarms : [],
   library: (Array.isArray(storedLibrary) ? storedLibrary : []).filter((book) => book && book.id && book.name),
   readerBookId: null, readerUrl: '', readerSelectedText: '', annotationBookId: null,
   homeFeed: { active: DEFAULT_HOME_FEED_ORDER[0], order: normalizeHomeFeedOrder(storedHomeFeedOrder), hasNew: false, loading: false, errors: {}, updatedAt: Number(storedHomeFeeds.updatedAt || 0), cacheVersion: storedHomeFeeds.cacheVersion || '', sources: storedHomeFeeds.sources && typeof storedHomeFeeds.sources === 'object' ? storedHomeFeeds.sources : {} },
@@ -382,10 +379,10 @@ function renderBottomNav() {
   bottomNav.hidden = !classic;
   bottomNav.classList.toggle('auto-hide-enabled', classic);
   if (!classic) {
-    bottomNav.classList.remove('is-hidden');
-    $('main')?.classList.remove('bottom-nav-hidden');
+    bottomNav.classList.remove('is-blurred');
+    $('main')?.classList.remove('bottom-nav-blurred');
   } else if ($('main')?.scrollTop <= 8) {
-    bottomNav.classList.remove('is-hidden');
+    bottomNav.classList.remove('is-blurred');
   }
   const refreshIcon = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0 2 5M20 5v6h-6"/></svg>';
   bottomNav.innerHTML = Object.values(SECTION_DEFS).map((item) => {
@@ -393,7 +390,7 @@ function renderBottomNav() {
     const active = state.section === item.key;
     return '<button class="bottom-tab ' + (active ? 'active' : '') + '" data-section="' + item.key + '" aria-current="' + (active ? 'page' : 'false') + '" aria-label="' + (isHomeRefresh ? (state.language === 'en' ? 'Refresh home' : '刷新首页') : t(item.key)) + '"><span class="bottom-tab-icon" aria-hidden="true">' + (isHomeRefresh ? refreshIcon : sectionIcon(item, active)) + '</span><span>' + t(item.key) + '</span>' + (item.key === 'messages' && unread ? '<sup>' + (unread > 99 ? '99+' : unread) + '</sup>' : '') + '</button>';
   }).join('');
-  $('main')?.classList.toggle('bottom-nav-hidden', Boolean(classic && bottomNav.classList.contains('is-hidden')));
+  $('main')?.classList.toggle('bottom-nav-blurred', Boolean(classic && bottomNav.classList.contains('is-blurred')));
   renderTopNav();
 }
 function selectTool(id) {
@@ -992,11 +989,10 @@ function calendar() {
     : '<p class="empty compact">' + t('noAgenda') + '</p>';
   const monthLabel = state.language === 'en' ? new Intl.DateTimeFormat('en-US', { month: 'long' }).format(first) + ' ' + year : year + ' 年 ' + (month + 1) + ' 月';
   const weekdays = state.language === 'en' ? ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] : ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
-  const alarmMarkup = renderAlarmPanel();
   return heading(t('calendar'), t('calendarDesc')) +
     '<div class="calendar-layout"><div class="calendar-card"><div class="calendar-top"><button class="icon-btn" data-month="-1" aria-label="Previous month">←</button><div class="calendar-month"><strong>' + monthLabel + '</strong><button class="text-btn calendar-today" data-today>' + t('today') + '</button></div><button class="icon-btn" data-month="1" aria-label="Next month">→</button></div>' +
     '<div class="calendar-legend"><span><i class="dot off"></i>' + t('legalHoliday') + '</span><span><i class="dot work"></i>' + t('makeUpWorkday') + '</span><span><i class="dot term"></i>' + t('solarTerm') + '</span><button class="calendar-add-event" data-open-event-dialog><span aria-hidden="true">＋</span>' + t('addAgenda') + '</button></div><div class="calendar-grid">' + weekdays.map((day) => '<div class="dow">' + day + '</div>').join('') + cells + '</div></div>' +
-   '<aside class="agenda-panel"><div class="subhead"><h3>' + t('agenda') + '</h3><button class="calendar-add-event" data-open-event-dialog><span aria-hidden="true">＋</span>' + t('addAgenda') + '</button></div><div class="event-list">' + eventList + '</div></aside></div>' + alarmMarkup;
+   '<aside class="agenda-panel"><div class="subhead"><h3>' + t('agenda') + '</h3><button class="calendar-add-event" data-open-event-dialog><span aria-hidden="true">＋</span>' + t('addAgenda') + '</button></div><div class="event-list">' + eventList + '</div></aside></div>';
 }
 function saveEvents() { saveStored(STORAGE.events, state.events); }
 
@@ -1004,89 +1000,12 @@ function renderEventDialog() {
   const dialog = $('#eventDialog');
   if (!dialog) return;
   const options = ['once', 'daily', 'workdays', 'restdays', 'weekly'].map((value) => '<option value="' + value + '">' + t(value === 'daily' ? 'everyDay' : value) + '</option>').join('');
-  const weekdays = alarmWeekdayLabels.map((label, index) => '<label class="weekday-option"><input type="checkbox" name="eventWeekday" value="' + index + '" ' + (index < 5 ? 'checked' : '') + '><span>' + (state.language === 'en' ? ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][index] : label) + '</span></label>').join('');
+  const eventWeekdayLabels = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
+  const weekdays = eventWeekdayLabels.map((label, index) => '<label class="weekday-option"><input type="checkbox" name="eventWeekday" value="' + index + '" ' + (index < 5 ? 'checked' : '') + '><span>' + (state.language === 'en' ? ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][index] : label) + '</span></label>').join('');
   dialog.innerHTML = '<div class="dialog-card event-dialog-card" role="dialog" aria-modal="true"><div class="dialog-head"><h2>' + t('newReminder') + '</h2><button class="icon-btn small" data-close-event-dialog aria-label="' + t('close') + '">×</button></div><form id="eventForm" class="event-form"><div class="field"><label for="eventTitle">' + t('eventContent') + '</label><input id="eventTitle" required maxlength="60" placeholder="' + t('eventPlaceholder') + '"></div><div class="field"><label>' + t('reminderSchedule') + '</label><div class="event-date-time-grid"><input id="eventDate" type="date" value="' + escapeHtml(state.selectedDate) + '" aria-label="' + t('eventDate') + '" required><input id="eventTime" type="time" step="1" aria-label="' + t('eventTime') + '"></div></div><div class="field"><label for="eventRepeat">' + t('eventRepeat') + '</label><select id="eventRepeat">' + options + '</select></div><div class="field event-weekdays-field" hidden><label>' + t('weekdays') + '</label><div class="weekday-options">' + weekdays + '</div></div><button class="primary full-width" type="submit">' + t('addEvent') + '</button></form></div>';
   dialog.hidden = false;
 }
 function closeEventDialog() { const dialog = $('#eventDialog'); if (dialog) dialog.hidden = true; }
-const alarmRepeatOptions = ['once', 'daily', 'workdays', 'restdays', 'weekly'];
-const alarmWeekdayLabels = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
-function saveAlarms() { saveStored(STORAGE.alarms, state.alarms.slice(0, 40)); }
-function isWorkdayKey(key) {
-  const holiday = holidayFor(key);
-  if (holiday) return !holiday.isOffDay;
-  const day = dateFromKey(key).getDay();
-  return day !== 0 && day !== 6;
-}
-function alarmMatchesDay(alarm, key) {
-  const weekday = (dateFromKey(key).getDay() + 6) % 7;
-  if (alarm.repeat === 'daily') return true;
-  if (alarm.repeat === 'workdays') return isWorkdayKey(key);
-  if (alarm.repeat === 'restdays') return !isWorkdayKey(key);
-  if (alarm.repeat === 'weekly') return (alarm.weekdays || [weekday]).map(Number).includes(weekday);
-  return false;
-}
-function nextRecurringAlarmAt(alarm, from = Date.now()) {
-  const start = new Date(from);
-  for (let offset = 0; offset <= 14; offset += 1) {
-    const candidate = new Date(start.getFullYear(), start.getMonth(), start.getDate() + offset);
-    const key = dateKey(candidate);
-    if (!alarmMatchesDay(alarm, key) || !alarm.time) continue;
-    const value = new Date(key + 'T' + alarm.time).getTime();
-    if (Number.isFinite(value) && value > from + 250) return value;
-  }
-  return 0;
-}
-function alarmDisplayRepeat(alarm) {
-  if (alarm.repeat === 'once') return new Intl.DateTimeFormat(state.language === 'en' ? 'en-US' : 'zh-CN', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(alarm.at));
-  if (alarm.repeat === 'daily') return t('everyDay') + ' · ' + alarm.time;
-  if (alarm.repeat === 'workdays') return t('workdays') + ' · ' + alarm.time;
-  if (alarm.repeat === 'restdays') return t('restdays') + ' · ' + alarm.time;
-  const days = (alarm.weekdays || []).map((day) => state.language === 'en' ? ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][Number(day)] : alarmWeekdayLabels[Number(day)]).filter(Boolean).join('、');
-  return t('weekly') + ' · ' + (days || (state.language === 'en' ? 'Mon' : '周一')) + ' · ' + alarm.time;
-}
-function renderAlarmPanel() {
-  const alarms = [...state.alarms].sort((a, b) => Number(b.createdAt || 0) - Number(a.createdAt || 0));
-  const list = alarms.length ? alarms.map((alarm) => '<div class="alarm-item ' + (alarm.enabled === false ? 'disabled' : '') + '"><button class="alarm-toggle" data-toggle-alarm="' + escapeHtml(alarm.id) + '" aria-pressed="' + (alarm.enabled !== false ? 'true' : 'false') + '"><span class="alarm-toggle-dot"></span></button><div class="alarm-item-copy"><strong>' + escapeHtml(alarm.title) + '</strong><small>' + escapeHtml(alarmDisplayRepeat(alarm)) + '</small></div><button class="icon-btn small" data-delete-alarm="' + escapeHtml(alarm.id) + '" aria-label="' + t('close') + '">×</button></div>').join('') : '<p class="empty compact">' + t('noAlarms') + '</p>';
-  return '<section class="alarm-panel"><div class="subhead"><div><h3>' + t('alarm') + '</h3><small class="settings-note">' + t('alarmHint') + '</small></div><button class="calendar-add-event" data-open-alarm-dialog><span aria-hidden="true">＋</span>' + t('addAlarm') + '</button></div><div class="alarm-list">' + list + '</div></section>';
-}
-function renderAlarmDialog() {
-  const dialog = $('#alarmDialog');
-  if (!dialog) return;
-  const defaultAt = Date.now() + 3600000;
-  const weekdays = alarmWeekdayLabels.map((label, index) => '<label class="weekday-option"><input type="checkbox" name="alarmWeekday" value="' + index + '" ' + (index < 5 ? 'checked' : '') + '><span>' + (state.language === 'en' ? ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][index] : label) + '</span></label>').join('');
-  dialog.innerHTML = '<div class="dialog-card alarm-dialog-card" role="dialog" aria-modal="true"><div class="dialog-head"><h2>' + t('addAlarm') + '</h2><button class="icon-btn small" data-close-alarm-dialog aria-label="' + t('close') + '">×</button></div><form id="alarmForm" class="event-form"><div class="field"><label for="alarmTitle">' + t('alarmContent') + '</label><input id="alarmTitle" required maxlength="60" placeholder="' + t('alarmPlaceholder') + '"></div><div class="field"><label for="alarmRepeat">' + t('alarmRepeat') + '</label><select id="alarmRepeat">' + alarmRepeatOptions.map((value) => '<option value="' + value + '">' + t(value === 'daily' ? 'everyDay' : value) + '</option>').join('') + '</select></div><div class="field alarm-once-field"><label for="alarmAt">' + t('alarmAt') + '</label><input id="alarmAt" type="datetime-local" step="1" value="' + escapeHtml(localDateTimeValue(defaultAt)) + '" required></div><div class="field alarm-repeat-field" hidden><label for="alarmTime">' + t('alarmAt') + '</label><input id="alarmTime" type="time" step="1" value="08:00:00"></div><div class="field alarm-weekdays-field" hidden><label>' + t('weekdays') + '</label><div class="weekday-options">' + weekdays + '</div></div><button class="primary full-width" type="submit">' + t('addAlarm') + '</button></form></div>';
-  dialog.hidden = false;
-}
-function closeAlarmDialog() { const dialog = $('#alarmDialog'); if (dialog) dialog.hidden = true; }
-function syncAlarmReminders() {
-  const now = Date.now();
-  state.alarms.filter((alarm) => alarm.enabled !== false).forEach((alarm) => {
-    const at = alarm.repeat === 'once' ? Number(alarm.at) : nextRecurringAlarmAt(alarm, now);
-    if (!Number.isFinite(at) || !at || (alarm.repeat === 'once' && at < now - 86400000)) return;
-    const id = 'alarm:' + alarm.id + ':' + at;
-    if (!state.notifications.some((item) => item.id === id)) state.notifications.push({ id, text: alarm.title, at, read: true, delivered: false, source: 'alarm', alarmId: alarm.id });
-  });
-  saveNotifications();
-}
-function createAlarmFromForm() {
-  const title = $('#alarmTitle')?.value.trim();
-  const repeat = $('#alarmRepeat')?.value || 'once';
-  if (!title) return;
-  const alarm = { id: uid(), title, repeat, enabled: true, createdAt: Date.now() };
-  if (repeat === 'once') {
-    const at = new Date($('#alarmAt').value).getTime();
-    if (!Number.isFinite(at) || at <= Date.now()) return toast(state.language === 'en' ? 'Choose a future time' : '请选择未来的提醒时间', 'error');
-    alarm.at = at;
-  } else {
-    alarm.time = $('#alarmTime').value;
-    if (!alarm.time) return toast(state.language === 'en' ? 'Choose a reminder time' : '请选择提醒时间', 'error');
-    alarm.weekdays = repeat === 'weekly' ? $$('input[name="alarmWeekday"]', $('#alarmDialog')).filter((input) => input.checked).map((input) => Number(input.value)) : [];
-    if (repeat === 'weekly' && !alarm.weekdays.length) return toast(state.language === 'en' ? 'Choose at least one weekday' : '请至少选择一个星期', 'error');
-    if (!nextRecurringAlarmAt(alarm)) return toast(state.language === 'en' ? 'No upcoming alarm time' : '没有可用的下一次提醒时间', 'error');
-  }
-  state.alarms.unshift(alarm); saveAlarms(); syncAlarmReminders(); scheduleNotificationCheck(); closeAlarmDialog(); render(); toast(state.language === 'en' ? 'Alarm added' : '闹钟已添加');
-}
 function renderLunarDialog(key) {
   const dialog = $('#lunarDialog');
   if (!dialog) return;
@@ -1406,19 +1325,11 @@ async function showNativeNotification(item) {
 }
 function checkNotifications() {
   syncAgendaReminders();
-  syncAlarmReminders();
   const due = state.notifications.filter((item) => !item.delivered && item.at && item.at <= Date.now());
   due.forEach((item) => {
     item.delivered = true; item.read = false; showNativeNotification(item); playAlertChime(); toast(item.text);
-    if (item.source === 'alarm') {
-      try { navigator.vibrate?.([180, 100, 180]); } catch { /* vibration is optional */ }
-      const alarm = state.alarms.find((entry) => entry.id === item.alarmId);
-      if (alarm?.repeat === 'once') { alarm.enabled = false; alarm.triggered = true; }
-    }
   });
   if (due.length) saveNotifications();
-  if (due.some((item) => item.source === 'alarm')) saveAlarms();
-  if (due.length) syncAlarmReminders();
   updateNotificationBadge();
   if (state.notificationOpen) renderNotifications();
   scheduleNotificationCheck();
@@ -1468,7 +1379,7 @@ function syncPayload() {
   return {
     app: 'OneBox', version: APP_VERSION, savedAt: new Date().toISOString(), theme: state.theme, languageMode: state.languageMode, language: state.language,
     toolOrder: state.toolOrder, calculator: parseStored(STORAGE.calculator, {}), events: state.events,
-    weatherCards: state.weatherCards, translationHistory: state.translationHistory, notifications: state.notifications, alarms: state.alarms, library: state.library,
+    weatherCards: state.weatherCards, translationHistory: state.translationHistory, notifications: state.notifications, library: state.library,
     layoutMode: state.layoutMode,
   };
 }
@@ -1543,7 +1454,6 @@ async function githubDownload() {
     if (Array.isArray(remote.weatherCards)) { state.weatherCards = remote.weatherCards; state.activeWeatherId = state.weatherCards[0]?.id || null; saveWeatherCards(); }
     if (Array.isArray(remote.translationHistory)) { state.translationHistory = remote.translationHistory; saveTranslationHistory(); }
     if (Array.isArray(remote.notifications)) { state.notifications = remote.notifications; saveNotifications(); }
-    if (Array.isArray(remote.alarms)) { state.alarms = remote.alarms; saveAlarms(); }
     if (Array.isArray(remote.library)) { state.library = remote.library; saveLibrary(); }
     if (remote.layoutMode === 'simple' || remote.layoutMode === 'classic') { state.layoutMode = remote.layoutMode; saveLayoutPreference(); }
     state.github.gistId = id; saveGithub(); applyLanguage(); renderNav(); render(); renderGithubDialog();
@@ -1812,20 +1722,6 @@ workspace.addEventListener('click', async (event) => {
   if (deleteCalcHistory) { state.calcHistory = state.calcHistory.filter((item) => String(item.id || item.at || item.expression) !== deleteCalcHistory.dataset.deleteCalcHistory); saveCalculator(); return render(); }
   if (event.target.closest('[data-clear-calc-history]')) { state.calcHistory = []; saveCalculator(); return render(); }
   if (event.target.closest('[data-open-event-dialog]')) return renderEventDialog();
-  if (event.target.closest('[data-open-alarm-dialog]')) return renderAlarmDialog();
-  const toggleAlarm = event.target.closest('[data-toggle-alarm]');
-  if (toggleAlarm) {
-    const alarm = state.alarms.find((item) => item.id === toggleAlarm.dataset.toggleAlarm);
-    if (alarm) { alarm.enabled = alarm.enabled === false; saveAlarms(); syncAlarmReminders(); scheduleNotificationCheck(); render(); }
-    return;
-  }
-  const deleteAlarm = event.target.closest('[data-delete-alarm]');
-  if (deleteAlarm) {
-    state.alarms = state.alarms.filter((item) => item.id !== deleteAlarm.dataset.deleteAlarm);
-    state.notifications = state.notifications.filter((item) => item.source !== 'alarm' || item.alarmId !== deleteAlarm.dataset.deleteAlarm || item.delivered);
-    saveAlarms(); saveNotifications(); scheduleNotificationCheck(); render();
-    return;
-  }
   const month = event.target.closest('[data-month]');
   if (month) { state.month = new Date(state.month.getFullYear(), state.month.getMonth() + Number(month.dataset.month), 1); return render(); }
   if (event.target.closest('[data-today]')) { state.month = new Date(today.getFullYear(), today.getMonth(), 1); state.selectedDate = dateKey(today); return render(); }
@@ -1931,26 +1827,6 @@ $('#eventDialog').addEventListener('submit', (event) => {
   saveEvents(); syncAgendaReminders(); scheduleNotificationCheck(); closeEventDialog(); render(); toast(state.language === 'en' ? 'Event added' : '日程已添加');
 });
 
-$('#alarmDialog').addEventListener('click', (event) => {
-  if (event.target === $('#alarmDialog') || event.target.closest('[data-close-alarm-dialog]')) closeAlarmDialog();
-});
-$('#alarmDialog').addEventListener('change', (event) => {
-  if (event.target.id !== 'alarmRepeat') return;
-  const recurring = event.target.value !== 'once';
-  const onceField = $('.alarm-once-field', $('#alarmDialog'));
-  const repeatField = $('.alarm-repeat-field', $('#alarmDialog'));
-  const weekdaysField = $('.alarm-weekdays-field', $('#alarmDialog'));
-  if (onceField) onceField.hidden = recurring;
-  if (repeatField) repeatField.hidden = !recurring;
-  if (weekdaysField) weekdaysField.hidden = event.target.value !== 'weekly';
-  const alarmAt = $('#alarmAt'); if (alarmAt) alarmAt.required = !recurring;
-  const alarmTime = $('#alarmTime'); if (alarmTime) alarmTime.required = recurring;
-});
-$('#alarmDialog').addEventListener('submit', (event) => {
-  event.preventDefault();
-  if (event.target.id === 'alarmForm') createAlarmFromForm();
-});
-
 $('#lunarDialog').addEventListener('click', (event) => {
   if (event.target === $('#lunarDialog') || event.target.closest('[data-close-lunar-dialog]')) closeLunarDialog();
 });
@@ -2013,9 +1889,9 @@ $('main').addEventListener('scroll', (event) => {
   const bottomNav = $('#bottomNav');
   if (!bottomNav || state.layoutMode !== 'classic') return;
   const current = main.scrollTop;
-  if (current <= 8 || current < lastMainScrollTop - 4) bottomNav.classList.remove('is-hidden');
-  else if (current > lastMainScrollTop + 4) bottomNav.classList.add('is-hidden');
-  main.classList.toggle('bottom-nav-hidden', bottomNav.classList.contains('is-hidden'));
+  if (current <= 8 || current < lastMainScrollTop - 4) bottomNav.classList.remove('is-blurred');
+  else if (current > lastMainScrollTop + 4) bottomNav.classList.add('is-blurred');
+  main.classList.toggle('bottom-nav-blurred', bottomNav.classList.contains('is-blurred'));
   lastMainScrollTop = current;
 }, { passive: true });
 
