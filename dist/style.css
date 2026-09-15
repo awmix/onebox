@@ -3778,3 +3778,36 @@ html.reader-focus .shell { width: 100%; padding: 0; }
   width: 14px;
   height: 14px;
 }
+
+/* 2.18.45: use the calculator's expanded-history frame as the shared height
+   reference for calendar, weather and bookshelf pages. Conversion keeps its
+   own content-driven height. */
+#workspace[data-tool="calendar"],
+#workspace[data-tool="weather"],
+#workspace[data-tool="reader"] {
+  height: 483px;
+  min-height: 483px;
+  max-height: 483px;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+.layout-nav-icon,
+.layout-nav-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+@media (max-width: 760px) {
+  #workspace[data-tool="calendar"],
+  #workspace[data-tool="weather"],
+  #workspace[data-tool="reader"] {
+    height: 681px;
+    min-height: 681px;
+    max-height: 681px;
+  }
+  .layout-nav-icon,
+  .layout-nav-icon svg {
+    width: 19px;
+    height: 19px;
+  }
+}
