@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.54';
+const APP_VERSION = '2.18.55';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -58,6 +58,10 @@ pageSwipeStage.id = 'pageSwipeStage';
 pageSwipeStage.className = 'page-swipe-stage';
 workspace.parentNode.insertBefore(pageSwipeStage, workspace);
 pageSwipeStage.appendChild(workspace);
+const homeSourceNav = document.createElement('nav');
+homeSourceNav.id = 'homeSourceNav';
+homeSourceNav.setAttribute('aria-label', '首页来源切换');
+pageSwipeStage.parentNode.insertBefore(homeSourceNav, pageSwipeStage);
 const parseStored = (key, fallback) => {
   try { return JSON.parse(localStorage.getItem(key)) ?? fallback; } catch { return fallback; }
 };
@@ -613,9 +617,15 @@ function openFeedLink(link) {
   if (state.openMode === 'new-tab') window.open(link, '_blank', 'noopener,noreferrer');
   else window.location.assign(link);
 }
-function renderHome() {
+function homeSourceTabsMarkup() {
   const sources = homeFeedSources();
-  const sourceTabs = sources.map((source, index) => '<button class="feed-source-tab ' + (state.homeFeed.active === source.id ? 'active' : '') + '" draggable="true" data-feed-source="' + source.id + '" data-feed-source-index="' + index + '"><span class="feed-source-mark ' + source.className + '"><img src="' + escapeHtml(source.icon) + '" alt="" loading="eager" onerror="this.hidden=true;this.nextElementSibling.style.display=\'inline\'"><span class="feed-source-fallback">' + escapeHtml(source.badge) + '</span></span><span>' + escapeHtml(source.name) + '</span></button>').join('') + (state.footprint ? '<button class="feed-source-tab ' + (state.homeFeed.active === 'footprint' ? 'active' : '') + '" data-feed-source="footprint" aria-label="' + t('footprint') + '"><span class="feed-source-mark footprint"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="7" cy="7" r="2.2"/><circle cx="16.5" cy="8.5" r="2.2"/><circle cx="6" cy="16.5" r="2.2"/><circle cx="15.5" cy="18" r="2.2"/></svg></span><span>' + t('footprint') + '</span></button>' : '');
+  return sources.map((source, index) => '<button class="feed-source-tab ' + (state.homeFeed.active === source.id ? 'active' : '') + '" draggable="true" data-feed-source="' + source.id + '" data-feed-source-index="' + index + '"><span class="feed-source-mark ' + source.className + '"><img src="' + escapeHtml(source.icon) + '" alt="" loading="eager" onerror="this.hidden=true;this.nextElementSibling.style.display=\'inline\'"><span class="feed-source-fallback">' + escapeHtml(source.badge) + '</span></span><span>' + escapeHtml(source.name) + '</span></button>').join('') + (state.footprint ? '<button class="feed-source-tab ' + (state.homeFeed.active === 'footprint' ? 'active' : '') + '" data-feed-source="footprint" aria-label="' + t('footprint') + '"><span class="feed-source-mark footprint"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="7" cy="7" r="2.2"/><circle cx="16.5" cy="8.5" r="2.2"/><circle cx="6" cy="16.5" r="2.2"/><circle cx="15.5" cy="18" r="2.2"/></svg></span><span>' + t('footprint') + '</span></button>' : '');
+}
+function renderHomeSourceNav() {
+  homeSourceNav.hidden = state.section !== 'home';
+  homeSourceNav.innerHTML = state.section === 'home' ? '<div class="feed-source-panel"><div class="feed-source-tabs" role="tablist" aria-label="RSS 来源">' + homeSourceTabsMarkup() + '</div></div>' : '';
+}
+function renderHome() {
   const isFootprint = state.homeFeed.active === 'footprint';
   const sourceItems = isFootprint ? recentFeedItems() : (state.homeFeed.sources[state.homeFeed.active]?.items || []);
   const cutoff = Date.now() - RSS_RETENTION_MS;
@@ -626,7 +636,7 @@ function renderHome() {
   const errors = Object.keys(state.homeFeed.errors || {}).length;
   const feedBody = state.homeFeed.loading && !hasItems && !isFootprint ? '<div class="feed-loading"><span></span><span></span><span></span></div>' : hasItems ? '<div class="feed-list">' + visibleItems.map(renderFeedItem).join('') + '</div>' : '<p class="empty feed-empty">' + (isFootprint ? (state.language === 'en' ? 'No articles read yet.' : '还没有阅读过首页消息。') : t('feedEmpty')) + '</p>';
   const refreshState = state.homeFeed.loading ? '<div class="feed-refresh-state" role="status"><span></span>' + (state.language === 'en' ? 'Refreshing' : '正在刷新') + '</div>' : '';
-  return '<div class="home-page feed-home"><section class="feed-source-panel"><div class="feed-source-tabs" role="tablist" aria-label="RSS 来源">' + sourceTabs + '</div></section><section class="feed-panel">' + refreshState + (errors ? '<p class="feed-warning">' + t('feedPartial') + '</p>' : '') + feedBody + '<p class="feed-hint">' + t('feedProxyHint') + (state.homeFeed.updatedAt ? ' · ' + t('feedUpdated') + ' ' + escapeHtml(feedDate(state.homeFeed.updatedAt)) : '') + '</p></section></div>';
+  return '<div class="home-page feed-home"><section class="feed-panel">' + refreshState + (errors ? '<p class="feed-warning">' + t('feedPartial') + '</p>' : '') + feedBody + '<p class="feed-hint">' + t('feedProxyHint') + (state.homeFeed.updatedAt ? ' · ' + t('feedUpdated') + ' ' + escapeHtml(feedDate(state.homeFeed.updatedAt)) : '') + '</p></section></div>';
 }
 function notificationRowMarkup(item) {
   return '<div class="swipe-row notification-swipe-row" data-swipe-row><div class="notification-item swipe-content ' + (item.read ? '' : 'unread') + '"><div><strong>' + escapeHtml(item.text) + '</strong><small>' + new Intl.DateTimeFormat(state.language === 'en' ? 'en-US' : 'zh-CN', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(item.at)) + '</small></div></div><button class="swipe-delete" data-delete-notification="' + escapeHtml(item.id) + '" aria-label="' + t('close') + '">' + (state.language === 'en' ? 'Delete' : '删除') + '</button></div>';
@@ -2174,6 +2184,7 @@ function render() {
   const renderers = { calculator, calendar, weather, convert, translate: translateConvertView, reader };
   workspace.dataset.tool = state.section === 'tools' ? state.tool : state.section;
   workspace.innerHTML = state.section === 'home' ? renderHome() : state.section === 'messages' ? renderMessages() : state.section === 'mine' ? renderMine() : (renderers[state.tool] || calculator)();
+  renderHomeSourceNav();
   document.documentElement.classList.toggle('reader-focus', state.section === 'tools' && state.tool === 'reader' && state.readerMode === 'reading' && state.readerImmersive);
   if (state.section === 'tools' && state.tool === 'reader' && state.readerMode === 'reading') {
     requestAnimationFrame(() => { ensureReaderFullscreenTool(); applyReaderPreferences(); updateReaderFullscreenControl(); if (state.readerDialog) { readerDialogMarkup(state.readerDialog); updateReaderReferenceChrome(); } });
@@ -2202,6 +2213,7 @@ let pageSwipeGesture = null;
 let pageSwipeAnimationToken = 0;
 let pageSwipeSuppressClickUntil = 0;
 let pageSwipeTrackState = null;
+let pageSwipeNavState = null;
 let readerSurfaceGesture = null;
 function startLongPress(target, type, index) {
   clearTimeout(reorderTimer);
@@ -2224,6 +2236,48 @@ function handleReorderClick(target, type, index) {
   reorderTarget.target.classList.remove('reorder-hold'); delete reorderTarget.target.dataset.longPressed; reorderTarget = null;
   return true;
 }
+function pageSwipeNavSelector(container) {
+  return container?.id === 'toolNav' ? '[data-tool]' : '[data-feed-source]';
+}
+function clearPageSwipeNav() {
+  if (!pageSwipeNavState) return;
+  pageSwipeNavState.container.classList.remove('page-swipe-nav-dragging');
+  pageSwipeNavState.indicator.remove();
+  pageSwipeNavState = null;
+}
+function setPageSwipeNavProgress(progress) {
+  const swipe = pageSwipeNavState;
+  if (!swipe) return;
+  const amount = Math.max(0, Math.min(1, progress));
+  const containerRect = swipe.container.getBoundingClientRect();
+  const fromRect = swipe.from.getBoundingClientRect();
+  const toRect = swipe.to.getBoundingClientRect();
+  const left = fromRect.left + (toRect.left - fromRect.left) * amount - containerRect.left + swipe.container.scrollLeft;
+  const width = fromRect.width + (toRect.width - fromRect.width) * amount;
+  swipe.indicator.style.left = Math.round(left) + 'px';
+  swipe.indicator.style.width = Math.max(8, Math.round(width)) + 'px';
+}
+function beginPageSwipeNav(container, direction) {
+  if (!container) return null;
+  clearPageSwipeNav();
+  const tabs = [...container.querySelectorAll(pageSwipeNavSelector(container))];
+  const currentIndex = tabs.findIndex((tab) => tab.classList.contains('active'));
+  const targetIndex = currentIndex + direction;
+  if (currentIndex < 0 || targetIndex < 0 || targetIndex >= tabs.length) return null;
+  const indicator = document.createElement('i');
+  indicator.className = 'page-swipe-nav-indicator';
+  indicator.setAttribute('aria-hidden', 'true');
+  container.classList.add('page-swipe-nav-dragging');
+  container.appendChild(indicator);
+  pageSwipeNavState = { container, from: tabs[currentIndex], to: tabs[targetIndex], indicator };
+  setPageSwipeNavProgress(0);
+  return pageSwipeNavState;
+}
+function settlePageSwipeNav(committed) {
+  if (!pageSwipeNavState) return;
+  pageSwipeNavState.indicator.style.transition = 'left .28s cubic-bezier(.22,.8,.22,1), width .28s cubic-bezier(.22,.8,.22,1)';
+  setPageSwipeNavProgress(committed ? 1 : 0);
+}
 function beginTabSwipe(container, event) {
   if (!container || event.pointerType === 'mouse') return;
   tabSwipeGesture = { container, startX: event.clientX, startY: event.clientY, dx: 0, dy: 0, cancelled: false };
@@ -2238,18 +2292,36 @@ function updateTabSwipe(event) {
     return;
   }
   if (Math.abs(tabSwipeGesture.dx) > 12) endLongPress();
+  if (Math.abs(tabSwipeGesture.dx) > 12 && !pageSwipeNavState) {
+    const direction = tabSwipeGesture.dx < 0 ? 1 : -1;
+    beginPageSwipeNav(tabSwipeGesture.container, direction);
+  }
+  if (pageSwipeNavState) {
+    const distance = Math.max(1, pageSwipeNavState.container.clientWidth * .18);
+    setPageSwipeNavProgress(Math.abs(tabSwipeGesture.dx) / distance);
+  }
 }
 function finishTabSwipe() {
   const gesture = tabSwipeGesture;
   tabSwipeGesture = null;
-  if (!gesture || gesture.cancelled || Math.abs(gesture.dx) < 52 || Math.abs(gesture.dx) <= Math.abs(gesture.dy) + 12) return;
+  if (!gesture || gesture.cancelled || Math.abs(gesture.dx) < 52 || Math.abs(gesture.dx) <= Math.abs(gesture.dy) + 12) {
+    settlePageSwipeNav(false);
+    clearPageSwipeNav();
+    return;
+  }
   const selector = gesture.container.id === 'toolNav' ? '[data-tool]' : '[data-feed-source]';
   const tabs = [...gesture.container.querySelectorAll(selector)];
   const currentIndex = tabs.findIndex((tab) => tab.classList.contains('active'));
   const nextIndex = currentIndex + (gesture.dx < 0 ? 1 : -1);
-  if (currentIndex < 0 || nextIndex < 0 || nextIndex >= tabs.length) return;
+  if (currentIndex < 0 || nextIndex < 0 || nextIndex >= tabs.length) {
+    settlePageSwipeNav(false);
+    clearPageSwipeNav();
+    return;
+  }
   const nextTab = tabs[nextIndex];
   tabSwipeSuppressClickUntil = Date.now() + 420;
+  settlePageSwipeNav(true);
+  clearPageSwipeNav();
   if (gesture.container.id === 'toolNav') selectTool(nextTab.dataset.tool);
   else selectHomeFeedSource(nextTab.dataset.feedSource);
   requestAnimationFrame(() => gesture.container.querySelector('.active')?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' }));
@@ -2299,6 +2371,7 @@ function clearPageSwipeTrack() {
   pageSwipeStage.style.transform = '';
   workspace.classList.remove('page-swipe-dragging', 'page-swipe-settling');
   workspace.style.transform = '';
+  clearPageSwipeNav();
   pageSwipeTrackState = null;
 }
 function preparePageSwipeTrack(gesture, direction) {
@@ -2322,7 +2395,8 @@ function preparePageSwipeTrack(gesture, direction) {
   const pageWidth = Math.max(1, workspace.getBoundingClientRect().width);
   pageSwipeStage.classList.add('is-active', direction === 1 ? 'forward' : 'backward');
   pageSwipeStage.style.transform = 'translate3d(' + (direction === 1 ? 0 : -pageWidth) + 'px, 0, 0)';
-  pageSwipeTrackState = { target, direction, pageWidth };
+  const navContainer = target.kind === 'tool' ? nav : homeSourceNav.querySelector('.feed-source-tabs');
+  pageSwipeTrackState = { target, direction, pageWidth, nav: beginPageSwipeNav(navContainer, direction) };
   return pageSwipeTrackState;
 }
 function resetPageSwipeTransform() {
@@ -2335,6 +2409,7 @@ function resetPageSwipeTransform() {
 function settlePageSwipeBack() {
   const token = ++pageSwipeAnimationToken;
   const track = pageSwipeTrackState;
+  settlePageSwipeNav(false);
   if (track) {
     pageSwipeStage.classList.remove('page-swipe-dragging');
     pageSwipeStage.classList.add('page-swipe-settling');
@@ -2358,6 +2433,7 @@ function settlePageSwipe(target, direction) {
   const token = ++pageSwipeAnimationToken;
   const track = pageSwipeTrackState;
   if (!track) return settlePageSwipeBack();
+  settlePageSwipeNav(true);
   pageSwipeStage.classList.remove('page-swipe-dragging');
   pageSwipeStage.classList.add('page-swipe-settling');
   pageSwipeStage.style.transform = 'translate3d(' + (direction === 1 ? -track.pageWidth : 0) + 'px, 0, 0)';
@@ -2394,6 +2470,7 @@ function updatePageSwipe(event) {
   pageSwipeStage.classList.add('page-swipe-dragging');
   const baseOffset = direction === 1 ? 0 : -track.pageWidth;
   pageSwipeStage.style.transform = 'translate3d(' + (baseOffset + gesture.dx) + 'px, 0, 0)';
+  setPageSwipeNavProgress(Math.abs(gesture.dx) / track.pageWidth);
 }
 function finishPageSwipe(event) {
   const gesture = pageSwipeGesture;
@@ -2453,6 +2530,23 @@ nav.addEventListener('dragstart', (event) => { const tab = event.target.closest(
 nav.addEventListener('dragover', (event) => { if (event.target.closest('[data-tool]')) event.preventDefault(); });
   nav.addEventListener('drop', (event) => { event.preventDefault(); const tab = event.target.closest('[data-tool]'); if (tab) swapToolOrder(Number(event.dataTransfer.getData('text/plain')), Number(tab.dataset.toolIndex)); });
 
+homeSourceNav.addEventListener('pointerdown', (event) => {
+  const source = event.target.closest('[data-feed-source]');
+  if (source) { startLongPress(source, 'feed', Number(source.dataset.feedSourceIndex)); beginTabSwipe(source.closest('.feed-source-tabs'), event); }
+});
+homeSourceNav.addEventListener('pointerup', endLongPress);
+homeSourceNav.addEventListener('pointercancel', endLongPress);
+homeSourceNav.addEventListener('click', (event) => {
+  const feedSource = event.target.closest('[data-feed-source]');
+  if (!feedSource) return;
+  if (Date.now() < tabSwipeSuppressClickUntil) { event.preventDefault(); return; }
+  if (feedSource.dataset.feedSourceIndex != null && handleReorderClick(feedSource, 'feed', Number(feedSource.dataset.feedSourceIndex))) { event.preventDefault(); return; }
+  selectHomeFeedSource(feedSource.dataset.feedSource);
+});
+homeSourceNav.addEventListener('dragstart', (event) => { const source = event.target.closest('[data-feed-source]'); if (source) event.dataTransfer.setData('text/plain', source.dataset.feedSourceIndex); });
+homeSourceNav.addEventListener('dragover', (event) => { if (event.target.closest('[data-feed-source]')) event.preventDefault(); });
+homeSourceNav.addEventListener('drop', (event) => { event.preventDefault(); const source = event.target.closest('[data-feed-source]'); if (source) swapHomeFeedSources(Number(event.dataTransfer.getData('text/plain')), Number(source.dataset.feedSourceIndex)); });
+
 workspace.addEventListener('pointerdown', (event) => { const card = event.target.closest('[data-weather-card]'); if (card) startLongPress(card, 'weather', Number(card.dataset.weatherIndex)); });
 workspace.addEventListener('pointerdown', (event) => { const source = event.target.closest('[data-feed-source]'); if (source) { startLongPress(source, 'feed', Number(source.dataset.feedSourceIndex)); beginTabSwipe(source.closest('.feed-source-tabs'), event); } });
 workspace.addEventListener('pointerdown', (event) => { const book = event.target.closest('[data-reader-book-card]'); if (book && !event.target.closest('[data-delete-book]')) startLongPress(book, 'book', Number(book.dataset.readerBookIndex)); });
@@ -2461,7 +2555,7 @@ workspace.addEventListener('pointercancel', endLongPress);
 document.querySelector('main')?.addEventListener('pointerdown', beginPageSwipe);
 document.addEventListener('pointermove', updateTabSwipe, { passive: true });
 document.addEventListener('pointerup', finishTabSwipe, { passive: true });
-document.addEventListener('pointercancel', () => { tabSwipeGesture = null; endLongPress(); }, { passive: true });
+document.addEventListener('pointercancel', () => { tabSwipeGesture = null; endLongPress(); clearPageSwipeNav(); }, { passive: true });
 document.addEventListener('pointermove', updatePageSwipe, { passive: false });
 document.addEventListener('pointerup', finishPageSwipe, { passive: true });
 document.addEventListener('pointercancel', () => { pageSwipeGesture = null; resetPageSwipeTransform(); }, { passive: true });

@@ -3928,8 +3928,96 @@ html[data-theme="dark"][data-color="mono"] #settingsDialog .setting-toggle input
   background: #000;
 }
 
-/* 2.18.54: page swipes use a two-panel track so the next view follows the
-   current view instead of exposing a blank strip during the gesture. */
+/* 2.18.55: page swipes keep the source/tool rail outside the moving content
+   track, while its active underline follows the finger between adjacent tabs. */
+#homeSourceNav {
+  display: block;
+  position: fixed;
+  top: var(--app-header-height);
+  left: 50%;
+  z-index: 55;
+  width: min(1104px, calc(100% - 24px));
+  height: 42px;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  overflow: visible;
+  transform: translateX(-50%);
+}
+#homeSourceNav[hidden] { display: none !important; }
+#homeSourceNav .feed-source-panel {
+  height: 100%;
+  box-sizing: border-box;
+  padding: 0 4px;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  background: var(--bg);
+  box-shadow: none;
+}
+#homeSourceNav .feed-source-tabs {
+  position: relative;
+  height: 100%;
+  align-items: stretch;
+  gap: 2px;
+  touch-action: pan-x;
+  overscroll-behavior-x: contain;
+}
+#homeSourceNav .feed-source-tab,
+#homeSourceNav .feed-source-tab.active {
+  position: relative;
+  height: 100%;
+  box-sizing: border-box;
+  padding: 4px 10px 5px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+#homeSourceNav .feed-source-tab.active { color: var(--ink); }
+#homeSourceNav .feed-source-tab,
+#homeSourceNav .feed-source-tab.active {
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+}
+#homeSourceNav .feed-source-mark {
+  width: 18px;
+  height: 18px;
+  border-radius: 6px;
+  font-size: 9px;
+}
+#homeSourceNav .feed-source-mark img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: inherit;
+}
+#homeSourceNav .feed-source-mark .feed-source-fallback { display: none; }
+#homeSourceNav .feed-source-mark:has(img[hidden]) .feed-source-fallback { display: inline; }
+#homeSourceNav .feed-source-mark.huxiu { background: #e39a35; color: #fff; border: 0; }
+#homeSourceNav .feed-source-mark.v2ex { background: #5c86a8; color: #fff; border: 0; }
+#homeSourceNav .feed-source-mark.footprint svg { width: 14px; height: 14px; }
+#toolNav,
+#homeSourceNav .feed-source-tabs {
+  position: relative;
+}
+#toolNav.page-swipe-nav-dragging .tab.active::after,
+#homeSourceNav .page-swipe-nav-dragging .feed-source-tab.active::after {
+  opacity: 0 !important;
+}
+.page-swipe-nav-indicator {
+  position: absolute;
+  z-index: 4;
+  left: 0;
+  bottom: 0;
+  width: 0;
+  height: 2px;
+  border-radius: 2px 2px 0 0;
+  background: var(--primary);
+  pointer-events: none;
+  will-change: left, width;
+}
 #toolNav,
 #workspace[data-tool="home"] .feed-source-tabs {
   touch-action: pan-x;
