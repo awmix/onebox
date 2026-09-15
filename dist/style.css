@@ -203,7 +203,6 @@ textarea { min-height: 130px; resize: vertical; }
 .advice-card b { display: block; margin-bottom: 4px; }
 .advice-card p { margin: 0; color: var(--muted); font-size: 12px; }
 .weather-section-title { margin: 20px 0 7px; font-size: 14px; }
-.weather-sort-hint { color: var(--muted); font-size: 11px; margin: 0 0 2px; }
 
 .converter-card { max-width: 760px; background: transparent; border: 0; border-radius: 0; padding: 0; }
 .conversion-row { display: grid; grid-template-columns: 1fr 42px 1fr; gap: 12px; align-items: end; }
@@ -2604,9 +2603,6 @@ html.reader-focus main:has(#workspace[data-tool="reader"]) { padding-top: calc(v
   font-size: 22px;
   line-height: 1.25;
 }
-#workspace[data-tool="translate"] .translation-result-history:has(.empty.compact) {
-  display: none;
-}
 #workspace[data-tool="translate"] .translation-result-history {
   margin-top: 12px;
   padding-top: 8px;
@@ -2710,6 +2706,116 @@ html.reader-focus main:has(#workspace[data-tool="reader"]) { padding-top: calc(v
   }
   #workspace[data-tool="translate"] .converter-panel .conversion-result strong {
     font-size: 18px;
+  }
+}
+
+/* 2.18.36: make the calculator a true iPhone-sized four-column keypad and
+   keep translation history/copy controls inside the result pane. */
+#workspace[data-tool="calculator"] .calculator-mobile-grid {
+  display: none;
+}
+#workspace[data-tool="translate"] .translation-input-wrap textarea {
+  resize: none;
+}
+#workspace[data-tool="translate"] .translation-result-pane .translation-result-panel {
+  position: relative;
+  padding-bottom: 42px !important;
+}
+#workspace[data-tool="translate"] .translation-result-head {
+  display: flex;
+  min-height: 24px;
+  align-items: center;
+  justify-content: flex-end;
+}
+#workspace[data-tool="translate"] .translation-history-toggle {
+  width: 26px;
+  height: 26px;
+}
+#workspace[data-tool="translate"] .translation-history-toggle svg {
+  width: 20px;
+  height: 20px;
+}
+#workspace[data-tool="translate"] .translation-result-history[hidden] {
+  display: none;
+}
+#workspace[data-tool="translate"] .translation-copy-button {
+  position: absolute;
+  right: 9px;
+  bottom: 8px;
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+}
+#workspace[data-tool="translate"] .translation-copy-button:hover:not(:disabled) {
+  color: var(--primary);
+  background: var(--soft);
+}
+#workspace[data-tool="translate"] .translation-copy-button:disabled {
+  opacity: .35;
+  cursor: default;
+}
+#workspace[data-tool="translate"] .translation-copy-button svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.7;
+}
+#workspace[data-tool="weather"] .weather-data-note {
+  margin: 7px 0 0;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+@media (max-width: 600px) {
+  main:has(#workspace[data-tool="calculator"]) {
+    height: auto;
+    max-height: none;
+    overflow: visible;
+    padding-bottom: 18px;
+  }
+  #workspace[data-tool="calculator"] .calculator-grid {
+    display: none;
+  }
+  #workspace[data-tool="calculator"] .calculator-mobile-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+  }
+  #workspace[data-tool="calculator"] .calculator-mobile-grid .key {
+    min-height: 52px;
+    padding: 8px 4px;
+    border-radius: 17px;
+    font-size: 15px;
+  }
+  #workspace[data-tool="calculator"] .calculator-mobile-grid .angle-toggle {
+    display: grid;
+    grid-column: span 2;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 7px;
+  }
+  #workspace[data-tool="calculator"] .calculator-mobile-grid .angle-toggle span {
+    font-size: 13px;
+  }
+  #workspace[data-tool="calculator"] .calculator-mobile-grid .angle-toggle i {
+    height: 18px;
+  }
+  #workspace[data-tool="calculator"] .calculator-keyboard {
+    margin-top: 12px;
+  }
+  #workspace[data-tool="translate"] .translation-result-pane .translation-result-panel {
+    padding-bottom: 40px !important;
   }
 }
 
@@ -2995,4 +3101,50 @@ main:has(#workspace[data-tool="calculator"]) {
   #workspace[data-tool="translate"] .converter-panel .conversion-layout {
     grid-template-columns: minmax(0, .82fr) 28px minmax(0, 1.18fr);
   }
+}
+
+/* Keep the iPhone overrides last so the legacy calculator rules cannot
+   re-enable the desktop grid or shrink the result controls. */
+@media (max-width: 600px) {
+  #workspace[data-tool="calculator"] .calculator-grid { display: none !important; }
+  #workspace[data-tool="calculator"] .calculator-mobile-grid {
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+  }
+  #workspace[data-tool="calculator"] .calculator-mobile-grid .key {
+    min-height: 52px;
+    padding: 8px 4px;
+    border-radius: 17px;
+    font-size: 15px;
+  }
+  #workspace[data-tool="calculator"] .calculator-mobile-grid .angle-toggle {
+    grid-column: span 2;
+    gap: 7px;
+  }
+  #workspace[data-tool="calculator"] .calculator-mobile-grid .angle-toggle span { font-size: 13px; }
+  #workspace[data-tool="calculator"] .calculator-mobile-grid .angle-toggle i { height: 18px; }
+  #workspace[data-tool="translate"] .translation-result-pane .translation-result-panel { padding-bottom: 40px !important; }
+}
+
+#workspace[data-tool="translate"] .translation-history-toggle {
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+}
+#workspace[data-tool="translate"] .translation-history-toggle[aria-expanded="true"] {
+  color: var(--primary);
+  background: var(--soft);
+}
+#workspace[data-tool="translate"] .translation-history-toggle svg {
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.7;
 }
