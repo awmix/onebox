@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.40';
+const APP_VERSION = '2.18.41';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -669,7 +669,7 @@ function readerHeadingId(index) { return 'reader-heading-' + index; }
 function readerTextToc(source) {
   const lines = String(source || '').replace(/\r\n?/g, '\n').split('\n');
   const items = [];
-  const chapterPattern = /^(?:第\s*[0-9０-９零〇一二三四五六七八九十百千万两]+\s*[章回节卷部篇集话]|chapter\s+\d+|part\s+[0-9ivxlc]+|序章|序言|前言|引子|楔子|尾声|后记|番外|附录)(?:\s+|[:：、.．-])?.{0,42}$/i;
+  const chapterPattern = /^(?:第\s*[0-9０-９零〇一二三四五六七八九十百千万两]+\s*[章回节卷部篇集话]|[一二三四五六七八九十百千万两]+[、.．]|chapter\s+\d+|part\s+[0-9ivxlc]+|序章|序言|前言|引子|楔子|尾声|后记|番外|附录)(?:\s+|[:：、.．-])?.{0,42}$/i;
   lines.forEach((line, index) => {
     const trimmed = line.trim();
     if (!trimmed) return;
@@ -772,10 +772,20 @@ function xmlAttribute(tag, name) {
   return tag.match(new RegExp(`${name}\\s*=\\s*["']([^"']+)`, 'i'))?.[1] || '';
 }
 function readerPath(dir, href) {
-  const parts = (String(dir || '') + String(href || '').split('#')[0]).split('/');
+  const rawPath = String(dir || '') + String(href || '').split('#')[0];
+  let normalizedPath = rawPath;
+  try { normalizedPath = decodeURIComponent(rawPath); } catch { /* keep the original path */ }
+  const parts = normalizedPath.split('/');
   const resolved = [];
   parts.forEach((part) => { if (!part || part === '.') return; if (part === '..') resolved.pop(); else resolved.push(part); });
   return resolved.join('/');
+}
+function readerHrefParts(href) {
+  const value = String(href || '');
+  const hashIndex = value.indexOf('#');
+  let anchor = hashIndex < 0 ? '' : value.slice(hashIndex + 1);
+  try { anchor = decodeURIComponent(anchor); } catch { /* keep the original anchor */ }
+  return { path: hashIndex < 0 ? value : value.slice(0, hashIndex), anchor };
 }
 function readerStripTags(value) { return String(value || '').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim(); }
 async function epubToHtml(bytes) {
@@ -793,6 +803,7 @@ async function epubToHtml(bytes) {
   const spine = [...opf.matchAll(/<itemref\b[^>]*>/gi)].map((match) => xmlAttribute(match[0], 'idref')).map((id) => manifest[id]).filter(Boolean);
   const spineEntries = [];
   const parts = [];
+  const inferredToc = [];
   for (const item of spine) {
     if (!/html|xhtml/i.test(item.media)) continue;
     const path = readerPath(base, item.href);
@@ -800,7 +811,13 @@ async function epubToHtml(bytes) {
     const body = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i)?.[1] || html;
     const section = spineEntries.length;
     spineEntries.push({ item, path, section });
-    parts.push('<section id="reader-epub-section-' + section + '">' + sanitizeReaderMarkup(body) + '</section>');
+    const sectionDocument = new DOMParser().parseFromString('<body>' + sanitizeReaderMarkup(body) + '</body>', 'text/html');
+    [...sectionDocument.body.querySelectorAll('h1,h2,h3,h4,h5,h6')].forEach((heading, headingIndex) => {
+      if (!heading.id) heading.id = 'reader-epub-heading-' + section + '-' + headingIndex;
+      const label = readerStripTags(heading.textContent);
+      if (label) inferredToc.push({ id: readerHeadingId(inferredToc.length), label, depth: Math.min(3, Number(heading.tagName.slice(1)) - 1), section, anchor: heading.id });
+    });
+    parts.push('<section id="reader-epub-section-' + section + '">' + sectionDocument.body.innerHTML + '</section>');
   }
   if (!parts.length) throw Error('EPUB has no readable chapters');
   const toc = [];
@@ -809,17 +826,19 @@ async function epubToHtml(bytes) {
   const tocFilePath = navItem ? readerPath(base, navItem.href) : ncxItem ? readerPath(base, ncxItem.href) : base;
   const tocDir = tocFilePath.replace(/[^/]*$/, '');
   const addTocLink = (label, href, depth = 0) => {
-    const targetPath = readerPath(tocDir, href);
+    const hrefParts = readerHrefParts(href);
+    const targetPath = readerPath(tocDir, hrefParts.path);
     const match = spineEntries.find((entry) => entry.path === targetPath || entry.path.endsWith('/' + targetPath));
     if (!label || !match) return;
     const key = match.section + ':' + label;
     if (toc.some((item) => item.key === key)) return;
-    toc.push({ id: readerHeadingId(toc.length), key, label, depth: Math.min(3, Number(depth) || 0), section: match.section });
+    toc.push({ id: readerHeadingId(toc.length), key, label, depth: Math.min(3, Number(depth) || 0), section: match.section, anchor: hrefParts.anchor });
   };
   if (navItem) {
     const navPath = readerPath(base, navItem.href);
     const navHtml = decoder.decode(await readZipEntry(bytes, entries, navPath) || new Uint8Array());
-    const navBody = navHtml.match(/<nav\b[\s\S]*?<\/nav>/i)?.[0] || navHtml;
+    const navBlocks = [...navHtml.matchAll(/<nav\b[\s\S]*?<\/nav>/gi)].map((match) => match[0]);
+    const navBody = navBlocks.find((block) => /(?:epub:type|role)\s*=\s*["'][^"']*(?:toc|doc-toc)/i.test(block.match(/^<nav\b[^>]*>/i)?.[0] || '')) || navBlocks[0] || navHtml;
     [...navBody.matchAll(/<a\b[^>]*href\s*=\s*["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi)].forEach((match) => addTocLink(readerStripTags(match[2]), match[1], (match[0].match(/data-depth\s*=\s*["'](\d+)/i) || [])[1] || 0));
   }
   if (!toc.length && ncxItem) {
@@ -827,8 +846,9 @@ async function epubToHtml(bytes) {
     const ncx = decoder.decode(await readZipEntry(bytes, entries, ncxPath) || new Uint8Array());
     [...ncx.matchAll(/<navPoint\b[^>]*>[\s\S]*?<text>([\s\S]*?)<\/text>[\s\S]*?<content\b[^>]*src\s*=\s*["']([^"']+)["'][\s\S]*?<\/navPoint>/gi)].forEach((match) => addTocLink(readerStripTags(match[1]), match[2]));
   }
+  const finalToc = toc.length ? toc : inferredToc;
   const title = opf.match(/<dc:title[^>]*>([\s\S]*?)<\/dc:title>/i)?.[1]?.replace(/<[^>]+>/g, '').trim();
-  return { title, html: parts.join('<hr>'), toc: toc.map(({ key, ...item }) => item) };
+  return { title, html: parts.join('<hr>'), toc: finalToc.map(({ key, ...item }) => item) };
 }
 async function importReaderFiles(fileList) {
   const files = [...(fileList || [])]; if (!files.length) return;
@@ -849,6 +869,23 @@ function readerAnnotationMarkup(book) {
   const notes = (book.annotations || []).slice().reverse();
   if (!notes.length) return '<p class="empty compact">' + t('noAnnotations') + '</p>';
   return notes.map((note) => '<div class="reader-note"><blockquote>' + escapeHtml(note.quote) + '</blockquote><p>' + escapeHtml(note.note) + '</p><button class="icon-btn small" data-delete-annotation="' + escapeHtml(note.id) + '" aria-label="' + t('close') + '">×</button></div>').join('');
+}
+let readerProgressFrame = 0;
+let readerProgressTimer = null;
+function scheduleReaderProgress(content) {
+  const book = readerBookById(state.readerBookId); if (!book || !content || !content.scrollHeight) return;
+  if (state.readerReadingMode === 'pages' && content.classList.contains('reader-page-viewport')) {
+    book.progress = Math.min(1, content.scrollLeft / Math.max(1, content.scrollWidth - content.clientWidth));
+  } else {
+    book.progress = Math.min(1, content.scrollTop / Math.max(1, content.scrollHeight - content.clientHeight));
+  }
+  if (!readerProgressFrame) readerProgressFrame = requestAnimationFrame(() => {
+    readerProgressFrame = 0;
+    if (state.readerReadingMode === 'pages' && content.classList.contains('reader-page-viewport')) updateReaderPager();
+    else updateReaderReferenceChrome();
+  });
+  clearTimeout(readerProgressTimer);
+  readerProgressTimer = setTimeout(() => { readerProgressTimer = null; saveLibrary(); }, 350);
 }
 function updateReaderPager() {
   const viewport = $('.reader-page-viewport'); if (!viewport) return;
@@ -901,7 +938,10 @@ async function openReaderBook(id) {
       else if (book.type === 'epub') { const parsed = await epubToHtml(bytes); content = parsed.html; toc = parsed.toc || []; hint = parsed.title ? parsed.title + ' · ' + t('epubHint') : t('epubHint'); }
       else { state.readerUrl = URL.createObjectURL(new Blob([bytes], { type: 'application/pdf' })); content = '<iframe class="reader-pdf" title="' + escapeHtml(book.name) + '" src="' + state.readerUrl + '"></iframe>'; hint = t('pdfHint'); }
     }
-    renderReaderView(content, hint, toc, book.type === 'pdf' ? 'scroll' : 'pages');
+    // Start with continuous reading for every format so the first screen is
+    // immediately readable on mobile; the reference-style paged mode remains
+    // available from Reading settings.
+    renderReaderView(content, hint, toc, 'scroll');
   } catch { toast(t('importFailed'), 'error'); state.readerBookId = null; }
 }
 function closeReader() {
@@ -937,8 +977,8 @@ function readerDialogMarkup(kind) {
   const prefs = state.readerPreferences;
   if (kind === 'toc') {
     const items = state.readerToc || [];
-    const body = items.length ? items.map((item) => '<button class="reader-toc-item depth-' + Math.min(3, Number(item.depth) || 0) + '" data-reader-toc-id="' + escapeHtml(item.id || '') + '" data-reader-toc-section="' + (item.section == null ? '' : item.section) + '"><span>' + escapeHtml(item.label || '—') + '</span></button>').join('') : '<p class="empty compact reader-dialog-empty">' + t('readerNoContents') + '</p>';
-    dialog.innerHTML = '<div class="reader-dialog-card reader-panel-card" role="dialog" aria-modal="true"><div class="dialog-head"><div><h2>' + t('readerContents') + '</h2><small>' + t('readerTocHint') + '</small></div><button class="icon-btn small" data-close-reader-dialog aria-label="' + t('close') + '">×</button></div><div class="reader-toc-list">' + body + '</div></div>';
+    const body = items.length ? items.map((item) => '<button class="reader-toc-item depth-' + Math.min(3, Number(item.depth) || 0) + '" data-reader-toc-id="' + escapeHtml(item.id || '') + '" data-reader-toc-section="' + (item.section == null ? '' : item.section) + '" data-reader-toc-anchor="' + escapeHtml(item.anchor || '') + '"><span>' + escapeHtml(item.label || '—') + '</span></button>').join('') : '<p class="empty compact reader-dialog-empty">' + t('readerNoContents') + '</p>';
+    dialog.innerHTML = '<div class="reader-dialog-card reader-panel-card" role="dialog" aria-modal="true"><div class="dialog-head reader-drawer-head"><button class="reader-drawer-back" data-close-reader aria-label="' + t('bookshelf') + '">‹ <span>' + t('bookshelf') + '</span></button><div><h2>' + t('readerContents') + '</h2><small>' + t('readerTocHint') + '</small></div><button class="icon-btn small" data-close-reader-dialog aria-label="' + t('close') + '">×</button></div><div class="reader-toc-list">' + body + '</div></div>';
   } else if (kind === 'background') {
     const themeButton = (id, label) => '<button class="reader-theme-choice ' + (prefs.theme === id ? 'active' : '') + '" data-reader-theme="' + id + '"><span class="reader-theme-dot theme-' + id + '"></span>' + label + '</button>';
     dialog.innerHTML = '<div class="reader-dialog-card reader-panel-card reader-sheet-card" role="dialog" aria-modal="true"><div class="dialog-head"><div><h2>' + t('readerTheme') + '</h2><small>' + t('readerSettingsHint') + '</small></div><button class="icon-btn small" data-close-reader-dialog aria-label="' + t('close') + '">×</button></div><div class="reader-sheet-body"><div class="reader-theme-grid reader-theme-grid-large">' + themeButton('paper', t('readerThemePaper')) + themeButton('sepia', t('readerThemeSepia')) + themeButton('green', t('readerThemeGreen')) + themeButton('dark', t('readerThemeDark')) + '</div></div></div>';
@@ -947,12 +987,12 @@ function readerDialogMarkup(kind) {
     dialog.innerHTML = '<div class="reader-dialog-card reader-panel-card reader-sheet-card" role="dialog" aria-modal="true"><div class="dialog-head"><div><h2>' + t('readerAnimation') + '</h2><small>' + t('readerSettingsHint') + '</small></div><button class="icon-btn small" data-close-reader-dialog aria-label="' + t('close') + '">×</button></div><div class="reader-sheet-body reader-choice-list">' + option('slide', t('readerAnimationSlide')) + option('cover', t('readerAnimationCover')) + option('none', t('readerAnimationNone')) + '</div></div>';
   } else {
     const themeButton = (id, label) => '<button class="reader-theme-choice ' + (prefs.theme === id ? 'active' : '') + '" data-reader-theme="' + id + '"><span class="reader-theme-dot theme-' + id + '"></span>' + label + '</button>';
-    dialog.innerHTML = '<div class="reader-dialog-card reader-panel-card" role="dialog" aria-modal="true"><div class="dialog-head"><div><h2>' + t('readerSettings') + '</h2><small>' + t('readerSettingsHint') + '</small></div><button class="icon-btn small" data-close-reader-dialog aria-label="' + t('close') + '">×</button></div><div class="reader-settings-body"><div class="reader-setting-group"><h3>' + t('readerTheme') + '</h3><div class="reader-theme-grid">' + themeButton('paper', t('readerThemePaper')) + themeButton('sepia', t('readerThemeSepia')) + themeButton('green', t('readerThemeGreen')) + themeButton('dark', t('readerThemeDark')) + '</div></div><label class="reader-select-row"><span>阅读方式</span><select data-reader-reading-mode><option value="scroll" ' + (state.readerReadingMode === 'scroll' ? 'selected' : '') + '>' + t('readerScroll') + '</option><option value="pages" ' + (state.readerReadingMode === 'pages' ? 'selected' : '') + '>' + t('readerPages') + '</option></select></label><label class="reader-range-row"><span>' + t('readerFontSize') + '<b data-reader-value="fontSize">' + prefs.fontSize + 'px</b></span><input type="range" min="15" max="26" step="1" value="' + prefs.fontSize + '" data-reader-preference="fontSize"></label><label class="reader-select-row"><span>' + t('readerFontFamily') + '</span><select data-reader-preference="fontFamily"><option value="system" ' + (prefs.fontFamily === 'system' ? 'selected' : '') + '>系统无衬线</option><option value="serif" ' + (prefs.fontFamily === 'serif' ? 'selected' : '') + '>阅读衬线</option><option value="mono" ' + (prefs.fontFamily === 'mono' ? 'selected' : '') + '>等宽字体</option></select></label><label class="reader-range-row"><span>' + t('readerLineHeight') + '<b data-reader-value="lineHeight">' + Number(prefs.lineHeight).toFixed(2) + '</b></span><input type="range" min="1.35" max="2.2" step="0.05" value="' + prefs.lineHeight + '" data-reader-preference="lineHeight"></label><label class="reader-range-row"><span>' + t('readerParagraphSpacing') + '<b data-reader-value="paragraphSpacing">' + prefs.paragraphSpacing + 'px</b></span><input type="range" min="6" max="28" step="1" value="' + prefs.paragraphSpacing + '" data-reader-preference="paragraphSpacing"></label><label class="reader-range-row"><span>' + t('readerLetterSpacing') + '<b data-reader-value="letterSpacing">' + Number(prefs.letterSpacing).toFixed(1) + 'px</b></span><input type="range" min="0" max="2" step="0.1" value="' + prefs.letterSpacing + '" data-reader-preference="letterSpacing"></label><label class="reader-select-row"><span>' + t('readerAnimation') + '</span><select data-reader-preference="pageAnimation"><option value="slide" ' + (prefs.pageAnimation === 'slide' ? 'selected' : '') + '>' + t('readerAnimationSlide') + '</option><option value="cover" ' + (prefs.pageAnimation === 'cover' ? 'selected' : '') + '>' + t('readerAnimationCover') + '</option><option value="none" ' + (prefs.pageAnimation === 'none' ? 'selected' : '') + '>' + t('readerAnimationNone') + '</option></select></label></div></div>';
+    dialog.innerHTML = '<div class="reader-dialog-card reader-panel-card" role="dialog" aria-modal="true"><div class="dialog-head reader-drawer-head"><div><h2>' + t('readerSettings') + '</h2><small>' + t('readerSettingsHint') + '</small></div><span class="reader-settings-progress" data-reader-progress-label>0%</span><button class="icon-btn small" data-close-reader-dialog aria-label="' + t('close') + '">×</button></div><div class="reader-settings-body"><div class="reader-setting-group"><h3>' + t('readerTheme') + '</h3><div class="reader-theme-grid">' + themeButton('paper', t('readerThemePaper')) + themeButton('sepia', t('readerThemeSepia')) + themeButton('green', t('readerThemeGreen')) + themeButton('dark', t('readerThemeDark')) + '</div></div><label class="reader-select-row"><span>阅读方式</span><select data-reader-reading-mode><option value="scroll" ' + (state.readerReadingMode === 'scroll' ? 'selected' : '') + '>' + t('readerScroll') + '</option><option value="pages" ' + (state.readerReadingMode === 'pages' ? 'selected' : '') + '>' + t('readerPages') + '</option></select></label><label class="reader-range-row"><span>' + t('readerFontSize') + '<b data-reader-value="fontSize">' + prefs.fontSize + 'px</b></span><input type="range" min="15" max="26" step="1" value="' + prefs.fontSize + '" data-reader-preference="fontSize"></label><label class="reader-select-row"><span>' + t('readerFontFamily') + '</span><select data-reader-preference="fontFamily"><option value="system" ' + (prefs.fontFamily === 'system' ? 'selected' : '') + '>系统无衬线</option><option value="serif" ' + (prefs.fontFamily === 'serif' ? 'selected' : '') + '>阅读衬线</option><option value="mono" ' + (prefs.fontFamily === 'mono' ? 'selected' : '') + '>等宽字体</option></select></label><label class="reader-range-row"><span>' + t('readerLineHeight') + '<b data-reader-value="lineHeight">' + Number(prefs.lineHeight).toFixed(2) + '</b></span><input type="range" min="1.35" max="2.2" step="0.05" value="' + prefs.lineHeight + '" data-reader-preference="lineHeight"></label><label class="reader-range-row"><span>' + t('readerParagraphSpacing') + '<b data-reader-value="paragraphSpacing">' + prefs.paragraphSpacing + 'px</b></span><input type="range" min="6" max="28" step="1" value="' + prefs.paragraphSpacing + '" data-reader-preference="paragraphSpacing"></label><label class="reader-range-row"><span>' + t('readerLetterSpacing') + '<b data-reader-value="letterSpacing">' + Number(prefs.letterSpacing).toFixed(1) + 'px</b></span><input type="range" min="0" max="2" step="0.1" value="' + prefs.letterSpacing + '" data-reader-preference="letterSpacing"></label><label class="reader-select-row"><span>' + t('readerAnimation') + '</span><select data-reader-preference="pageAnimation"><option value="slide" ' + (prefs.pageAnimation === 'slide' ? 'selected' : '') + '>' + t('readerAnimationSlide') + '</option><option value="cover" ' + (prefs.pageAnimation === 'cover' ? 'selected' : '') + '>' + t('readerAnimationCover') + '</option><option value="none" ' + (prefs.pageAnimation === 'none' ? 'selected' : '') + '>' + t('readerAnimationNone') + '</option></select></label></div></div>';
   }
   dialog.hidden = false;
 }
 function closeReaderDialog() { const dialog = $('#readerDialog'); if (dialog) dialog.hidden = true; state.readerDialog = ''; }
-function openReaderDialog(kind) { state.readerDialog = kind; readerDialogMarkup(kind); }
+function openReaderDialog(kind) { state.readerDialog = kind; readerDialogMarkup(kind); updateReaderReferenceChrome(); }
 function readerPreferenceLabel(key, value) {
   if (key === 'fontSize' || key === 'paragraphSpacing') return value + 'px';
   if (key === 'lineHeight') return Number(value).toFixed(2);
@@ -970,7 +1010,7 @@ function readerPreferenceChanged(input) {
 function jumpToReaderToc(item) {
   closeReaderDialog();
   const content = $('[data-reader-content]'); if (!content || !item) return;
-  const target = item.section != null ? document.getElementById('reader-epub-section-' + item.section) : document.getElementById(item.id);
+  const target = readerTocTarget(item);
   if (!target) return;
   if (state.readerReadingMode === 'pages' && content.classList.contains('reader-page-viewport')) {
     const page = Math.max(0, Math.floor(target.offsetLeft / Math.max(1, content.clientWidth)));
@@ -979,7 +1019,10 @@ function jumpToReaderToc(item) {
 }
 function readerTocTarget(item) {
   if (!item) return null;
-  return item.section != null ? document.getElementById('reader-epub-section-' + item.section) : document.getElementById(item.id);
+  if (item.section == null) return document.getElementById(item.id);
+  const section = document.getElementById('reader-epub-section-' + item.section);
+  if (!section || !item.anchor) return section;
+  return [...section.querySelectorAll('[id]')].find((node) => node.id === item.anchor) || section;
 }
 function currentReaderChapterIndex() {
   const content = $('[data-reader-content]'); if (!content || !state.readerToc.length) return -1;
@@ -1013,7 +1056,9 @@ function updateReaderReferenceChrome() {
   if (slider && document.activeElement !== slider) slider.value = String(Math.round(progress * 100));
   const pageInfo = $('[data-reader-page-info]');
   if (pageInfo) pageInfo.textContent = state.readerReadingMode === 'pages' && content?.classList.contains('reader-page-viewport') ? (state.readerPage + 1) + ' / ' + pageCount : Math.round(progress * 100) + '%';
+  $$('[data-reader-progress-label]').forEach((node) => { node.textContent = Math.round(progress * 100) + '%'; });
   const fill = $('[data-reader-progress-fill]'); if (fill) fill.style.width = Math.round(progress * 100) + '%';
+  if (chapterIndex) chapterIndex.textContent = state.readerReadingMode === 'pages' && content?.classList.contains('reader-page-viewport') ? (state.readerPage + 1) + ' / ' + pageCount : state.readerToc.length ? (index + 1) + ' / ' + state.readerToc.length : '—';
   const previous = $('[data-reader-chapter-prev]'); const next = $('[data-reader-chapter-next]');
   if (previous) previous.disabled = !state.readerToc.length || index <= 0;
   if (next) next.disabled = !state.readerToc.length || index >= state.readerToc.length - 1;
@@ -1042,11 +1087,12 @@ function turnReaderPage(direction) {
   updateReaderPager();
   const count = Math.max(1, Math.ceil(viewport.scrollWidth / Math.max(1, viewport.clientWidth)));
   state.readerPage = Math.min(Math.max(0, state.readerPage + direction), count - 1);
-  viewport.classList.remove('reader-turn-forward', 'reader-turn-back', 'reader-turn-cover-forward', 'reader-turn-cover-back');
+  const animationTarget = $('.reader-page-flow') || viewport;
+  animationTarget.classList.remove('reader-turn-forward', 'reader-turn-back', 'reader-turn-cover-forward', 'reader-turn-cover-back');
   if (state.readerPreferences.pageAnimation !== 'none') {
-    void viewport.offsetWidth;
+    void animationTarget.offsetWidth;
     const animationClass = state.readerPreferences.pageAnimation === 'cover' ? (direction > 0 ? 'reader-turn-cover-forward' : 'reader-turn-cover-back') : (direction > 0 ? 'reader-turn-forward' : 'reader-turn-back');
-    viewport.classList.add(animationClass);
+    animationTarget.classList.add(animationClass);
   }
   viewport.scrollTo({ left: state.readerPage * viewport.clientWidth, behavior: 'smooth' });
   setTimeout(updateReaderPager, 260);
@@ -1070,12 +1116,12 @@ function readerReadingView(book) {
   return '<div class="reader-reference-shell' + chromeClass + '" data-reader-theme="' + escapeHtml(state.readerPreferences.theme) + '">' +
     '<header class="reader-reference-top"><button class="reader-ref-icon" data-close-reader aria-label="' + t('closeReader') + '">' + icon('<path d="m15 5-7 7 7 7"/>') + '</button><div class="reader-reference-title"><strong>' + escapeHtml(book.name) + '</strong><small>' + escapeHtml(hint) + '</small></div><span class="reader-reference-page" data-reader-page-info>' + escapeHtml(pageLabel) + '</span></header>' +
     '<main class="reader-reference-body"><article class="' + contentClass + ' reader-reference-viewer" data-reader-content data-reader-surface>' + content + '</article></main>' +
-    '<footer class="reader-reference-bottom"><div class="reader-reference-chapter"><span class="reader-reference-chapter-name" data-reader-chapter-name>' + escapeHtml(chapter) + '</span><span class="reader-reference-chapter-index" data-reader-chapter-index>' + (state.readerToc.length ? '1/' + state.readerToc.length : '0/0') + '</span><span class="reader-reference-chapter-bar"><i data-reader-progress-fill></i></span></div>' +
-    '<div class="reader-reference-progress-row"><button class="reader-reference-chapter-button" data-reader-chapter-prev disabled aria-label="上一章">‹</button><div class="reader-reference-progress"><span data-reader-progress-label>0%</span><input data-reader-progress type="range" min="0" max="100" step="1" value="0" aria-label="阅读进度"></div><button class="reader-reference-chapter-button" data-reader-chapter-next disabled aria-label="下一章">›</button></div>' +
-    '<div class="reader-reference-tool-row">' + tool('reader-toc', '<path d="M5 5h14M5 12h14M5 19h9"/>', t('readerContents')) + tool('reader-background', '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4"/>', t('readerTheme')) + tool('reader-animation', '<path d="M5 6h14M5 12h14M5 18h14"/><path d="m9 9 3 3-3 3"/>', t('readerAnimation')) + tool('reader-settings', '<path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/><circle cx="12" cy="12" r="3.5"/>', t('readerSettings')) + '<button class="reader-reference-tool reader-annotate-button" data-annotate-selection hidden>' + icon('<path d="m5 19 1-4L16.5 4.5a2.1 2.1 0 0 1 3 3L9 18zM14 7l3 3"/>') + '<span>' + t('addAnnotation') + '</span></button></div></footer></div>';
+    '<footer class="reader-reference-bottom"><div class="reader-reference-chapter"><span class="reader-reference-chapter-name" data-reader-chapter-name>' + escapeHtml(chapter) + '</span><span class="reader-reference-chapter-index" data-reader-chapter-index>' + (state.readerToc.length ? '1 / ' + state.readerToc.length : '—') + '</span></div>' +
+    '<div class="reader-reference-tool-row">' + tool('reader-toc', '<path d="M5 5h14M5 12h14M5 19h9"/>', t('readerContents')) + tool('reader-background', '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4"/>', t('readerTheme')) + tool('reader-animation', '<path d="M5 6h14M5 12h14M5 18h14"/><path d="m9 9 3 3-3 3"/>', t('readerAnimation')) + '<button class="reader-reference-tool reader-settings-tool" data-reader-settings>' + icon('<path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/><circle cx="12" cy="12" r="3.5"/>') + '<span>' + t('readerSettings') + '</span><em data-reader-progress-label>0%</em></button>' + '<button class="reader-reference-tool reader-annotate-button" data-annotate-selection hidden>' + icon('<path d="m5 19 1-4L16.5 4.5a2.1 2.1 0 0 1 3 3L9 18zM14 7l3 3"/>') + '<span>' + t('addAnnotation') + '</span></button></div></footer></div>';
 }
 function readerAddCardMarkup(compact = false) {
-  return '<button class="reader-empty-card ' + (compact ? 'reader-add-card' : '') + '" data-open-reader-file><span class="reader-empty-book"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M8 10.5c7-2.5 12-1 16 2v25c-4-3-9-4.5-16-2v-25ZM40 10.5c-7-2.5-12-1-16 2v25c4-3-9-4.5-16-2v-25Z"/><path d="M24 12.5v25"/></svg></span><strong>' + t('addBook') + '</strong><small>' + t('readerHint') + '</small><span class="reader-empty-plus">＋</span></button>';
+  const hint = compact ? (state.language === 'en' ? 'Add a local document' : '添加本机文档') : t('readerHint');
+  return '<button class="reader-empty-card ' + (compact ? 'reader-add-card' : '') + '" data-open-reader-file><span class="reader-empty-book"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M8 10.5c7-2.5 12-1 16 2v25c-4-3-9-4.5-16-2v-25ZM40 10.5c-7-2.5-12-1-16 2v25c4-3-9-4.5-16-2v-25Z"/><path d="M24 12.5v25"/></svg></span><strong>' + t('addBook') + '</strong><span class="reader-empty-hint">' + hint + '</span><span class="reader-empty-plus">＋</span></button>';
 }
 function reader() {
   const activeBook = readerBookById(state.readerBookId);
@@ -1088,7 +1134,7 @@ function reader() {
   }).join('');
   const empty = readerAddCardMarkup();
   const libraryBody = books.length ? '<div class="reader-book-grid">' + cards + readerAddCardMarkup(true) + '</div>' : empty;
-  return '<div class="reader-library-view"><div class="reader-library-head"><div><p class="reader-library-kicker">ONEBOX READER</p><div class="reader-library-title-row"><h2>' + t('bookshelf') + '</h2><span class="reader-book-count">' + books.length + '</span></div><small>' + t('readerHint') + '</small></div><button class="reader-library-add" data-open-reader-file aria-label="' + t('addBook') + '">＋</button><input id="readerFileInput" type="file" hidden multiple accept=".md,.markdown,.txt,.pdf,.epub,text/markdown,text/plain,application/pdf,application/epub+zip"></div>' + libraryBody + '</div>';
+  return '<div class="reader-library-view"><div class="reader-library-head"><div><p class="reader-library-kicker">ONEBOX READER</p><div class="reader-library-title-row"><h2>' + t('bookshelf') + '</h2><span class="reader-book-count">' + books.length + '</span></div><small>' + t('readerHint') + '</small></div><input id="readerFileInput" type="file" hidden multiple accept=".md,.markdown,.txt,.pdf,.epub,text/markdown,text/plain,application/pdf,application/epub+zip"></div>' + libraryBody + '</div>';
 }
 
 // Calendar data --------------------------------------------------------------
@@ -2285,6 +2331,7 @@ $('#lunarDialog').addEventListener('click', (event) => {
 
 $('#readerDialog').addEventListener('click', (event) => {
   if (event.target === $('#readerDialog')) return closeReaderDialog();
+  if (event.target.closest('[data-close-reader]')) return closeReader();
   if (event.target.closest('[data-close-reader-dialog]')) return closeReaderDialog();
   const tocItem = event.target.closest('[data-reader-toc-id]');
   if (tocItem) {
@@ -2307,16 +2354,7 @@ $('#readerDialog').addEventListener('change', (event) => {
   if (event.target.matches('[data-reader-reading-mode]')) { state.readerReadingMode = event.target.value === 'pages' ? 'pages' : 'scroll'; state.readerPage = 0; closeReaderDialog(); render(); requestAnimationFrame(restoreReaderPosition); }
 });
 workspace.addEventListener('scroll', (event) => {
-  const book = readerBookById(state.readerBookId); const content = event.target.closest('[data-reader-content]');
-  if (!book || !content || !content.scrollHeight) return;
-  if (state.readerReadingMode === 'pages' && content.classList.contains('reader-page-viewport')) {
-    const max = Math.max(1, content.scrollWidth - content.clientWidth);
-    book.progress = Math.min(1, content.scrollLeft / max); updateReaderPager();
-  } else {
-    book.progress = Math.min(1, content.scrollTop / Math.max(1, content.scrollHeight - content.clientHeight));
-  }
-  updateReaderReferenceChrome();
-  saveLibrary();
+  scheduleReaderProgress(event.target.closest('[data-reader-content]'));
 }, true);
 $('#annotationDialog').addEventListener('click', (event) => {
   if (event.target === $('#annotationDialog') || event.target.closest('[data-close-annotation]')) { $('#annotationDialog').hidden = true; return; }

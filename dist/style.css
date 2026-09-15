@@ -3446,3 +3446,26 @@ main:has(#workspace[data-tool="calculator"]) {
   .reader-panel-card { max-height: calc(100dvh - 18px); border-radius: 20px; }
   .reader-settings-body { padding: 10px 14px 16px; }
 }
+
+/* Reader follow-up fixes: keep the shelf add tile complete, make the drawer
+   return action explicit, and animate the visible page flow instead of the
+   overflow viewport. */
+.reader-book-grid .reader-empty-card { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; color: var(--primary); }
+.reader-book-grid .reader-empty-card strong { display: block; color: var(--ink); font-size: 12px; white-space: normal !important; }
+.reader-empty-hint { display: block; max-width: 90%; color: var(--muted); font-size: 9px; line-height: 1.35; white-space: normal; overflow: visible; overflow-wrap: anywhere; }
+.reader-book-grid .reader-empty-card small { display: none; }
+.reader-book-grid .reader-empty-plus { top: 9px; right: 11px; transform: none; font-size: 20px; }
+.reader-drawer-head { display: grid !important; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px !important; }
+.reader-drawer-head > div { min-width: 0; }
+.reader-drawer-back { display: inline-flex; align-items: center; gap: 3px; min-height: 32px; padding: 0; border: 0; background: transparent; color: var(--primary); font-size: 12px; font-weight: 750; cursor: pointer; }
+.reader-drawer-back:first-letter { font-size: 23px; font-weight: 400; }
+.reader-settings-progress { min-width: 36px; color: var(--primary); font-size: 12px; font-variant-numeric: tabular-nums; font-weight: 800; text-align: right; }
+.reader-reference-chapter-index { margin-left: auto; }
+.reader-settings-tool em { color: currentColor; font-size: 9px; font-style: normal; font-variant-numeric: tabular-nums; }
+.reader-reference-tool-row .reader-annotate-button { display: none; }
+.reader-reference-viewer .reader-page-flow.reader-turn-forward { animation: reader-reference-page-forward .34s ease; }
+.reader-reference-viewer .reader-page-flow.reader-turn-back { animation: reader-reference-page-back .34s ease; }
+.reader-reference-viewer .reader-page-flow.reader-turn-cover-forward { animation: reader-reference-page-cover-forward .38s ease; }
+.reader-reference-viewer .reader-page-flow.reader-turn-cover-back { animation: reader-reference-page-cover-back .38s ease; }
+@keyframes reader-reference-page-forward { 0% { transform: translateX(0); opacity: 1; } 48% { transform: translateX(-12px); opacity: .55; } 100% { transform: translateX(0); opacity: 1; } }
+@keyframes reader-reference-page-back { 0% { transform: translateX(0); opacity: 1; } 48% { transform: translateX(12px); opacity: .55; } 100% { transform: translateX(0); opacity: 1; } }
