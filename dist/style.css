@@ -3928,9 +3928,24 @@ html[data-theme="dark"][data-color="mono"] #settingsDialog .setting-toggle input
   background: #000;
 }
 
-/* 2.18.52: both navigation rails support horizontal touch swipes. */
+/* 2.18.53: navigation rails and page content support touch swipes. */
 #toolNav,
 #workspace[data-tool="home"] .feed-source-tabs {
   touch-action: pan-x;
   overscroll-behavior-x: contain;
+}
+#workspace {
+  /* Keep native vertical scrolling, while horizontal motion stays available
+     to the page-level swipe controller. */
+  touch-action: pan-y;
+}
+#workspace.page-swipe-dragging {
+  will-change: transform;
+  transition: none !important;
+  user-select: none;
+  cursor: grabbing;
+}
+#workspace.page-swipe-settling {
+  will-change: transform;
+  transition: transform .28s cubic-bezier(.22, .8, .22, 1) !important;
 }

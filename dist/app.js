@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.52';
+const APP_VERSION = '2.18.53';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -2193,6 +2193,9 @@ let swipeGesture = null;
 let swipeSuppressClickUntil = 0;
 let tabSwipeGesture = null;
 let tabSwipeSuppressClickUntil = 0;
+let pageSwipeGesture = null;
+let pageSwipeAnimationToken = 0;
+let pageSwipeSuppressClickUntil = 0;
 let readerSurfaceGesture = null;
 function startLongPress(target, type, index) {
   clearTimeout(reorderTimer);
@@ -2246,6 +2249,99 @@ function finishTabSwipe() {
   requestAnimationFrame(() => gesture.container.querySelector('.active')?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' }));
 }
 
+function pageSwipeItems() {
+  if (state.section === 'home') {
+    return [...homeFeedSources().map((source) => ({ kind: 'home', id: source.id })), ...(state.footprint ? [{ kind: 'home', id: 'footprint' }] : [])];
+  }
+  if (state.section === 'tools') return state.toolOrder.map((id) => ({ kind: 'tool', id }));
+  return [];
+}
+function pageSwipeIndex(items) {
+  const currentId = state.section === 'home' ? state.homeFeed.active : state.tool;
+  return items.findIndex((item) => item.id === currentId);
+}
+function pageSwipeTarget(event) {
+  const main = event.target.closest('main');
+  if (!main || event.pointerType === 'mouse' || pageSwipeAnimationToken) return null;
+  if (event.target.closest('#toolNav, .feed-source-tabs, [data-reader-surface], .reader-reference-shell, [data-swipe-row], input, textarea, select, [contenteditable="true"], .weather-card-list, .weather-days, .hourly-strip, .advice-strip, .translation-history-list')) return null;
+  const items = pageSwipeItems();
+  const index = pageSwipeIndex(items);
+  if (index < 0 || items.length < 2) return null;
+  return { main, items, index, pointerId: event.pointerId, startX: event.clientX, startY: event.clientY, dx: 0, dy: 0, cancelled: false, dragging: false };
+}
+function beginPageSwipe(event) {
+  pageSwipeGesture = pageSwipeTarget(event);
+}
+function resetPageSwipeTransform() {
+  workspace.classList.remove('page-swipe-dragging');
+  workspace.style.transform = '';
+}
+function settlePageSwipeBack() {
+  const token = ++pageSwipeAnimationToken;
+  workspace.classList.remove('page-swipe-dragging');
+  workspace.classList.add('page-swipe-settling');
+  workspace.style.transform = 'translate3d(0, 0, 0)';
+  window.setTimeout(() => {
+    if (token !== pageSwipeAnimationToken) return;
+    pageSwipeAnimationToken = 0;
+    workspace.classList.remove('page-swipe-settling');
+    workspace.style.transform = '';
+  }, 300);
+}
+function selectPageSwipeItem(item) {
+  if (item.kind === 'tool') return selectTool(item.id);
+  return selectHomeFeedSource(item.id);
+}
+function settlePageSwipe(target, direction) {
+  const token = ++pageSwipeAnimationToken;
+  workspace.classList.remove('page-swipe-dragging');
+  workspace.classList.add('page-swipe-settling');
+  workspace.style.transform = 'translate3d(' + (direction * 100) + '%, 0, 0)';
+  window.setTimeout(() => {
+    if (token !== pageSwipeAnimationToken) return;
+    pageSwipeAnimationToken = 0;
+    workspace.classList.remove('page-swipe-settling');
+    selectPageSwipeItem(target);
+    workspace.style.transform = '';
+  }, 300);
+}
+function updatePageSwipe(event) {
+  const gesture = pageSwipeGesture;
+  if (!gesture || (gesture.pointerId != null && event.pointerId !== gesture.pointerId)) return;
+  gesture.dx = event.clientX - gesture.startX;
+  gesture.dy = event.clientY - gesture.startY;
+  if (Math.abs(gesture.dy) > Math.abs(gesture.dx) + 10 && Math.abs(gesture.dy) > 8) {
+    gesture.cancelled = true;
+    endLongPress();
+    resetPageSwipeTransform();
+    return;
+  }
+  if (Math.abs(gesture.dx) <= 10 || Math.abs(gesture.dx) <= Math.abs(gesture.dy) + 8) return;
+  gesture.dragging = true;
+  endLongPress();
+  if (event.cancelable) event.preventDefault();
+  const direction = gesture.dx < 0 ? 1 : -1;
+  const nextIndex = gesture.index + direction;
+  const canNavigate = nextIndex >= 0 && nextIndex < gesture.items.length;
+  const visualDx = canNavigate ? gesture.dx : gesture.dx * 0.2;
+  workspace.classList.add('page-swipe-dragging');
+  workspace.style.transform = 'translate3d(' + visualDx + 'px, 0, 0)';
+}
+function finishPageSwipe(event) {
+  const gesture = pageSwipeGesture;
+  pageSwipeGesture = null;
+  if (!gesture || (gesture.pointerId != null && event.pointerId !== gesture.pointerId)) return;
+  if (gesture.cancelled || !gesture.dragging) return;
+  pageSwipeSuppressClickUntil = Date.now() + 460;
+  const direction = gesture.dx < 0 ? 1 : -1;
+  const nextIndex = gesture.index + direction;
+  const distance = Math.abs(gesture.dx);
+  const threshold = Math.max(56, Math.min(112, window.innerWidth * 0.18));
+  const target = nextIndex >= 0 && nextIndex < gesture.items.length && distance >= threshold ? gesture.items[nextIndex] : null;
+  if (target) settlePageSwipe(target, direction);
+  else settlePageSwipeBack();
+}
+
 workspace.addEventListener('pointerdown', (event) => {
   const row = event.target.closest('[data-swipe-row]');
   if (!row || event.target.closest('.swipe-delete')) {
@@ -2294,9 +2390,13 @@ workspace.addEventListener('pointerdown', (event) => { const source = event.targ
 workspace.addEventListener('pointerdown', (event) => { const book = event.target.closest('[data-reader-book-card]'); if (book && !event.target.closest('[data-delete-book]')) startLongPress(book, 'book', Number(book.dataset.readerBookIndex)); });
 workspace.addEventListener('pointerup', endLongPress);
 workspace.addEventListener('pointercancel', endLongPress);
+document.querySelector('main')?.addEventListener('pointerdown', beginPageSwipe);
 document.addEventListener('pointermove', updateTabSwipe, { passive: true });
 document.addEventListener('pointerup', finishTabSwipe, { passive: true });
 document.addEventListener('pointercancel', () => { tabSwipeGesture = null; endLongPress(); }, { passive: true });
+document.addEventListener('pointermove', updatePageSwipe, { passive: false });
+document.addEventListener('pointerup', finishPageSwipe, { passive: true });
+document.addEventListener('pointercancel', () => { pageSwipeGesture = null; resetPageSwipeTransform(); }, { passive: true });
 workspace.addEventListener('pointerdown', (event) => {
   const surface = event.target.closest('[data-reader-surface]');
   if (state.readerMode === 'reading' && surface) readerSurfaceGesture = { surface, x: event.clientX, y: event.clientY };
@@ -2317,6 +2417,7 @@ workspace.addEventListener('dragstart', (event) => { const source = event.target
 workspace.addEventListener('dragover', (event) => { if (event.target.closest('[data-feed-source]')) event.preventDefault(); });
 workspace.addEventListener('drop', (event) => { event.preventDefault(); const source = event.target.closest('[data-feed-source]'); if (source) swapHomeFeedSources(Number(event.dataTransfer.getData('text/plain')), Number(source.dataset.feedSourceIndex)); });
 workspace.addEventListener('click', async (event) => {
+  if (Date.now() < pageSwipeSuppressClickUntil) { event.preventDefault(); return; }
   if (Date.now() < swipeSuppressClickUntil && event.target.closest('[data-swipe-row]')) return;
   const section = event.target.closest('[data-section]');
   if (section) return selectSection(section.dataset.section);
