@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.33';
+const APP_VERSION = '2.18.34';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -272,7 +272,7 @@ const state = {
   layoutMode: storedLayout === 'classic' ? 'classic' : 'simple',
   toolOrder: normalizeToolOrder(parseStored(STORAGE.toolOrder, DEFAULT_TOOL_ORDER)),
   calcExpr: storedCalculator.expr || '', calcHistory: Array.isArray(storedCalculator.history) ? storedCalculator.history : [],
-  calcJustEvaluated: false, calcScientific: false, calcAngle: 'deg',
+  calcJustEvaluated: false, calcScientific: false, calcInverse: false, calcHistoryOpen: false, calcAngle: 'deg',
   month: new Date(today.getFullYear(), today.getMonth(), 1), selectedDate: dateKey(today),
   events: parseStored(STORAGE.events, {}) || {},
   weatherCards: initialWeatherCards.map((item) => ({ ...item, id: item.id || uid() })),
@@ -1017,17 +1017,25 @@ function calculator() {
     const id = item.id || String(item.at || item.expression);
     return '<div class="swipe-row history-swipe-row" data-swipe-row><button class="history-item swipe-content" data-history-expression="' + escapeHtml(item.expression) + '"><span>' + escapeHtml(item.expression) + '</span><b>' + escapeHtml(item.result) + '</b></button><button class="swipe-delete" data-delete-calc-history="' + escapeHtml(id) + '">' + (state.language === 'en' ? 'Delete' : '删除') + '</button></div>';
   }).join('') : '<p class="empty compact">' + t('ready') + '</p>';
-  const science = '<button class="science-key angle-toggle" data-toggle-angle>' + (state.calcAngle === 'deg' ? t('degree') : t('radian')) + '</button>' + scienceKeys.map(([label, key]) => '<button class="science-key" data-science-key="' + escapeHtml(key) + '">' + label + '</button>').join('');
-  const basic = (state.calcScientific ? scientificCalcKeys : calcKeys).map((key) => key === 'ƒx'
-    ? '<button class="key scientific-toggle" data-toggle-scientific aria-pressed="' + (state.calcScientific ? 'true' : 'false') + '" aria-label="' + t('scientific') + '">ƒx</button>'
-    : '<button class="key ' + (/[÷×−+%]/.test(key) ? 'op' : '') + ' ' + (key === '=' ? 'equal' : '') + ' ' + (key === 'AC' ? 'danger' : '') + '" data-key="' + key + '">' + key + '</button>').join('');
-  return heading(t('calculator'), t('calculatorDesc')) +
-    '<div class="calculator-layout"><div class="calculator-surface"><div class="display" aria-live="polite"><div class="expression">' + (escapeHtml(state.calcExpr) || (state.language === 'en' ? 'Ready' : '准备计算')) + '</div><div class="result">' + calcPreview() + '</div><div class="display-history"><div class="display-history-head"><span>' + t('recentCalculations') + '</span><button class="text-btn" data-clear-calc-history ' + (state.calcHistory.length ? '' : 'disabled') + '>' + t('clear') + '</button></div><div class="display-history-list">' + history + '</div></div></div>' +
-    '<div class="calculator-keyboard"><div class="scientific-bar" ' + (state.calcScientific ? '' : 'hidden') + '>' + science + '</div><div class="keys">' + basic + '</div></div><p class="keyboard-hint">' + t('keyboard') + '</p></div></div>';
+  const scienceButton = (label, key, extra = '') => '<button class="key calc-science-key" data-science-key="' + escapeHtml(key) + '" ' + extra + '>' + label + '</button>';
+  const normalButton = (label, extra = '') => '<button class="key ' + (/[÷×−+%]/.test(label) ? 'op ' : '') + (label === '=' ? 'equal ' : '') + (label === 'CE' ? 'danger ' : '') + '" data-key="' + escapeHtml(label) + '" ' + extra + '>' + label + '</button>';
+  const inverse = state.calcInverse;
+  const angle = '<button class="key angle-toggle" data-toggle-angle aria-label="' + t('degree') + ' / ' + t('radian') + '"><span>Deg</span><i></i><span>Rad</span></button>';
+  const keys = [
+    angle, scienceButton('x!', '!'), normalButton('('), normalButton(')'), normalButton('%'), normalButton('CE'),
+    '<button class="key calc-science-key" data-toggle-inverse aria-pressed="' + (inverse ? 'true' : 'false') + '">Inv</button>', scienceButton(inverse ? 'sin⁻¹' : 'sin', inverse ? 'asin(' : 'sin('), scienceButton('ln', 'ln('), normalButton('7'), normalButton('8'), normalButton('9'), normalButton('÷'),
+    scienceButton('π', 'π'), scienceButton(inverse ? 'cos⁻¹' : 'cos', inverse ? 'acos(' : 'cos('), scienceButton('log', 'log('), normalButton('4'), normalButton('5'), normalButton('6'), normalButton('×'),
+    scienceButton('e', 'e'), scienceButton(inverse ? 'tan⁻¹' : 'tan', inverse ? 'atan(' : 'tan('), scienceButton('√', 'sqrt('), normalButton('1'), normalButton('2'), normalButton('3'), normalButton('−'),
+    '<button class="key calc-science-key" data-answer>Ans</button>', '<button class="key calc-science-key" data-key="EXP">EXP</button>', scienceButton('xʸ', '^'), normalButton('0'), normalButton('.'), normalButton('='), normalButton('+'),
+  ].join('');
+  const answer = state.calcHistory[0]?.result || '0';
+  return '<div class="calculator-layout"><div class="calculator-surface"><div class="display" aria-live="polite"><div class="display-meta"><button class="display-history-toggle" data-toggle-calc-history aria-expanded="' + (state.calcHistoryOpen ? 'true' : 'false') + '" aria-label="' + t('recentCalculations') + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.3-5.7"/><path d="M4 5v5h5"/></svg></button><span>Ans = ' + escapeHtml(String(answer)) + '</span></div><div class="expression">' + (escapeHtml(state.calcExpr) || (state.language === 'en' ? 'Ready' : '准备计算')) + '</div><div class="result" aria-hidden="true">' + calcPreview() + '</div><div class="display-history" ' + (state.calcHistoryOpen ? '' : 'hidden') + '><div class="display-history-head"><span>' + t('recentCalculations') + '</span><button class="text-btn" data-clear-calc-history ' + (state.calcHistory.length ? '' : 'disabled') + '>' + t('clear') + '</button></div><div class="display-history-list">' + history + '</div></div></div>' +
+    '<div class="calculator-keyboard"><div class="keys calculator-grid">' + keys + '</div></div></div></div>';
 }
 function calculatorKey(key) {
-  if (key === 'AC') { state.calcExpr = ''; state.calcJustEvaluated = false; }
+  if (key === 'AC' || key === 'CE') { state.calcExpr = ''; state.calcJustEvaluated = false; }
   else if (key === '⌫') { state.calcExpr = state.calcExpr.slice(0, -1); state.calcJustEvaluated = false; }
+  else if (key === 'EXP') { state.calcExpr += '×10^'; state.calcJustEvaluated = false; }
   else if (key === '=') {
     try { const result = evaluateExpression(state.calcExpr); if (state.calcExpr) state.calcHistory.unshift({ id: uid(), expression: state.calcExpr, result: formatNumber(result), at: Date.now() }); state.calcExpr = String(result); state.calcJustEvaluated = true; }
     catch (error) { toast(error.message, 'error'); }
@@ -1827,6 +1835,9 @@ workspace.addEventListener('click', async (event) => {
   if (key) return calculatorKey(key.dataset.key);
   const scienceKey = event.target.closest('[data-science-key]');
   if (scienceKey) { state.calcJustEvaluated = false; state.calcExpr += scienceKey.dataset.scienceKey; saveCalculator(); return render(); }
+  if (event.target.closest('[data-answer]')) { state.calcJustEvaluated = false; state.calcExpr += state.calcHistory[0]?.result || calcPreview(); saveCalculator(); return render(); }
+  if (event.target.closest('[data-toggle-inverse]')) { state.calcInverse = !state.calcInverse; return render(); }
+  if (event.target.closest('[data-toggle-calc-history]')) { state.calcHistoryOpen = !state.calcHistoryOpen; return render(); }
   if (event.target.closest('[data-toggle-scientific]')) { state.calcScientific = !state.calcScientific; return render(); }
   if (event.target.closest('[data-toggle-angle]')) { state.calcAngle = state.calcAngle === 'deg' ? 'rad' : 'deg'; return render(); }
   const history = event.target.closest('[data-history-expression]');
