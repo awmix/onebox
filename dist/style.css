@@ -3824,12 +3824,12 @@ html.reader-focus .shell { width: 100%; padding: 0; }
   width: 100%;
 }
 
-/* The update action is a quiet text action; only its text follows the
-   configured application accent. */
+/* The update action remains lightweight, but keeps a visible button shape;
+   only its text and outline follow the configured application accent. */
 .mine-update-button.primary,
 .mine-update-button.primary:hover,
 .mine-update-button.primary:focus-visible {
-  border: 0;
+  border: 1px solid var(--primary);
   background: transparent;
   box-shadow: none;
   color: var(--primary);
@@ -3837,4 +3837,12 @@ html.reader-focus .shell { width: 100%; padding: 0; }
 .mine-update-button.primary:hover,
 .mine-update-button.primary:focus-visible {
   background: var(--soft);
+}
+
+/* 2.18.48: soften only the current hour/day selection stroke. The weather
+   cards themselves keep their existing size, spacing and content. */
+#workspace[data-tool="weather"] .hour-card.current,
+#workspace[data-tool="weather"] .forecast.current {
+  border-width: 1px;
+  border-color: color-mix(in srgb, var(--primary) 45%, transparent);
 }
