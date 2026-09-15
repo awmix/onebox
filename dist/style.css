@@ -2066,11 +2066,11 @@ main:has(#workspace[data-tool="mine"]) { background: transparent; }
 }
 #settingsDialog .settings-top-display-control .setting-toggle input:checked::after { transform: translateX(11px); }
 
-/* Weather controls stay on one iPhone-sized rail. Search is intentionally a
-   text action; location and refresh retain their compact control surfaces. */
+/* Weather controls stay on one iPhone-sized rail. Search remains a compact
+   outlined action; location stays inside the input. */
 #workspace[data-tool="weather"] .weather-search {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 52px 52px;
+  grid-template-columns: minmax(0, 1fr) 52px;
   align-items: center;
   gap: 5px;
 }
@@ -2234,7 +2234,7 @@ main:has(#workspace[data-tool="mine"]) { background: transparent; }
 
 @media (max-width: 600px) {
   #workspace[data-tool="weather"] .weather-search {
-    grid-template-columns: minmax(0, 1fr) 48px 48px;
+    grid-template-columns: minmax(0, 1fr) 48px;
     gap: 4px;
   }
   #workspace[data-tool="weather"] .weather-location-button {
@@ -3828,18 +3828,20 @@ html.reader-focus .shell { width: 100%; padding: 0; }
 .mine-update-button.primary,
 .mine-update-button.primary:hover,
 .mine-update-button.primary:focus-visible {
-  border: 0;
+  border: 1px solid var(--line);
   border-radius: 13px;
-  background: var(--primary);
+  background: transparent;
   box-shadow: none;
-  color: #fff;
-  padding: 10px 14px;
+  color: var(--primary);
+  min-width: 52px;
+  min-height: 38px;
+  padding: 0 12px;
   font-size: 12px;
   font-weight: 750;
 }
 .mine-update-button.primary:hover,
 .mine-update-button.primary:focus-visible {
-  background: color-mix(in srgb, var(--primary) 88%, #000);
+  background: var(--soft);
 }
 
 /* 2.18.48: soften only the current hour/day selection stroke. The weather

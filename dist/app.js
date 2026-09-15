@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.49';
+const APP_VERSION = '2.18.50';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -1681,7 +1681,7 @@ function weatherAdvice(weather, current) {
 }
 function weather() {
   const active = state.weatherCards.find((item) => item.id === state.activeWeatherId) || state.weatherCards[0];
-  const search = '<form id="weatherSearch" class="weather-search"><label class="sr-only" for="cityInput">' + t('searchPlace') + '</label><div class="weather-search-field"><input id="cityInput" placeholder="' + t('searchPlace') + '" autocomplete="off"><button class="weather-location-button" type="button" data-locate aria-label="' + t('currentLocation') + '"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7"></circle><circle cx="12" cy="12" r="2"></circle><path d="M12 2v3M12 19v3M2 12h3M19 12h3"></path></svg></button></div><button class="primary" type="submit">' + t('weatherSearch') + '</button><button class="secondary" type="button" data-refresh-weather>' + t('refresh') + '</button></form>';
+  const search = '<form id="weatherSearch" class="weather-search"><label class="sr-only" for="cityInput">' + t('searchPlace') + '</label><div class="weather-search-field"><input id="cityInput" placeholder="' + t('searchPlace') + '" autocomplete="off"><button class="weather-location-button" type="button" data-locate aria-label="' + t('currentLocation') + '"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7"></circle><circle cx="12" cy="12" r="2"></circle><path d="M12 2v3M12 19v3M2 12h3M19 12h3"></path></svg></button></div><button class="primary" type="submit">' + t('weatherSearch') + '</button></form>';
   const results = state.weatherSearchResults.length ? '<div class="weather-search-results"><div class="search-results-head"><strong>' + (state.language === 'en' ? 'Search results' : '搜索结果') + '</strong><small>' + (state.language === 'en' ? 'Choose a place, then add it to weather cards' : '选择地点后再添加到天气卡片') + '</small></div>' + state.weatherSearchResults.map((place, index) => '<div class="weather-result"><span><strong>' + escapeHtml(place.name) + '</strong><small>' + escapeHtml(placeLabel(place)) + '</small></span><button class="secondary" data-weather-result-index="' + index + '">' + t('addCard') + '</button></div>').join('') + '</div>' : '';
   if (!active) return heading(t('weather'), t('weatherDesc')) + search + results + '<div class="empty weather-empty">' + (state.weatherLoading ? '<span class="loader"></span>' + t('weatherLoading') : t('noWeather')) + (state.weatherError ? '<strong class="error-text">' + escapeHtml(state.weatherError) + '</strong>' : '') + '</div>';
   const current = active.current || {};
@@ -2244,6 +2244,7 @@ nav.addEventListener('click', (event) => {
   const tab = event.target.closest('[data-tool]'); if (!tab) return;
   if (handleReorderClick(tab, 'tool', Number(tab.dataset.toolIndex))) { event.preventDefault(); return; }
   selectTool(tab.dataset.tool);
+  if (tab.dataset.tool === 'weather') refreshWeatherCard(state.weatherCards.find((card) => card.id === state.activeWeatherId));
 });
 nav.addEventListener('dragstart', (event) => { const tab = event.target.closest('[data-tool]'); if (tab) event.dataTransfer.setData('text/plain', tab.dataset.toolIndex); });
 nav.addEventListener('dragover', (event) => { if (event.target.closest('[data-tool]')) event.preventDefault(); });
@@ -2407,7 +2408,6 @@ workspace.addEventListener('click', async (event) => {
     state.weatherLoading = true; render();
     return navigator.geolocation.getCurrentPosition(async (position) => addWeatherPlace(await reverseGeocode(position.coords.latitude, position.coords.longitude)), () => { state.weatherLoading = false; state.weatherError = state.language === 'en' ? 'Location permission was denied' : '无法获取当前位置，请检查浏览器权限'; render(); });
   }
-  if (event.target.closest('[data-refresh-weather]')) return refreshWeatherCard(state.weatherCards.find((item) => item.id === state.activeWeatherId));
   if (event.target.closest('[data-swap]')) { [conversion.from, conversion.to] = [conversion.to, conversion.from]; return render(); }
   if (event.target.closest('[data-swap-language]')) {
     const source = state.translation.source === 'auto' ? 'en' : state.translation.source;
@@ -2454,7 +2454,10 @@ workspace.addEventListener('change', (event) => {
 });
 workspace.addEventListener('submit', (event) => {
   event.preventDefault();
-  if (event.target.id === 'weatherSearch') searchWeather($('#cityInput').value);
+  if (event.target.id === 'weatherSearch') {
+    const query = $('#cityInput')?.value.trim() || '';
+    return query ? searchWeather(query) : refreshWeatherCard(state.weatherCards.find((item) => item.id === state.activeWeatherId));
+  }
 });
 
 $('#eventDialog').addEventListener('click', (event) => {
