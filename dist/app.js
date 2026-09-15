@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.27';
+const APP_VERSION = '2.18.28';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -32,8 +32,7 @@ const TOOL_DEFS = {
   calculator: { icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="3"/><path d="M8 7h8M8 11h.01M12 11h.01M16 11h.01M8 15h.01M12 15h.01M16 15h.01M8 18h8"/></svg>', key: 'calculator' },
   calendar: { icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="16" rx="3"/><path d="M8 3v4M16 3v4M4 9h16M8 13h.01M12 13h.01M16 13h.01M8 17h.01M12 17h.01M16 17h.01"/></svg>', key: 'calendar' },
   weather: { icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.5"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>', key: 'weather' },
-  convert: { icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h12l-3-3M19 17H7l3 3M17 4v4M7 16v4"/></svg>', key: 'convert' },
-  translate: { icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 17 8 6l4 11M5.5 13h5M14 6h6M14 10h4M14 14h6M14 18h4"/></svg>', key: 'translate' },
+  translate: { icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 18 8 6l4 12M5.5 14h5M14 8h6M17 5v3M14 16h6M17 13v3"/></svg>', key: 'translateConvert' },
   reader: { icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4h12v17H7.5A1.5 1.5 0 0 1 6 19.5V4Z"/><path d="M6 5.5A2.5 2.5 0 0 1 8.5 3H18M9 8h6M9 12h6M9 16h4"/></svg>', key: 'reader' },
 };
 const RSS_SOURCES = [
@@ -147,7 +146,7 @@ const toast = (message, kind = 'info') => {
 
 const DICT = {
   zh: {
-    calculator: '计算', calendar: '日历', weather: '天气', convert: '转换', translate: '翻译', reader: '阅读',
+    calculator: '计算', calendar: '日历', weather: '天气', convert: '转换', translate: '翻译', translateConvert: '翻译 / 转换', reader: '阅读',
     online: '在线', offline: '离线', install: '安装应用', settings: '设置', notifications: '消息提示',
     heroSubtitle: '快速、清爽、可离线。你的数据优先保存在当前设备。',
     calculatorDesc: '支持括号、百分比、科学函数和键盘输入，并自动保留最近计算记录。',
@@ -188,7 +187,7 @@ const DICT = {
     bookshelf: '书架', addBook: '添加文档', noBooks: '还没有本地文档。', readerHint: '支持 Markdown、PDF、EPUB；文档仅保存在当前设备。', openBook: '打开阅读', deleteBook: '删除文档', annotations: '标注', addAnnotation: '添加标注', annotationPlaceholder: '写下你的标注…', saveAnnotation: '保存标注', annotationHint: '选择文字后长按或点击标注按钮。', noAnnotations: '还没有标注。', reading: '正在阅读', closeReader: '关闭阅读', unsupportedFile: '请选择 .md、.markdown、.pdf 或 .epub 文件。', importFailed: '文档读取失败，请重试。', deleteConfirm: '确定删除这本文档吗？', pdfHint: 'PDF 使用浏览器原生阅读器打开。', epubHint: 'EPUB 已转换为适合 OneBox 的连续阅读视图。',
   },
   en: {
-    calculator: 'Calculator', calendar: 'Calendar', weather: 'Weather', convert: 'Convert', translate: 'Translate', reader: 'Reader',
+    calculator: 'Calculator', calendar: 'Calendar', weather: 'Weather', convert: 'Convert', translate: 'Translate', translateConvert: 'Translate / Convert', reader: 'Reader',
     online: 'Online', offline: 'Offline', install: 'Install', settings: 'Settings', notifications: 'Notifications',
     heroSubtitle: 'Fast, calm and offline-ready. Your data stays on this device first.',
     calculatorDesc: 'Parentheses, percentages, scientific functions, keyboard input and history.',
@@ -248,7 +247,7 @@ const storedFootprint = parseStored(STORAGE.footprint, false) === true;
 const rawWeatherCards = parseStored(STORAGE.weatherCards, []);
 const legacyWeather = parseStored(STORAGE.legacyWeather, null);
 const normalizeToolOrder = (value) => {
-  const order = Array.isArray(value) ? value.filter((id) => TOOL_DEFS[id]) : [];
+  const order = Array.isArray(value) ? value.map((id) => id === 'convert' ? 'translate' : id).filter((id) => TOOL_DEFS[id]) : [];
   return [...new Set(order.concat(Object.keys(TOOL_DEFS)))].slice(0, Object.keys(TOOL_DEFS).length);
 };
 const normalizeHomeFeedOrder = (value) => {
@@ -260,8 +259,9 @@ const initialWeatherCards = (Array.isArray(rawWeatherCards) && rawWeatherCards.l
   isCurrentLocation: Boolean(item.isCurrentLocation || item.name === '当前位置' || item.name === 'Current location'),
 })).filter((item, index, cards) => !item.isCurrentLocation || cards.findIndex((candidate) => candidate.isCurrentLocation) === index);
 const initialHash = location.hash.slice(1);
-const initialTool = Object.keys(TOOL_DEFS).includes(initialHash) ? initialHash : 'calculator';
-const initialSection = ['home', 'messages', 'mine'].includes(initialHash) ? initialHash : Object.keys(TOOL_DEFS).includes(initialHash) ? 'tools' : 'home';
+const initialToolHash = initialHash === 'convert' ? 'translate' : initialHash;
+const initialTool = Object.keys(TOOL_DEFS).includes(initialToolHash) ? initialToolHash : 'calculator';
+const initialSection = ['home', 'messages', 'mine'].includes(initialHash) ? initialHash : Object.keys(TOOL_DEFS).includes(initialToolHash) ? 'tools' : 'home';
 const state = {
   tool: initialTool,
   section: initialSection,
@@ -332,7 +332,7 @@ function renderHeaderControls() {
   const layoutNav = $('#layoutNav');
   if (layoutNav) layoutNav.hidden = !simple;
   const topDisplay = state.topDisplay || { theme: true, language: true, messages: true };
-  const visibility = { notifyBtn: !simple && topDisplay.messages, themeBtn: !simple && topDisplay.theme, languageBtn: !simple && topDisplay.language, settingsBtn: !simple };
+  const visibility = { notifyBtn: false, themeBtn: !simple && topDisplay.theme, languageBtn: !simple && topDisplay.language, settingsBtn: !simple };
   Object.entries(visibility).forEach(([id, visible]) => {
     const button = $('#' + id);
     if (button) button.hidden = !visible;
@@ -396,7 +396,7 @@ function renderTopNav() {
   const layoutNav = $('#layoutNav');
   if (!layoutNav) return;
   const unread = state.notifications.filter((item) => !item.read).length;
-  const refreshIcon = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0 2 5M20 5v6h-6"/></svg>';
+  const refreshIcon = '<svg class="refresh-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0 2 5M20 5v6h-6M4 13a8 8 0 1 0-2-5M4 19v-6h6"/></svg>';
   layoutNav.innerHTML = Object.values(SECTION_DEFS).map((item) => {
     const active = state.section === item.key;
     const isHomeRefresh = item.key === 'home' && state.homeFeed.hasNew;
@@ -416,7 +416,7 @@ function renderBottomNav() {
   } else if ($('main')?.scrollTop <= 8) {
     bottomNav.classList.remove('is-blurred');
   }
-  const refreshIcon = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0 2 5M20 5v6h-6"/></svg>';
+  const refreshIcon = '<svg class="refresh-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0 2 5M20 5v6h-6M4 13a8 8 0 1 0-2-5M4 19v-6h6"/></svg>';
   bottomNav.innerHTML = Object.values(SECTION_DEFS).map((item) => {
     const isHomeRefresh = item.key === 'home' && state.homeFeed.hasNew;
     const active = state.section === item.key;
@@ -426,6 +426,7 @@ function renderBottomNav() {
   renderTopNav();
 }
 function selectTool(id) {
+  if (id === 'convert') id = 'translate';
   if (!TOOL_DEFS[id]) id = 'calculator';
   state.section = 'tools';
   state.tool = id;
@@ -1165,7 +1166,7 @@ function weatherAdvice(weather, current) {
 }
 function weather() {
   const active = state.weatherCards.find((item) => item.id === state.activeWeatherId) || state.weatherCards[0];
-  const search = '<form id="weatherSearch" class="weather-search"><label class="sr-only" for="cityInput">' + t('searchPlace') + '</label><div class="weather-search-field"><input id="cityInput" placeholder="' + t('searchPlace') + '" autocomplete="off"></div><button class="weather-location-button" type="button" data-locate aria-label="' + t('currentLocation') + '"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7"></circle><circle cx="12" cy="12" r="2"></circle><path d="M12 2v3M12 19v3M2 12h3M19 12h3"></path></svg></button><button class="primary" type="submit">' + t('weatherSearch') + '</button><button class="secondary" type="button" data-refresh-weather>' + t('refresh') + '</button></form>';
+  const search = '<form id="weatherSearch" class="weather-search"><label class="sr-only" for="cityInput">' + t('searchPlace') + '</label><div class="weather-search-field"><input id="cityInput" placeholder="' + t('searchPlace') + '" autocomplete="off"><button class="weather-location-button" type="button" data-locate aria-label="' + t('currentLocation') + '"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7"></circle><circle cx="12" cy="12" r="2"></circle><path d="M12 2v3M12 19v3M2 12h3M19 12h3"></path></svg></button></div><button class="primary" type="submit">' + t('weatherSearch') + '</button><button class="secondary" type="button" data-refresh-weather>' + t('refresh') + '</button></form>';
   const results = state.weatherSearchResults.length ? '<div class="weather-search-results"><div class="search-results-head"><strong>' + (state.language === 'en' ? 'Search results' : '搜索结果') + '</strong><small>' + (state.language === 'en' ? 'Choose a place, then add it to weather cards' : '选择地点后再添加到天气卡片') + '</small></div>' + state.weatherSearchResults.map((place, index) => '<div class="weather-result"><span><strong>' + escapeHtml(place.name) + '</strong><small>' + escapeHtml(placeLabel(place)) + '</small></span><button class="secondary" data-weather-result-index="' + index + '">' + t('addCard') + '</button></div>').join('') + '</div>' : '';
   if (!active) return heading(t('weather'), t('weatherDesc')) + search + results + '<div class="empty weather-empty">' + (state.weatherLoading ? '<span class="loader"></span>' + t('weatherLoading') : t('noWeather')) + (state.weatherError ? '<strong class="error-text">' + escapeHtml(state.weatherError) + '</strong>' : '') + '</div>';
   const current = active.current || {};
@@ -1236,15 +1237,15 @@ function convertedValue() {
 function unitOptions(category, selected) {
   return category.units.map((unit, index) => '<option value="' + index + '" ' + (index === selected ? 'selected' : '') + '>' + unit[0] + ' (' + unit[1] + ')</option>').join('');
 }
-function convert() {
+function conversionMarkup() {
   const category = units[conversion.category];
   const categories = Object.entries(units).map(([key, item]) => '<option value="' + key + '" ' + (key === conversion.category ? 'selected' : '') + '>' + item.name + '</option>').join('');
-  return heading(t('convert'), t('convertDesc')) +
-    '<div class="converter-card"><div class="field field-inline"><label for="conversionCategory">' + t('converterType') + '</label><select id="conversionCategory">' + categories + '</select></div><div class="conversion-row">' +
+  return '<div class="converter-card"><div class="field field-inline"><label for="conversionCategory">' + t('converterType') + '</label><select id="conversionCategory">' + categories + '</select></div><div class="conversion-row">' +
     '<div class="field field-inline"><label for="fromUnit">' + t('from') + '</label><select id="fromUnit">' + unitOptions(category, conversion.from) + '</select><input id="conversionValue" type="number" step="any" inputmode="decimal" value="' + escapeHtml(conversion.value) + '" aria-label="' + t('from') + '"></div>' +
     '<button class="swap" data-swap aria-label="' + t('swap') + '">⇄</button><div class="field field-inline"><label for="toUnit">' + t('to') + '</label><select id="toUnit">' + unitOptions(category, conversion.to) + '</select><div class="conversion-result" aria-live="polite"><small>' + t('result') + '</small><strong>' + formatNumber(convertedValue()) + '</strong><span>' + category.units[conversion.to][1] + '</span></div></div></div>' +
     '<button class="secondary copy-button" data-copy-conversion>' + t('copyResult') + '</button><span class="copy-status" id="copyStatus"></span></div>';
 }
+function convert() { return '<section class="language-tool-card converter-panel"><div class="language-tool-head"><div><p class="section-kicker">' + t('convert') + '</p><h2>' + t('convert') + '</h2><p>' + t('convertDesc') + '</p></div></div>' + conversionMarkup() + '</section>'; }
 
 // Translation ---------------------------------------------------------------
 const languageOptions = [['auto', '自动检测 / Auto'], ['zh', '中文 / Chinese'], ['en', 'English'], ['ja', '日本語 / Japanese'], ['ko', '한국어 / Korean']];
@@ -1293,6 +1294,9 @@ function translateView() {
     '<div class="translation-layout"><div class="translation-card"><div class="translation-toolbar"><div class="field field-inline"><label for="translationSource">' + t('source') + '</label><select id="translationSource">' + options(state.translation.source) + '</select></div><button class="swap" data-swap-language aria-label="' + t('swap') + '">⇄</button><div class="field field-inline"><label for="translationTarget">' + t('target') + '</label><select id="translationTarget">' + options(state.translation.target) + '</select></div></div>' +
     '<div class="field"><label for="translationInput">' + t('translationInput') + '</label><div class="translation-input-wrap"><textarea id="translationInput" maxlength="5000" placeholder="' + (state.language === 'en' ? 'Type or paste text here…' : '输入或粘贴文字…') + '">' + escapeHtml(state.translation.input) + '</textarea><div class="translation-input-actions"><button class="input-action" data-translate-submit ' + (state.translation.loading ? 'disabled' : '') + ' aria-label="' + t('translateNow') + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 12 16-8-5 16-3-6-8-2Z"/><path d="m12 14 4-4"/></svg></button><button class="input-action" data-save-translation aria-label="' + t('saveTranslation') + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h11l3 3v13H5zM8 4v6h8V4M8 16h8"/></svg></button></div></div></div><h3 class="weather-section-title">' + t('translationResult') + '</h3><div class="translation-result ' + (state.translation.result ? '' : 'placeholder') + '">' + escapeHtml(result) + '</div>' + (state.translation.error ? '<p class="inline-alert">' + escapeHtml(state.translation.error) + '</p>' : '') + '</div>' +
     '<aside class="translation-history"><div class="subhead"><h3>' + t('translationHistory') + '</h3><button class="text-btn" data-clear-translation-history>' + t('clear') + '</button></div><div class="translation-history-list">' + history + '</div></aside></div>';
+}
+function translateConvertView() {
+  return '<div class="translate-convert-page"><section class="language-tool-card translation-panel"><div class="language-tool-head"><div><p class="section-kicker">' + t('translate') + '</p><h2>' + t('translate') + '</h2><p>' + t('translateDesc') + '</p></div></div>' + translateView() + '</section>' + convert() + '</div>';
 }
 
 // Notifications and calendar reminders -------------------------------------
@@ -1527,7 +1531,7 @@ function closeGithubDialog() { const dialog = $('#githubDialog'); if (dialog) di
 function renderSettings() {
   const dialog = $('#settingsDialog');
   const notificationPreference = state.notificationPreference === 'deny' ? 'deny' : 'allow';
-  const topDisplay = state.layoutMode === 'classic' ? '<div class="settings-preference-row settings-top-display-row"><h3>' + t('topDisplay') + '</h3><div class="settings-preference-control settings-top-display-control"><label class="setting-toggle"><input type="checkbox" data-top-display="theme" ' + (state.topDisplay.theme ? 'checked' : '') + '><span>' + t('theme') + '</span></label><label class="setting-toggle"><input type="checkbox" data-top-display="language" ' + (state.topDisplay.language ? 'checked' : '') + '><span>' + t('language') + '</span></label><label class="setting-toggle"><input type="checkbox" data-top-display="messages" ' + (state.topDisplay.messages ? 'checked' : '') + '><span>' + t('messages') + '</span></label></div></div>' : '';
+  const topDisplay = state.layoutMode === 'classic' ? '<div class="settings-preference-row settings-top-display-row"><h3>' + t('topDisplay') + '</h3><div class="settings-preference-control settings-top-display-control"><label class="setting-toggle"><input type="checkbox" data-top-display="theme" ' + (state.topDisplay.theme ? 'checked' : '') + '><span>' + t('theme') + '</span></label><label class="setting-toggle"><input type="checkbox" data-top-display="language" ' + (state.topDisplay.language ? 'checked' : '') + '><span>' + t('language') + '</span></label></div></div>' : '';
   dialog.innerHTML = '<div class="dialog-card settings-dialog-card" role="dialog" aria-modal="true"><div class="dialog-head"><h2>' + t('settings') + '</h2><button class="icon-btn small" data-close-settings aria-label="' + t('close') + '">×</button></div>' +
     '<div class="settings-preferences"><div class="settings-preference-row"><h3>' + t('layout') + '</h3><div class="settings-preference-control"><select id="settingsLayout"><option value="classic" ' + (state.layoutMode === 'classic' ? 'selected' : '') + '>' + t('classicLayout') + '</option><option value="simple" ' + (state.layoutMode === 'simple' ? 'selected' : '') + '>' + t('simpleLayout') + '</option></select></div></div>' + topDisplay + '<div class="settings-preference-row"><h3>' + t('theme') + '</h3><div class="settings-preference-control"><select id="settingsTheme"><option value="system" ' + (state.theme === 'system' ? 'selected' : '') + '>' + t('system') + '</option><option value="light" ' + (state.theme === 'light' ? 'selected' : '') + '>' + t('light') + '</option><option value="dark" ' + (state.theme === 'dark' ? 'selected' : '') + '>' + t('dark') + '</option></select></div></div><div class="settings-preference-row"><h3>' + t('color') + '</h3><div class="settings-preference-control"><select id="settingsColor"><option value="mono" ' + (state.color === 'mono' ? 'selected' : '') + '>' + t('blackWhite') + '</option><option value="purple" ' + (state.color === 'purple' ? 'selected' : '') + '>' + t('noblePurple') + '</option><option value="blue" ' + (state.color === 'blue' ? 'selected' : '') + '>' + t('skyBlue') + '</option><option value="green" ' + (state.color === 'green' ? 'selected' : '') + '>' + t('notBananaGreen') + '</option><option value="yellow" ' + (state.color === 'yellow' ? 'selected' : '') + '>' + t('meituanYellow') + '</option></select></div></div><div class="settings-preference-row"><h3>' + t('language') + '</h3><div class="settings-preference-control"><select id="settingsLanguage"><option value="system" ' + (state.languageMode === 'system' ? 'selected' : '') + '>' + t('system') + '</option><option value="zh" ' + (state.languageMode === 'zh' ? 'selected' : '') + '>中文</option><option value="en" ' + (state.languageMode === 'en' ? 'selected' : '') + '>English</option></select></div></div><div class="settings-preference-row"><h3>' + t('messages') + '</h3><div class="settings-preference-control"><select id="settingsNotifications"><option value="allow" ' + (notificationPreference === 'allow' ? 'selected' : '') + '>' + t('enableNotifications') + '</option><option value="deny" ' + (notificationPreference === 'deny' ? 'selected' : '') + '>' + t('disableNotifications') + '</option></select></div></div><div class="settings-preference-row"><h3>' + t('footprint') + '</h3><div class="settings-preference-control"><select id="settingsFootprint"><option value="hide" ' + (!state.footprint ? 'selected' : '') + '>' + t('hideFootprint') + '</option><option value="show" ' + (state.footprint ? 'selected' : '') + '>' + t('showFootprint') + '</option></select></div></div></div>';
   dialog.hidden = false; state.settingsOpen = true;
@@ -1628,7 +1632,7 @@ function render() {
   applyLanguage();
   if (state.section === 'home') loadHomeFeeds();
   nav.hidden = state.section !== 'tools';
-  const renderers = { calculator, calendar, weather, convert, translate: translateView, reader };
+  const renderers = { calculator, calendar, weather, convert, translate: translateConvertView, reader };
   workspace.dataset.tool = state.section === 'tools' ? state.tool : state.section;
   workspace.innerHTML = state.section === 'home' ? renderHome() : state.section === 'messages' ? renderMessages() : state.section === 'mine' ? renderMine() : (renderers[state.tool] || calculator)();
   if (state.section === 'tools' && state.tool === 'calendar') ensureHolidayYear(state.month.getFullYear());
