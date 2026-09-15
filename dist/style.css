@@ -4222,9 +4222,133 @@ main { overflow-x: hidden; }
 }
 .reader-fullscreen-tool .reader-fullscreen-exit { stroke-width: 2; }
 
+/* 2.18.59: reader preferences use the same compact choice buttons as the
+   reading backgrounds; text actions stay inside the reader surface. */
+.reader-choice-grid {
+  display: grid;
+  gap: 6px;
+}
+.reader-choice-grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.reader-choice-grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.reader-setting-choice {
+  width: 100%;
+  min-width: 0;
+  padding-inline: 4px;
+  overflow: hidden;
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.reader-settings-body > .reader-setting-group + .reader-setting-group,
+.reader-settings-body > .reader-setting-group + .reader-range-row,
+.reader-settings-body > .reader-range-row + .reader-setting-group {
+  margin-top: 14px;
+}
+.reader-progress-ring {
+  width: 26px;
+  height: 26px;
+  flex-basis: 26px;
+}
+.reader-progress-ring b {
+  max-width: 22px;
+  overflow: hidden;
+  font-size: 6px;
+  letter-spacing: -.3px;
+  line-height: 1;
+  white-space: nowrap;
+  transform: scale(.9);
+}
+.reader-selection-menu {
+  position: absolute;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  max-width: calc(100% - 16px);
+  padding: 5px;
+  border: 1px solid var(--reader-line);
+  border-radius: 12px;
+  background: var(--reader-panel);
+  box-shadow: 0 10px 24px rgba(12, 18, 30, .16);
+}
+.reader-selection-menu[hidden],
+.reader-comment-popover[hidden] { display: none; }
+.reader-selection-menu button {
+  min-height: 28px;
+  padding: 4px 8px;
+  border: 1px solid color-mix(in srgb, var(--reader-line) 82%, var(--primary));
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--reader-panel) 86%, var(--reader-bg));
+  color: var(--reader-ink);
+  font-size: 11px;
+  white-space: nowrap;
+}
+.reader-selection-menu button:hover,
+.reader-selection-menu button:focus-visible {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+.reader-underline {
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  text-decoration-line: underline;
+  text-decoration-color: var(--primary);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+}
+.reader-highlight {
+  margin: 0;
+  padding: 0 .08em;
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--primary) 24%, transparent);
+  color: inherit;
+}
+.reader-comment-anchor {
+  border-bottom: 1px dotted var(--primary);
+}
+.reader-comment-badge {
+  display: inline-block;
+  width: 10px;
+  height: 12px;
+  margin: 0 0 0 2px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--primary);
+  vertical-align: super;
+  cursor: pointer;
+}
+.reader-comment-badge::before {
+  content: '•';
+  font-size: 14px;
+  font-weight: 900;
+  line-height: 10px;
+}
+.reader-comment-popover {
+  position: absolute;
+  z-index: 31;
+  width: min(260px, calc(100% - 20px));
+  padding: 10px 12px;
+  border: 1px solid var(--reader-line);
+  border-radius: 12px;
+  background: var(--reader-panel);
+  color: var(--reader-ink);
+  box-shadow: 0 10px 28px rgba(12, 18, 30, .18);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.reader-comment-popover strong { color: var(--primary); font-size: 11px; }
+.reader-comment-popover p { margin: 5px 0 0; overflow-wrap: anywhere; white-space: pre-wrap; }
+#annotationDialog { z-index: 180; }
+
 @media (max-width: 600px) {
   .reader-dialog-title { gap: 6px; }
   .reader-dialog-title small { font-size: 10px; }
   .reader-dialog-close { width: 32px; height: 32px; flex-basis: 32px; }
   .reader-settings-body .reader-theme-choice { gap: 2px; font-size: 10px; }
+  .reader-setting-choice { font-size: 10px; }
+  .reader-selection-menu { gap: 3px; padding: 4px; }
+  .reader-selection-menu button { min-height: 27px; padding-inline: 7px; font-size: 10px; }
 }

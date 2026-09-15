@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.58';
+const APP_VERSION = '2.18.59';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -302,7 +302,7 @@ const state = {
   translationHistory: parseStored(STORAGE.translationHistory, []),
   translationHistoryOpen: storedTranslationHistoryOpen,
   library: (Array.isArray(storedLibrary) ? storedLibrary : []).filter((book) => book && book.id && book.name),
-  readerBookId: null, readerUrl: '', readerContent: '', readerHint: '', readerToc: [], readerDialog: '', readerChromeHidden: false, readerImmersive: false, readerMode: 'library', readerReadingMode: 'scroll', readerPage: 0, readerSelectedText: '', readerLayout: storedReaderLayout === 'list' ? 'list' : 'grid', annotationBookId: null,
+  readerBookId: null, readerUrl: '', readerContent: '', readerHint: '', readerToc: [], readerDialog: '', readerChromeHidden: false, readerImmersive: false, readerMode: 'library', readerReadingMode: 'scroll', readerPage: 0, readerSelectedText: '', readerSelection: null, readerLayout: storedReaderLayout === 'list' ? 'list' : 'grid', annotationBookId: null,
   readerPreferences: { theme: ['paper', 'sepia', 'green', 'dark'].includes(storedReaderPreferences.theme) ? storedReaderPreferences.theme : 'paper', fontSize: Number.isFinite(Number(storedReaderPreferences.fontSize)) ? Math.min(26, Math.max(15, Number(storedReaderPreferences.fontSize))) : 18, fontFamily: ['system', 'serif', 'mono'].includes(storedReaderPreferences.fontFamily) ? storedReaderPreferences.fontFamily : 'system', lineHeight: Number.isFinite(Number(storedReaderPreferences.lineHeight)) ? Math.min(2.2, Math.max(1.35, Number(storedReaderPreferences.lineHeight))) : 1.8, paragraphSpacing: Number.isFinite(Number(storedReaderPreferences.paragraphSpacing)) ? Math.min(28, Math.max(6, Number(storedReaderPreferences.paragraphSpacing))) : 14, letterSpacing: Number.isFinite(Number(storedReaderPreferences.letterSpacing)) ? Math.min(2, Math.max(0, Number(storedReaderPreferences.letterSpacing))) : 0, pageAnimation: ['slide', 'cover', 'none'].includes(storedReaderPreferences.pageAnimation) ? storedReaderPreferences.pageAnimation : 'slide' },
   homeFeed: { active: DEFAULT_HOME_FEED_ORDER[0], order: normalizeHomeFeedOrder(storedHomeFeedOrder), hasNew: false, loading: false, errors: {}, updatedAt: Number(storedHomeFeeds.updatedAt || 0), cacheVersion: storedHomeFeeds.cacheVersion || '', sources: storedHomeFeeds.sources && typeof storedHomeFeeds.sources === 'object' ? storedHomeFeeds.sources : {} },
   homeFeedRead: storedHomeFeedRead && typeof storedHomeFeedRead === 'object' ? storedHomeFeedRead : {},
@@ -985,6 +985,14 @@ function readerAnnotationMarkup(book) {
 }
 let readerProgressFrame = 0;
 let readerProgressTimer = null;
+let readerRestoreTimer = null;
+function scheduleReaderPositionRestore() {
+  if (readerRestoreTimer) clearTimeout(readerRestoreTimer);
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    restoreReaderPosition();
+    readerRestoreTimer = setTimeout(() => { readerRestoreTimer = null; restoreReaderPosition(); }, 140);
+  }));
+}
 function scheduleReaderProgress(content) {
   const book = readerBookById(state.readerBookId); if (!book || !content || !content.scrollHeight) return;
   if (state.readerReadingMode === 'pages' && content.classList.contains('reader-page-viewport')) {
@@ -999,6 +1007,16 @@ function scheduleReaderProgress(content) {
   });
   clearTimeout(readerProgressTimer);
   readerProgressTimer = setTimeout(() => { readerProgressTimer = null; saveLibrary(); }, 350);
+}
+function flushReaderProgress() {
+  const book = readerBookById(state.readerBookId); const content = $('[data-reader-content]');
+  if (!book || !content || !content.scrollHeight) return;
+  if (state.readerReadingMode === 'pages' && content.classList.contains('reader-page-viewport')) {
+    book.progress = Math.min(1, Math.max(0, content.scrollLeft / Math.max(1, content.scrollWidth - content.clientWidth)));
+  } else {
+    book.progress = Math.min(1, Math.max(0, content.scrollTop / Math.max(1, content.scrollHeight - content.clientHeight)));
+  }
+  saveLibrary();
 }
 function updateReaderPager() {
   const viewport = $('.reader-page-viewport'); if (!viewport) return;
@@ -1022,7 +1040,8 @@ function restoreReaderPosition() {
     content.scrollLeft = Math.min(Math.max(0, page), count - 1) * content.clientWidth;
     updateReaderPager();
   } else if (book.progress) {
-    content.scrollTop = content.scrollHeight * book.progress;
+    const maxScrollTop = Math.max(0, content.scrollHeight - content.clientHeight);
+    content.scrollTop = maxScrollTop * Math.min(1, Math.max(0, Number(book.progress) || 0));
   }
   updateReaderReferenceChrome();
 }
@@ -1076,13 +1095,13 @@ function renderReaderView(content, hint = '', toc = [], readingMode = 'pages') {
   state.readerChromeHidden = false;
   state.readerPage = 0;
   render();
-  requestAnimationFrame(restoreReaderPosition);
+  scheduleReaderPositionRestore();
 }
 async function openReaderBook(id) {
   const book = readerBookById(id); if (!book) return;
   state.readerImmersive = true;
   requestReaderFullscreen();
-  state.readerBookId = id; state.readerSelectedText = ''; book.lastOpenedAt = Date.now(); saveLibrary();
+  state.readerBookId = id; state.readerSelectedText = ''; state.readerSelection = null; book.lastOpenedAt = Date.now(); saveLibrary();
   try {
     let content = ''; let hint = ''; let toc = [];
     if (book.type === 'md') { content = markdownToHtml(book.content); toc = readerTextToc(book.content).map((item) => ({ ...item })); }
@@ -1103,7 +1122,8 @@ async function openReaderBook(id) {
 function closeReader() {
   exitReaderFullscreen();
   if (state.readerUrl) URL.revokeObjectURL(state.readerUrl);
-  state.readerUrl = ''; state.readerBookId = null; state.readerContent = ''; state.readerHint = ''; state.readerToc = []; state.readerDialog = ''; state.readerChromeHidden = false; state.readerImmersive = false; state.readerMode = 'library'; state.readerReadingMode = 'scroll'; state.readerPage = 0; state.readerSelectedText = '';
+  flushReaderProgress();
+  state.readerUrl = ''; state.readerBookId = null; state.readerContent = ''; state.readerHint = ''; state.readerToc = []; state.readerDialog = ''; state.readerChromeHidden = false; state.readerImmersive = false; state.readerMode = 'library'; state.readerReadingMode = 'scroll'; state.readerPage = 0; state.readerSelectedText = ''; state.readerSelection = null;
   render();
 }
 const READER_THEME_VALUES = {
@@ -1135,6 +1155,8 @@ function readerDialogMarkup(kind) {
   const closeButton = '<button class="reader-dialog-close" data-close-reader-dialog aria-label="' + t('close') + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 7 10 10M17 7 7 17"/></svg></button>';
   const title = (heading, hint) => '<div class="reader-dialog-title"><h2>' + heading + '</h2><small>' + hint + '</small></div>';
   const themeButton = (id, label) => '<button class="reader-theme-choice ' + (prefs.theme === id ? 'active' : '') + '" data-reader-theme="' + id + '"><span class="reader-theme-dot theme-' + id + '"></span>' + label + '</button>';
+  const choiceButton = (group, value, label, current) => '<button type="button" class="reader-theme-choice reader-setting-choice ' + (current === value ? 'active' : '') + '" data-reader-choice="' + group + '" data-reader-choice-value="' + value + '">' + label + '</button>';
+  const choiceGroup = (heading, group, current, choices, className) => '<div class="reader-setting-group"><h3>' + heading + '</h3><div class="reader-choice-grid ' + (className || '') + '">' + choices.map(([value, label]) => choiceButton(group, value, label, current)).join('') + '</div></div>';
   if (kind === 'toc') {
     const items = state.readerToc || [];
     const body = items.length ? items.map((item) => '<button class="reader-toc-item depth-' + Math.min(3, Number(item.depth) || 0) + '" data-reader-toc-id="' + escapeHtml(item.id || '') + '" data-reader-toc-section="' + (item.section == null ? '' : item.section) + '" data-reader-toc-anchor="' + escapeHtml(item.anchor || '') + '"><span>' + escapeHtml(item.label || '—') + '</span></button>').join('') : '<p class="empty compact reader-dialog-empty">' + t('readerNoContents') + '</p>';
@@ -1145,7 +1167,10 @@ function readerDialogMarkup(kind) {
     const option = (value, label) => '<button class="reader-sheet-choice ' + (prefs.pageAnimation === value ? 'active' : '') + '" data-reader-animation="' + value + '"><span>' + label + '</span><i>' + (prefs.pageAnimation === value ? '✓' : '') + '</i></button>';
     dialog.innerHTML = '<div class="reader-dialog-card reader-panel-card reader-sheet-card" role="dialog" aria-modal="true"><div class="dialog-head reader-dialog-head">' + title(t('readerAnimation'), t('readerSettingsHint')) + closeButton + '</div><div class="reader-sheet-body reader-choice-list">' + option('slide', t('readerAnimationSlide')) + option('cover', t('readerAnimationCover')) + option('none', t('readerAnimationNone')) + '</div></div>';
   } else {
-    dialog.innerHTML = '<div class="reader-dialog-card reader-panel-card" role="dialog" aria-modal="true"><div class="dialog-head reader-dialog-head">' + title(t('settings'), t('readerSettingsHint')) + closeButton + '</div><div class="reader-settings-body"><div class="reader-setting-group"><h3>' + t('readerTheme') + '</h3><div class="reader-theme-grid">' + themeButton('paper', t('readerThemePaper')) + themeButton('sepia', t('readerThemeSepia')) + themeButton('green', t('readerThemeGreen')) + themeButton('dark', t('readerThemeDark')) + '</div></div><label class="reader-select-row"><span>阅读方式</span><select data-reader-reading-mode><option value="scroll" ' + (state.readerReadingMode === 'scroll' ? 'selected' : '') + '>' + t('readerScroll') + '</option><option value="pages" ' + (state.readerReadingMode === 'pages' ? 'selected' : '') + '>' + t('readerPages') + '</option></select></label><label class="reader-range-row"><span>' + t('readerFontSize') + '<b data-reader-value="fontSize">' + prefs.fontSize + 'px</b></span><input type="range" min="15" max="26" step="1" value="' + prefs.fontSize + '" data-reader-preference="fontSize"></label><label class="reader-select-row"><span>' + t('readerFontFamily') + '</span><select data-reader-preference="fontFamily"><option value="system" ' + (prefs.fontFamily === 'system' ? 'selected' : '') + '>系统无衬线</option><option value="serif" ' + (prefs.fontFamily === 'serif' ? 'selected' : '') + '>阅读衬线</option><option value="mono" ' + (prefs.fontFamily === 'mono' ? 'selected' : '') + '>等宽字体</option></select></label><label class="reader-range-row"><span>' + t('readerLineHeight') + '<b data-reader-value="lineHeight">' + Number(prefs.lineHeight).toFixed(2) + '</b></span><input type="range" min="1.35" max="2.2" step="0.05" value="' + prefs.lineHeight + '" data-reader-preference="lineHeight"></label><label class="reader-range-row"><span>' + t('readerParagraphSpacing') + '<b data-reader-value="paragraphSpacing">' + prefs.paragraphSpacing + 'px</b></span><input type="range" min="6" max="28" step="1" value="' + prefs.paragraphSpacing + '" data-reader-preference="paragraphSpacing"></label><label class="reader-range-row"><span>' + t('readerLetterSpacing') + '<b data-reader-value="letterSpacing">' + Number(prefs.letterSpacing).toFixed(1) + 'px</b></span><input type="range" min="0" max="2" step="0.1" value="' + prefs.letterSpacing + '" data-reader-preference="letterSpacing"></label><label class="reader-select-row"><span>' + t('readerAnimation') + '</span><select data-reader-preference="pageAnimation"><option value="slide" ' + (prefs.pageAnimation === 'slide' ? 'selected' : '') + '>' + t('readerAnimationSlide') + '</option><option value="cover" ' + (prefs.pageAnimation === 'cover' ? 'selected' : '') + '>' + t('readerAnimationCover') + '</option><option value="none" ' + (prefs.pageAnimation === 'none' ? 'selected' : '') + '>' + t('readerAnimationNone') + '</option></select></label></div></div>';
+    const readingChoices = choiceGroup('阅读方式', 'readingMode', state.readerReadingMode, [['scroll', t('readerScroll')], ['pages', t('readerPages')]], 'reader-choice-grid-2');
+    const fontChoices = choiceGroup(t('readerFontFamily'), 'fontFamily', prefs.fontFamily, [['system', '系统无衬线'], ['serif', '阅读衬线'], ['mono', '等宽字体']], 'reader-choice-grid-3');
+    const animationChoices = choiceGroup(t('readerAnimation'), 'pageAnimation', prefs.pageAnimation, [['slide', t('readerAnimationSlide')], ['cover', t('readerAnimationCover')], ['none', t('readerAnimationNone')]], 'reader-choice-grid-3');
+    dialog.innerHTML = '<div class="reader-dialog-card reader-panel-card" role="dialog" aria-modal="true"><div class="dialog-head reader-dialog-head">' + title(t('settings'), t('readerSettingsHint')) + closeButton + '</div><div class="reader-settings-body"><div class="reader-setting-group"><h3>' + t('readerTheme') + '</h3><div class="reader-theme-grid">' + themeButton('paper', t('readerThemePaper')) + themeButton('sepia', t('readerThemeSepia')) + themeButton('green', t('readerThemeGreen')) + themeButton('dark', t('readerThemeDark')) + '</div></div>' + readingChoices + '<label class="reader-range-row"><span>' + t('readerFontSize') + '<b data-reader-value="fontSize">' + prefs.fontSize + 'px</b></span><input type="range" min="15" max="26" step="1" value="' + prefs.fontSize + '" data-reader-preference="fontSize"></label>' + fontChoices + '<label class="reader-range-row"><span>' + t('readerLineHeight') + '<b data-reader-value="lineHeight">' + Number(prefs.lineHeight).toFixed(2) + '</b></span><input type="range" min="1.35" max="2.2" step="0.05" value="' + prefs.lineHeight + '" data-reader-preference="lineHeight"></label><label class="reader-range-row"><span>' + t('readerParagraphSpacing') + '<b data-reader-value="paragraphSpacing">' + prefs.paragraphSpacing + 'px</b></span><input type="range" min="6" max="28" step="1" value="' + prefs.paragraphSpacing + '" data-reader-preference="paragraphSpacing"></label><label class="reader-range-row"><span>' + t('readerLetterSpacing') + '<b data-reader-value="letterSpacing">' + Number(prefs.letterSpacing).toFixed(1) + 'px</b></span><input type="range" min="0" max="2" step="0.1" value="' + prefs.letterSpacing + '" data-reader-preference="letterSpacing"></label>' + animationChoices + '</div></div>';
   }
   dialog.hidden = false;
 }
@@ -1164,6 +1189,115 @@ function readerPreferenceChanged(input) {
   saveReaderPreferences(); applyReaderPreferences();
   const value = $('[data-reader-value="' + key + '"]', $('#readerDialog'));
   if (value) value.textContent = readerPreferenceLabel(key, state.readerPreferences[key]);
+}
+function hideReaderSelectionMenu() {
+  const menu = $('[data-reader-selection-menu]');
+  if (menu) menu.hidden = true;
+}
+function readerTextOffset(root, container, offset) {
+  if (!root || !container) return -1;
+  try {
+    const range = document.createRange();
+    range.selectNodeContents(root);
+    range.setEnd(container, offset);
+    return range.toString().length;
+  } catch { return -1; }
+}
+function readerRangeAtTextOffsets(root, start, end) {
+  if (!root || !Number.isFinite(start) || !Number.isFinite(end) || end <= start) return null;
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  let node; let cursor = 0; let startNode = null; let endNode = null; let startOffset = 0; let endOffset = 0;
+  while ((node = walker.nextNode())) {
+    const next = cursor + node.nodeValue.length;
+    if (!startNode && start >= cursor && start <= next) { startNode = node; startOffset = Math.max(0, start - cursor); }
+    if (end >= cursor && end <= next) { endNode = node; endOffset = Math.max(0, end - cursor); break; }
+    cursor = next;
+  }
+  if (!startNode || !endNode) return null;
+  const range = document.createRange();
+  try { range.setStart(startNode, startOffset); range.setEnd(endNode, endOffset); return range; } catch { return null; }
+}
+function readerSelectionAnchor(root, range) {
+  const start = readerTextOffset(root, range.startContainer, range.startOffset);
+  const end = readerTextOffset(root, range.endContainer, range.endOffset);
+  if (start < 0 || end <= start) return null;
+  return { start, end, quote: range.toString().trim().slice(0, 1200) };
+}
+function readerSelectionMenuPosition(range) {
+  const menu = $('[data-reader-selection-menu]'); const shell = $('.reader-reference-shell');
+  if (!menu || !shell) return;
+  menu.hidden = false;
+  const shellRect = shell.getBoundingClientRect(); const rect = range.getBoundingClientRect();
+  const menuRect = menu.getBoundingClientRect();
+  const left = Math.min(Math.max(8, rect.left - shellRect.left + (rect.width - menuRect.width) / 2), shellRect.width - menuRect.width - 8);
+  const above = rect.top - shellRect.top - menuRect.height - 8;
+  const top = above >= 8 ? above : Math.min(shellRect.height - menuRect.height - 8, rect.bottom - shellRect.top + 8);
+  menu.style.left = Math.max(8, left) + 'px';
+  menu.style.top = Math.max(8, top) + 'px';
+}
+function readerShowSelectionMenu(range) {
+  const root = $('[data-reader-content]'); if (!root || !range || !root.contains(range.commonAncestorContainer)) return;
+  const anchor = readerSelectionAnchor(root, range);
+  if (!anchor || !anchor.quote) return hideReaderSelectionMenu();
+  state.readerSelectedText = anchor.quote;
+  state.readerSelection = anchor;
+  requestAnimationFrame(() => readerSelectionMenuPosition(range));
+}
+function readerFindQuoteRange(root, quote) {
+  const text = String(quote || '').trim(); if (!text) return null;
+  const start = root.textContent.indexOf(text);
+  return start < 0 ? null : readerRangeAtTextOffsets(root, start, start + text.length);
+}
+function applyReaderMarkups() {
+  const root = $('[data-reader-content]'); const book = readerBookById(state.readerBookId);
+  if (!root || !book || book.type === 'pdf') return;
+  const markups = (book.markups || []).map((item) => ({ ...item, type: item.type === 'comment' ? 'comment' : item.type }));
+  const comments = (book.annotations || []).filter((item) => item.kind === 'comment' || (item.start != null && item.note)).map((item) => ({ ...item, type: 'comment' }));
+  const entries = markups.concat(comments).filter((item) => item.type === 'underline' || item.type === 'highlight' || item.type === 'comment');
+  entries.sort((a, b) => Number(b.start ?? -1) - Number(a.start ?? -1));
+  entries.forEach((item) => {
+    const range = Number.isFinite(Number(item.start)) && Number.isFinite(Number(item.end))
+      ? readerRangeAtTextOffsets(root, Number(item.start), Number(item.end))
+      : readerFindQuoteRange(root, item.quote);
+    if (!range || range.collapsed) return;
+    const wrapper = document.createElement(item.type === 'comment' ? 'span' : 'mark');
+    wrapper.className = item.type === 'comment' ? 'reader-comment-anchor' : 'reader-' + item.type;
+    if (item.id) wrapper.dataset.readerMarkupId = item.id;
+    const fragment = range.extractContents();
+    wrapper.appendChild(fragment);
+    if (item.type === 'comment') {
+      const badge = document.createElement('button');
+      badge.className = 'reader-comment-badge';
+      badge.type = 'button';
+      badge.dataset.readerCommentId = item.id || '';
+      badge.setAttribute('aria-label', state.language === 'en' ? 'Show comment' : '查看评论');
+      badge.setAttribute('aria-hidden', 'true');
+      wrapper.appendChild(badge);
+    }
+    range.insertNode(wrapper);
+  });
+}
+function showReaderCommentPopover(id, trigger) {
+  const book = readerBookById(state.readerBookId); const note = (book?.annotations || []).find((item) => item.id === id);
+  const popover = $('[data-reader-comment-popover]'); const shell = $('.reader-reference-shell');
+  if (!note || !popover || !shell) return;
+  popover.innerHTML = '<strong>' + (state.language === 'en' ? 'Comment' : '评论') + '</strong><p>' + escapeHtml(note.note || '') + '</p>';
+  popover.hidden = false;
+  const shellRect = shell.getBoundingClientRect(); const triggerRect = trigger.getBoundingClientRect(); const popoverRect = popover.getBoundingClientRect();
+  const left = Math.min(Math.max(10, triggerRect.left - shellRect.left - 8), shellRect.width - popoverRect.width - 10);
+  const top = Math.min(Math.max(10, triggerRect.bottom - shellRect.top + 8), shellRect.height - popoverRect.height - 10);
+  popover.style.left = left + 'px'; popover.style.top = top + 'px';
+}
+function hideReaderCommentPopover() { const popover = $('[data-reader-comment-popover]'); if (popover) popover.hidden = true; }
+function applyReaderSelectionAction(action) {
+  const book = readerBookById(state.readerBookId); const selection = state.readerSelection;
+  hideReaderSelectionMenu();
+  if (!book || !selection?.quote) return;
+  if (action === 'comment') return renderAnnotationDialog();
+  book.markups ||= [];
+  book.markups.push({ id: uid(), type: action, start: selection.start, end: selection.end, quote: selection.quote, createdAt: Date.now() });
+  state.readerSelection = null; state.readerSelectedText = '';
+  window.getSelection()?.removeAllRanges(); saveLibrary(); render();
 }
 function jumpToReaderToc(item) {
   closeReaderDialog();
@@ -1201,7 +1335,7 @@ function currentReaderChapterIndex() {
 }
 function updateReaderReferenceChrome() {
   const shell = $('.reader-reference-shell'); if (!shell) return;
-  shell.classList.toggle('chrome-hidden', state.readerChromeHidden);
+  shell.classList.toggle('chrome-hidden', state.readerReadingMode === 'pages' && state.readerChromeHidden);
   const index = currentReaderChapterIndex(); const item = state.readerToc[index];
   const name = $('[data-reader-chapter-name]'); const chapterIndex = $('[data-reader-chapter-index]');
   if (name) name.textContent = item?.label || '—';
@@ -1241,6 +1375,7 @@ function goReaderChapter(step) {
   jumpToReaderToc(state.readerToc[target]);
 }
 function toggleReaderChrome() {
+  if (state.readerReadingMode !== 'pages') return;
   state.readerChromeHidden = !state.readerChromeHidden;
   updateReaderReferenceChrome();
 }
@@ -1283,12 +1418,12 @@ function readerReadingView(book) {
   const pageLabel = isPdf ? hint : (state.readerReadingMode === 'pages' ? '1 / 1' : hint);
   const icon = (path) => '<svg viewBox="0 0 24 24" aria-hidden="true">' + path + '</svg>';
   const tool = (action, path, label) => '<button class="reader-reference-tool" data-' + action + '>' + icon(path) + '<span>' + label + '</span></button>';
-  const chromeClass = (state.readerChromeHidden ? ' chrome-hidden' : '') + (state.readerImmersive ? '' : ' reader-windowed');
+  const chromeClass = (state.readerReadingMode === 'pages' && state.readerChromeHidden ? ' chrome-hidden' : '') + (state.readerImmersive ? '' : ' reader-windowed');
   return '<div class="reader-reference-shell' + chromeClass + '" data-reader-theme="' + escapeHtml(state.readerPreferences.theme) + '">' +
     '<header class="reader-reference-top"><div class="reader-reference-title"><strong>' + escapeHtml(book.name) + '</strong><small>' + escapeHtml(hint) + '</small></div></header>' +
     '<main class="reader-reference-body"><article class="' + contentClass + ' reader-reference-viewer" data-reader-content data-reader-surface>' + content + '</article></main>' +
     '<footer class="reader-reference-bottom"><div class="reader-reference-chapter"><span class="reader-reference-chapter-name" data-reader-chapter-name>' + escapeHtml(chapter) + '</span><span class="reader-reference-chapter-index" data-reader-chapter-index>' + (state.readerToc.length ? '1 / ' + state.readerToc.length : '—') + '</span></div>' +
-    '<div class="reader-reference-tool-row"><button class="reader-reference-tool reader-shelf-tool" data-close-reader aria-label="' + t('bookshelf') + '">' + icon('<path d="m15 5-7 7 7 7"/>') + '<span>' + t('bookshelf') + '</span></button>' + tool('reader-toc', '<path d="M5 5h14M5 12h14M5 19h9"/>', t('readerContents')) + '<button class="reader-reference-tool reader-settings-tool" data-reader-settings>' + icon('<path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1-2.1"/><circle cx="12" cy="12" r="3.5"/>') + '<span>' + t('settings') + '</span></button>' + '<button class="reader-reference-tool reader-progress-tool" aria-label="' + t('readerProgress') + '"><span class="reader-progress-ring" data-reader-progress-ring><svg viewBox="0 0 24 24" aria-hidden="true"><circle class="reader-progress-track" cx="12" cy="12" r="9"/><circle class="reader-progress-value" data-reader-progress-value cx="12" cy="12" r="9"/></svg><b data-reader-progress-label>0%</b></span><span>' + t('readerProgress') + '</span></button>' + '<button class="reader-reference-tool reader-fullscreen-tool" data-reader-fullscreen aria-label="' + t('readerFullscreen') + '"></button>' + '<button class="reader-reference-tool reader-annotate-button" data-annotate-selection hidden>' + icon('<path d="m5 19 1-4L16.5 4.5a2.1 2.1 0 0 1 3 3L9 18zM14 7l3 3"/>') + '<span>' + t('addAnnotation') + '</span></button></div></footer></div>';
+    '<div class="reader-reference-tool-row"><button class="reader-reference-tool reader-shelf-tool" data-close-reader aria-label="' + t('bookshelf') + '">' + icon('<path d="m15 5-7 7 7 7"/>') + '<span>' + t('bookshelf') + '</span></button>' + tool('reader-toc', '<path d="M5 5h14M5 12h14M5 19h9"/>', t('readerContents')) + '<button class="reader-reference-tool reader-settings-tool" data-reader-settings>' + icon('<path d="M4 7h8M16 7h4M4 12h3M11 12h9M4 17h8M16 17h4"/><circle cx="14" cy="7" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="14" cy="17" r="2"/>') + '<span>' + t('settings') + '</span></button>' + '<button class="reader-reference-tool reader-progress-tool" aria-label="' + t('readerProgress') + '"><span class="reader-progress-ring" data-reader-progress-ring><svg viewBox="0 0 24 24" aria-hidden="true"><circle class="reader-progress-track" cx="12" cy="12" r="9"/><circle class="reader-progress-value" data-reader-progress-value cx="12" cy="12" r="9"/></svg><b data-reader-progress-label>0%</b></span><span>' + t('readerProgress') + '</span></button>' + '<button class="reader-reference-tool reader-fullscreen-tool" data-reader-fullscreen aria-label="' + t('readerFullscreen') + '"></button>' + '<button class="reader-reference-tool reader-annotate-button" data-annotate-selection hidden>' + icon('<path d="m5 19 1-4L16.5 4.5a2.1 2.1 0 0 1 3 3L9 18zM14 7l3 3"/>') + '<span>' + t('addAnnotation') + '</span></button></div></footer><div class="reader-selection-menu" data-reader-selection-menu hidden role="menu"><button type="button" data-reader-selection-action="underline">' + (state.language === 'en' ? 'Underline' : '划线') + '</button><button type="button" data-reader-selection-action="highlight">' + (state.language === 'en' ? 'Highlight' : '高亮') + '</button><button type="button" data-reader-selection-action="comment">' + (state.language === 'en' ? 'Comment' : '评论') + '</button></div><div class="reader-comment-popover" data-reader-comment-popover hidden></div></div>';
 }
 function readerFormatCoverMarkup(type) {
   const icons = {
@@ -2206,7 +2341,7 @@ function render() {
   renderHomeSourceNav();
   document.documentElement.classList.toggle('reader-focus', state.section === 'tools' && state.tool === 'reader' && state.readerMode === 'reading' && state.readerImmersive);
   if (state.section === 'tools' && state.tool === 'reader' && state.readerMode === 'reading') {
-    requestAnimationFrame(() => { ensureReaderFullscreenTool(); applyReaderPreferences(); updateReaderFullscreenControl(); if (state.readerDialog) { readerDialogMarkup(state.readerDialog); updateReaderReferenceChrome(); } });
+    requestAnimationFrame(() => { ensureReaderFullscreenTool(); applyReaderPreferences(); applyReaderMarkups(); updateReaderFullscreenControl(); scheduleReaderPositionRestore(); if (state.readerDialog) { readerDialogMarkup(state.readerDialog); updateReaderReferenceChrome(); } });
   } else if (!state.readerDialog) {
     const readerDialog = $('#readerDialog'); if (readerDialog) readerDialog.hidden = true;
   }
@@ -2619,6 +2754,12 @@ workspace.addEventListener('drop', (event) => { event.preventDefault(); const ca
 workspace.addEventListener('dragstart', (event) => { const source = event.target.closest('[data-feed-source]'); if (source) event.dataTransfer.setData('text/plain', source.dataset.feedSourceIndex); });
 workspace.addEventListener('dragover', (event) => { if (event.target.closest('[data-feed-source]')) event.preventDefault(); });
 workspace.addEventListener('drop', (event) => { event.preventDefault(); const source = event.target.closest('[data-feed-source]'); if (source) swapHomeFeedSources(Number(event.dataTransfer.getData('text/plain')), Number(source.dataset.feedSourceIndex)); });
+workspace.addEventListener('contextmenu', (event) => {
+  if (state.readerMode !== 'reading' || !event.target.closest('[data-reader-content]') || !state.readerSelection) return;
+  event.preventDefault();
+  const selection = window.getSelection();
+  if (selection?.rangeCount) readerShowSelectionMenu(selection.getRangeAt(0));
+});
 workspace.addEventListener('click', async (event) => {
   if (Date.now() < pageSwipeSuppressClickUntil) { event.preventDefault(); return; }
   if (Date.now() < swipeSuppressClickUntil && event.target.closest('[data-swipe-row]')) return;
@@ -2641,6 +2782,11 @@ workspace.addEventListener('click', async (event) => {
   const feedLink = feedItem?.dataset.feedLink;
   if (feedLink) { markFeedRead(feedItem.dataset.feedId); feedItem.classList.add('is-read'); openFeedLink(feedLink); return; }
   if (state.readerMode === 'reading') {
+    const selectionAction = event.target.closest('[data-reader-selection-action]');
+    if (selectionAction) { applyReaderSelectionAction(selectionAction.dataset.readerSelectionAction); return; }
+    const commentMarker = event.target.closest('[data-reader-comment-id]');
+    if (commentMarker) { showReaderCommentPopover(commentMarker.dataset.readerCommentId, commentMarker); return; }
+    if (!event.target.closest('[data-reader-comment-popover]')) hideReaderCommentPopover();
     if (event.target.closest('[data-reader-chapter-prev]')) { goReaderChapter(-1); return; }
     if (event.target.closest('[data-reader-chapter-next]')) { goReaderChapter(1); return; }
     if (event.target.closest('[data-reader-background]')) { openReaderDialog('background'); return; }
@@ -2654,7 +2800,7 @@ workspace.addEventListener('click', async (event) => {
         if (x < rect.width * .32) turnReaderPage(-1);
         else if (x > rect.width * .68) turnReaderPage(1);
         else toggleReaderChrome();
-      } else toggleReaderChrome();
+      } else if (state.readerReadingMode === 'pages') toggleReaderChrome();
       return;
     }
   }
@@ -2843,6 +2989,16 @@ $('#readerDialog').addEventListener('click', (event) => {
   }
   const theme = event.target.closest('[data-reader-theme]');
   if (theme) { state.readerPreferences.theme = theme.dataset.readerTheme; saveReaderPreferences(); applyReaderPreferences(); return readerDialogMarkup(state.readerDialog === 'background' ? 'background' : 'settings'); }
+  const choice = event.target.closest('[data-reader-choice]');
+  if (choice) {
+    const group = choice.dataset.readerChoice; const value = choice.dataset.readerChoiceValue;
+    if (group === 'readingMode') {
+      state.readerReadingMode = value === 'pages' ? 'pages' : 'scroll'; state.readerChromeHidden = false; state.readerPage = 0; closeReaderDialog(); render(); scheduleReaderPositionRestore();
+    } else if (group === 'fontFamily' || group === 'pageAnimation') {
+      state.readerPreferences[group] = value; saveReaderPreferences(); applyReaderPreferences(); readerDialogMarkup('settings');
+    }
+    return;
+  }
   const animation = event.target.closest('[data-reader-animation]');
   if (animation) { state.readerPreferences.pageAnimation = animation.dataset.readerAnimation; saveReaderPreferences(); closeReaderDialog(); return; }
   if (event.target.closest('[data-annotate-selection]')) return renderAnnotationDialog();
@@ -2854,24 +3010,27 @@ $('#readerDialog').addEventListener('click', (event) => {
 $('#readerDialog').addEventListener('input', (event) => { if (event.target.matches('[data-reader-preference]')) readerPreferenceChanged(event.target); });
 $('#readerDialog').addEventListener('change', (event) => {
   if (event.target.matches('[data-reader-preference]')) readerPreferenceChanged(event.target);
-  if (event.target.matches('[data-reader-reading-mode]')) { state.readerReadingMode = event.target.value === 'pages' ? 'pages' : 'scroll'; state.readerPage = 0; closeReaderDialog(); render(); requestAnimationFrame(restoreReaderPosition); }
+  if (event.target.matches('[data-reader-reading-mode]')) { state.readerReadingMode = event.target.value === 'pages' ? 'pages' : 'scroll'; state.readerChromeHidden = false; state.readerPage = 0; closeReaderDialog(); render(); scheduleReaderPositionRestore(); }
 });
 workspace.addEventListener('scroll', (event) => {
   scheduleReaderProgress(event.target.closest('[data-reader-content]'));
 }, true);
 $('#annotationDialog').addEventListener('click', (event) => {
-  if (event.target === $('#annotationDialog') || event.target.closest('[data-close-annotation]')) { $('#annotationDialog').hidden = true; return; }
+  if (event.target === $('#annotationDialog') || event.target.closest('[data-close-annotation]')) { $('#annotationDialog').hidden = true; state.readerSelection = null; state.readerSelectedText = ''; hideReaderSelectionMenu(); return; }
   if (!event.target.closest('[data-save-annotation]')) return;
   const book = readerBookById(state.readerBookId); const note = $('#annotationText')?.value.trim();
   if (!book || !state.readerSelectedText || !note) return toast(state.language === 'en' ? 'Write a note first' : '请先写下标注内容', 'error');
-  book.annotations ||= []; book.annotations.push({ id: uid(), quote: state.readerSelectedText, note, createdAt: Date.now() }); saveLibrary(); $('#annotationDialog').hidden = true; render();
+  const selection = state.readerSelection || {};
+  book.annotations ||= []; book.annotations.push({ id: uid(), kind: 'comment', quote: state.readerSelectedText, note, start: selection.start, end: selection.end, createdAt: Date.now() });
+  state.readerSelection = null; state.readerSelectedText = ''; hideReaderSelectionMenu(); saveLibrary(); $('#annotationDialog').hidden = true; render();
 });
 document.addEventListener('selectionchange', () => {
-  if (!state.readerBookId) return;
-  const selection = window.getSelection(); const text = selection?.toString().trim() || '';
-  if (text) state.readerSelectedText = text.slice(0, 1000);
-  const button = $('.reader-annotate-button');
-  if (button) button.hidden = !state.readerSelectedText;
+  if (!state.readerBookId || state.readerMode !== 'reading') return;
+  const selection = window.getSelection(); const content = $('[data-reader-content]');
+  if (!selection || !content || selection.rangeCount === 0 || selection.isCollapsed) { hideReaderSelectionMenu(); return; }
+  const range = selection.getRangeAt(0);
+  if (!content.contains(range.commonAncestorContainer)) { hideReaderSelectionMenu(); return; }
+  readerShowSelectionMenu(range);
 });
 
 $('#bottomNav').addEventListener('click', (event) => {
@@ -2984,7 +3143,7 @@ document.addEventListener('click', (event) => {
   if (state.notificationOpen && !event.target.closest('#notificationPanel, #notifyBtn')) closeNotifications();
 });
 document.addEventListener('pointerdown', unlockAlertAudio, { once: true, passive: true });
-window.addEventListener('pagehide', () => { clearTimeout(persistenceTimer); writePersistentSnapshot(); });
+window.addEventListener('pagehide', () => { flushReaderProgress(); clearTimeout(persistenceTimer); writePersistentSnapshot(); });
 window.addEventListener('beforeinstallprompt', (event) => { event.preventDefault(); window.installPrompt = event; $('#installBtn').hidden = false; });
 window.addEventListener('online', () => { $('#connectionStatus').textContent = t('online'); toast(state.language === 'en' ? 'Back online' : '网络已恢复'); });
 window.addEventListener('offline', () => { $('#connectionStatus').textContent = t('offline'); toast(state.language === 'en' ? 'Offline mode' : '已切换到离线模式'); });
