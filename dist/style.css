@@ -3793,8 +3793,8 @@ html.reader-focus .shell { width: 100%; padding: 0; }
 }
 .layout-nav-icon,
 .layout-nav-icon svg {
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
 }
 
 @media (max-width: 760px) {
@@ -3807,8 +3807,8 @@ html.reader-focus .shell { width: 100%; padding: 0; }
   }
   .layout-nav-icon,
   .layout-nav-icon svg {
-    width: 19px;
-    height: 19px;
+    width: 21px;
+    height: 21px;
   }
 }
 
@@ -3824,19 +3824,22 @@ html.reader-focus .shell { width: 100%; padding: 0; }
   width: 100%;
 }
 
-/* The update action remains lightweight, but keeps a visible button shape;
-   only its text and outline follow the configured application accent. */
+/* Match the update action to the weather search primary button. */
 .mine-update-button.primary,
 .mine-update-button.primary:hover,
 .mine-update-button.primary:focus-visible {
-  border: 1px solid var(--primary);
-  background: transparent;
+  border: 0;
+  border-radius: 13px;
+  background: var(--primary);
   box-shadow: none;
-  color: var(--primary);
+  color: #fff;
+  padding: 10px 14px;
+  font-size: 12px;
+  font-weight: 750;
 }
 .mine-update-button.primary:hover,
 .mine-update-button.primary:focus-visible {
-  background: var(--soft);
+  background: color-mix(in srgb, var(--primary) 88%, #000);
 }
 
 /* 2.18.48: soften only the current hour/day selection stroke. The weather
