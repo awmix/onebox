@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.26';
+const APP_VERSION = '2.18.27';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -23,6 +23,7 @@ const STORAGE = {
   layout: 'onebox.layout',
   notificationPreference: 'onebox.notification-preference',
   color: 'onebox.color',
+  colorExplicit: 'onebox.color-explicit',
   topDisplay: 'onebox.top-display',
   footprint: 'onebox.footprint',
   github: 'onebox.github',
@@ -164,7 +165,7 @@ const DICT = {
     refresh: '刷新', searchPlace: '搜索城市或区县',
     noWeather: '天气需要联网，搜索一个城市或区县开始。', weatherLoading: '正在获取天气…',
     weatherData: '天气数据来自 Open-Meteo；最近一次成功结果会保存在本机，离线时仍可查看。',
-    sortWeather: '长按天气卡片可调整顺序', hourly: '前后 12 小时', daily: '前 3 天 · 今天 · 未来 15 天', advice: '天气建议',
+    sortWeather: '长按天气卡片可调整顺序，右上角可删除', hourly: '24 小时', daily: '前 3 天 · 今天 · 未来 15 天', advice: '天气建议',
     commute: '出行', sport: '运动', clothing: '穿衣', sunscreen: '防晒', hiking: '爬山',
     addCard: '添加', noResults: '没有找到匹配地点，请换个关键词。',
     home: '首页', tools: '工具', messages: '消息', mine: '我的', quickTools: '常用工具', openSettings: '打开设置', noMessages: '还没有消息。',
@@ -182,7 +183,7 @@ const DICT = {
     userAgreement: '用户协议', viewAgreement: '查看协议', agreementTitle: 'OneBox 用户协议', agreementBody: 'OneBox 是一款本地优先的日常工具应用。计算记录、日程、翻译历史和天气卡片默认保存在当前设备；使用 GitHub 云同步时，数据会写入你自己的私有 Gist。天气和翻译功能会请求对应的开源服务，服务商可能记录必要的请求信息。请在使用提醒、定位和消息通知功能前确认已授予相应权限。',
     addReminder: '添加提醒', reminderText: '提醒内容', remindAt: '提醒时间', noNotifications: '还没有提醒。', once: '指定时间', everyDay: '每天', workdays: '工作日', restdays: '非工作日', weekly: '每周', weekdays: '重复星期',
     markRead: '全部已读', close: '关闭', system: '跟随系统', light: '浅色', dark: '深色',
-    layout: '布局', classicLayout: '经典布局', simpleLayout: '简约布局', language: '语言', theme: '主题', color: '颜色', blackWhite: '黑白配', noblePurple: '贵族紫', skyBlue: '天空蓝', notBananaGreen: '不蕉绿', meituanYellow: '美团黄', topDisplay: '顶部显示', footprint: '足迹', reorderHint: '长按工具标签可以调整顺序',
+    layout: '布局', classicLayout: '经典布局', simpleLayout: '简约布局', language: '语言', theme: '主题', color: '颜色', blackWhite: '黑白配', noblePurple: '贵族紫', skyBlue: '天空蓝', notBananaGreen: '不蕉绿', meituanYellow: '美团黄', topDisplay: '顶部显示', footprint: '足迹', showFootprint: '在首页显示', hideFootprint: '不在首页显示', reorderHint: '长按工具标签可以调整顺序',
     languagePending: '日语、韩语语言包已预留，当前版本先提供中文和英文。',
     bookshelf: '书架', addBook: '添加文档', noBooks: '还没有本地文档。', readerHint: '支持 Markdown、PDF、EPUB；文档仅保存在当前设备。', openBook: '打开阅读', deleteBook: '删除文档', annotations: '标注', addAnnotation: '添加标注', annotationPlaceholder: '写下你的标注…', saveAnnotation: '保存标注', annotationHint: '选择文字后长按或点击标注按钮。', noAnnotations: '还没有标注。', reading: '正在阅读', closeReader: '关闭阅读', unsupportedFile: '请选择 .md、.markdown、.pdf 或 .epub 文件。', importFailed: '文档读取失败，请重试。', deleteConfirm: '确定删除这本文档吗？', pdfHint: 'PDF 使用浏览器原生阅读器打开。', epubHint: 'EPUB 已转换为适合 OneBox 的连续阅读视图。',
   },
@@ -205,7 +206,6 @@ const DICT = {
     refresh: 'Refresh', searchPlace: 'Search city or district',
     noWeather: 'Search a city or district to get weather.', weatherLoading: 'Loading weather…',
     weatherData: 'Weather by Open-Meteo. The last successful result is cached locally for offline use.',
-    sortWeather: 'Long-press a weather card to reorder', hourly: '12 hours before and after', daily: '3 days before · today · next 15 days', advice: 'Advice',
     commute: 'Travel', sport: 'Sport', clothing: 'Clothing', sunscreen: 'Sun care', hiking: 'Hiking',
     addCard: 'Add', noResults: 'No matching place. Try another query.',
     home: 'Home', tools: 'Tools', messages: 'Messages', mine: 'Me', quickTools: 'Quick tools', openSettings: 'Open settings', noMessages: 'No messages yet.',
@@ -223,7 +223,8 @@ const DICT = {
     userAgreement: 'User agreement', viewAgreement: 'View agreement', agreementTitle: 'OneBox user agreement', agreementBody: 'OneBox is a local-first daily tools app. Calculator history, events, translation history and weather cards stay on this device by default; when GitHub sync is enabled, they are written to your own private Gist. Weather and translation features request open-source services, which may record necessary request metadata. Review the permissions before enabling reminders, location or message notifications.',
     addReminder: 'Add reminder', reminderText: 'Reminder', remindAt: 'When', noNotifications: 'No reminders yet.', once: 'Once', everyDay: 'Every day', workdays: 'Workdays', restdays: 'Rest days', weekly: 'Weekly', weekdays: 'Weekdays',
     markRead: 'Mark all read', close: 'Close', system: 'System', light: 'Light', dark: 'Dark',
-    layout: 'Layout', classicLayout: 'Classic layout', simpleLayout: 'Simple layout', theme: 'Theme', language: 'Language', color: 'Color', blackWhite: 'Black and white', noblePurple: 'Noble purple', skyBlue: 'Sky blue', notBananaGreen: 'WeChat green', meituanYellow: 'Meituan yellow', topDisplay: 'Show at top', footprint: 'Footprints', reorderHint: 'Long-press a tool tab to reorder',
+    sortWeather: 'Long-press a weather card to reorder; use the top-right delete control to remove it', hourly: '24 hours', daily: '3 days before · today · next 15 days', advice: 'Advice',
+    layout: 'Layout', classicLayout: 'Classic layout', simpleLayout: 'Simple layout', theme: 'Theme', language: 'Language', color: 'Color', blackWhite: 'Black and white', noblePurple: 'Noble purple', skyBlue: 'Sky blue', notBananaGreen: 'WeChat green', meituanYellow: 'Meituan yellow', topDisplay: 'Show at top', footprint: 'Footprints', showFootprint: 'Show on Home', hideFootprint: 'Hide from Home', reorderHint: 'Long-press a tool tab to reorder',
     languagePending: 'Japanese and Korean are reserved for a future language pack. Chinese and English are available now.',
     bookshelf: 'Bookshelf', addBook: 'Add document', noBooks: 'No local documents yet.', readerHint: 'Supports Markdown, PDF and EPUB. Files stay on this device.', openBook: 'Open', deleteBook: 'Delete', annotations: 'Notes', addAnnotation: 'Add note', annotationPlaceholder: 'Write a note…', saveAnnotation: 'Save note', annotationHint: 'Select text, long-press or use the note button.', noAnnotations: 'No notes yet.', reading: 'Reading', closeReader: 'Close reader', unsupportedFile: 'Choose a .md, .markdown, .pdf or .epub file.', importFailed: 'Could not read this document.', deleteConfirm: 'Delete this document?', pdfHint: 'PDF opens in the browser native reader.', epubHint: 'EPUB is converted into a continuous OneBox reading view.',
   },
@@ -234,6 +235,7 @@ const storedTheme = localStorage.getItem(STORAGE.theme);
 const storedLanguage = localStorage.getItem(STORAGE.language) || 'system';
 const storedLayout = localStorage.getItem(STORAGE.layout);
 const storedColor = localStorage.getItem(STORAGE.color);
+const storedColorExplicit = localStorage.getItem(STORAGE.colorExplicit) === 'true';
 const resolveLanguageMode = (mode) => mode === 'en' || mode === 'zh' ? mode : ((navigator.language || '').toLowerCase().startsWith('en') ? 'en' : 'zh');
 const storedCalculator = parseStored(STORAGE.calculator, { expr: '', history: [] });
 const storedLibrary = parseStored(STORAGE.library, []);
@@ -264,7 +266,7 @@ const state = {
   tool: initialTool,
   section: initialSection,
   theme: ['light', 'dark', 'system'].includes(storedTheme) ? storedTheme : 'system',
-  color: ['mono', 'purple', 'blue', 'green', 'yellow'].includes(storedColor) ? storedColor : 'mono',
+  color: ['mono', 'purple', 'blue', 'green', 'yellow'].includes(storedColor) && (storedColor !== 'mono' || storedColorExplicit) ? storedColor : 'purple',
   languageMode: ['zh', 'en', 'system'].includes(storedLanguage) ? storedLanguage : 'system',
   language: resolveLanguageMode(storedLanguage),
   layoutMode: storedLayout === 'classic' ? 'classic' : 'simple',
@@ -359,7 +361,7 @@ function applyLanguage() {
   renderHeaderControls();
 }
 function saveThemeLanguage() { localStorage.setItem(STORAGE.theme, state.theme); localStorage.setItem(STORAGE.language, state.languageMode); queuePersistentSnapshot(); }
-function saveColorPreference() { localStorage.setItem(STORAGE.color, state.color); queuePersistentSnapshot(); }
+function saveColorPreference() { localStorage.setItem(STORAGE.color, state.color); localStorage.setItem(STORAGE.colorExplicit, 'true'); queuePersistentSnapshot(); }
 function saveTopDisplay() { saveStored(STORAGE.topDisplay, state.topDisplay); }
 function saveFootprintPreference() { saveStored(STORAGE.footprint, state.footprint); }
 function saveLayoutPreference() { localStorage.setItem(STORAGE.layout, state.layoutMode); queuePersistentSnapshot(); }
@@ -606,11 +608,11 @@ function renderMine() {
     reading: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4h8l3 3v5M14 4v4h4M9 12h3M9 16h3"/><circle cx="16.5" cy="16.5" r="3.5"/><path d="M16.5 14.8v1.9l1.2.7"/></svg>',
     agreement: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l3 3v15H6zM15 3v4h4M9 12h6M9 16h6"/></svg>',
   })[name];
-  const row = (action, glyph, title, description) => '<button class="mine-row" ' + action + '><span class="mine-row-icon">' + icon(glyph) + '</span><span><strong>' + title + '</strong><small>' + description + '</small></span><span>›</span></button>';
+  const row = (action, glyph, title, description) => '<button class="mine-row" ' + action + '><span class="mine-row-icon">' + icon(glyph) + '</span><span class="mine-row-copy"><strong>' + title + '</strong><small class="mine-row-description">' + description + '</small></span><span>›</span></button>';
   const updateStatus = state.updateAvailable ? t('updateAvailable') : state.updateChecking ? t('updating') : t('upToDate');
   const updateButton = state.updateAvailable ? '<button class="primary mine-update-button" data-apply-update>' + t('applyUpdate') + '</button>' : '<button class="secondary mine-update-button" data-check-update ' + (state.updateChecking ? 'disabled' : '') + '>' + t('checkUpdate') + '</button>';
-  const updateRow = '<div class="mine-row mine-update-row"><span class="mine-row-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0 2 5M20 5v6h-6"/></svg></span><span><strong>' + t('appUpdate') + ' <small class="settings-version">v' + APP_VERSION + '</small></strong><small>' + updateStatus + '</small></span><span class="mine-row-action">' + updateButton + '</span></div>';
-  return '<div class="section-page mine-page"><div class="mine-list">' + row('data-open-settings-page', 'settings', t('settings'), state.language === 'en' ? 'Theme, language, color and display' : '主题、语言、颜色与显示设置') + updateRow + row('data-open-github-page', 'github', 'GitHub', escapeHtml(githubStatus)) + row('data-open-agreement-page', 'agreement', t('userAgreement'), state.language === 'en' ? 'Learn how OneBox handles data' : '了解 OneBox 如何处理数据') + '</div></div>';
+  const updateRow = '<div class="mine-row mine-update-row"><span class="mine-row-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v10M8 10l4 4 4-4M5 19h14"/></svg></span><span class="mine-row-copy mine-update-copy"><strong>' + t('appUpdate') + '</strong><small class="mine-row-description">v' + APP_VERSION + ' · ' + updateStatus + '</small></span><span class="mine-row-action">' + updateButton + '</span></div>';
+  return '<div class="section-page mine-page"><div class="mine-list">' + row('data-open-settings-page', 'settings', t('settings'), state.language === 'en' ? 'Theme, language, color and display' : '主题、语言、颜色与显示设置') + row('data-open-github-page', 'github', 'GitHub', escapeHtml(githubStatus)) + updateRow + row('data-open-agreement-page', 'agreement', t('userAgreement'), state.language === 'en' ? 'Learn how OneBox handles data' : '了解 OneBox 如何处理数据') + '</div></div>';
 }
 
 function recentFeedItems() {
@@ -1027,8 +1029,8 @@ function calendar() {
   const weekdays = state.language === 'en' ? ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] : ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
   return heading(t('calendar'), t('calendarDesc')) +
     '<div class="calendar-layout"><div class="calendar-card"><div class="calendar-top"><button class="icon-btn" data-month="-1" aria-label="Previous month">←</button><div class="calendar-month"><strong>' + monthLabel + '</strong><button class="text-btn calendar-today" data-today>' + t('today') + '</button></div><button class="icon-btn" data-month="1" aria-label="Next month">→</button></div>' +
-    '<div class="calendar-legend"><span><i class="dot off"></i>' + t('legalHoliday') + '</span><span><i class="dot work"></i>' + t('makeUpWorkday') + '</span><span><i class="dot term"></i>' + t('solarTerm') + '</span><button class="calendar-add-event" data-open-event-dialog><span aria-hidden="true">＋</span>' + t('addAgenda') + '</button></div><div class="calendar-grid">' + weekdays.map((day) => '<div class="dow">' + day + '</div>').join('') + cells + '</div></div>' +
-   '<aside class="agenda-panel"><div class="subhead"><h3>' + t('agenda') + '</h3><button class="calendar-add-event" data-open-event-dialog><span aria-hidden="true">＋</span>' + t('addAgenda') + '</button></div><div class="event-list">' + eventList + '</div></aside></div>';
+    '<div class="calendar-legend"><span><i class="dot off"></i>' + t('legalHoliday') + '</span><span><i class="dot work"></i>' + t('makeUpWorkday') + '</span><span><i class="dot term"></i>' + t('solarTerm') + '</span></div><div class="calendar-grid">' + weekdays.map((day) => '<div class="dow">' + day + '</div>').join('') + cells + '</div></div>' +
+   '<aside class="agenda-panel"><div class="subhead"><h3>' + t('agenda') + '</h3></div><div class="event-list">' + eventList + '</div><button class="calendar-add-event" data-open-event-dialog><span aria-hidden="true">＋</span>' + t('addAgenda') + '</button></aside></div>';
 }
 function saveEvents() { saveStored(STORAGE.events, state.events); }
 
@@ -1172,7 +1174,7 @@ function weather() {
     const cardCurrent = card.current || {};
     const temperature = card.loading && !card.current ? '…' : Math.round(cardCurrent.temperature_2m ?? 0) + '°';
     const details = card.loading && !card.current ? t('weatherLoading') : (state.language === 'en' ? 'Feels ' : '体感 ') + Math.round(cardCurrent.apparent_temperature ?? cardCurrent.temperature_2m ?? 0) + '° · ' + (state.language === 'en' ? 'Humidity ' : '湿度 ') + (cardCurrent.relative_humidity_2m ?? '—') + '% · ' + (state.language === 'en' ? 'Wind ' : '风速 ') + Math.round(cardCurrent.wind_speed_10m ?? 0) + ' km/h';
-    return '<button class="weather-card ' + (card.id === active.id ? 'active' : '') + (card.loading ? ' loading' : '') + '" draggable="true" data-weather-card="' + card.id + '" data-weather-index="' + index + '"><div class="weather-card-head"><span><strong>' + escapeHtml(card.name) + '</strong><small>' + escapeHtml([card.admin2, card.admin1].filter(Boolean).join(' · ') || card.country || '') + '</small></span><span class="weather-card-icon" aria-hidden="true">' + item[0] + '</span></div><div class="weather-card-main"><span class="weather-card-temp">' + temperature + '</span><span class="weather-card-condition">' + escapeHtml(item[1]) + '</span></div><span class="weather-card-meta">' + escapeHtml(details) + '</span></button>';
+    return '<button class="weather-card ' + (card.id === active.id ? 'active' : '') + (card.loading ? ' loading' : '') + '" draggable="true" data-weather-card="' + card.id + '" data-weather-index="' + index + '"><span class="weather-card-delete" data-delete-weather="' + escapeHtml(card.id) + '" role="button" tabindex="0" aria-label="' + (state.language === 'en' ? 'Delete weather card' : '删除天气卡片') + '">×</span><div class="weather-card-head"><span><strong>' + escapeHtml(card.name) + '</strong><small>' + escapeHtml([card.admin2, card.admin1].filter(Boolean).join(' · ') || card.country || '') + '</small></span><span class="weather-card-icon" aria-hidden="true">' + item[0] + '</span></div><div class="weather-card-main"><span class="weather-card-temp">' + temperature + '</span><span class="weather-card-condition">' + escapeHtml(item[1]) + '</span></div><span class="weather-card-meta">' + escapeHtml(details) + '</span></button>';
   }).join('');
   const title = [active.name, active.admin2, active.admin1, active.country].filter(Boolean).join(' · ');
   if (active.loading && !active.current) {
@@ -1182,7 +1184,7 @@ function weather() {
   const selectedHour = currentHourIndex(active);
   const currentHour = selectedHour >= 0 ? selectedHour : 0;
   const hourlyStart = Math.max(0, currentHour - 12);
-  const hourlyEnd = Math.min(hourlyTimes.length, currentHour + 13);
+  const hourlyEnd = Math.min(hourlyTimes.length, currentHour + 12);
   const hourly = hourlyTimes.slice(hourlyStart, hourlyEnd).map((time, offset) => {
     const index = hourlyStart + offset; const item = weatherCode(active.hourly.weather_code[index]); const date = new Date(time); const isCurrent = index === currentHour;
     const label = isCurrent ? (state.language === 'en' ? 'Now' : '现在') : new Intl.DateTimeFormat(state.language === 'en' ? 'en-US' : 'zh-CN', { hour: '2-digit', minute: '2-digit' }).format(date);
@@ -1527,7 +1529,7 @@ function renderSettings() {
   const notificationPreference = state.notificationPreference === 'deny' ? 'deny' : 'allow';
   const topDisplay = state.layoutMode === 'classic' ? '<div class="settings-preference-row settings-top-display-row"><h3>' + t('topDisplay') + '</h3><div class="settings-preference-control settings-top-display-control"><label class="setting-toggle"><input type="checkbox" data-top-display="theme" ' + (state.topDisplay.theme ? 'checked' : '') + '><span>' + t('theme') + '</span></label><label class="setting-toggle"><input type="checkbox" data-top-display="language" ' + (state.topDisplay.language ? 'checked' : '') + '><span>' + t('language') + '</span></label><label class="setting-toggle"><input type="checkbox" data-top-display="messages" ' + (state.topDisplay.messages ? 'checked' : '') + '><span>' + t('messages') + '</span></label></div></div>' : '';
   dialog.innerHTML = '<div class="dialog-card settings-dialog-card" role="dialog" aria-modal="true"><div class="dialog-head"><h2>' + t('settings') + '</h2><button class="icon-btn small" data-close-settings aria-label="' + t('close') + '">×</button></div>' +
-    '<div class="settings-preferences"><div class="settings-preference-row"><h3>' + t('layout') + '</h3><div class="settings-preference-control"><select id="settingsLayout"><option value="classic" ' + (state.layoutMode === 'classic' ? 'selected' : '') + '>' + t('classicLayout') + '</option><option value="simple" ' + (state.layoutMode === 'simple' ? 'selected' : '') + '>' + t('simpleLayout') + '</option></select></div></div>' + topDisplay + '<div class="settings-preference-row"><h3>' + t('theme') + '</h3><div class="settings-preference-control"><select id="settingsTheme"><option value="system" ' + (state.theme === 'system' ? 'selected' : '') + '>' + t('system') + '</option><option value="light" ' + (state.theme === 'light' ? 'selected' : '') + '>' + t('light') + '</option><option value="dark" ' + (state.theme === 'dark' ? 'selected' : '') + '>' + t('dark') + '</option></select></div></div><div class="settings-preference-row"><h3>' + t('color') + '</h3><div class="settings-preference-control"><select id="settingsColor"><option value="mono" ' + (state.color === 'mono' ? 'selected' : '') + '>' + t('blackWhite') + '</option><option value="purple" ' + (state.color === 'purple' ? 'selected' : '') + '>' + t('noblePurple') + '</option><option value="blue" ' + (state.color === 'blue' ? 'selected' : '') + '>' + t('skyBlue') + '</option><option value="green" ' + (state.color === 'green' ? 'selected' : '') + '>' + t('notBananaGreen') + '</option><option value="yellow" ' + (state.color === 'yellow' ? 'selected' : '') + '>' + t('meituanYellow') + '</option></select></div></div><div class="settings-preference-row"><h3>' + t('language') + '</h3><div class="settings-preference-control"><select id="settingsLanguage"><option value="system" ' + (state.languageMode === 'system' ? 'selected' : '') + '>' + t('system') + '</option><option value="zh" ' + (state.languageMode === 'zh' ? 'selected' : '') + '>中文</option><option value="en" ' + (state.languageMode === 'en' ? 'selected' : '') + '>English</option></select></div></div><div class="settings-preference-row"><h3>' + t('messages') + '</h3><div class="settings-preference-control"><select id="settingsNotifications"><option value="allow" ' + (notificationPreference === 'allow' ? 'selected' : '') + '>' + t('enableNotifications') + '</option><option value="deny" ' + (notificationPreference === 'deny' ? 'selected' : '') + '>' + t('disableNotifications') + '</option></select></div></div><div class="settings-preference-row"><h3>' + t('footprint') + '</h3><div class="settings-preference-control"><label class="setting-toggle"><input id="settingsFootprint" type="checkbox" ' + (state.footprint ? 'checked' : '') + '><span>' + (state.language === 'en' ? 'Show on Home' : '在首页显示') + '</span></label></div></div></div>';
+    '<div class="settings-preferences"><div class="settings-preference-row"><h3>' + t('layout') + '</h3><div class="settings-preference-control"><select id="settingsLayout"><option value="classic" ' + (state.layoutMode === 'classic' ? 'selected' : '') + '>' + t('classicLayout') + '</option><option value="simple" ' + (state.layoutMode === 'simple' ? 'selected' : '') + '>' + t('simpleLayout') + '</option></select></div></div>' + topDisplay + '<div class="settings-preference-row"><h3>' + t('theme') + '</h3><div class="settings-preference-control"><select id="settingsTheme"><option value="system" ' + (state.theme === 'system' ? 'selected' : '') + '>' + t('system') + '</option><option value="light" ' + (state.theme === 'light' ? 'selected' : '') + '>' + t('light') + '</option><option value="dark" ' + (state.theme === 'dark' ? 'selected' : '') + '>' + t('dark') + '</option></select></div></div><div class="settings-preference-row"><h3>' + t('color') + '</h3><div class="settings-preference-control"><select id="settingsColor"><option value="mono" ' + (state.color === 'mono' ? 'selected' : '') + '>' + t('blackWhite') + '</option><option value="purple" ' + (state.color === 'purple' ? 'selected' : '') + '>' + t('noblePurple') + '</option><option value="blue" ' + (state.color === 'blue' ? 'selected' : '') + '>' + t('skyBlue') + '</option><option value="green" ' + (state.color === 'green' ? 'selected' : '') + '>' + t('notBananaGreen') + '</option><option value="yellow" ' + (state.color === 'yellow' ? 'selected' : '') + '>' + t('meituanYellow') + '</option></select></div></div><div class="settings-preference-row"><h3>' + t('language') + '</h3><div class="settings-preference-control"><select id="settingsLanguage"><option value="system" ' + (state.languageMode === 'system' ? 'selected' : '') + '>' + t('system') + '</option><option value="zh" ' + (state.languageMode === 'zh' ? 'selected' : '') + '>中文</option><option value="en" ' + (state.languageMode === 'en' ? 'selected' : '') + '>English</option></select></div></div><div class="settings-preference-row"><h3>' + t('messages') + '</h3><div class="settings-preference-control"><select id="settingsNotifications"><option value="allow" ' + (notificationPreference === 'allow' ? 'selected' : '') + '>' + t('enableNotifications') + '</option><option value="deny" ' + (notificationPreference === 'deny' ? 'selected' : '') + '>' + t('disableNotifications') + '</option></select></div></div><div class="settings-preference-row"><h3>' + t('footprint') + '</h3><div class="settings-preference-control"><select id="settingsFootprint"><option value="hide" ' + (!state.footprint ? 'selected' : '') + '>' + t('hideFootprint') + '</option><option value="show" ' + (state.footprint ? 'selected' : '') + '>' + t('showFootprint') + '</option></select></div></div></div>';
   dialog.hidden = false; state.settingsOpen = true;
 }
 function closeSettings() { $('#settingsDialog').hidden = true; state.settingsOpen = false; }
@@ -1650,7 +1652,8 @@ function startLongPress(target, type, index) {
   reorderTarget = { target, type, index };
   reorderTimer = setTimeout(() => {
     target.classList.add('reorder-hold'); target.dataset.longPressed = 'true';
-    toast(state.language === 'en' ? 'Reorder mode: tap another item' : '排序模式：再点一下目标位置');
+    if (type === 'weather') target.classList.add('weather-delete-ready');
+    toast(type === 'weather' ? (state.language === 'en' ? 'Delete control is ready at the top right' : '右上角已显示删除按钮') : (state.language === 'en' ? 'Reorder mode: tap another item' : '排序模式：再点一下目标位置'));
   }, 520);
 }
 function endLongPress() { clearTimeout(reorderTimer); reorderTimer = null; }
@@ -1783,6 +1786,14 @@ workspace.addEventListener('click', async (event) => {
   }
   const weatherResult = event.target.closest('[data-weather-result-index]');
   if (weatherResult) return addWeatherPlace(state.weatherSearchResults[Number(weatherResult.dataset.weatherResultIndex)]);
+  const deleteWeather = event.target.closest('[data-delete-weather]');
+  if (deleteWeather) {
+    event.preventDefault(); event.stopPropagation();
+    const id = deleteWeather.dataset.deleteWeather;
+    state.weatherCards = state.weatherCards.filter((card) => card.id !== id);
+    if (state.activeWeatherId === id) state.activeWeatherId = state.weatherCards[0]?.id || null;
+    reorderTarget = null; saveWeatherCards(); return render();
+  }
   const weatherCard = event.target.closest('[data-weather-card]');
   if (weatherCard) {
     if (handleReorderClick(weatherCard, 'weather', Number(weatherCard.dataset.weatherIndex))) { event.preventDefault(); return; }
@@ -1970,7 +1981,7 @@ $('#settingsDialog').addEventListener('change', (event) => {
   if (event.target.id === 'settingsColor') { state.color = ['mono', 'purple', 'blue', 'green', 'yellow'].includes(event.target.value) ? event.target.value : 'mono'; saveColorPreference(); applyTheme(); render(); renderSettings(); }
   if (event.target.id === 'settingsLanguage') { state.languageMode = event.target.value; saveThemeLanguage(); applyLanguage(); renderNav(); render(); renderSettings(); }
   if (event.target.id === 'settingsNotifications') { state.notificationPreference = event.target.value; saveStored(STORAGE.notificationPreference, state.notificationPreference); if (state.notificationPreference === 'allow') requestNotifications(); }
-  if (event.target.id === 'settingsFootprint') { state.footprint = event.target.checked; saveFootprintPreference(); if (!state.footprint && state.homeFeed.active === 'footprint') state.homeFeed.active = DEFAULT_HOME_FEED_ORDER[0]; render(); renderSettings(); }
+  if (event.target.id === 'settingsFootprint') { state.footprint = event.target.value === 'show'; saveFootprintPreference(); if (!state.footprint && state.homeFeed.active === 'footprint') state.homeFeed.active = DEFAULT_HOME_FEED_ORDER[0]; render(); renderSettings(); }
   if (event.target.dataset.topDisplay) { state.topDisplay[event.target.dataset.topDisplay] = event.target.checked; saveTopDisplay(); renderHeaderControls(); renderSettings(); }
 });
 $('#settingsDialog').addEventListener('input', () => {});
