@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.59';
+const APP_VERSION = '2.18.60';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -1252,7 +1252,7 @@ function applyReaderMarkups() {
   const root = $('[data-reader-content]'); const book = readerBookById(state.readerBookId);
   if (!root || !book || book.type === 'pdf') return;
   const markups = (book.markups || []).map((item) => ({ ...item, type: item.type === 'comment' ? 'comment' : item.type }));
-  const comments = (book.annotations || []).filter((item) => item.kind === 'comment' || (item.start != null && item.note)).map((item) => ({ ...item, type: 'comment' }));
+  const comments = (book.annotations || []).filter((item) => item.note).map((item) => ({ ...item, type: 'comment' }));
   const entries = markups.concat(comments).filter((item) => item.type === 'underline' || item.type === 'highlight' || item.type === 'comment');
   entries.sort((a, b) => Number(b.start ?? -1) - Number(a.start ?? -1));
   entries.forEach((item) => {
