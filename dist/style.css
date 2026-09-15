@@ -3927,3 +3927,10 @@ html[data-theme="dark"][data-color="mono"] .setting-toggle input:checked::after,
 html[data-theme="dark"][data-color="mono"] #settingsDialog .setting-toggle input:checked::after {
   background: #000;
 }
+
+/* 2.18.52: both navigation rails support horizontal touch swipes. */
+#toolNav,
+#workspace[data-tool="home"] .feed-source-tabs {
+  touch-action: pan-x;
+  overscroll-behavior-x: contain;
+}

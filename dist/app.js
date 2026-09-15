@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.51';
+const APP_VERSION = '2.18.52';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -472,6 +472,12 @@ function swapHomeFeedSources(from, to) {
   [state.homeFeed.order[from], state.homeFeed.order[to]] = [state.homeFeed.order[to], state.homeFeed.order[from]];
   saveHomeFeedOrder(); render();
   toast(state.language === 'en' ? 'Feed order saved' : '订阅源顺序已保存');
+}
+function selectHomeFeedSource(sourceId) {
+  state.homeFeed.active = sourceId;
+  if (state.section === 'home') render();
+  if (sourceId !== 'footprint') return loadHomeFeeds(true, sourceId);
+  return undefined;
 }
 
 function feedText(value = '') { return String(value).replace(/<[^>]*>/g, ' ').replace(/&nbsp;/gi, ' ').replace(/\s+/g, ' ').trim(); }
@@ -2185,6 +2191,8 @@ let reorderTimer = null;
 let reorderTarget = null;
 let swipeGesture = null;
 let swipeSuppressClickUntil = 0;
+let tabSwipeGesture = null;
+let tabSwipeSuppressClickUntil = 0;
 let readerSurfaceGesture = null;
 function startLongPress(target, type, index) {
   clearTimeout(reorderTimer);
@@ -2206,6 +2214,36 @@ function handleReorderClick(target, type, index) {
   if (reorderTarget.index !== index) type === 'tool' ? swapToolOrder(reorderTarget.index, index) : type === 'feed' ? swapHomeFeedSources(reorderTarget.index, index) : swapWeatherCards(reorderTarget.index, index);
   reorderTarget.target.classList.remove('reorder-hold'); delete reorderTarget.target.dataset.longPressed; reorderTarget = null;
   return true;
+}
+function beginTabSwipe(container, event) {
+  if (!container || event.pointerType === 'mouse') return;
+  tabSwipeGesture = { container, startX: event.clientX, startY: event.clientY, dx: 0, dy: 0, cancelled: false };
+}
+function updateTabSwipe(event) {
+  if (!tabSwipeGesture) return;
+  tabSwipeGesture.dx = event.clientX - tabSwipeGesture.startX;
+  tabSwipeGesture.dy = event.clientY - tabSwipeGesture.startY;
+  if (Math.abs(tabSwipeGesture.dy) > Math.abs(tabSwipeGesture.dx) + 12 && Math.abs(tabSwipeGesture.dy) > 8) {
+    tabSwipeGesture.cancelled = true;
+    endLongPress();
+    return;
+  }
+  if (Math.abs(tabSwipeGesture.dx) > 12) endLongPress();
+}
+function finishTabSwipe() {
+  const gesture = tabSwipeGesture;
+  tabSwipeGesture = null;
+  if (!gesture || gesture.cancelled || Math.abs(gesture.dx) < 52 || Math.abs(gesture.dx) <= Math.abs(gesture.dy) + 12) return;
+  const selector = gesture.container.id === 'toolNav' ? '[data-tool]' : '[data-feed-source]';
+  const tabs = [...gesture.container.querySelectorAll(selector)];
+  const currentIndex = tabs.findIndex((tab) => tab.classList.contains('active'));
+  const nextIndex = currentIndex + (gesture.dx < 0 ? 1 : -1);
+  if (currentIndex < 0 || nextIndex < 0 || nextIndex >= tabs.length) return;
+  const nextTab = tabs[nextIndex];
+  tabSwipeSuppressClickUntil = Date.now() + 420;
+  if (gesture.container.id === 'toolNav') selectTool(nextTab.dataset.tool);
+  else selectHomeFeedSource(nextTab.dataset.feedSource);
+  requestAnimationFrame(() => gesture.container.querySelector('.active')?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' }));
 }
 
 workspace.addEventListener('pointerdown', (event) => {
@@ -2237,11 +2275,12 @@ document.addEventListener('pointerup', () => {
   } else if (gesture.dx > 24) gesture.row.classList.remove('swiped');
 }, { passive: true });
 
-nav.addEventListener('pointerdown', (event) => { const tab = event.target.closest('[data-tool]'); if (tab) startLongPress(tab, 'tool', Number(tab.dataset.toolIndex)); });
+nav.addEventListener('pointerdown', (event) => { const tab = event.target.closest('[data-tool]'); if (tab) { startLongPress(tab, 'tool', Number(tab.dataset.toolIndex)); beginTabSwipe(nav, event); } });
 nav.addEventListener('pointerup', endLongPress);
 nav.addEventListener('pointercancel', endLongPress);
 nav.addEventListener('click', (event) => {
   const tab = event.target.closest('[data-tool]'); if (!tab) return;
+  if (Date.now() < tabSwipeSuppressClickUntil) { event.preventDefault(); return; }
   if (handleReorderClick(tab, 'tool', Number(tab.dataset.toolIndex))) { event.preventDefault(); return; }
   selectTool(tab.dataset.tool);
   if (tab.dataset.tool === 'weather') refreshWeatherCard(state.weatherCards.find((card) => card.id === state.activeWeatherId));
@@ -2251,10 +2290,13 @@ nav.addEventListener('dragover', (event) => { if (event.target.closest('[data-to
   nav.addEventListener('drop', (event) => { event.preventDefault(); const tab = event.target.closest('[data-tool]'); if (tab) swapToolOrder(Number(event.dataTransfer.getData('text/plain')), Number(tab.dataset.toolIndex)); });
 
 workspace.addEventListener('pointerdown', (event) => { const card = event.target.closest('[data-weather-card]'); if (card) startLongPress(card, 'weather', Number(card.dataset.weatherIndex)); });
-workspace.addEventListener('pointerdown', (event) => { const source = event.target.closest('[data-feed-source]'); if (source) startLongPress(source, 'feed', Number(source.dataset.feedSourceIndex)); });
+workspace.addEventListener('pointerdown', (event) => { const source = event.target.closest('[data-feed-source]'); if (source) { startLongPress(source, 'feed', Number(source.dataset.feedSourceIndex)); beginTabSwipe(source.closest('.feed-source-tabs'), event); } });
 workspace.addEventListener('pointerdown', (event) => { const book = event.target.closest('[data-reader-book-card]'); if (book && !event.target.closest('[data-delete-book]')) startLongPress(book, 'book', Number(book.dataset.readerBookIndex)); });
 workspace.addEventListener('pointerup', endLongPress);
 workspace.addEventListener('pointercancel', endLongPress);
+document.addEventListener('pointermove', updateTabSwipe, { passive: true });
+document.addEventListener('pointerup', finishTabSwipe, { passive: true });
+document.addEventListener('pointercancel', () => { tabSwipeGesture = null; endLongPress(); }, { passive: true });
 workspace.addEventListener('pointerdown', (event) => {
   const surface = event.target.closest('[data-reader-surface]');
   if (state.readerMode === 'reading' && surface) readerSurfaceGesture = { surface, x: event.clientX, y: event.clientY };
@@ -2286,11 +2328,9 @@ workspace.addEventListener('click', async (event) => {
   }
   const feedSource = event.target.closest('[data-feed-source]');
   if (feedSource) {
+    if (Date.now() < tabSwipeSuppressClickUntil) { event.preventDefault(); return; }
     if (feedSource.dataset.feedSourceIndex != null && handleReorderClick(feedSource, 'feed', Number(feedSource.dataset.feedSourceIndex))) { event.preventDefault(); return; }
-    const sourceId = feedSource.dataset.feedSource;
-    state.homeFeed.active = sourceId;
-    if (sourceId !== 'footprint') return loadHomeFeeds(true, sourceId);
-    return render();
+    return selectHomeFeedSource(feedSource.dataset.feedSource);
   }
   if (event.target.closest('[data-refresh-feeds]')) return loadHomeFeeds(true);
   const feedItem = event.target.closest('[data-feed-link]');
