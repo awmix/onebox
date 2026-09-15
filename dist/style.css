@@ -1,18 +1,18 @@
 :root {
   --bg: #f3f5fa;
-  --bg-top: #e8edff;
+  --bg-top: #eef0f4;
   --panel: #fff;
   --panel-2: #f8f9fc;
   --ink: #11131a;
   --muted: #707584;
   --line: #e5e8f0;
-  --primary: #405cf5;
-  --primary-2: #687bff;
-  --soft: #edf0ff;
+  --primary: #17191f;
+  --primary-2: #565b66;
+  --soft: #eef0f4;
   --danger: #d14d5b;
   --warning: #cf7a1f;
   --success: #31925e;
-  --shadow: 0 18px 55px rgba(33, 43, 90, .1);
+  --shadow: 0 18px 55px rgba(25, 30, 42, .1);
   --radius: 24px;
   color-scheme: light;
 }
@@ -32,7 +32,7 @@ button, input, select, textarea { font: inherit; }
 button, .tab, .weather-card, .key { touch-action: manipulation; -webkit-user-select: none; user-select: none; }
 button { transition: transform .15s ease, box-shadow .15s ease, background .15s ease; }
 button:not(:disabled):hover { transform: translateY(-1px); }
-button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 3px solid rgba(64, 92, 245, .28); outline-offset: 2px; }
+button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 3px solid color-mix(in srgb, var(--primary) 28%, transparent); outline-offset: 2px; }
 a { color: inherit; }
 .shell { width: min(1160px, 100%); margin: auto; padding: 0 28px; }
 .app-header {
@@ -341,6 +341,9 @@ textarea { min-height: 130px; resize: vertical; }
 
 #settingsDialog .settings-update-section .settings-preference-control { flex-wrap: nowrap; }
 #settingsDialog .settings-update-section .setting-toggle span { white-space: nowrap; }
+#settingsDialog .settings-top-display-row { align-items: flex-start; }
+#settingsDialog .settings-top-display-control { justify-content: flex-end; gap: 5px 9px; }
+#settingsDialog .settings-top-display-control .setting-toggle { min-height: 30px; }
 
 @media (max-width: 760px) {
   #settingsDialog .settings-preference-control { gap: 8px; }
@@ -570,9 +573,9 @@ button:not(:disabled):active { transform: scale(.98); }
 .weather-search-field input { min-width: 0; padding-right: 42px; }
 .converter-card { max-width: 760px; padding: 0; border: 0; background: transparent; }
 
-[data-theme="dark"] .tab.active { border-color: #8794ff; background: var(--soft); box-shadow: none; }
+[data-theme="dark"] .tab.active { border-color: var(--primary); background: var(--soft); box-shadow: none; }
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .tab.active { border-color: #8794ff; background: var(--soft); box-shadow: none; }
+  :root:not([data-theme="light"]) .tab.active { border-color: var(--primary); background: var(--soft); box-shadow: none; }
 }
 
 /* Notifications use the same modal surface as settings. */
@@ -817,10 +820,16 @@ main:has(#workspace[data-tool="home"]), main:has(#workspace[data-tool="messages"
 .home-tool-icon, .mine-row-icon { display: grid; place-items: center; flex: 0 0 34px; width: 34px; height: 34px; border-radius: 11px; background: var(--soft); color: var(--primary); font-size: 19px; font-weight: 800; }
 .home-tool-icon svg { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
 .mine-row-icon svg { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.mine-update-row { cursor: default; }
+.mine-update-row .mine-row-icon svg { width: 19px; height: 19px; }
+.mine-row-action { margin-left: auto; display: flex; align-items: center; }
+.mine-update-button { padding: 7px 10px; border-radius: 10px; font-size: 11px; white-space: nowrap; }
 .home-tool-arrow, .mine-row > span:last-child { margin-left: auto; color: var(--muted); font-size: 20px; }
 .page-title-row { display: flex; align-items: end; justify-content: space-between; gap: 16px; margin-bottom: 20px; }
 .page-title-row h1 { margin-bottom: 0; }
 .message-panel { max-width: 680px; }
+.message-panel-head { display: flex; justify-content: flex-end; min-height: 26px; margin: -4px 0 8px; }
+.message-panel-head .compact-action { padding: 5px 9px; border-radius: 9px; font-size: 11px; }
 .message-panel .notification-list { max-height: none; margin: 0; }
 .mine-list { max-width: 680px; padding: 8px; display: grid; gap: 8px; }
 .mine-row { border: 0; border-radius: 15px; }
@@ -1041,6 +1050,8 @@ main { padding-bottom: calc(94px + env(safe-area-inset-bottom)); }
 .feed-source-mark.huxiu, .feed-source-tag.huxiu b { background: #20242b; color: #f1d7a4; }
 .feed-source-mark.zhihu, .feed-source-tag.zhihu b { background: #1677ff; color: #fff; }
 .feed-source-mark.v2ex, .feed-source-tag.v2ex b { background: var(--panel-2); border: 1px solid var(--line); color: var(--ink); }
+.feed-source-mark.footprint { background: var(--soft); color: var(--primary); }
+.feed-source-mark.footprint svg { width: 16px; height: 16px; fill: currentColor; }
 .feed-refresh { flex: 0 0 auto; width: 38px; height: 38px; padding: 8px; border-radius: 11px; }
 .feed-refresh svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .feed-refresh:disabled svg { animation: feed-spin .9s linear infinite; }
@@ -1087,7 +1098,7 @@ main { padding-bottom: calc(94px + env(safe-area-inset-bottom)); }
 .setting-toggle input::after { content: ''; position: absolute; top: 3px; left: 3px; width: 14px; height: 14px; border-radius: 50%; background: var(--muted); transition: transform .15s ease, background .15s ease; }
 .setting-toggle input:checked { border-color: var(--primary); background: var(--primary); }
 .setting-toggle input:checked::after { transform: translateX(16px); background: #fff; }
-.setting-toggle input:focus-visible { outline: 3px solid rgba(64, 92, 245, .25); outline-offset: 2px; }
+.setting-toggle input:focus-visible { outline: 3px solid color-mix(in srgb, var(--primary) 25%, transparent); outline-offset: 2px; }
 
 @media (max-width: 600px) {
   .feed-source-panel { padding: 7px; }
@@ -1722,9 +1733,9 @@ main:not(:has(#workspace[data-tool="home"])):not(:has(#workspace[data-tool="mess
 }
 .layout-nav-button:hover { transform: none; }
 .layout-nav-button.active {
-  border-color: var(--primary);
-  background: var(--soft);
-  color: var(--ink);
+  border-color: transparent;
+  background: transparent;
+  color: var(--primary);
 }
 .layout-nav-icon {
   width: 18px;
@@ -1759,6 +1770,7 @@ html.layout-simple #bottomNav { display: none !important; }
 html.layout-simple .connection,
 html.layout-simple #notifyBtn,
 html.layout-simple #themeBtn,
+html.layout-simple #languageBtn,
 html.layout-simple #settingsBtn,
 html.layout-simple #updateBtn,
 html.layout-simple #languageControl { display: none !important; }
@@ -1801,3 +1813,74 @@ html.layout-simple #languageControl { display: none !important; }
   #eventDialog .event-date-time-grid { gap: 6px; }
   #eventDialog .event-date-time-grid input { padding-inline: 8px; font-size: 13px; }
 }
+
+/* User-selectable accent palettes. The neutral palette is the default; the
+   other presets only replace the accent tokens so every existing surface and
+   icon follows the same color without creating parallel component themes. */
+[data-color="mono"] {
+  --primary: #17191f;
+  --primary-2: #565b66;
+  --soft: color-mix(in srgb, var(--primary) 9%, var(--panel));
+  --bg-top: color-mix(in srgb, var(--primary) 6%, var(--bg));
+}
+[data-color="purple"] {
+  --primary: #405cf5;
+  --primary-2: #687bff;
+  --soft: color-mix(in srgb, var(--primary) 11%, var(--panel));
+  --bg-top: color-mix(in srgb, var(--primary) 7%, var(--bg));
+}
+[data-color="blue"] {
+  --primary: #1677ff;
+  --primary-2: #4a9aff;
+  --soft: color-mix(in srgb, var(--primary) 11%, var(--panel));
+  --bg-top: color-mix(in srgb, var(--primary) 7%, var(--bg));
+}
+[data-color="green"] {
+  --primary: #07c160;
+  --primary-2: #35d987;
+  --soft: color-mix(in srgb, var(--primary) 11%, var(--panel));
+  --bg-top: color-mix(in srgb, var(--primary) 7%, var(--bg));
+}
+[data-color="yellow"] {
+  --primary: #e5a900;
+  --primary-2: #ffc629;
+  --soft: color-mix(in srgb, var(--primary) 13%, var(--panel));
+  --bg-top: color-mix(in srgb, var(--primary) 8%, var(--bg));
+}
+html[data-theme="dark"][data-color="mono"] {
+  --primary: #f5f6fa;
+  --primary-2: #b8bdc8;
+  --soft: color-mix(in srgb, var(--primary) 12%, var(--panel));
+  --bg-top: color-mix(in srgb, var(--primary) 8%, var(--bg));
+}
+
+/* Mine is a system surface: keep its action glyphs neutral even when the
+   user chooses a colorful accent for the rest of the application. */
+.mine-page .mine-row-icon {
+  color: var(--ink);
+  background: var(--panel-2);
+  border-color: var(--line);
+}
+
+/* Keep the system-level Mine actions monochrome and keep the optional top
+   display switches readable on narrow settings sheets. */
+#settingsDialog .settings-top-display-control {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: center;
+  width: 100%;
+  gap: 6px;
+}
+#settingsDialog .settings-top-display-control .setting-toggle {
+  min-width: 0;
+  justify-content: flex-start;
+  gap: 4px;
+  font-size: 10px;
+}
+#settingsDialog .settings-top-display-control .setting-toggle span,
+#settingsDialog #settingsFootprint + span {
+  max-width: none;
+  overflow: visible;
+  text-overflow: clip;
+}
+#settingsDialog #settingsFootprint + span { white-space: nowrap; }

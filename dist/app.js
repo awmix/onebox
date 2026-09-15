@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.25';
+const APP_VERSION = '2.18.26';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -22,6 +22,9 @@ const STORAGE = {
   homeFeedOrder: 'onebox.home-feed-order',
   layout: 'onebox.layout',
   notificationPreference: 'onebox.notification-preference',
+  color: 'onebox.color',
+  topDisplay: 'onebox.top-display',
+  footprint: 'onebox.footprint',
   github: 'onebox.github',
 };
 const TOOL_DEFS = {
@@ -179,7 +182,7 @@ const DICT = {
     userAgreement: '用户协议', viewAgreement: '查看协议', agreementTitle: 'OneBox 用户协议', agreementBody: 'OneBox 是一款本地优先的日常工具应用。计算记录、日程、翻译历史和天气卡片默认保存在当前设备；使用 GitHub 云同步时，数据会写入你自己的私有 Gist。天气和翻译功能会请求对应的开源服务，服务商可能记录必要的请求信息。请在使用提醒、定位和消息通知功能前确认已授予相应权限。',
     addReminder: '添加提醒', reminderText: '提醒内容', remindAt: '提醒时间', noNotifications: '还没有提醒。', once: '指定时间', everyDay: '每天', workdays: '工作日', restdays: '非工作日', weekly: '每周', weekdays: '重复星期',
     markRead: '全部已读', close: '关闭', system: '跟随系统', light: '浅色', dark: '深色',
-    layout: '布局', classicLayout: '经典布局', simpleLayout: '简约布局', language: '语言', theme: '主题', reorderHint: '长按工具标签可以调整顺序',
+    layout: '布局', classicLayout: '经典布局', simpleLayout: '简约布局', language: '语言', theme: '主题', color: '颜色', blackWhite: '黑白配', noblePurple: '贵族紫', skyBlue: '天空蓝', notBananaGreen: '不蕉绿', meituanYellow: '美团黄', topDisplay: '顶部显示', footprint: '足迹', reorderHint: '长按工具标签可以调整顺序',
     languagePending: '日语、韩语语言包已预留，当前版本先提供中文和英文。',
     bookshelf: '书架', addBook: '添加文档', noBooks: '还没有本地文档。', readerHint: '支持 Markdown、PDF、EPUB；文档仅保存在当前设备。', openBook: '打开阅读', deleteBook: '删除文档', annotations: '标注', addAnnotation: '添加标注', annotationPlaceholder: '写下你的标注…', saveAnnotation: '保存标注', annotationHint: '选择文字后长按或点击标注按钮。', noAnnotations: '还没有标注。', reading: '正在阅读', closeReader: '关闭阅读', unsupportedFile: '请选择 .md、.markdown、.pdf 或 .epub 文件。', importFailed: '文档读取失败，请重试。', deleteConfirm: '确定删除这本文档吗？', pdfHint: 'PDF 使用浏览器原生阅读器打开。', epubHint: 'EPUB 已转换为适合 OneBox 的连续阅读视图。',
   },
@@ -220,7 +223,7 @@ const DICT = {
     userAgreement: 'User agreement', viewAgreement: 'View agreement', agreementTitle: 'OneBox user agreement', agreementBody: 'OneBox is a local-first daily tools app. Calculator history, events, translation history and weather cards stay on this device by default; when GitHub sync is enabled, they are written to your own private Gist. Weather and translation features request open-source services, which may record necessary request metadata. Review the permissions before enabling reminders, location or message notifications.',
     addReminder: 'Add reminder', reminderText: 'Reminder', remindAt: 'When', noNotifications: 'No reminders yet.', once: 'Once', everyDay: 'Every day', workdays: 'Workdays', restdays: 'Rest days', weekly: 'Weekly', weekdays: 'Weekdays',
     markRead: 'Mark all read', close: 'Close', system: 'System', light: 'Light', dark: 'Dark',
-    layout: 'Layout', classicLayout: 'Classic layout', simpleLayout: 'Simple layout', language: 'Language', theme: 'Theme', reorderHint: 'Long-press a tool tab to reorder',
+    layout: 'Layout', classicLayout: 'Classic layout', simpleLayout: 'Simple layout', theme: 'Theme', language: 'Language', color: 'Color', blackWhite: 'Black and white', noblePurple: 'Noble purple', skyBlue: 'Sky blue', notBananaGreen: 'WeChat green', meituanYellow: 'Meituan yellow', topDisplay: 'Show at top', footprint: 'Footprints', reorderHint: 'Long-press a tool tab to reorder',
     languagePending: 'Japanese and Korean are reserved for a future language pack. Chinese and English are available now.',
     bookshelf: 'Bookshelf', addBook: 'Add document', noBooks: 'No local documents yet.', readerHint: 'Supports Markdown, PDF and EPUB. Files stay on this device.', openBook: 'Open', deleteBook: 'Delete', annotations: 'Notes', addAnnotation: 'Add note', annotationPlaceholder: 'Write a note…', saveAnnotation: 'Save note', annotationHint: 'Select text, long-press or use the note button.', noAnnotations: 'No notes yet.', reading: 'Reading', closeReader: 'Close reader', unsupportedFile: 'Choose a .md, .markdown, .pdf or .epub file.', importFailed: 'Could not read this document.', deleteConfirm: 'Delete this document?', pdfHint: 'PDF opens in the browser native reader.', epubHint: 'EPUB is converted into a continuous OneBox reading view.',
   },
@@ -230,6 +233,7 @@ const toolName = (id) => t(TOOL_DEFS[id]?.key || id);
 const storedTheme = localStorage.getItem(STORAGE.theme);
 const storedLanguage = localStorage.getItem(STORAGE.language) || 'system';
 const storedLayout = localStorage.getItem(STORAGE.layout);
+const storedColor = localStorage.getItem(STORAGE.color);
 const resolveLanguageMode = (mode) => mode === 'en' || mode === 'zh' ? mode : ((navigator.language || '').toLowerCase().startsWith('en') ? 'en' : 'zh');
 const storedCalculator = parseStored(STORAGE.calculator, { expr: '', history: [] });
 const storedLibrary = parseStored(STORAGE.library, []);
@@ -237,6 +241,8 @@ const storedHomeFeeds = parseStored(STORAGE.homeFeeds, {}) || {};
 const storedHomeFeedRead = parseStored(STORAGE.homeFeedRead, {}) || {};
 const storedHomeFeedOrder = parseStored(STORAGE.homeFeedOrder, DEFAULT_HOME_FEED_ORDER);
 const storedNotificationPreference = parseStored(STORAGE.notificationPreference, 'allow');
+const storedTopDisplay = parseStored(STORAGE.topDisplay, {}) || {};
+const storedFootprint = parseStored(STORAGE.footprint, false) === true;
 const rawWeatherCards = parseStored(STORAGE.weatherCards, []);
 const legacyWeather = parseStored(STORAGE.legacyWeather, null);
 const normalizeToolOrder = (value) => {
@@ -258,6 +264,7 @@ const state = {
   tool: initialTool,
   section: initialSection,
   theme: ['light', 'dark', 'system'].includes(storedTheme) ? storedTheme : 'system',
+  color: ['mono', 'purple', 'blue', 'green', 'yellow'].includes(storedColor) ? storedColor : 'mono',
   languageMode: ['zh', 'en', 'system'].includes(storedLanguage) ? storedLanguage : 'system',
   language: resolveLanguageMode(storedLanguage),
   layoutMode: storedLayout === 'classic' ? 'classic' : 'simple',
@@ -278,6 +285,8 @@ const state = {
   homeFeedRequest: 0,
   notifications: parseStored(STORAGE.notifications, []), notificationOpen: false, settingsOpen: false, githubDialogOpen: false, recentReadingOpen: false,
   notificationPreference: storedNotificationPreference === 'deny' ? 'deny' : 'allow',
+  topDisplay: { theme: storedTopDisplay.theme !== false, language: storedTopDisplay.language !== false, messages: storedTopDisplay.messages !== false },
+  footprint: storedFootprint,
   swRegistration: null, updateAvailable: false, updateChecking: false, updateApplying: false,
   github: (() => { const value = parseStored(STORAGE.github, {}) || {}; return { clientId: value.clientId || '', token: value.token || '', user: value.user || null, gistId: value.gistId || '', deviceCode: '', userCode: '', verificationUri: '', expiresAt: 0, interval: 5 }; })(),
 };
@@ -293,10 +302,14 @@ function themeIcon(resolved) {
   if (resolved === 'dark') return '<svg class="header-line-icon theme-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 15.5A8.5 8.5 0 0 1 8.5 4 8.5 8.5 0 1 0 20 15.5Z"/></svg>';
   return '<svg class="header-line-icon theme-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.5"/><path d="M12 2.5v2M12 19.5v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2.5 12h2M19.5 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>';
 }
+function languageIcon() {
+  return '<svg class="header-line-icon language-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M3.8 9h16.4M3.8 15h16.4M12 3.5c2.2 2.3 3.4 5.1 3.4 8.5S14.2 18.2 12 20.5C9.8 18.2 8.6 15.4 8.6 12S9.8 5.8 12 3.5Z"/></svg>';
+}
 function applyTheme() {
   const resolved = state.theme === 'system' ? (window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : state.theme;
   document.documentElement.dataset.theme = resolved;
   document.documentElement.dataset.themeMode = state.theme;
+  document.documentElement.dataset.color = state.color;
   document.documentElement.style.colorScheme = resolved;
   const meta = $('meta[name="theme-color"]');
   if (meta) meta.content = resolved === 'dark' ? '#0d0f14' : '#f3f5fa';
@@ -316,10 +329,19 @@ function renderHeaderControls() {
   document.documentElement.classList.toggle('layout-classic', !simple);
   const layoutNav = $('#layoutNav');
   if (layoutNav) layoutNav.hidden = !simple;
-  ['notifyBtn', 'themeBtn', 'settingsBtn'].forEach((id) => {
+  const topDisplay = state.topDisplay || { theme: true, language: true, messages: true };
+  const visibility = { notifyBtn: !simple && topDisplay.messages, themeBtn: !simple && topDisplay.theme, languageBtn: !simple && topDisplay.language, settingsBtn: !simple };
+  Object.entries(visibility).forEach(([id, visible]) => {
     const button = $('#' + id);
-    if (button) button.hidden = simple;
+    if (button) button.hidden = !visible;
   });
+  const languageButton = $('#languageBtn');
+  if (languageButton) {
+    languageButton.innerHTML = languageIcon();
+    const languageLabel = state.languageMode === 'system' ? t('system') : state.languageMode === 'zh' ? '中文' : 'English';
+    languageButton.setAttribute('aria-label', t('language') + '：' + languageLabel);
+    languageButton.dataset.languageMode = state.languageMode;
+  }
   const languageControl = $('#languageControl');
   const languagePicker = $('#languagePicker');
   if (languageControl) languageControl.hidden = true;
@@ -337,10 +359,18 @@ function applyLanguage() {
   renderHeaderControls();
 }
 function saveThemeLanguage() { localStorage.setItem(STORAGE.theme, state.theme); localStorage.setItem(STORAGE.language, state.languageMode); queuePersistentSnapshot(); }
+function saveColorPreference() { localStorage.setItem(STORAGE.color, state.color); queuePersistentSnapshot(); }
+function saveTopDisplay() { saveStored(STORAGE.topDisplay, state.topDisplay); }
+function saveFootprintPreference() { saveStored(STORAGE.footprint, state.footprint); }
 function saveLayoutPreference() { localStorage.setItem(STORAGE.layout, state.layoutMode); queuePersistentSnapshot(); }
 function cycleTheme() {
   state.theme = state.theme === 'system' ? 'light' : state.theme === 'light' ? 'dark' : 'system';
   saveThemeLanguage(); applyTheme(); render();
+}
+function cycleLanguage() {
+  state.languageMode = state.languageMode === 'system' ? 'zh' : state.languageMode === 'zh' ? 'en' : 'system';
+  saveThemeLanguage(); applyLanguage(); renderNav(); render();
+  if (state.settingsOpen) renderSettings();
 }
 
 function heading(title, subtitle, actions = '') {
@@ -543,13 +573,16 @@ function renderFeedItem(item) {
 }
 function renderHome() {
   const sources = homeFeedSources();
-  const sourceTabs = sources.map((source, index) => '<button class="feed-source-tab ' + (state.homeFeed.active === source.id ? 'active' : '') + '" draggable="true" data-feed-source="' + source.id + '" data-feed-source-index="' + index + '"><span class="feed-source-mark ' + source.className + '"><img src="' + escapeHtml(source.icon) + '" alt="" loading="eager" onerror="this.hidden=true;this.nextElementSibling.style.display=\'inline\'"><span class="feed-source-fallback">' + escapeHtml(source.badge) + '</span></span><span>' + escapeHtml(source.name) + '</span></button>').join('');
-  const sourceItems = state.homeFeed.sources[state.homeFeed.active]?.items || [];
+  const sourceTabs = sources.map((source, index) => '<button class="feed-source-tab ' + (state.homeFeed.active === source.id ? 'active' : '') + '" draggable="true" data-feed-source="' + source.id + '" data-feed-source-index="' + index + '"><span class="feed-source-mark ' + source.className + '"><img src="' + escapeHtml(source.icon) + '" alt="" loading="eager" onerror="this.hidden=true;this.nextElementSibling.style.display=\'inline\'"><span class="feed-source-fallback">' + escapeHtml(source.badge) + '</span></span><span>' + escapeHtml(source.name) + '</span></button>').join('') + (state.footprint ? '<button class="feed-source-tab ' + (state.homeFeed.active === 'footprint' ? 'active' : '') + '" data-feed-source="footprint" aria-label="' + t('footprint') + '"><span class="feed-source-mark footprint"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="7" cy="7" r="2.2"/><circle cx="16.5" cy="8.5" r="2.2"/><circle cx="6" cy="16.5" r="2.2"/><circle cx="15.5" cy="18" r="2.2"/></svg></span><span>' + t('footprint') + '</span></button>' : '');
+  const isFootprint = state.homeFeed.active === 'footprint';
+  const sourceItems = isFootprint ? recentFeedItems() : (state.homeFeed.sources[state.homeFeed.active]?.items || []);
   const cutoff = Date.now() - RSS_RETENTION_MS;
-  const items = sourceItems.filter((item) => { const timestamp = feedItemTimestamp(item); return !Number.isFinite(timestamp) || timestamp >= cutoff; }).sort((a, b) => (feedItemTimestamp(b) || 0) - (feedItemTimestamp(a) || 0)).slice(0, RSS_MAX_ITEMS_PER_SOURCE);
-  const hasItems = items.length > 0;
+  const items = sourceItems.filter((item) => { const timestamp = feedItemTimestamp(item); return !Number.isFinite(timestamp) || timestamp >= cutoff; });
+  if (!isFootprint) items.sort((a, b) => (feedItemTimestamp(b) || 0) - (feedItemTimestamp(a) || 0));
+  const visibleItems = items.slice(0, RSS_MAX_ITEMS_PER_SOURCE);
+  const hasItems = visibleItems.length > 0;
   const errors = Object.keys(state.homeFeed.errors || {}).length;
-  const feedBody = state.homeFeed.loading && !hasItems ? '<div class="feed-loading"><span></span><span></span><span></span></div>' : hasItems ? '<div class="feed-list">' + items.map(renderFeedItem).join('') + '</div>' : '<p class="empty feed-empty">' + t('feedEmpty') + '</p>';
+  const feedBody = state.homeFeed.loading && !hasItems && !isFootprint ? '<div class="feed-loading"><span></span><span></span><span></span></div>' : hasItems ? '<div class="feed-list">' + visibleItems.map(renderFeedItem).join('') + '</div>' : '<p class="empty feed-empty">' + (isFootprint ? (state.language === 'en' ? 'No articles read yet.' : '还没有阅读过首页消息。') : t('feedEmpty')) + '</p>';
   const refreshState = state.homeFeed.loading ? '<div class="feed-refresh-state" role="status"><span></span>' + (state.language === 'en' ? 'Refreshing' : '正在刷新') + '</div>' : '';
   return '<div class="home-page feed-home"><section class="feed-source-panel"><div class="feed-source-tabs" role="tablist" aria-label="RSS 来源">' + sourceTabs + '</div></section><section class="feed-panel">' + refreshState + (errors ? '<p class="feed-warning">' + t('feedPartial') + '</p>' : '') + feedBody + '<p class="feed-hint">' + t('feedProxyHint') + (state.homeFeed.updatedAt ? ' · ' + t('feedUpdated') + ' ' + escapeHtml(feedDate(state.homeFeed.updatedAt)) : '') + '</p></section></div>';
 }
@@ -562,7 +595,7 @@ function notificationItemsMarkup() {
   return items.map(notificationRowMarkup).join('');
 }
 function renderMessages() {
-  return '<div class="section-page message-page"><div class="page-title-row"><div><h1>' + t('messages') + '</h1></div><button class="secondary" data-mark-notifications-read>' + t('markRead') + '</button></div><div class="message-panel"><div class="notification-list">' + notificationItemsMarkup() + '</div></div></div>';
+  return '<div class="section-page message-page"><div class="message-panel"><div class="message-panel-head"><button class="secondary compact-action" data-mark-notifications-read>' + t('markRead') + '</button></div><div class="notification-list">' + notificationItemsMarkup() + '</div></div></div>';
 }
 
 function renderMine() {
@@ -574,7 +607,10 @@ function renderMine() {
     agreement: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l3 3v15H6zM15 3v4h4M9 12h6M9 16h6"/></svg>',
   })[name];
   const row = (action, glyph, title, description) => '<button class="mine-row" ' + action + '><span class="mine-row-icon">' + icon(glyph) + '</span><span><strong>' + title + '</strong><small>' + description + '</small></span><span>›</span></button>';
-  return '<div class="section-page mine-page"><div class="page-title-row"><div><h1>' + t('mine') + '</h1></div></div><div class="mine-list">' + row('data-open-settings-page', 'settings', t('settings'), state.language === 'en' ? 'Theme, language, updates and display' : '主题、语言、更新与显示设置') + row('data-open-github-page', 'github', 'GitHub', escapeHtml(githubStatus)) + row('data-open-recent-reading', 'reading', state.language === 'en' ? 'Recent reading' : '最近阅读', state.language === 'en' ? 'Articles you have opened' : '查看首页阅读过的消息') + row('data-open-agreement-page', 'agreement', t('userAgreement'), state.language === 'en' ? 'Learn how OneBox handles data' : '了解 OneBox 如何处理数据') + '</div></div>';
+  const updateStatus = state.updateAvailable ? t('updateAvailable') : state.updateChecking ? t('updating') : t('upToDate');
+  const updateButton = state.updateAvailable ? '<button class="primary mine-update-button" data-apply-update>' + t('applyUpdate') + '</button>' : '<button class="secondary mine-update-button" data-check-update ' + (state.updateChecking ? 'disabled' : '') + '>' + t('checkUpdate') + '</button>';
+  const updateRow = '<div class="mine-row mine-update-row"><span class="mine-row-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0 2 5M20 5v6h-6"/></svg></span><span><strong>' + t('appUpdate') + ' <small class="settings-version">v' + APP_VERSION + '</small></strong><small>' + updateStatus + '</small></span><span class="mine-row-action">' + updateButton + '</span></div>';
+  return '<div class="section-page mine-page"><div class="mine-list">' + row('data-open-settings-page', 'settings', t('settings'), state.language === 'en' ? 'Theme, language, color and display' : '主题、语言、颜色与显示设置') + updateRow + row('data-open-github-page', 'github', 'GitHub', escapeHtml(githubStatus)) + row('data-open-agreement-page', 'agreement', t('userAgreement'), state.language === 'en' ? 'Learn how OneBox handles data' : '了解 OneBox 如何处理数据') + '</div></div>';
 }
 
 function recentFeedItems() {
@@ -1377,10 +1413,10 @@ function githubHeaders() {
 }
 function syncPayload() {
   return {
-    app: 'OneBox', version: APP_VERSION, savedAt: new Date().toISOString(), theme: state.theme, languageMode: state.languageMode, language: state.language,
+    app: 'OneBox', version: APP_VERSION, savedAt: new Date().toISOString(), theme: state.theme, color: state.color, languageMode: state.languageMode, language: state.language,
     toolOrder: state.toolOrder, calculator: parseStored(STORAGE.calculator, {}), events: state.events,
     weatherCards: state.weatherCards, translationHistory: state.translationHistory, notifications: state.notifications, library: state.library,
-    layoutMode: state.layoutMode,
+    layoutMode: state.layoutMode, topDisplay: state.topDisplay, footprint: state.footprint,
   };
 }
 async function githubLogin() {
@@ -1447,6 +1483,7 @@ async function githubDownload() {
     if (!content) throw Error();
     const remote = JSON.parse(content);
     if (remote.theme) state.theme = remote.theme;
+    if (['mono', 'purple', 'blue', 'green', 'yellow'].includes(remote.color)) { state.color = remote.color; saveColorPreference(); }
     if (remote.languageMode || remote.language) state.languageMode = ['zh', 'en', 'system'].includes(remote.languageMode || remote.language) ? (remote.languageMode || remote.language) : 'system';
     if (Array.isArray(remote.toolOrder)) state.toolOrder = normalizeToolOrder(remote.toolOrder);
     if (remote.calculator) saveStored(STORAGE.calculator, remote.calculator);
@@ -1456,6 +1493,8 @@ async function githubDownload() {
     if (Array.isArray(remote.notifications)) { state.notifications = remote.notifications; saveNotifications(); }
     if (Array.isArray(remote.library)) { state.library = remote.library; saveLibrary(); }
     if (remote.layoutMode === 'simple' || remote.layoutMode === 'classic') { state.layoutMode = remote.layoutMode; saveLayoutPreference(); }
+    if (remote.topDisplay && typeof remote.topDisplay === 'object') { state.topDisplay = { theme: remote.topDisplay.theme !== false, language: remote.topDisplay.language !== false, messages: remote.topDisplay.messages !== false }; saveTopDisplay(); }
+    if (typeof remote.footprint === 'boolean') { state.footprint = remote.footprint; saveFootprintPreference(); }
     state.github.gistId = id; saveGithub(); applyLanguage(); renderNav(); render(); renderGithubDialog();
     toast(state.language === 'en' ? 'Settings restored from GitHub' : '已从 GitHub 恢复设置');
   } catch { toast(state.language === 'en' ? 'GitHub restore failed' : 'GitHub 恢复失败', 'error'); }
@@ -1485,13 +1524,10 @@ function renderGithubDialog() {
 function closeGithubDialog() { const dialog = $('#githubDialog'); if (dialog) dialog.hidden = true; state.githubDialogOpen = false; }
 function renderSettings() {
   const dialog = $('#settingsDialog');
-  const updateStatus = state.updateAvailable ? ' · ' + t('updateAvailable') : (state.updateChecking ? ' · ' + t('updating') : '');
-  const updateAction = state.updateAvailable ? '<button class="primary" data-apply-update>' + t('applyUpdate') + '</button>' : '';
-  const newBadge = '<span class="new-badge" title="New" aria-label="New"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.2 5.1 5.6.7-4.1 3.8 1.1 5.5-4.8-2.8-4.8 2.8 1.1-5.5-4.1-3.8 5.6-.7L12 3Z"/></svg></span>';
   const notificationPreference = state.notificationPreference === 'deny' ? 'deny' : 'allow';
+  const topDisplay = state.layoutMode === 'classic' ? '<div class="settings-preference-row settings-top-display-row"><h3>' + t('topDisplay') + '</h3><div class="settings-preference-control settings-top-display-control"><label class="setting-toggle"><input type="checkbox" data-top-display="theme" ' + (state.topDisplay.theme ? 'checked' : '') + '><span>' + t('theme') + '</span></label><label class="setting-toggle"><input type="checkbox" data-top-display="language" ' + (state.topDisplay.language ? 'checked' : '') + '><span>' + t('language') + '</span></label><label class="setting-toggle"><input type="checkbox" data-top-display="messages" ' + (state.topDisplay.messages ? 'checked' : '') + '><span>' + t('messages') + '</span></label></div></div>' : '';
   dialog.innerHTML = '<div class="dialog-card settings-dialog-card" role="dialog" aria-modal="true"><div class="dialog-head"><h2>' + t('settings') + '</h2><button class="icon-btn small" data-close-settings aria-label="' + t('close') + '">×</button></div>' +
-    '<div class="settings-preferences"><div class="settings-preference-row"><h3>' + t('layout') + '</h3><div class="settings-preference-control"><select id="settingsLayout"><option value="classic" ' + (state.layoutMode === 'classic' ? 'selected' : '') + '>' + t('classicLayout') + '</option><option value="simple" ' + (state.layoutMode === 'simple' ? 'selected' : '') + '>' + t('simpleLayout') + '</option></select></div></div><div class="settings-preference-row"><h3>' + t('theme') + '</h3><div class="settings-preference-control"><select id="settingsTheme"><option value="system" ' + (state.theme === 'system' ? 'selected' : '') + '>' + t('system') + '</option><option value="light" ' + (state.theme === 'light' ? 'selected' : '') + '>' + t('light') + '</option><option value="dark" ' + (state.theme === 'dark' ? 'selected' : '') + '>' + t('dark') + '</option></select></div></div><div class="settings-preference-row"><h3>' + t('language') + '</h3><div class="settings-preference-control"><select id="settingsLanguage"><option value="system" ' + (state.languageMode === 'system' ? 'selected' : '') + '>' + t('system') + '</option><option value="zh" ' + (state.languageMode === 'zh' ? 'selected' : '') + '>中文</option><option value="en" ' + (state.languageMode === 'en' ? 'selected' : '') + '>English</option></select></div></div><div class="settings-preference-row"><h3>' + t('messages') + '</h3><div class="settings-preference-control"><select id="settingsNotifications"><option value="allow" ' + (notificationPreference === 'allow' ? 'selected' : '') + '>' + t('enableNotifications') + '</option><option value="deny" ' + (notificationPreference === 'deny' ? 'selected' : '') + '>' + t('disableNotifications') + '</option></select></div></div>' +
-    '<section class="settings-section settings-update-section"><div class="settings-row"><h3>' + t('appUpdate') + ' <small class="settings-version">v' + APP_VERSION + ' ' + newBadge + updateStatus + '</small></h3><div class="settings-preference-control"><button class="primary update-check-button" data-check-update ' + (state.updateChecking ? 'disabled' : '') + '>' + t('checkUpdate') + '</button>' + updateAction + '</div></div></section></div>';
+    '<div class="settings-preferences"><div class="settings-preference-row"><h3>' + t('layout') + '</h3><div class="settings-preference-control"><select id="settingsLayout"><option value="classic" ' + (state.layoutMode === 'classic' ? 'selected' : '') + '>' + t('classicLayout') + '</option><option value="simple" ' + (state.layoutMode === 'simple' ? 'selected' : '') + '>' + t('simpleLayout') + '</option></select></div></div>' + topDisplay + '<div class="settings-preference-row"><h3>' + t('theme') + '</h3><div class="settings-preference-control"><select id="settingsTheme"><option value="system" ' + (state.theme === 'system' ? 'selected' : '') + '>' + t('system') + '</option><option value="light" ' + (state.theme === 'light' ? 'selected' : '') + '>' + t('light') + '</option><option value="dark" ' + (state.theme === 'dark' ? 'selected' : '') + '>' + t('dark') + '</option></select></div></div><div class="settings-preference-row"><h3>' + t('color') + '</h3><div class="settings-preference-control"><select id="settingsColor"><option value="mono" ' + (state.color === 'mono' ? 'selected' : '') + '>' + t('blackWhite') + '</option><option value="purple" ' + (state.color === 'purple' ? 'selected' : '') + '>' + t('noblePurple') + '</option><option value="blue" ' + (state.color === 'blue' ? 'selected' : '') + '>' + t('skyBlue') + '</option><option value="green" ' + (state.color === 'green' ? 'selected' : '') + '>' + t('notBananaGreen') + '</option><option value="yellow" ' + (state.color === 'yellow' ? 'selected' : '') + '>' + t('meituanYellow') + '</option></select></div></div><div class="settings-preference-row"><h3>' + t('language') + '</h3><div class="settings-preference-control"><select id="settingsLanguage"><option value="system" ' + (state.languageMode === 'system' ? 'selected' : '') + '>' + t('system') + '</option><option value="zh" ' + (state.languageMode === 'zh' ? 'selected' : '') + '>中文</option><option value="en" ' + (state.languageMode === 'en' ? 'selected' : '') + '>English</option></select></div></div><div class="settings-preference-row"><h3>' + t('messages') + '</h3><div class="settings-preference-control"><select id="settingsNotifications"><option value="allow" ' + (notificationPreference === 'allow' ? 'selected' : '') + '>' + t('enableNotifications') + '</option><option value="deny" ' + (notificationPreference === 'deny' ? 'selected' : '') + '>' + t('disableNotifications') + '</option></select></div></div><div class="settings-preference-row"><h3>' + t('footprint') + '</h3><div class="settings-preference-control"><label class="setting-toggle"><input id="settingsFootprint" type="checkbox" ' + (state.footprint ? 'checked' : '') + '><span>' + (state.language === 'en' ? 'Show on Home' : '在首页显示') + '</span></label></div></div></div>';
   dialog.hidden = false; state.settingsOpen = true;
 }
 function closeSettings() { $('#settingsDialog').hidden = true; state.settingsOpen = false; }
@@ -1506,6 +1542,7 @@ function markUpdateAvailable() {
   state.updateAvailable = true;
   refreshUpdateIndicator();
   if (state.settingsOpen) renderSettings();
+  if (state.section === 'mine') render();
 }
 function observeUpdateWorker(registration) {
   return new Promise((resolve) => {
@@ -1538,6 +1575,7 @@ async function checkForUpdate() {
   state.swRegistration = registration;
   state.updateChecking = true;
   if (state.settingsOpen) renderSettings();
+  if (state.section === 'mine') render();
   try {
     const installingBeforeCheck = registration.installing;
     const workerPromise = observeUpdateWorker(registration);
@@ -1548,9 +1586,9 @@ async function checkForUpdate() {
       worker = await Promise.race([workerPromise, sleep(newWorkerStarted ? 15000 : 900).then(() => null)]);
     }
     if (worker || registration.waiting) markUpdateAvailable();
-    else { state.updateAvailable = false; refreshUpdateIndicator(); if (state.settingsOpen) renderSettings(); toast(t('upToDate')); }
+    else { state.updateAvailable = false; refreshUpdateIndicator(); if (state.settingsOpen) renderSettings(); if (state.section === 'mine') render(); toast(t('upToDate')); }
   } catch { toast(state.language === 'en' ? 'Update check failed' : '更新检查失败', 'error'); }
-  finally { state.updateChecking = false; if (state.settingsOpen) renderSettings(); }
+  finally { state.updateChecking = false; if (state.settingsOpen) renderSettings(); if (state.section === 'mine') render(); }
 }
 function applyUpdate() {
   const worker = state.swRegistration?.waiting;
@@ -1682,7 +1720,7 @@ workspace.addEventListener('click', async (event) => {
   if (homeTool) return selectTool(homeTool.dataset.homeTool);
   const feedSource = event.target.closest('[data-feed-source]');
   if (feedSource) {
-    if (handleReorderClick(feedSource, 'feed', Number(feedSource.dataset.feedSourceIndex))) { event.preventDefault(); return; }
+    if (feedSource.dataset.feedSourceIndex != null && handleReorderClick(feedSource, 'feed', Number(feedSource.dataset.feedSourceIndex))) { event.preventDefault(); return; }
     state.homeFeed.active = feedSource.dataset.feedSource; return render();
   }
   if (event.target.closest('[data-refresh-feeds]')) return loadHomeFeeds(true);
@@ -1704,6 +1742,8 @@ workspace.addEventListener('click', async (event) => {
     return;
   }
   if (event.target.closest('[data-open-settings-page]')) return renderSettings();
+  if (event.target.closest('[data-check-update]')) return checkForUpdate();
+  if (event.target.closest('[data-apply-update]')) return applyUpdate();
   if (event.target.closest('[data-open-github-page]')) return renderGithubDialog();
   if (event.target.closest('[data-open-recent-reading]')) return renderRecentReading();
   if (event.target.closest('[data-open-agreement-page]')) return renderAgreementDialog();
@@ -1903,6 +1943,7 @@ document.addEventListener('keydown', (event) => {
 });
 
 $('#themeBtn').addEventListener('click', cycleTheme);
+$('#languageBtn').addEventListener('click', cycleLanguage);
 $('#settingsBtn').addEventListener('click', () => renderSettings());
 $('#notifyBtn').addEventListener('click', () => {
   state.notificationOpen = !state.notificationOpen;
@@ -1910,7 +1951,7 @@ $('#notifyBtn').addEventListener('click', () => {
   else closeNotifications();
   $('#notifyBtn').setAttribute('aria-expanded', String(state.notificationOpen));
 });
-$('#updateBtn').addEventListener('click', applyUpdate);
+$('#updateBtn')?.addEventListener('click', applyUpdate);
 $('#installBtn').addEventListener('click', async () => { if (!window.installPrompt) return; window.installPrompt.prompt(); await window.installPrompt.userChoice; window.installPrompt = null; $('#installBtn').hidden = true; });
 $('#settingsDialog').addEventListener('click', (event) => {
   if (event.target === $('#settingsDialog') || event.target.closest('[data-close-settings]')) return closeSettings();
@@ -1926,8 +1967,11 @@ $('#settingsDialog').addEventListener('click', (event) => {
 $('#settingsDialog').addEventListener('change', (event) => {
   if (event.target.id === 'settingsLayout') { state.layoutMode = event.target.value === 'simple' ? 'simple' : 'classic'; saveLayoutPreference(); render(); renderSettings(); }
   if (event.target.id === 'settingsTheme') { state.theme = event.target.value; saveThemeLanguage(); applyTheme(); render(); }
+  if (event.target.id === 'settingsColor') { state.color = ['mono', 'purple', 'blue', 'green', 'yellow'].includes(event.target.value) ? event.target.value : 'mono'; saveColorPreference(); applyTheme(); render(); renderSettings(); }
   if (event.target.id === 'settingsLanguage') { state.languageMode = event.target.value; saveThemeLanguage(); applyLanguage(); renderNav(); render(); renderSettings(); }
   if (event.target.id === 'settingsNotifications') { state.notificationPreference = event.target.value; saveStored(STORAGE.notificationPreference, state.notificationPreference); if (state.notificationPreference === 'allow') requestNotifications(); }
+  if (event.target.id === 'settingsFootprint') { state.footprint = event.target.checked; saveFootprintPreference(); if (!state.footprint && state.homeFeed.active === 'footprint') state.homeFeed.active = DEFAULT_HOME_FEED_ORDER[0]; render(); renderSettings(); }
+  if (event.target.dataset.topDisplay) { state.topDisplay[event.target.dataset.topDisplay] = event.target.checked; saveTopDisplay(); renderHeaderControls(); renderSettings(); }
 });
 $('#settingsDialog').addEventListener('input', () => {});
 $('#agreementDialog').addEventListener('click', (event) => {
