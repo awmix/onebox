@@ -2315,9 +2315,13 @@ html.reader-focus main:has(#workspace[data-tool="reader"]) { padding-top: calc(v
 }
 .translation-result-panel {
   min-height: 0 !important;
-  padding: 14px !important;
+  padding: 12px !important;
 }
-.translation-result-current { min-height: 72px; white-space: pre-wrap; }
+#workspace[data-tool="translate"] .translation-input-wrap textarea {
+  min-height: 96px;
+  max-height: 160px;
+}
+.translation-result-current { min-height: 54px; white-space: pre-wrap; }
 .translation-result-current.placeholder { color: var(--muted); }
 .translation-result-history {
   margin-top: 14px;
@@ -2326,7 +2330,7 @@ html.reader-focus main:has(#workspace[data-tool="reader"]) { padding-top: calc(v
   text-align: left;
 }
 .translation-result-history .translation-history-list {
-  max-height: 176px;
+  max-height: 148px;
   overflow: auto;
   overscroll-behavior: contain;
   display: grid;
@@ -2399,6 +2403,8 @@ html.reader-focus main:has(#workspace[data-tool="reader"]) { padding-top: calc(v
 .mine-update-button.primary { background: var(--primary); color: #fff; }
 
 @media (max-width: 760px) {
+  #workspace[data-tool="translate"] .translation-input-wrap textarea { min-height: 86px; }
+  .translation-result-current { min-height: 48px; }
   .reader-title-line { gap: 6px; }
   .reader-title-line small { font-size: 10px; }
   .reader-add-card { min-height: 78px; padding: 9px 12px; }
