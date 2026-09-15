@@ -3928,7 +3928,7 @@ html[data-theme="dark"][data-color="mono"] #settingsDialog .setting-toggle input
   background: #000;
 }
 
-/* 2.18.55: page swipes keep the source/tool rail outside the moving content
+/* 2.18.56: page swipes keep the source/tool rail outside the moving content
    track, while its active underline follows the finger between adjacent tabs. */
 #homeSourceNav {
   display: block;
@@ -3974,6 +3974,16 @@ html[data-theme="dark"][data-color="mono"] #settingsDialog .setting-toggle input
   background: transparent;
 }
 #homeSourceNav .feed-source-tab.active { color: var(--ink); }
+#homeSourceNav .feed-source-tab.active::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  border-radius: 2px 2px 0 0;
+  background: var(--primary);
+}
 #homeSourceNav .feed-source-tab,
 #homeSourceNav .feed-source-tab.active {
   gap: 6px;
@@ -3998,7 +4008,15 @@ html[data-theme="dark"][data-color="mono"] #settingsDialog .setting-toggle input
 #homeSourceNav .feed-source-mark.huxiu { background: #e39a35; color: #fff; border: 0; }
 #homeSourceNav .feed-source-mark.v2ex { background: #5c86a8; color: #fff; border: 0; }
 #homeSourceNav .feed-source-mark.footprint svg { width: 14px; height: 14px; }
-#toolNav,
+#toolNav {
+  position: fixed;
+  top: var(--app-header-height);
+  left: 50%;
+  z-index: 50;
+  width: min(1104px, calc(100% - 24px));
+  margin: 0;
+  transform: translateX(-50%);
+}
 #homeSourceNav .feed-source-tabs {
   position: relative;
 }
