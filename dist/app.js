@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.37';
+const APP_VERSION = '2.18.38';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -39,12 +39,12 @@ const TOOL_DEFS = {
 };
 const RSS_SOURCES = [
   { id: 'ithome', name: 'IT之家', badge: 'IT', icon: 'https://www.ithome.com/favicon.ico', className: 'ithome', urls: ['https://www.ithome.com/rss/', 'https://www.ithome.com/rss'] },
-  { id: 'huxiu', name: '虎嗅', badge: '虎', icon: 'https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/be/4c/7f/be4c7f2c-0ebc-7ba8-a60e-c5707c67b0ee/AppIcon-0-0-1x_U007epad-0-1-0-85-220.png/128x128bb.png', className: 'huxiu', urls: ['https://rss.huxiu.com/', 'https://www.huxiu.com/rss/0.xml'] },
-  { id: 'zhihu', name: '知乎', badge: '知', icon: 'https://www.zhihu.com/favicon.ico', className: 'zhihu', urls: ['https://rss.mifaw.com/articles/5c8bb11a3c41f61efd36683e/5c919d543882afa09dff3fa3', 'https://feedx.net/rss/zhihudaily.xml', 'https://rsshub.rssforever.com/zhihu/hotlist'] },
-  { id: 'v2ex', name: 'V2EX', badge: 'V', icon: 'https://www.v2ex.com/favicon.ico', className: 'v2ex', urls: ['https://www.v2ex.com/feed/rss.xml', 'https://www.v2ex.com/index.xml'] },
+  { id: 'huxiu', name: '虎嗅', badge: '虎', icon: 'https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/be/4c/7f/be4c7f2c-0ebc-7ba8-a60e-c5707c67b0ee/AppIcon-0-0-1x_U007epad-0-1-0-85-220.png/128x128bb.png', className: 'huxiu', urls: ['https://www.huxiu.com/rss/0.xml', 'https://rsshub.app/huxiu/article', 'https://rsshub.rssforever.com/huxiu/article'] },
+  { id: 'zhihu', name: '知乎', badge: '知', icon: 'https://www.zhihu.com/favicon.ico', className: 'zhihu', urls: ['https://rsshub.app/zhihu/hotlist', 'https://rsshub.rssforever.com/zhihu/hotlist', 'https://rsshub.rssforever.com/zhihu/hot/depth', 'https://feedx.net/rss/zhihudaily.xml'] },
+  { id: 'v2ex', name: 'V2EX', badge: 'V', icon: 'https://www.v2ex.com/favicon.ico', className: 'v2ex', urls: ['https://www.v2ex.com/index.xml', 'https://www.v2ex.com/feed/tab/tech.xml', 'https://www.v2ex.com/feed/tab/creative.xml', 'https://www.v2ex.com/feed/rss.xml'] },
 ];
 const RSS_JSON_ENDPOINT = 'https://api.rss2json.com/v1/api.json?rss_url=';
-const RSS_REFRESH_INTERVAL = 10 * 60 * 1000;
+const RSS_REFRESH_INTERVAL = 5 * 60 * 1000;
 const RSS_RETENTION_MS = 2 * 24 * 60 * 60 * 1000;
 const RSS_MAX_ITEMS_PER_SOURCE = 60;
 const DEFAULT_HOME_FEED_ORDER = RSS_SOURCES.map((source) => source.id);
@@ -165,7 +165,7 @@ const DICT = {
     noteOptional: '备注（可选）', weatherSearch: '搜索', currentLocation: '当前位置',
     refresh: '刷新', searchPlace: '搜索城市或区县',
     noWeather: '天气需要联网，搜索一个城市或区县开始。', weatherLoading: '正在获取天气…',
-    weatherData: '天气数据来自 Open-Meteo，最近更新 {time}，保存本机离线仍可查看。',
+    weatherData: '数据来自 Open-Meteo，最近更新 {time}，离线可查看。',
     sortWeather: '', hourly: '24 小时', daily: '前 3 天 · 今天 · 未来 15 天', advice: '天气建议',
     commute: '出行', sport: '运动', clothing: '穿衣', sunscreen: '防晒', hiking: '爬山',
     addCard: '添加', noResults: '没有找到匹配地点，请换个关键词。',
@@ -511,12 +511,18 @@ function feedImageUrl(value) {
   if (url.includes('images.weserv.nl/')) return url;
   return 'https://images.weserv.nl/?url=' + encodeURIComponent(url);
 }
+function feedImageSource(item = {}) {
+  const html = String(item.content || item.description || '');
+  const embedded = html.match(/<img[^>]+src=["']([^"']+)["']/i)?.[1] || '';
+  const value = item.thumbnail || item.enclosure?.link || item.enclosure?.url || item.image || embedded;
+  return safeExternalUrl(String(value).startsWith('//') ? 'https:' + value : value);
+}
 function normalizeFeedItem(item, source) {
   const title = feedText(item.title || item.name); const link = safeExternalUrl(item.link || item.guid);
   if (!title || !link) return null;
-  const thumbnail = feedImageUrl(item.thumbnail || item.enclosure?.link || item.enclosure?.url);
+  const thumbnail = feedImageSource(item);
   const publishedAt = item.pubDate || item.published || item.isoDate || item.date || '';
-  return { id: source.id + ':' + (item.guid || item.link || title), source: source.id, title, link, description: feedText(item.description || item.content || '').slice(0, 180), thumbnail, publishedAt, publishedMs: parseFeedTimestamp(publishedAt) };
+  return { id: source.id + ':' + link, source: source.id, title, link, description: feedText(item.description || item.content || '').slice(0, 180), thumbnail, publishedAt, publishedMs: parseFeedTimestamp(publishedAt) };
 }
 function mergeFeedItems(source, incoming) {
   const existing = state.homeFeed.sources[source.id]?.items || [];
@@ -529,19 +535,22 @@ function mergeFeedItems(source, incoming) {
     .slice(0, RSS_MAX_ITEMS_PER_SOURCE);
 }
 async function fetchFeedSource(source) {
-  let lastError = null;
-  for (const feedUrl of source.urls) {
+  const results = await Promise.all(source.urls.map(async (feedUrl) => {
     try {
-      const response = await fetchWithTimeout(RSS_JSON_ENDPOINT + encodeURIComponent(feedUrl) + '&_=' + Date.now(), { cache: 'no-store', headers: { Accept: 'application/json' } }, 12000);
+      const response = await fetchWithTimeout(RSS_JSON_ENDPOINT + encodeURIComponent(feedUrl) + '&_=' + Date.now(), { cache: 'no-store', headers: { Accept: 'application/json' } }, 10000);
       if (!response.ok) throw Error('HTTP ' + response.status);
       const payload = await response.json();
       if (payload.status !== 'ok' || !Array.isArray(payload.items)) throw Error('Invalid RSS response');
-      const items = payload.items.map((item) => normalizeFeedItem(item, source)).filter(Boolean).slice(0, RSS_MAX_ITEMS_PER_SOURCE);
-      if (!items.length) throw Error('Empty RSS feed');
-      return { items, updatedAt: Date.now(), feedUrl };
-    } catch (error) { lastError = error; }
-  }
-  throw lastError || Error('RSS unavailable');
+      const items = payload.items.map((item) => normalizeFeedItem(item, source)).filter(Boolean);
+      return items.length ? { items, feedUrl } : null;
+    } catch { return null; }
+  }));
+  const successful = results.filter(Boolean);
+  if (!successful.length) throw Error('RSS unavailable');
+  const items = [...new Map(successful.flatMap((result) => result.items).map((item) => [item.id, item])).values()]
+    .sort((a, b) => (feedItemTimestamp(b) || 0) - (feedItemTimestamp(a) || 0))
+    .slice(0, RSS_MAX_ITEMS_PER_SOURCE);
+  return { items, updatedAt: Date.now(), feedUrl: successful.map((result) => result.feedUrl).join(',') };
 }
 async function loadHomeFeeds(force = false, sourceId = '') {
   if (state.homeFeed.loading) return;
@@ -573,8 +582,9 @@ async function loadHomeFeeds(force = false, sourceId = '') {
 }
 function renderFeedItem(item) {
   const source = feedSource(item);
-  const thumbnail = feedImageUrl(item.thumbnail);
-  const image = thumbnail ? '<span class="feed-item-media"><img class="feed-item-image" src="' + escapeHtml(thumbnail) + '" alt="" loading="lazy" onerror="this.hidden=true;this.nextElementSibling.hidden=false"><span class="feed-image-fallback" hidden aria-hidden="true">' + escapeHtml(source.badge) + '</span></span>' : '';
+  const rawThumbnail = safeExternalUrl(item.thumbnail);
+  const thumbnail = feedImageUrl(rawThumbnail) || rawThumbnail;
+  const image = rawThumbnail ? '<span class="feed-item-media"><img class="feed-item-image" src="' + escapeHtml(thumbnail) + '" data-fallback="' + escapeHtml(rawThumbnail) + '" alt="" loading="lazy" onerror="if(this.dataset.fallback && this.getAttribute(\'src\') !== this.dataset.fallback){this.src=this.dataset.fallback;return;}this.hidden=true;this.nextElementSibling.hidden=false"><span class="feed-image-fallback" hidden aria-hidden="true">' + escapeHtml(source.badge) + '</span></span>' : '';
   const meta = '<div class="feed-item-meta"><span class="feed-source-tag ' + source.className + '"><b><img src="' + escapeHtml(source.icon) + '" alt="" loading="lazy" onerror="this.hidden=true;this.nextElementSibling.style.display=\'inline\'"><span class="feed-source-fallback">' + escapeHtml(source.badge) + '</span></b>' + escapeHtml(source.name) + '</span><time datetime="' + escapeHtml(new Date(feedItemTimestamp(item) || Date.now()).toISOString()) + '">' + escapeHtml(feedDate(item)) + '</time></div>';
   const read = Boolean(state.homeFeedRead[item.id]);
   return '<article class="feed-item ' + (thumbnail ? 'has-media ' : '') + (read ? 'is-read' : '') + '" data-feed-id="' + escapeHtml(item.id) + '" data-feed-link="' + escapeHtml(item.link) + '" tabindex="0" role="link"><div class="feed-item-body"><h2>' + escapeHtml(item.title) + '</h2>' + (item.description ? '<p>' + escapeHtml(item.description) + '</p>' : '') + meta + '</div>' + (image ? '<div class="feed-item-side">' + image + '</div>' : '') + '</article>';
@@ -1173,11 +1183,18 @@ async function addWeatherPlace(place) {
   finally { if (request === state.weatherRequest) { state.weatherLoading = false; render(); } }
 }
 async function refreshWeatherCard(card) {
-  if (!card) return;
-  const request = ++state.weatherRequest; state.weatherLoading = true; state.weatherError = ''; render();
-  try { const data = await getWeatherData(card.latitude, card.longitude); if (request !== state.weatherRequest) return; Object.assign(card, data, { updatedAt: Date.now() }); saveWeatherCards(); }
-  catch (error) { state.weatherError = error.message || (state.language === 'en' ? 'Refresh failed' : '刷新失败'); }
-  finally { if (request === state.weatherRequest) { state.weatherLoading = false; render(); } }
+  if (!card || state.weatherLoading) return;
+  const request = ++state.weatherRequest; state.weatherLoading = true; state.weatherError = ''; card.loading = true;
+  try {
+    const data = await getWeatherData(card.latitude, card.longitude);
+    if (request !== state.weatherRequest) return;
+    Object.assign(card, data, { updatedAt: Date.now(), loading: false }); saveWeatherCards();
+  } catch (error) {
+    card.loading = false;
+    state.weatherError = error.message || (state.language === 'en' ? 'Refresh failed' : '刷新失败');
+  } finally {
+    if (request === state.weatherRequest) { state.weatherLoading = false; render(); }
+  }
 }
 async function searchWeather(query) {
   const value = query.trim();
@@ -1370,8 +1387,11 @@ function translateView() {
     : '<p class="empty compact">' + t('noHistory') + '</p>';
   const options = (selected) => languageOptions.map(([value, label]) => '<option value="' + value + '" ' + (selected === value ? 'selected' : '') + '>' + label + '</option>').join('');
   const result = state.translation.loading ? (state.language === 'en' ? 'Translating…' : '翻译中…') : state.translation.result || (state.language === 'en' ? 'Translate' : '翻译');
+  const resultMarkup = state.translation.result
+    ? '<span class="translation-result-text">' + escapeHtml(result) + '</span><button class="translation-copy-button" data-copy-translation aria-label="' + t('copyResult') + '" title="' + t('copyResult') + '"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="11" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h2"/></svg></button>'
+    : '<span class="translation-result-text">' + escapeHtml(result) + '</span>';
   return '<div class="translation-layout"><div class="translation-card"><div class="translation-toolbar"><div class="field field-inline"><label for="translationSource">' + t('source') + '</label><select id="translationSource">' + options(state.translation.source) + '</select></div><button class="swap" data-swap-language aria-label="' + t('swap') + '">⇄</button><div class="field field-inline"><label for="translationTarget">' + t('target') + '</label><select id="translationTarget">' + options(state.translation.target) + '</select></div></div>' +
-    '<div class="translation-content-grid"><div class="translation-input-pane"><div class="field"><label for="translationInput">' + t('translationInput') + '</label><div class="translation-input-wrap"><textarea id="translationInput" maxlength="5000" placeholder="' + (state.language === 'en' ? 'Type or paste text here…' : '输入或粘贴文字…') + '">' + escapeHtml(state.translation.input) + '</textarea><div class="translation-input-actions"><button class="input-action" data-translate-submit ' + (state.translation.loading ? 'disabled' : '') + ' aria-label="' + t('translateNow') + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 12 16-8-5 16-3-6-8-2Z"/><path d="m12 14 4-4"/></svg></button></div></div></div></div><div class="translation-result-pane"><div class="translation-pane-title">' + t('translationResult') + '</div><div class="translation-result translation-result-panel"><div class="translation-result-head"><button class="display-history-toggle translation-history-toggle" data-toggle-translation-history aria-expanded="' + (state.translationHistoryOpen ? 'true' : 'false') + '" aria-label="' + t('translationHistory') + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 12a8.5 8.5 0 1 0 2.5-6.4"/><path d="M3.5 4.5v5h5"/><path d="M12 7.5v4.8l3 1.8"/></svg></button></div><div class="translation-result-current ' + (state.translation.result ? '' : 'placeholder') + '">' + escapeHtml(result) + '</div><div class="translation-result-history" ' + (state.translationHistoryOpen ? '' : 'hidden') + '><div class="display-history-head"><span>' + t('translationHistory') + '</span><button class="text-btn" data-clear-translation-history ' + (state.translationHistory.length ? '' : 'disabled') + '>' + t('clear') + '</button></div><div class="translation-history-list">' + history + '</div></div><button class="translation-copy-button" data-copy-translation ' + (state.translation.result ? '' : 'disabled') + ' aria-label="' + t('copyResult') + '" title="' + t('copyResult') + '"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="11" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h2"/></svg></button></div></div></div>' + (state.translation.error ? '<p class="inline-alert">' + escapeHtml(state.translation.error) + '</p>' : '') + '</div></div>';
+    '<div class="translation-content-grid"><div class="translation-input-pane"><div class="field"><label for="translationInput">' + t('translationInput') + '</label><div class="translation-input-wrap"><textarea id="translationInput" maxlength="5000" placeholder="' + (state.language === 'en' ? 'Type or paste text here…' : '输入或粘贴文字…') + '">' + escapeHtml(state.translation.input) + '</textarea><div class="translation-input-actions"><button class="input-action" data-translate-submit ' + (state.translation.loading ? 'disabled' : '') + ' aria-label="' + t('translateNow') + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 12 16-8-5 16-3-6-8-2Z"/><path d="m12 14 4-4"/></svg></button></div></div></div></div><div class="translation-result-pane"><div class="translation-pane-title">' + t('translationResult') + '</div><div class="translation-result translation-result-panel"><div class="translation-result-head"><button class="display-history-toggle translation-history-toggle" data-toggle-translation-history aria-expanded="' + (state.translationHistoryOpen ? 'true' : 'false') + '" aria-label="' + t('translationHistory') + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 12a8.5 8.5 0 1 0 2.5-6.4"/><path d="M3.5 4.5v5h5"/><path d="M12 7.5v4.8l3 1.8"/></svg></button></div><div class="translation-result-current ' + (state.translation.result ? '' : 'placeholder') + '">' + resultMarkup + '</div><div class="translation-result-history" ' + (state.translationHistoryOpen ? '' : 'hidden') + '><div class="display-history-head"><span>' + t('translationHistory') + '</span><button class="text-btn" data-clear-translation-history ' + (state.translationHistory.length ? '' : 'disabled') + '>' + t('clear') + '</button></div><div class="translation-history-list">' + history + '</div></div></div></div></div>' + (state.translation.error ? '<p class="inline-alert">' + escapeHtml(state.translation.error) + '</p>' : '') + '</div></div>';
 }
 function translateConvertView() {
   return '<div class="translate-convert-page"><section class="language-tool-card translation-panel"><div class="language-tool-head"><h2>' + t('translate') + '</h2><p>' + t('translateDesc') + '</p></div>' + translateView() + '</section>' + convert() + '</div>';
@@ -1811,9 +1831,8 @@ workspace.addEventListener('click', async (event) => {
   if (feedSource) {
     if (feedSource.dataset.feedSourceIndex != null && handleReorderClick(feedSource, 'feed', Number(feedSource.dataset.feedSourceIndex))) { event.preventDefault(); return; }
     const sourceId = feedSource.dataset.feedSource;
-    const isCurrentSource = state.homeFeed.active === sourceId;
     state.homeFeed.active = sourceId;
-    if (isCurrentSource && sourceId !== 'footprint') return loadHomeFeeds(true, sourceId);
+    if (sourceId !== 'footprint') return loadHomeFeeds(true, sourceId);
     return render();
   }
   if (event.target.closest('[data-refresh-feeds]')) return loadHomeFeeds(true);
