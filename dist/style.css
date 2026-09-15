@@ -3851,3 +3851,79 @@ html.reader-focus .shell { width: 100%; padding: 0; }
   border-width: 1px;
   border-color: color-mix(in srgb, var(--primary) 45%, transparent);
 }
+
+/* 2.18.51: dark mode uses neutral black surfaces throughout the app. Accent
+   colors remain available for active states and semantic actions, but no
+   longer tint the page layers blue or purple. */
+html[data-theme="dark"] {
+  --bg: #000;
+  --bg-top: #000;
+  --panel: #0b0b0b;
+  --panel-2: #151515;
+  --ink: #f5f5f5;
+  --muted: #9b9b9b;
+  --line: #2b2b2b;
+  --soft: #1b1b1b;
+  --shadow: 0 20px 60px rgba(0, 0, 0, .72);
+  color-scheme: dark;
+}
+html[data-theme="dark"] body,
+html[data-theme="dark"] .app-header {
+  background: var(--bg);
+}
+html[data-theme="dark"] .tab:not(.active),
+html[data-theme="dark"] .key {
+  background: var(--panel-2);
+}
+html[data-theme="dark"] .logo-mark {
+  box-shadow: 0 7px 16px rgba(0, 0, 0, .62);
+}
+html[data-theme="dark"] .date-orbit {
+  border-color: var(--line);
+  box-shadow: inset 0 0 0 17px rgba(255, 255, 255, .04);
+}
+html[data-theme="dark"] input:focus,
+html[data-theme="dark"] select:focus,
+html[data-theme="dark"] textarea:focus {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 24%, transparent);
+}
+html[data-theme="dark"] .bottom-nav,
+html[data-theme="dark"] #toolNav {
+  box-shadow: 0 18px 55px rgba(0, 0, 0, .72);
+}
+html[data-theme="dark"] .popover,
+html[data-theme="dark"] .dialog-card,
+html[data-theme="dark"] #settingsDialog .settings-dialog-card,
+html[data-theme="dark"] #notificationPanel .notification-dialog-card,
+html[data-theme="dark"] #eventDialog .event-dialog-card,
+html[data-theme="dark"] #githubDialog .github-dialog-card,
+html[data-theme="dark"] #agreementDialog .agreement-dialog-card,
+html[data-theme="dark"] .language-tool-card {
+  box-shadow: 0 24px 80px rgba(0, 0, 0, .72);
+}
+html[data-theme="dark"] .reader-theme-dot.theme-dark {
+  background: #050505;
+  border-color: var(--line);
+}
+
+/* White is the neutral dark-mode accent. Give solid controls dark text so
+   the monochrome palette remains readable instead of white-on-white. */
+html[data-theme="dark"][data-color="mono"] .primary:not(.mine-update-button),
+html[data-theme="dark"][data-color="mono"] .key.equal,
+html[data-theme="dark"][data-color="mono"] .science-toggle[aria-pressed="true"],
+html[data-theme="dark"][data-color="mono"] .reader-library-add,
+html[data-theme="dark"][data-color="mono"] .reader-view-button.active,
+html[data-theme="dark"][data-color="mono"] #workspace[data-tool="calculator"] .science-control-key,
+html[data-theme="dark"][data-color="mono"] #settingsDialog [data-apply-update] {
+  background: #f5f5f5;
+  color: #000;
+}
+html[data-theme="dark"][data-color="mono"] .setting-toggle input:checked,
+html[data-theme="dark"][data-color="mono"] #settingsDialog .setting-toggle input:checked {
+  background: #f5f5f5;
+  border-color: #f5f5f5;
+}
+html[data-theme="dark"][data-color="mono"] .setting-toggle input:checked::after,
+html[data-theme="dark"][data-color="mono"] #settingsDialog .setting-toggle input:checked::after {
+  background: #000;
+}
