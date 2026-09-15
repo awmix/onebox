@@ -2411,3 +2411,101 @@ html.reader-focus main:has(#workspace[data-tool="reader"]) { padding-top: calc(v
   #workspace[data-tool="calendar"] .agenda-panel > .subhead { padding-right: 100px; }
   #workspace[data-tool="calendar"] .agenda-panel > .calendar-add-event { top: 14px; right: 14px; }
 }
+
+/* 2.18.32: give the unit converter a calmer iPhone-sized single-column flow. */
+#workspace[data-tool="translate"] .converter-panel {
+  padding: 16px;
+  border-radius: 20px;
+}
+#workspace[data-tool="translate"] .converter-panel .language-tool-head {
+  margin-bottom: 14px;
+}
+#workspace[data-tool="translate"] .converter-panel .converter-category {
+  grid-template-columns: 1fr;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+#workspace[data-tool="translate"] .converter-panel .converter-category label,
+#workspace[data-tool="translate"] .converter-panel .conversion-field label {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 750;
+  letter-spacing: .02em;
+}
+#workspace[data-tool="translate"] .converter-panel .conversion-row {
+  grid-template-columns: 1fr;
+  gap: 9px;
+}
+#workspace[data-tool="translate"] .converter-panel .conversion-field {
+  gap: 6px;
+}
+#workspace[data-tool="translate"] .converter-panel .conversion-field select,
+#workspace[data-tool="translate"] .converter-panel .conversion-field input,
+#workspace[data-tool="translate"] .converter-panel .conversion-result,
+#workspace[data-tool="translate"] .converter-panel .converter-category select {
+  min-height: 48px;
+  border-radius: 14px;
+  box-sizing: border-box;
+}
+#workspace[data-tool="translate"] .converter-panel .conversion-field input,
+#workspace[data-tool="translate"] .converter-panel .conversion-result {
+  margin-top: 0;
+}
+#workspace[data-tool="translate"] .converter-panel .conversion-field input {
+  padding-inline: 13px;
+}
+#workspace[data-tool="translate"] .converter-panel .conversion-result {
+  padding: 9px 13px;
+  gap: 6px;
+}
+#workspace[data-tool="translate"] .converter-panel .conversion-result small {
+  font-size: 11px;
+}
+#workspace[data-tool="translate"] .converter-panel .conversion-result strong {
+  font-size: 22px;
+}
+#workspace[data-tool="translate"] .converter-panel .swap {
+  width: 100%;
+  height: 38px;
+  margin: 0;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  background: var(--soft);
+  color: var(--primary);
+  font-size: 21px;
+  line-height: 1;
+}
+#workspace[data-tool="translate"] .converter-panel .converter-footer {
+  margin-top: 12px;
+}
+#workspace[data-tool="translate"] .converter-panel .copy-button {
+  min-height: 42px;
+  padding-inline: 16px;
+  border-radius: 13px;
+}
+
+@media (max-width: 760px) {
+  #workspace[data-tool="translate"] .converter-panel {
+    padding: 14px;
+    border-radius: 20px;
+  }
+  #workspace[data-tool="translate"] .converter-panel .language-tool-head {
+    margin-bottom: 12px;
+  }
+  #workspace[data-tool="translate"] .converter-panel .converter-category {
+    margin-bottom: 12px;
+  }
+  #workspace[data-tool="translate"] .converter-panel .conversion-row {
+    gap: 8px;
+  }
+  #workspace[data-tool="translate"] .converter-panel .conversion-field select,
+  #workspace[data-tool="translate"] .converter-panel .conversion-field input,
+  #workspace[data-tool="translate"] .converter-panel .conversion-result,
+  #workspace[data-tool="translate"] .converter-panel .converter-category select {
+    min-height: 46px;
+  }
+  #workspace[data-tool="translate"] .converter-panel .swap {
+    height: 36px;
+    border-radius: 12px;
+  }
+}
