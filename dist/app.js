@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.43';
+const APP_VERSION = '2.18.44';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -1017,10 +1017,24 @@ function exitReaderFullscreen() {
   try { return Promise.resolve(exit.call(document)).catch(() => {}); } catch { return Promise.resolve(); }
 }
 function updateReaderFullscreenControl() {
-  const button = $('[data-reader-fullscreen]'); if (!button) return;
+  const button = $('.reader-fullscreen-tool') || $('[data-reader-fullscreen]'); if (!button) return;
   const active = Boolean(readerFullscreenElement());
   button.innerHTML = active ? '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4H4v5M15 4h5v5M9 20H4v-5M15 20h5v-5"/></svg><span>' + t('readerExitFullscreen') + '</span>' : '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 4H4v4M16 4h4v4M8 20H4v-4M16 20h4v-4"/></svg><span>' + t('readerFullscreen') + '</span>';
   button.setAttribute('aria-label', active ? t('readerExitFullscreen') : t('readerFullscreen'));
+}
+function ensureReaderFullscreenTool() {
+  const header = $('.reader-reference-top');
+  header?.querySelector('[data-reader-fullscreen]')?.remove();
+  header?.querySelector('.reader-reference-spacer')?.remove();
+  const row = $('.reader-reference-tool-row');
+  if (!row || row.querySelector('.reader-fullscreen-tool')) return;
+  const button = document.createElement('button');
+  button.className = 'reader-reference-tool reader-fullscreen-tool';
+  button.setAttribute('data-reader-fullscreen', '');
+  button.setAttribute('aria-label', t('readerFullscreen'));
+  button.innerHTML = '<span>' + t('readerFullscreen') + '</span>';
+  const annotation = row.querySelector('.reader-annotate-button');
+  row.insertBefore(button, annotation || null);
 }
 function toggleReaderFullscreen() {
   state.readerImmersive = !state.readerImmersive;
@@ -2153,7 +2167,7 @@ function render() {
   workspace.innerHTML = state.section === 'home' ? renderHome() : state.section === 'messages' ? renderMessages() : state.section === 'mine' ? renderMine() : (renderers[state.tool] || calculator)();
   document.documentElement.classList.toggle('reader-focus', state.section === 'tools' && state.tool === 'reader' && state.readerMode === 'reading' && state.readerImmersive);
   if (state.section === 'tools' && state.tool === 'reader' && state.readerMode === 'reading') {
-    requestAnimationFrame(() => { applyReaderPreferences(); updateReaderFullscreenControl(); if (state.readerDialog) { readerDialogMarkup(state.readerDialog); updateReaderReferenceChrome(); } });
+    requestAnimationFrame(() => { ensureReaderFullscreenTool(); applyReaderPreferences(); updateReaderFullscreenControl(); if (state.readerDialog) { readerDialogMarkup(state.readerDialog); updateReaderReferenceChrome(); } });
   } else if (!state.readerDialog) {
     const readerDialog = $('#readerDialog'); if (readerDialog) readerDialog.hidden = true;
   }

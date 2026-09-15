@@ -3666,3 +3666,115 @@ html.reader-focus .shell { width: 100%; padding: 0; }
   .reader-book-grid .reader-add-card { min-height: 132px; }
   .reader-empty-card.reader-add-card { min-height: 210px; }
 }
+
+/* 2.18.44: reading controls stay usable on a narrow viewport. Keep the
+   content strictly vertical, make long contents drawers scroll independently,
+   and place fullscreen beside progress instead of in the reader header. */
+.reader-reference-top {
+  display: flex;
+  align-items: center;
+}
+.reader-reference-top .reader-reference-spacer,
+.reader-reference-top [data-reader-fullscreen] {
+  display: none !important;
+}
+.reader-reference-top .reader-reference-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  text-align: center;
+}
+.reader-dialog-card:has(.reader-toc-list) .reader-drawer-head {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+.reader-dialog-card:has(.reader-toc-list) .reader-drawer-back {
+  display: none !important;
+}
+.reader-dialog-card:has(.reader-toc-list) .reader-toc-list {
+  min-height: 0;
+  flex: 1 1 auto;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+}
+.reader-reference-viewer.reader-scroll-content {
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior-y: contain;
+  overscroll-behavior-x: none;
+  touch-action: pan-y;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+.reader-reference-viewer.reader-scroll-content > * {
+  max-width: 100%;
+  box-sizing: border-box;
+}
+.reader-reference-viewer.reader-scroll-content img,
+.reader-reference-viewer.reader-scroll-content video,
+.reader-reference-viewer.reader-scroll-content svg {
+  max-width: 100%;
+  height: auto;
+}
+.reader-reference-viewer.reader-scroll-content pre {
+  max-width: 100%;
+  overflow-x: hidden;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.reader-reference-viewer.reader-scroll-content table {
+  display: block;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+.reader-reference-tool-row {
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+.reader-reference-tool {
+  touch-action: manipulation;
+}
+.reader-fullscreen-tool {
+  display: flex;
+}
+.reader-reference-shell.reader-windowed {
+  height: calc(100svh - var(--app-header-height) - 48px);
+  max-height: calc(100svh - var(--app-header-height) - 48px);
+  min-height: 0;
+  margin: 0;
+}
+.reader-layout-toggle {
+  min-width: 36px;
+  width: 36px;
+  padding: 6px;
+  gap: 0;
+}
+.reader-layout-toggle > span {
+  display: none;
+}
+.reader-layout-toggle:hover,
+.reader-layout-toggle:focus-visible,
+.reader-layout-toggle:active {
+  border-color: var(--line);
+  background: var(--panel-2);
+  color: var(--muted);
+}
+
+/* Keep the homepage source rail visually aligned with the compact tool rail:
+   same 18px marks, 12px labels and a short touch target. */
+#workspace[data-tool="home"] .feed-source-tab,
+#workspace[data-tool="home"] .feed-source-tab.active {
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+}
+#workspace[data-tool="home"] .feed-source-mark {
+  width: 18px;
+  height: 18px;
+  border-radius: 6px;
+  font-size: 9px;
+}
+#workspace[data-tool="home"] .feed-source-mark.footprint svg {
+  width: 14px;
+  height: 14px;
+}
