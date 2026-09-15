@@ -3811,3 +3811,30 @@ html.reader-focus .shell { width: 100%; padding: 0; }
     height: 19px;
   }
 }
+
+/* 2.18.46: the bookshelf uses the same full content width as the other
+   tools, while its internal panel remains the OneBox bordered surface. */
+#workspace[data-tool="reader"] .reader-library-view {
+  width: 100%;
+  max-width: none;
+  padding-left: 0;
+  padding-right: 0;
+}
+#workspace[data-tool="reader"] .reader-library-panel {
+  width: 100%;
+}
+
+/* The update action is a quiet text action; only its text follows the
+   configured application accent. */
+.mine-update-button.primary,
+.mine-update-button.primary:hover,
+.mine-update-button.primary:focus-visible {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  color: var(--primary);
+}
+.mine-update-button.primary:hover,
+.mine-update-button.primary:focus-visible {
+  background: var(--soft);
+}
