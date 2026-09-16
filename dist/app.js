@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.83';
+const APP_VERSION = '2.18.84';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -173,7 +173,7 @@ const DICT = {
     keyboard: '键盘：数字、+ − × ÷、括号、Enter 等号、Esc 清空',
     today: '今天', off: '休', work: '补班', normalCalendar: '工作日历',
     legalHoliday: '法定休息', makeUpWorkday: '补班', solarTerm: '节气', selectedDay: '选中日期',
-    noAgenda: '这一天还没有安排。', agenda: '日程', addAgenda: '新增日程', newReminder: '新增提醒', eventContent: '日程内容', eventPlaceholder: '请输入你的日程信息', addEvent: '添加日程', addToDay: '添加日程', eventDate: '日期', eventTime: '时间（精确到秒）', reminderSchedule: '提醒日程', eventRepeat: '重复方式',
+    noAgenda: '这一天还没有安排。', agenda: '日程', addAgenda: '新增日程', newReminder: '新增提醒', eventContent: '日程内容', eventPlaceholder: '请输入你的日程信息', addEvent: '添加日程', addToDay: '添加日程', eventDate: '日期', eventTime: '时间', reminderSchedule: '提醒日程', eventRepeat: '重复方式',
     noteOptional: '备注（可选）', weatherSearch: '搜索', currentLocation: '当前位置',
     refresh: '刷新', searchPlace: '搜索城市或区县',
     noWeather: '天气需要联网，搜索一个城市或区县开始。', weatherLoading: '正在获取天气…',
@@ -214,7 +214,7 @@ const DICT = {
     keyboard: 'Keyboard: numbers, + − × ÷, parentheses, Enter and Escape',
     today: 'Today', off: 'Off', work: 'Make-up workday', normalCalendar: 'Work calendar',
     legalHoliday: 'Public holiday', makeUpWorkday: 'Make-up workday', solarTerm: 'Solar term', selectedDay: 'Selected day',
-    noAgenda: 'Nothing planned for this day.', agenda: 'Events', addAgenda: 'New event', newReminder: 'New reminder', eventContent: 'Event details', eventPlaceholder: 'Enter your event details', addEvent: 'Add event', addToDay: 'Add event', eventDate: 'Date', eventTime: 'Time (to the second)', reminderSchedule: 'Reminder time', eventRepeat: 'Repeat',
+    noAgenda: 'Nothing planned for this day.', agenda: 'Events', addAgenda: 'New event', newReminder: 'New reminder', eventContent: 'Event details', eventPlaceholder: 'Enter your event details', addEvent: 'Add event', addToDay: 'Add event', eventDate: 'Date', eventTime: 'Time', reminderSchedule: 'Reminder time', eventRepeat: 'Repeat',
     noteOptional: 'Note (optional)', weatherSearch: 'Search', currentLocation: 'Current location',
     refresh: 'Refresh', searchPlace: 'Search city or district',
     noWeather: 'Search a city or district to get weather.', weatherLoading: 'Loading weather…',
@@ -1860,19 +1860,44 @@ function calendar() {
 }
 function saveEvents() { saveStored(STORAGE.events, state.events); }
 
-function eventDateOptions(selectedKey) {
+function eventDateTimeParts(selectedKey) {
   const validKey = /^\d{4}-\d{2}-\d{2}$/.test(String(selectedKey || ''));
-  const selectedDate = validKey ? dateFromKey(selectedKey) : new Date();
-  const value = validKey ? selectedKey : dateKey(selectedDate);
-  const start = new Date(selectedDate); start.setDate(start.getDate() - 180);
-  const end = new Date(selectedDate); end.setDate(end.getDate() + 365);
-  const formatter = new Intl.DateTimeFormat(state.language === 'en' ? 'en-US' : 'zh-CN', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' });
-  let options = '';
-  for (const cursor = new Date(start); cursor <= end; cursor.setDate(cursor.getDate() + 1)) {
-    const key = dateKey(cursor);
-    options += '<option value="' + key + '"' + (key === value ? ' selected' : '') + '>' + escapeHtml(formatter.format(cursor)) + '</option>';
-  }
-  return options;
+  const date = validKey ? dateFromKey(selectedKey) : new Date();
+  const now = new Date();
+  const year = date.getFullYear(); const month = date.getMonth() + 1; const day = date.getDate();
+  const hour = now.getHours(); const minute = now.getMinutes();
+  const pad2 = (value) => String(value).padStart(2, '0');
+  return { year, month, day, hour, minute, dateValue: year + '-' + pad2(month) + '-' + pad2(day), timeValue: pad2(hour) + ':' + pad2(minute) };
+}
+function eventSelectOptions(values, selected, formatter = (value) => value) {
+  return values.map((value) => '<option value="' + value + '"' + (Number(value) === Number(selected) ? ' selected' : '') + '>' + escapeHtml(formatter(value)) + '</option>').join('');
+}
+function eventDateTimeMarkup(selectedKey) {
+  const parts = eventDateTimeParts(selectedKey);
+  const years = []; for (let value = parts.year - 5; value <= parts.year + 5; value += 1) years.push(value);
+  const months = Array.from({ length: 12 }, (_, index) => index + 1);
+  const days = Array.from({ length: new Date(parts.year, parts.month, 0).getDate() }, (_, index) => index + 1);
+  const hours = Array.from({ length: 24 }, (_, index) => index);
+  const minutes = Array.from({ length: 60 }, (_, index) => index);
+  const zh = state.language !== 'en';
+  const unit = (value, chinese, english) => zh ? value + chinese : english + ' ' + value;
+  return {
+    parts,
+    date: '<div class="event-date-selectors" role="group" aria-label="' + t('eventDate') + '"><select id="eventDateYear" data-event-date-part="year" aria-label="' + (zh ? '年' : 'Year') + '">' + eventSelectOptions(years, parts.year) + '</select><span class="event-date-unit">' + (zh ? '年' : '/') + '</span><select id="eventDateMonth" data-event-date-part="month" aria-label="' + (zh ? '月' : 'Month') + '">' + eventSelectOptions(months, parts.month, (value) => unit(value, '月', 'M')) + '</select><span class="event-date-unit">' + (zh ? '月' : '/') + '</span><select id="eventDateDay" data-event-date-part="day" aria-label="' + (zh ? '日' : 'Day') + '">' + eventSelectOptions(days, parts.day, (value) => unit(value, '日', 'D')) + '</select></div>',
+    time: '<div class="event-time-selectors" role="group" aria-label="' + t('eventTime') + '"><select id="eventTimeHour" data-event-time-part="hour" aria-label="' + (zh ? '时' : 'Hour') + '">' + eventSelectOptions(hours, parts.hour, (value) => String(value).padStart(2, '0')) + '</select><span class="event-time-separator">:</span><select id="eventTimeMinute" data-event-time-part="minute" aria-label="' + (zh ? '分' : 'Minute') + '">' + eventSelectOptions(minutes, parts.minute, (value) => String(value).padStart(2, '0')) + '</select></div>',
+    hidden: '<input type="hidden" id="eventDate" value="' + parts.dateValue + '"><input type="hidden" id="eventTime" value="' + parts.timeValue + '">',
+  };
+}
+function syncEventDateTimeFields() {
+  const year = Number($('#eventDateYear')?.value); const month = Number($('#eventDateMonth')?.value); const daySelect = $('#eventDateDay');
+  if (!year || !month || !daySelect) return;
+  const maxDay = new Date(year, month, 0).getDate(); const currentDay = Math.min(Number(daySelect.value) || 1, maxDay);
+  if (daySelect.options.length !== maxDay) daySelect.innerHTML = eventSelectOptions(Array.from({ length: maxDay }, (_, index) => index + 1), currentDay, (value) => (state.language === 'en' ? 'D ' + value : value + '日'));
+  daySelect.value = String(currentDay);
+  const pad2 = (value) => String(value).padStart(2, '0');
+  const date = $('#eventDate'); if (date) date.value = year + '-' + pad2(month) + '-' + pad2(currentDay);
+  const hour = $('#eventTimeHour')?.value; const minute = $('#eventTimeMinute')?.value; const time = $('#eventTime');
+  if (time && hour != null && minute != null) time.value = pad2(hour) + ':' + pad2(minute);
 }
 function renderEventDialog() {
   const dialog = $('#eventDialog');
@@ -1880,7 +1905,8 @@ function renderEventDialog() {
   const options = ['once', 'daily', 'workdays', 'restdays', 'weekly'].map((value) => '<option value="' + value + '">' + t(value === 'daily' ? 'everyDay' : value) + '</option>').join('');
   const eventWeekdayLabels = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
   const weekdays = eventWeekdayLabels.map((label, index) => '<label class="weekday-option"><input type="checkbox" name="eventWeekday" value="' + index + '" ' + (index < 5 ? 'checked' : '') + '><span>' + (state.language === 'en' ? ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][index] : label) + '</span></label>').join('');
-  dialog.innerHTML = '<div class="dialog-card event-dialog-card" role="dialog" aria-modal="true"><div class="dialog-head"><h2>' + t('newReminder') + '</h2><button class="icon-btn small" data-close-event-dialog aria-label="' + t('close') + '">×</button></div><form id="eventForm" class="event-form"><div class="field"><label for="eventTitle">' + t('eventContent') + '</label><textarea id="eventTitle" rows="3" required maxlength="60" placeholder="' + t('eventPlaceholder') + '"></textarea></div><div class="field"><label>' + t('reminderSchedule') + '</label><div class="event-date-time-grid"><label class="event-date-time-field"><span class="event-date-time-label">' + t('eventDate') + '</span><select id="eventDate" aria-label="' + t('eventDate') + '" required>' + eventDateOptions(state.selectedDate) + '</select></label><label class="event-date-time-field"><span class="event-date-time-label">' + t('eventTime') + '</span><input id="eventTime" type="time" step="1" aria-label="' + t('eventTime') + '"></label></div></div><div class="field"><label for="eventRepeat">' + t('eventRepeat') + '</label><select id="eventRepeat">' + options + '</select></div><div class="field event-weekdays-field" hidden><label>' + t('weekdays') + '</label><div class="weekday-options">' + weekdays + '</div></div><button class="primary full-width" type="submit">' + t('addEvent') + '</button></form></div>';
+  const dateTime = eventDateTimeMarkup(state.selectedDate);
+  dialog.innerHTML = '<div class="dialog-card event-dialog-card" role="dialog" aria-modal="true"><div class="dialog-head"><h2>' + t('newReminder') + '</h2><button class="icon-btn small" data-close-event-dialog aria-label="' + t('close') + '">×</button></div><form id="eventForm" class="event-form"><div class="field"><label for="eventTitle">' + t('eventContent') + '</label><textarea id="eventTitle" rows="3" required maxlength="60" placeholder="' + t('eventPlaceholder') + '"></textarea></div><div class="field"><label>' + t('reminderSchedule') + '</label><div class="event-date-time-grid"><label class="event-date-time-field"><span class="event-date-time-label">' + t('eventDate') + '</span>' + dateTime.date + '</label><label class="event-date-time-field"><span class="event-date-time-label">' + t('eventTime') + '</span>' + dateTime.time + '</label></div>' + dateTime.hidden + '</div><div class="field"><label for="eventRepeat">' + t('eventRepeat') + '</label><select id="eventRepeat">' + options + '</select></div><div class="field event-weekdays-field" hidden><label>' + t('weekdays') + '</label><div class="weekday-options">' + weekdays + '</div></div><button class="primary full-width" type="submit">' + t('addEvent') + '</button></form></div>';
   dialog.hidden = false;
 }
 function closeEventDialog() { const dialog = $('#eventDialog'); if (dialog) dialog.hidden = true; }
@@ -3231,6 +3257,7 @@ $('#eventDialog').addEventListener('click', (event) => {
   if (event.target === $('#eventDialog') || event.target.closest('[data-close-event-dialog]')) closeEventDialog();
 });
 $('#eventDialog').addEventListener('change', (event) => {
+  if (event.target.matches('[data-event-date-part], [data-event-time-part]')) syncEventDateTimeFields();
   if (event.target.id === 'eventRepeat') {
     const weekly = $('.event-weekdays-field', $('#eventDialog')); if (weekly) weekly.hidden = event.target.value !== 'weekly';
     const time = $('#eventTime'); if (time) time.required = event.target.value !== 'once';
@@ -3239,6 +3266,7 @@ $('#eventDialog').addEventListener('change', (event) => {
 $('#eventDialog').addEventListener('submit', (event) => {
   event.preventDefault();
   if (event.target.id !== 'eventForm') return;
+  syncEventDateTimeFields();
   const title = $('#eventTitle').value.trim(); if (!title) return;
   const key = $('#eventDate').value || state.selectedDate; const repeat = $('#eventRepeat')?.value || 'once'; const time = $('#eventTime').value;
   if (repeat !== 'once' && !time) return toast(state.language === 'en' ? 'Choose a reminder time for a repeating event' : '周期性日程需要选择提醒时间', 'error');

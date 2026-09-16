@@ -1903,19 +1903,17 @@ html.layout-simple #languageControl { display: none !important; }
 #eventDialog .event-form input,
 #eventDialog .event-form select { min-width: 0; width: 100%; height: 46px; padding: 10px 12px; }
 #eventDialog .event-date-time-grid { min-width: 0; gap: 8px; }
-#eventDialog .event-date-time-grid input { min-width: 0; width: 100%; padding-inline: 10px; }
+#eventDialog .event-date-time-grid select { min-width: 0; width: 100%; padding-inline: 10px; }
 #eventDialog .event-form .full-width { min-height: 46px; margin-top: 2px; border-radius: 14px; }
 @media (max-width: 390px) {
   #eventDialog { padding-inline: 10px; }
   #eventDialog .event-dialog-card { padding-inline: 16px; }
   #eventDialog .dialog-head { margin-inline: -16px; padding-inline: 16px; }
   #eventDialog .event-date-time-grid { gap: 6px; }
-  #eventDialog .event-date-time-grid input { padding-inline: 8px; font-size: 13px; }
+  #eventDialog .event-date-time-grid select { padding-inline: 8px; font-size: 13px; }
 }
 
-/* Mobile native date/time controls need their own labels and width. Keeping
-   them in one row makes WebKit compress the seconds field into unreadable
-   placeholder fragments on narrow screens. */
+/* Date and time controls stay in one row with compact, explicit labels. */
 #eventDialog .event-date-time-grid { align-items: start; }
 #eventDialog .event-date-time-field {
   display: grid;
@@ -1929,7 +1927,7 @@ html.layout-simple #languageControl { display: none !important; }
   font-weight: 700;
   line-height: 1.2;
 }
-#eventDialog .event-date-time-field input {
+#eventDialog .event-date-time-field select {
   box-sizing: border-box;
   min-width: 0;
   width: 100%;
@@ -1947,18 +1945,10 @@ html.layout-simple #languageControl { display: none !important; }
     gap: 8px;
   }
   #eventDialog .event-date-time-field { gap: 4px; }
-  #eventDialog .event-date-time-field input {
+  #eventDialog .event-date-time-field select {
     height: 48px;
     padding-inline: 12px;
     font-size: 16px;
-  }
-  #eventDialog input[type="date"]::-webkit-date-and-time-value,
-  #eventDialog input[type="time"]::-webkit-date-and-time-value {
-    text-align: left;
-  }
-  #eventDialog input[type="date"]::-webkit-calendar-picker-indicator,
-  #eventDialog input[type="time"]::-webkit-calendar-picker-indicator {
-    margin-left: auto;
   }
 }
 
@@ -5672,6 +5662,50 @@ html[data-theme-mode="dark-gray"] .key {
 /* The selected weather place starts at the leading edge of the card rail. */
 #workspace[data-tool="weather"] .weather-card-list {
   scroll-snap-type: x proximity;
+}
+
+/* Calendar date/time controls: use small, explicit year/month/day and
+   hour/minute selectors so mobile WebKit never collapses a native date field
+   into an unreadable mixed-format control. */
+#eventDialog .event-date-time-grid {
+  grid-template-columns: minmax(0, 1.25fr) minmax(108px, .75fr);
+  gap: 8px;
+}
+#eventDialog .event-date-selectors,
+#eventDialog .event-time-selectors {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  gap: 4px;
+}
+#eventDialog .event-date-selectors select,
+#eventDialog .event-time-selectors select {
+  box-sizing: border-box;
+  height: 42px;
+  min-width: 0;
+  padding: 8px 6px;
+  font-size: 14px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+#eventDialog .event-date-selectors select:first-of-type { flex: 1.25 1 0; }
+#eventDialog .event-date-selectors select:nth-of-type(2),
+#eventDialog .event-date-selectors select:nth-of-type(3) { flex: .9 1 0; }
+#eventDialog .event-time-selectors select { flex: 1 1 0; }
+#eventDialog .event-date-unit,
+#eventDialog .event-time-separator {
+  flex: 0 0 auto;
+  color: var(--muted);
+  font-weight: 750;
+  line-height: 1;
+}
+@media (max-width: 600px) {
+  #eventDialog .event-date-time-grid { grid-template-columns: minmax(0, 1.2fr) minmax(108px, .8fr); gap: 6px; }
+  #eventDialog .event-date-selectors,
+  #eventDialog .event-time-selectors { gap: 2px; }
+  #eventDialog .event-date-selectors select,
+  #eventDialog .event-time-selectors select { height: 42px; padding-inline: 4px; font-size: 13px; }
+  #eventDialog .event-date-unit { font-size: 11px; }
 }
 
 /* Slightly reduce the translation action and keep its bilingual mark a shade
