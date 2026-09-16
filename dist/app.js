@@ -1313,6 +1313,17 @@ function showReaderCommentPopover(id, trigger) {
   popover.style.left = left + 'px'; popover.style.top = top + 'px';
 }
 function hideReaderCommentPopover() { const popover = $('[data-reader-comment-popover]'); if (popover) popover.hidden = true; }
+async function copyReaderText(text) {
+  if (navigator.clipboard?.writeText) return navigator.clipboard.writeText(text);
+  const textarea = document.createElement('textarea');
+  textarea.value = text;
+  textarea.setAttribute('readonly', '');
+  textarea.style.position = 'fixed'; textarea.style.opacity = '0';
+  document.body.appendChild(textarea); textarea.select();
+  const copied = document.execCommand('copy');
+  textarea.remove();
+  if (!copied) throw Error('clipboard unavailable');
+}
 async function applyReaderSelectionAction(action) {
   const book = readerBookById(state.readerBookId); const selection = state.readerSelection;
   hideReaderSelectionMenu();
@@ -1321,8 +1332,7 @@ async function applyReaderSelectionAction(action) {
   if (action === 'copy' || action === 'share') {
     try {
       if (action === 'share' && navigator.share) await navigator.share({ title: book.name, text: selection.quote });
-      else if (navigator.clipboard?.writeText) await navigator.clipboard.writeText(selection.quote);
-      else throw Error('clipboard unavailable');
+      else await copyReaderText(selection.quote);
       toast(state.language === 'en' ? (action === 'share' ? 'Shared' : 'Copied') : (action === 'share' ? '已分享' : '已复制'));
     } catch (error) {
       if (error?.name !== 'AbortError') toast(state.language === 'en' ? 'Copy failed' : '复制失败', 'error');
