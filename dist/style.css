@@ -5596,20 +5596,10 @@ html[data-theme-mode="dark-gray"] .key {
    configured accent for the label. */
 #workspace[data-tool="calendar"] .calendar-today,
 #workspace[data-tool="calendar"] .calendar-add-event {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  box-sizing: border-box;
-  height: 38px;
-  min-height: 38px;
-  padding: 0 12px;
   border: 1px solid var(--line);
   border-radius: 13px;
   background: transparent;
   color: var(--primary);
-  font-size: 12px;
-  font-weight: 750;
-  line-height: 1;
 }
 #workspace[data-tool="calendar"] .calendar-today:hover,
 #workspace[data-tool="calendar"] .calendar-today:focus-visible,
@@ -5620,11 +5610,6 @@ html[data-theme-mode="dark-gray"] .key {
   color: var(--primary);
   transform: none;
 }
-#workspace[data-tool="calendar"] .calendar-add-event {
-  width: max-content;
-  margin: 10px 0 0 auto;
-}
-
 /* Keep the selected weather period anchored to the leading edge of its strip
    instead of letting scroll snapping pull it into the center. */
 #workspace[data-tool="weather"] .hour-card,
