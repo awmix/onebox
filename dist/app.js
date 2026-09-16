@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.89';
+const APP_VERSION = '2.18.91';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -39,17 +39,24 @@ const TOOL_DEFS = {
   translate: { icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 18 8 6l4 12M5.5 14h5M14 8h6M17 5v3M14 16h6M17 13v3"/></svg>', key: 'convert' },
   reader: { icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 5.5c2.2-.9 4.6-.4 7.5 1.4v12.2c-2.9-1.8-5.3-2.3-7.5-1.4z"/><path d="M19.5 5.5c-2.2-.9-4.6-.4-7.5 1.4v12.2c2.9-1.8 5.3-2.3 7.5-1.4z"/><path d="M12 6.9v12.2"/></svg>', key: 'reader' },
 };
-const RSS_SOURCES = [
-  { id: 'ithome', name: 'IT之家', badge: 'IT', icon: 'https://www.ithome.com/favicon.ico', className: 'ithome', urls: ['https://www.ithome.com/rss/', 'https://www.ithome.com/rss'] },
-  { id: 'huxiu', name: '虎嗅', badge: '虎', icon: 'https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/be/4c/7f/be4c7f2c-0ebc-7ba8-a60e-c5707c67b0ee/AppIcon-0-0-1x_U007epad-0-1-0-85-220.png/128x128bb.png', className: 'huxiu', urls: ['https://www.huxiu.com/rss/0.xml', 'https://rsshub.app/huxiu/article', 'https://rsshub.rssforever.com/huxiu/article'] },
-  { id: 'zhihu', name: '知乎', badge: '知', icon: 'https://www.zhihu.com/favicon.ico', className: 'zhihu', urls: ['https://rsshub.app/zhihu/hotlist', 'https://rsshub.rssforever.com/zhihu/hotlist', 'https://rsshub.rssforever.com/zhihu/hot/depth', 'https://feedx.net/rss/zhihudaily.xml'] },
-  { id: 'v2ex', name: 'V2EX', badge: 'V', icon: 'https://www.v2ex.com/favicon.ico', className: 'v2ex', urls: ['https://www.v2ex.com/index.xml', 'https://www.v2ex.com/feed/tab/tech.xml', 'https://www.v2ex.com/feed/tab/creative.xml', 'https://www.v2ex.com/feed/rss.xml'] },
+// Homepage subscriptions live in one registry. Set enabled:false to retire a
+// source without touching rendering, ordering, cache or interaction code.
+// The fetchers are intentionally source-specific: using one RSS aggregator for
+// every site was the reason several feeds lagged by hours and hit rate limits.
+const FEED_SOURCE_REGISTRY = [
+  { id: 'ithome', name: 'IT之家', badge: 'IT', icon: 'https://www.ithome.com/favicon.ico', className: 'ithome', mobileHost: 'm.ithome.com', siteUrl: 'https://www.ithome.com/', fetchers: [{ kind: 'rss', url: 'https://www.ithome.com/rss/' }] },
+  { id: 'huxiu', name: '虎嗅', badge: '虎', icon: 'https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/be/4c/7f/be4c7f2c-0ebc-7ba8-a60e-c5707c67b0ee/AppIcon-0-0-1x_U007epad-0-1-0-85-220.png/128x128bb.png', className: 'huxiu', mobileHost: 'm.huxiu.com', siteUrl: 'https://www.huxiu.com/', fetchers: [{ kind: 'rss', url: 'https://www.huxiu.com/rss/0.xml' }, { kind: 'rss', url: 'https://rsshub.rssforever.com/huxiu/article' }] },
+  { id: 'zhihu', name: '知乎', badge: '知', icon: 'https://www.zhihu.com/favicon.ico', className: 'zhihu', siteUrl: 'https://www.zhihu.com/hot', fetchers: [{ kind: 'zhihu-hot', url: 'https://www.zhihu.com/api/v4/search/hot_search' }] },
+  { id: 'v2ex', name: 'V2EX', badge: 'V', icon: 'https://www.v2ex.com/favicon.ico', className: 'v2ex', siteUrl: 'https://www.v2ex.com/?tab=all', fetchers: [{ kind: 'v2ex-latest', url: 'https://www.v2ex.com/api/topics/latest.json' }, { kind: 'rss', url: 'https://www.v2ex.com/index.xml' }] },
+  { id: 'weibo', name: '微博', badge: '博', icon: 'https://weibo.com/favicon.ico', className: 'weibo', mobileHost: 'm.weibo.cn', siteUrl: 'https://s.weibo.com/top/summary?cate=realtimehot', fetchers: [{ kind: 'weibo-hot', url: 'https://baiapi.cn/api/weibo?type=json' }] },
+  { id: 'bilibili', name: 'B站', badge: 'B', icon: 'https://www.bilibili.com/favicon.ico', className: 'bilibili', mobileHost: 'm.bilibili.com', siteUrl: 'https://search.bilibili.com/all', fetchers: [{ kind: 'bilibili-hot', url: 'https://api.bilibili.com/x/web-interface/search/square?limit=30&platform=web' }] },
 ];
-const RSS_JSON_ENDPOINT = 'https://api.rss2json.com/v1/api.json?rss_url=';
-const RSS_REFRESH_INTERVAL = 5 * 60 * 1000;
+const RSS_SOURCES = FEED_SOURCE_REGISTRY.filter((source) => source.enabled !== false);
+const RSS_REFRESH_INTERVAL = 2 * 60 * 1000;
 const RSS_RETENTION_MS = 2 * 24 * 60 * 60 * 1000;
 const RSS_MAX_ITEMS_PER_SOURCE = 60;
 const DEFAULT_HOME_FEED_ORDER = RSS_SOURCES.map((source) => source.id);
+const NAVIGATION_SESSION_KEY = 'onebox-navigation-position';
 const DEFAULT_TOOL_ORDER = Object.keys(TOOL_DEFS);
 const nav = $('#toolNav');
 const workspace = $('#workspace');
@@ -499,7 +506,7 @@ function selectHomeFeedSource(sourceId) {
   return undefined;
 }
 
-function feedText(value = '') { return String(value).replace(/<[^>]*>/g, ' ').replace(/&nbsp;/gi, ' ').replace(/\s+/g, ' ').trim(); }
+function feedText(value = '') { return String(value).replace(/<[^>]*>/g, ' ').replace(/!\[[^\]]*\]\([^)]*\)/g, ' ').replace(/\[([^\]]+)\]\([^)]*\)/g, '$1').replace(/&nbsp;/gi, ' ').replace(/\s+/g, ' ').trim(); }
 function safeExternalUrl(value = '') {
   try { const url = new URL(value); return ['http:', 'https:'].includes(url.protocol) ? url.href : ''; } catch { return ''; }
 }
@@ -546,19 +553,99 @@ function feedImageUrl(value) {
 }
 function feedImageSource(item = {}) {
   const html = String(item.content || item.description || '');
-  const embedded = html.match(/<img[^>]+src=["']([^"']+)["']/i)?.[1] || '';
+  const embedded = html.match(/<img[^>]+src=["']([^"']+)["']/i)?.[1] || html.match(/!\[[^\]]*\]\((https?:\/\/[^)\s]+)[^)]*\)/i)?.[1] || '';
   const value = item.thumbnail || item.enclosure?.link || item.enclosure?.url || item.image || embedded;
   return safeExternalUrl(String(value).startsWith('//') ? 'https:' + value : value);
 }
-function normalizeFeedItem(item, source) {
+function normalizeFeedItem(item, source, overrides = {}) {
   const title = feedText(item.title || item.name); const link = safeExternalUrl(item.link || item.guid);
   if (!title || !link) return null;
   const thumbnail = feedImageSource(item);
   const publishedAt = item.pubDate || item.published || item.isoDate || item.date || '';
-  return { id: source.id + ':' + link, source: source.id, title, link, description: feedText(item.description || item.content || '').slice(0, 180), thumbnail, publishedAt, publishedMs: parseFeedTimestamp(publishedAt) };
+  return { id: source.id + ':' + link, source: source.id, title, link, description: feedText(item.description || item.content || '').slice(0, 180), thumbnail, publishedAt, publishedMs: parseFeedTimestamp(publishedAt), ...overrides };
+}
+function jinaReaderUrl(url) {
+  const value = String(url || '').trim();
+  if (!value) return '';
+  const separator = value.includes('?') ? '&' : '?';
+  return 'https://r.jina.ai/http://' + value + separator + '_onebox=' + Date.now();
+}
+function jinaContent(value) {
+  const text = String(value || '').trim();
+  const marker = 'Markdown Content:';
+  const content = text.includes(marker) ? text.slice(text.indexOf(marker) + marker.length).trim() : text;
+  return content.replace(/^```(?:json|javascript|text)?\s*/i, '').replace(/\s*```\s*$/i, '').trim();
+}
+function jinaJson(value) {
+  const content = jinaContent(value);
+  try { return JSON.parse(content); } catch {
+    const start = Math.min(...[content.indexOf('{'), content.indexOf('[')].filter((index) => index >= 0));
+    const end = Math.max(content.lastIndexOf('}'), content.lastIndexOf(']'));
+    if (Number.isFinite(start) && start >= 0 && end > start) {
+      try { return JSON.parse(content.slice(start, end + 1)); } catch { return null; }
+    }
+    return null;
+  }
+}
+function syntheticFeedTime(index) { return Date.now() - index * 60 * 1000; }
+function rssMarkdownItems(value, source) {
+  const content = jinaContent(value);
+  const headings = [...content.matchAll(/^#{2,6}\s+\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/gm)];
+  return headings.map((match, index) => {
+    const blockStart = (match.index || 0) + match[0].length;
+    const nextStart = headings[index + 1]?.index ?? content.length;
+    return normalizeFeedItem({ title: match[1], link: match[2], description: content.slice(blockStart, nextStart) }, source, { approximate: true, publishedMs: syntheticFeedTime(index) });
+  }).filter(Boolean);
+}
+function structuredHotItems(payload, source, kind) {
+  if (!payload) return [];
+  if (kind === 'zhihu-hot') {
+    const values = Array.isArray(payload.hot_search_queries) ? payload.hot_search_queries : [];
+    return values.map((item, index) => {
+      const title = feedText(item.query || item.real_query || item.title);
+      if (!title) return null;
+      const link = 'https://www.zhihu.com/search?type=content&q=' + encodeURIComponent(title);
+      return normalizeFeedItem({ title, link, description: item.hot_value ? '热度 ' + item.hot_value : '' }, source, { approximate: true, publishedMs: syntheticFeedTime(index) });
+    }).filter(Boolean);
+  }
+  if (kind === 'bilibili-hot') {
+    const values = Array.isArray(payload.data?.trending?.list) ? payload.data.trending.list : [];
+    return values.map((item, index) => {
+      const title = feedText(item.show_name || item.keyword || item.name);
+      if (!title) return null;
+      const link = 'https://search.bilibili.com/all?keyword=' + encodeURIComponent(title);
+      const score = item.hot_value || item.score || item.heat;
+      return normalizeFeedItem({ title, link, description: score ? '热度 ' + score : '' }, source, { approximate: true, publishedMs: syntheticFeedTime(index) });
+    }).filter(Boolean);
+  }
+  if (kind === 'weibo-hot') {
+    const values = Array.isArray(payload.data) ? payload.data : [];
+    const updateTime = payload.update_time || '';
+    return values.map((item, index) => {
+      const title = feedText(item.title || item.word || item.name);
+      if (!title) return null;
+      const link = 'https://m.weibo.cn/search?query=' + encodeURIComponent(title);
+      return normalizeFeedItem({ title, link, description: item.hot ? '热度 ' + item.hot : '' }, source, { publishedAt: updateTime, publishedMs: parseFeedTimestamp(updateTime) || syntheticFeedTime(index) });
+    }).filter(Boolean);
+  }
+  if (kind === 'v2ex-latest') {
+    const values = Array.isArray(payload) ? payload : [];
+    return values.map((item, index) => normalizeFeedItem({
+      title: item.title,
+      link: item.url || (item.id ? 'https://www.v2ex.com/t/' + item.id : ''),
+      description: item.content,
+      image: item.member?.avatar_normal,
+      publishedAt: item.last_modified || item.created ? new Date(Number(item.last_modified || item.created) * 1000).toISOString() : '',
+    }, source, { publishedMs: parseFeedTimestamp(item.last_modified || item.created ? new Date(Number(item.last_modified || item.created) * 1000).toISOString() : '') || syntheticFeedTime(index) })).filter(Boolean);
+  }
+  return [];
 }
 function mergeFeedItems(source, incoming) {
-  const existing = state.homeFeed.sources[source.id]?.items || [];
+  const existing = (state.homeFeed.sources[source.id]?.items || []).map((item) => ({
+    ...item,
+    description: feedText(item.description || ''),
+    thumbnail: item.thumbnail || feedImageSource(item),
+  }));
   const merged = new Map(existing.map((item) => [item.id, item]));
   incoming.forEach((item) => merged.set(item.id, { ...merged.get(item.id), ...item }));
   const cutoff = Date.now() - RSS_RETENTION_MS;
@@ -568,18 +655,19 @@ function mergeFeedItems(source, incoming) {
     .slice(0, RSS_MAX_ITEMS_PER_SOURCE);
 }
 async function fetchFeedSource(source) {
-  const results = await Promise.all(source.urls.map(async (feedUrl) => {
+  const fetchers = Array.isArray(source.fetchers) ? source.fetchers : (source.urls || []).map((url) => ({ kind: 'rss', url }));
+  const successful = [];
+  for (const fetcher of fetchers) {
     try {
-      const response = await fetchWithTimeout(RSS_JSON_ENDPOINT + encodeURIComponent(feedUrl) + '&_=' + Date.now(), { cache: 'no-store', headers: { Accept: 'application/json' } }, 10000);
+      const response = await fetchWithTimeout(jinaReaderUrl(fetcher.url), { cache: 'no-store', headers: { Accept: 'text/plain, application/json' } }, 14000);
       if (!response.ok) throw Error('HTTP ' + response.status);
-      const payload = await response.json();
-      if (payload.status !== 'ok' || !Array.isArray(payload.items)) throw Error('Invalid RSS response');
-      const items = payload.items.map((item) => normalizeFeedItem(item, source)).filter(Boolean);
-      return items.length ? { items, feedUrl } : null;
-    } catch { return null; }
-  }));
-  const successful = results.filter(Boolean);
-  if (!successful.length) throw Error('RSS unavailable');
+      const text = await response.text();
+      const payload = fetcher.kind === 'rss' ? null : jinaJson(text);
+      const items = fetcher.kind === 'rss' ? rssMarkdownItems(text, source) : structuredHotItems(payload, source, fetcher.kind);
+      if (items.length) { successful.push({ items, feedUrl: fetcher.url }); break; }
+    } catch { /* try the next source-specific fallback */ }
+  }
+  if (!successful.length) throw Error('Feed unavailable');
   const items = [...new Map(successful.flatMap((result) => result.items).map((item) => [item.id, item])).values()]
     .sort((a, b) => (feedItemTimestamp(b) || 0) - (feedItemTimestamp(a) || 0))
     .slice(0, RSS_MAX_ITEMS_PER_SOURCE);
@@ -622,10 +710,50 @@ function renderFeedItem(item) {
   const read = Boolean(state.homeFeedRead[item.id]);
   return '<article class="feed-item ' + (thumbnail ? 'has-media ' : '') + (read ? 'is-read' : '') + '" data-feed-id="' + escapeHtml(item.id) + '" data-feed-link="' + escapeHtml(item.link) + '" tabindex="0" role="link"><div class="feed-item-body"><h2>' + escapeHtml(item.title) + '</h2>' + (item.description ? '<p>' + escapeHtml(item.description) + '</p>' : '') + meta + '</div>' + (image ? '<div class="feed-item-side">' + image + '</div>' : '') + '</article>';
 }
+function isMobileSurface() {
+  return Boolean(navigator.standalone || window.matchMedia?.('(display-mode: standalone)').matches || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 0 && window.matchMedia?.('(max-width: 760px)').matches));
+}
+function mobileFeedLink(item) {
+  const link = safeExternalUrl(item?.link);
+  if (!link || !isMobileSurface()) return link;
+  const source = feedSource(item);
+  if (source.id === 'weibo' || source.id === 'bilibili') return link.replace('https://search.bilibili.com/all', 'https://m.bilibili.com/search').replace('https://s.weibo.com/', 'https://m.weibo.cn/');
+  if (!source.mobileHost) return link;
+  try { const url = new URL(link); url.hostname = source.mobileHost; return url.href; } catch { return link; }
+}
+function feedItemByLink(link) {
+  return RSS_SOURCES.flatMap((source) => state.homeFeed.sources[source.id]?.items || []).find((item) => item.link === link) || recentFeedItems().find((item) => item.link === link) || { link };
+}
+function saveNavigationPosition() {
+  try {
+    const main = $('main'); const tabs = $('.feed-source-tabs');
+    sessionStorage.setItem(NAVIGATION_SESSION_KEY, JSON.stringify({ hash: location.hash, section: state.section, tool: state.tool, homeFeedActive: state.homeFeed.active, mainScrollTop: main?.scrollTop || 0, sourceScrollLeft: tabs?.scrollLeft || 0, savedAt: Date.now() }));
+  } catch { /* session storage may be disabled */ }
+}
+function restoreNavigationPosition() {
+  let saved = null;
+  try { saved = JSON.parse(sessionStorage.getItem(NAVIGATION_SESSION_KEY) || 'null'); sessionStorage.removeItem(NAVIGATION_SESSION_KEY); } catch { saved = null; }
+  if (!saved || saved.hash !== location.hash || Date.now() - Number(saved.savedAt || 0) > 30 * 60 * 1000) return;
+  if (state.section === 'home' && RSS_SOURCES.some((source) => source.id === saved.homeFeedActive)) {
+    state.homeFeed.active = saved.homeFeedActive;
+    render();
+  }
+  const restore = () => {
+    clearPageSwipeTrack();
+    const main = $('main'); const tabs = $('.feed-source-tabs');
+    if (main) main.scrollTo({ top: Math.max(0, Number(saved.mainScrollTop) || 0), behavior: 'auto' });
+    if (tabs) tabs.scrollLeft = Math.max(0, Number(saved.sourceScrollLeft) || 0);
+    $('#bottomNav')?.classList.remove('is-blurred'); main?.classList.remove('bottom-nav-blurred'); lastMainScrollTop = main?.scrollTop || 0;
+  };
+  requestAnimationFrame(restore);
+  window.setTimeout(restore, 120);
+  window.setTimeout(restore, 320);
+}
 function openFeedLink(link) {
   if (!link) return;
-  if (state.openMode === 'new-tab') window.open(link, '_blank', 'noopener,noreferrer');
-  else window.location.assign(link);
+  const target = mobileFeedLink(feedItemByLink(link));
+  if (state.openMode === 'new-tab') window.open(target, '_blank', 'noopener,noreferrer');
+  else { saveNavigationPosition(); window.location.assign(target); }
 }
 function homeSourceTabsMarkup() {
   const sources = homeFeedSources();
@@ -1593,8 +1721,8 @@ function reader() {
     const progress = typeof book.progress === 'number' ? book.progress : Number(book.progress?.percent || 0);
     return '<article class="book-card reader-book-card" data-reader-book-card data-reader-book-index="' + books.indexOf(book) + '" data-id="' + escapeHtml(book.id) + '"><button class="book-open reader-book-open" data-open-reader="' + escapeHtml(book.id) + '"><span class="book-cover reader-book-cover ' + book.type + '">' + readerBookCoverMarkup(book) + '</span><span class="book-copy reader-book-copy"><strong>' + escapeHtml(book.name) + '</strong><span class="reader-book-meta"><span>' + book.type.toUpperCase() + '</span><i></i><span>' + Math.max(1, Math.round(book.size / 1024)) + ' KB</span></span><span class="reader-book-progress"><span class="prog-bar"><i style="width:' + Math.round(progress * 100) + '%"></i></span><em>' + Math.round(progress * 100) + '%</em></span></span></button><button class="book-delete reader-book-delete" data-delete-book="' + escapeHtml(book.id) + '" aria-label="' + t('deleteBook') + '" title="' + t('deleteBook') + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M9 7V4h6v3M8 10v7M12 10v7M16 10v7M7 7l1 14h8l1-14"/></svg></button></article>';
   }).join('');
-  const empty = readerAddCardMarkup();
-  const libraryBody = books.length ? '<div class="reader-book-grid ' + (state.readerLayout === 'list' ? 'reader-book-list' : 'reader-book-grid-cards') + '">' + cards + readerAddCardMarkup() + '</div>' : empty;
+  const layoutClass = state.readerLayout === 'list' ? 'reader-book-list' : 'reader-book-grid-cards';
+  const libraryBody = '<div class="reader-book-grid ' + layoutClass + (!books.length ? ' reader-book-grid-empty' : '') + '">' + (books.length ? cards : '') + readerAddCardMarkup() + '</div>';
   const layoutIcon = state.readerLayout === 'list' ? '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 6h14M5 12h14M5 18h14"/><path d="M5 6h.01M5 12h.01M5 18h.01"/></svg><span>宫格</span>' : '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/></svg><span>列表</span>';
   return '<div class="reader-library-view"><section class="reader-library-panel"><div class="reader-library-head"><div class="reader-library-title-row"><h2>' + t('bookshelf') + ' <span class="reader-book-count">(' + books.length + ')</span></h2><small>' + t('readerHint') + '</small></div><div class="reader-library-actions"><button class="reader-layout-toggle" data-reader-layout-toggle aria-label="切换书架布局">' + layoutIcon + '</button></div></div>' + libraryBody + '</section><input id="readerFileInput" type="file" hidden multiple accept=".md,.markdown,.txt,.pdf,.epub,text/markdown,text/plain,application/pdf,application/epub+zip"></div>';
 }
@@ -3462,7 +3590,16 @@ document.addEventListener('click', (event) => {
   if (state.notificationOpen && !event.target.closest('#notificationPanel, #notifyBtn')) closeNotifications();
 });
 document.addEventListener('pointerdown', unlockAlertAudio, { once: true, passive: true });
-window.addEventListener('pagehide', () => { flushReaderProgress(); clearTimeout(persistenceTimer); writePersistentSnapshot(); });
+window.addEventListener('pagehide', () => { saveNavigationPosition(); flushReaderProgress(); clearTimeout(persistenceTimer); writePersistentSnapshot(); });
+window.addEventListener('pageshow', () => {
+  // iOS Safari/PWA can restore the old swipe transform and viewport-sized
+  // bottom inset from the external page. Clear those transient styles before
+  // restoring the user's exact tab and scroll position.
+  pageSwipeAnimationToken = 0;
+  pageSwipeGesture = null;
+  clearPageSwipeTrack();
+  restoreNavigationPosition();
+});
 window.addEventListener('beforeinstallprompt', (event) => { event.preventDefault(); window.installPrompt = event; $('#installBtn').hidden = false; });
 window.addEventListener('online', () => { $('#connectionStatus').textContent = t('online'); toast(state.language === 'en' ? 'Back online' : '网络已恢复'); });
 window.addEventListener('offline', () => { $('#connectionStatus').textContent = t('offline'); toast(state.language === 'en' ? 'Offline mode' : '已切换到离线模式'); });

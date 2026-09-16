@@ -1149,6 +1149,8 @@ html.reader-focus #readerDialog .reader-dialog-card { width: min(720px, 100%); m
 .feed-source-mark.huxiu, .feed-source-tag.huxiu b { background: #20242b; color: #f1d7a4; }
 .feed-source-mark.zhihu, .feed-source-tag.zhihu b { background: #1677ff; color: #fff; }
 .feed-source-mark.v2ex, .feed-source-tag.v2ex b { background: var(--panel-2); border: 1px solid var(--line); color: var(--ink); }
+.feed-source-mark.weibo, .feed-source-tag.weibo b { background: #e6162d; color: #fff; }
+.feed-source-mark.bilibili, .feed-source-tag.bilibili b { background: #00aeec; color: #fff; }
 .feed-source-mark.footprint { background: var(--soft); color: var(--primary); }
 .feed-source-mark.footprint svg { width: 16px; height: 16px; fill: currentColor; }
 .feed-refresh { flex: 0 0 auto; width: 38px; height: 38px; padding: 8px; border-radius: 11px; }
@@ -5516,6 +5518,36 @@ html.reader-focus .reader-reference-bottom {
   align-items: center;
   justify-content: center;
   text-align: center;
+}
+
+/* An empty shelf still uses the selected layout. Gallery mode gets a centered
+   tile; list mode keeps the compact full-width action row. */
+.reader-book-grid.reader-book-grid-empty {
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+.reader-book-grid.reader-book-grid-empty.reader-book-grid-cards {
+  grid-template-columns: minmax(220px, 300px);
+  justify-content: center;
+}
+.reader-book-grid.reader-book-grid-empty .reader-add-card {
+  min-height: 230px;
+  aspect-ratio: 3 / 4;
+}
+.reader-book-grid.reader-book-grid-empty.reader-book-list .reader-add-card {
+  min-height: 76px;
+  aspect-ratio: auto;
+}
+@media (max-width: 600px) {
+  .reader-book-grid.reader-book-grid-empty.reader-book-grid-cards {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .reader-book-grid.reader-book-grid-empty .reader-add-card {
+    min-height: 210px;
+  }
+  .reader-book-grid.reader-book-grid-empty.reader-book-list .reader-add-card {
+    min-height: 76px;
+  }
 }
 
 /* 2.18.77: a softer dark theme for users who want a dark surface without
