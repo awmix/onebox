@@ -3528,6 +3528,12 @@ main:has(#workspace[data-tool="calculator"]) {
    fallback when the browser does not expose the Fullscreen API. */
 html.reader-focus,
 html.reader-focus body { overflow: hidden; }
+html.reader-focus,
+html.reader-focus body,
+html.reader-focus .shell,
+html.reader-focus main:has(#workspace[data-tool="reader"]) {
+  min-height: 100svh;
+}
 html.reader-focus .app-header,
 html.reader-focus #toolNav,
 html.reader-focus #bottomNav { visibility: hidden; pointer-events: none; }
@@ -5433,8 +5439,10 @@ html.reader-focus #readerDialog .reader-dialog-card {
 html.reader-focus main:has(#workspace[data-tool="reader"]),
 html.reader-focus #pageSwipeStage:has(> #workspace[data-tool="reader"]),
 html.reader-focus #workspace[data-tool="reader"] {
+  height: 100vh !important;
   height: 100dvh !important;
-  min-height: 0 !important;
+  min-height: 100vh !important;
+  min-height: 100svh !important;
   max-height: 100dvh !important;
   padding: 0 !important;
   overflow: hidden !important;
@@ -5443,8 +5451,10 @@ html.reader-focus #workspace[data-tool="reader"] .reader-reference-shell {
   position: fixed;
   inset: 0;
   width: 100%;
-  height: 100dvh;
-  min-height: 0;
+  height: 100vh !important;
+  height: 100dvh !important;
+  min-height: 100vh !important;
+  min-height: 100svh !important;
   max-height: none;
 }
 html.reader-focus .reader-reference-bottom {
@@ -5644,12 +5654,14 @@ html[data-theme-mode="dark-gray"] .key {
 #eventDialog .event-datetime-input {
   box-sizing: border-box;
   width: 100%;
-  height: 42px;
+  height: 46px;
   min-width: 0;
   padding: 8px 10px;
   font-size: 14px;
   font-variant-numeric: tabular-nums;
+  text-align: left;
 }
+#eventDialog #eventRepeat { font-size: 13px; }
 #workspace[data-tool="calendar"] .calendar-month { gap: 16px; }
 
 /* The location action follows the light/dark theme surfaces, not the user's
@@ -5685,7 +5697,7 @@ html[data-theme-mode="dark-gray"] .key {
 }
 
 @media (max-width: 600px) {
-  #eventDialog .event-datetime-input { height: 42px; padding-inline: 9px; font-size: 13px; }
+  #eventDialog .event-datetime-input { height: 46px; padding-inline: 9px; font-size: 13px; }
 }
 
 /* Slightly reduce the translation action and keep its bilingual mark a shade
