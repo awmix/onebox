@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.77';
+const APP_VERSION = '2.18.79';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -1157,6 +1157,12 @@ function saveReaderPreferences() { saveStored(STORAGE.readerPreferences, state.r
 function applyReaderPreferences() {
   const shell = $('.reader-reference-shell, .reader-reading-shell'); if (!shell) return;
   const prefs = state.readerPreferences; const palette = READER_THEME_VALUES[prefs.theme] || READER_THEME_VALUES.paper;
+  const rootStyles = getComputedStyle(document.documentElement);
+  const globalTheme = document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light';
+  const readerUiInk = globalTheme === 'dark' ? '#ffffff' : '#000000';
+  const readerUiMuted = globalTheme === 'dark' ? '#bdbdbd' : '#606060';
+  const readerUiPanel = rootStyles.getPropertyValue('--panel').trim() || (globalTheme === 'dark' ? '#0b0b0b' : '#ffffff');
+  const readerUiLine = rootStyles.getPropertyValue('--line').trim() || (globalTheme === 'dark' ? '#2b2b2b' : '#dfe4ee');
   shell.dataset.readerTheme = prefs.theme;
   shell.style.setProperty('--reader-bg', palette.bg);
   shell.style.setProperty('--reader-panel', palette.panel);
@@ -1168,9 +1174,9 @@ function applyReaderPreferences() {
   shell.style.setProperty('--reader-line-height', prefs.lineHeight);
   shell.style.setProperty('--reader-paragraph-spacing', prefs.paragraphSpacing + 'px');
   shell.style.setProperty('--reader-letter-spacing', prefs.letterSpacing + 'px');
-  // The dialogs are mounted outside the reader shell, so copy the same local
-  // palette onto them instead of letting comments/settings fall back to the
-  // application's global theme colors.
+  // The dialogs are mounted outside the reader shell. Their surface follows
+  // Mine > Settings > Theme and their text stays deliberately black/white;
+  // the reading page itself keeps the selected paper/sepia/green/night ink.
   ['#readerDialog', '#annotationDialog'].forEach((selector) => {
     const dialog = $(selector); if (!dialog) return;
     dialog.dataset.readerTheme = prefs.theme;
@@ -1179,6 +1185,10 @@ function applyReaderPreferences() {
     dialog.style.setProperty('--reader-ink', palette.ink);
     dialog.style.setProperty('--reader-muted', palette.muted);
     dialog.style.setProperty('--reader-line', palette.line);
+    dialog.style.setProperty('--reader-ui-ink', readerUiInk);
+    dialog.style.setProperty('--reader-ui-muted', readerUiMuted);
+    dialog.style.setProperty('--reader-ui-panel', readerUiPanel);
+    dialog.style.setProperty('--reader-ui-line', readerUiLine);
   });
 }
 function readerDialogMarkup(kind) {
@@ -2508,6 +2518,10 @@ function endLongPress() { clearTimeout(reorderTimer); reorderTimer = null; }
 function readerBookCardsInDom() {
   return [...document.querySelectorAll('[data-reader-book-card]')];
 }
+function releaseReaderBookPointer(drag) {
+  if (!drag || drag.type !== 'book' || drag.pointerId == null) return;
+  try { if (drag.target.hasPointerCapture?.(drag.pointerId)) drag.target.releasePointerCapture(drag.pointerId); } catch {}
+}
 function updateReaderBookDrag(event) {
   const drag = readerBookDrag;
   if (!drag || (drag.pointerId != null && event.pointerId !== drag.pointerId)) return;
@@ -2523,7 +2537,8 @@ function updateReaderBookDrag(event) {
     drag.target.classList.remove('reader-delete-ready');
     if (event.cancelable) event.preventDefault();
   }
-  const over = event.target.closest?.('[data-reader-book-card]');
+  const hit = document.elementFromPoint?.(event.clientX, event.clientY) || event.target;
+  const over = hit?.closest?.('[data-reader-book-card]');
   if (!over || over === drag.target || !over.parentElement) return;
   const rect = over.getBoundingClientRect();
   const insertAfter = event.clientY > rect.top + rect.height / 2;
@@ -2547,14 +2562,18 @@ function finishReaderBookDrag(event = null) {
     readerBookSuppressClickUntil = Date.now() + 500;
     drag.target.classList.remove('reader-book-dragging');
     reorderTarget = null;
+    releaseReaderBookPointer(drag);
     render();
     toast(state.language === 'en' ? 'Shelf order saved' : '书架顺序已保存');
+  } else {
+    releaseReaderBookPointer(drag);
   }
   readerBookDrag = null;
   return wasActive;
 }
 function clearReaderDeleteMode() {
   endLongPress();
+  releaseReaderBookPointer(readerBookDrag);
   $$('.reader-book-card.reader-delete-ready, .reader-book-card.reorder-hold').forEach((card) => {
     card.classList.remove('reader-delete-ready', 'reorder-hold');
     delete card.dataset.longPressed;
@@ -2915,7 +2934,10 @@ workspace.addEventListener('pointerdown', (event) => { const source = event.targ
 workspace.addEventListener('pointerdown', (event) => {
   const book = event.target.closest('[data-reader-book-card]');
   if (book && event.target.closest('[data-delete-book]')) return;
-  if (book) startLongPress(book, 'book', Number(book.dataset.readerBookIndex), event);
+  if (book) {
+    startLongPress(book, 'book', Number(book.dataset.readerBookIndex), event);
+    try { if (event.pointerId != null) book.setPointerCapture?.(event.pointerId); } catch {}
+  }
   else if (state.tool === 'reader' && state.readerMode === 'library') clearReaderDeleteMode();
 });
 workspace.addEventListener('pointerup', endLongPress);
@@ -2930,7 +2952,15 @@ document.addEventListener('pointerdown', (event) => {
 document.querySelector('main')?.addEventListener('pointerdown', beginPageSwipe);
 document.addEventListener('pointermove', updatePageSwipe, { passive: false });
 document.addEventListener('pointerup', finishPageSwipe, { passive: true });
-document.addEventListener('pointercancel', () => { tabSwipeGesture = null; pageSwipeGesture = null; endLongPress(); swipeGesture = null; resetPageSwipeTransform(); }, { passive: true });
+document.addEventListener('pointercancel', () => {
+  tabSwipeGesture = null; pageSwipeGesture = null; endLongPress(); swipeGesture = null; resetPageSwipeTransform();
+  if (readerBookDrag) {
+    releaseReaderBookPointer(readerBookDrag);
+    readerBookDrag.target.classList.remove('reader-book-dragging', 'reader-delete-ready', 'reorder-hold');
+    readerBookDrag = null;
+    if (reorderTarget?.type === 'book') reorderTarget = null;
+  }
+}, { passive: true });
 workspace.addEventListener('pointerdown', (event) => {
   const surface = event.target.closest('[data-reader-surface]');
   if (state.readerMode === 'reading' && surface) {
@@ -3035,7 +3065,11 @@ workspace.addEventListener('click', async (event) => {
   }
   const bookCard = event.target.closest('[data-reader-book-card]');
   if (bookCard && handleReorderClick(bookCard, 'book', Number(bookCard.dataset.readerBookIndex))) { event.preventDefault(); return; }
-  const openReader = event.target.closest('[data-open-reader]');
+  // A touch drag keeps pointer capture on the card so the browser cannot
+  // steal the gesture for page scrolling. In that case the synthetic click
+  // can target the article instead of its inner open button; resolve the
+  // button from the card as a fallback so a normal tap still opens the book.
+  const openReader = event.target.closest('[data-open-reader]') || event.target.closest('[data-reader-book-card]')?.querySelector('[data-open-reader]');
   if (openReader) return openReaderBook(openReader.dataset.openReader);
   if (event.target.closest('[data-annotate-selection]')) return renderAnnotationDialog();
   const deleteAnnotation = event.target.closest('[data-delete-annotation]');
@@ -3186,6 +3220,36 @@ $('#lunarDialog').addEventListener('click', (event) => {
   if (event.target === $('#lunarDialog') || event.target.closest('[data-close-lunar-dialog]')) closeLunarDialog();
 });
 
+function applyReaderDialogChoice(choice) {
+  const group = choice.dataset.readerChoice; const value = choice.dataset.readerChoiceValue;
+  if (group === 'readingMode') {
+    state.readerReadingMode = value === 'scroll' ? 'scroll' : 'pages';
+    if (value !== 'scroll') state.readerPreferences.pageAnimation = value.slice('pages-'.length) || 'slide';
+    state.readerChromeHidden = false; state.readerPage = 0; saveReaderPreferences(); closeReaderDialog(); render(); scheduleReaderPositionRestore();
+  } else if (group === 'fontSize') {
+    state.readerPreferences.fontSize = Math.min(26, Math.max(15, Number(value) || 18)); saveReaderPreferences(); applyReaderPreferences(); readerDialogMarkup('settings');
+  } else if (group === 'lineHeight' || group === 'paragraphSpacing' || group === 'letterSpacing') {
+    state.readerPreferences[group] = Number(value); saveReaderPreferences(); applyReaderPreferences(); readerDialogMarkup('settings');
+  } else if (group === 'fullscreenOnOpen') {
+    state.readerPreferences.fullscreenOnOpen = value === 'true'; saveReaderPreferences(); readerDialogMarkup('settings');
+  } else if (group === 'fontFamily' || group === 'pageAnimation') {
+    state.readerPreferences[group] = value; saveReaderPreferences(); applyReaderPreferences(); readerDialogMarkup('settings');
+  }
+  return true;
+}
+
+// Keep settings choices reliable on installed PWAs as well as desktop. Some
+// WebKit builds retarget a click from a freshly-rendered modal button to the
+// modal surface, so handle the choice during capture before that retargeting
+// can swallow the delegated listener below.
+document.addEventListener('click', (event) => {
+  const dialog = $('#readerDialog');
+  const choice = event.target.closest?.('[data-reader-choice]');
+  if (!dialog || !choice || !dialog.contains(choice)) return;
+  event.stopPropagation();
+  applyReaderDialogChoice(choice);
+}, true);
+
 $('#readerDialog').addEventListener('click', (event) => {
   if (event.target === $('#readerDialog')) return closeReaderDialog();
   if (event.target.closest('[data-close-reader]')) return closeReader();
@@ -3200,23 +3264,7 @@ $('#readerDialog').addEventListener('click', (event) => {
   const theme = event.target.closest('[data-reader-theme]');
   if (theme) { state.readerPreferences.theme = theme.dataset.readerTheme; saveReaderPreferences(); applyReaderPreferences(); return readerDialogMarkup(state.readerDialog === 'background' ? 'background' : 'settings'); }
   const choice = event.target.closest('[data-reader-choice]');
-  if (choice) {
-    const group = choice.dataset.readerChoice; const value = choice.dataset.readerChoiceValue;
-    if (group === 'readingMode') {
-      state.readerReadingMode = value === 'scroll' ? 'scroll' : 'pages';
-      if (value !== 'scroll') state.readerPreferences.pageAnimation = value.slice('pages-'.length) || 'slide';
-      state.readerChromeHidden = false; state.readerPage = 0; saveReaderPreferences(); closeReaderDialog(); render(); scheduleReaderPositionRestore();
-    } else if (group === 'fontSize') {
-      state.readerPreferences.fontSize = Math.min(26, Math.max(15, Number(value) || 18)); saveReaderPreferences(); applyReaderPreferences(); readerDialogMarkup('settings');
-    } else if (group === 'lineHeight' || group === 'paragraphSpacing' || group === 'letterSpacing') {
-      state.readerPreferences[group] = Number(value); saveReaderPreferences(); applyReaderPreferences(); readerDialogMarkup('settings');
-    } else if (group === 'fullscreenOnOpen') {
-      state.readerPreferences.fullscreenOnOpen = value === 'true'; saveReaderPreferences(); readerDialogMarkup('settings');
-    } else if (group === 'fontFamily' || group === 'pageAnimation') {
-      state.readerPreferences[group] = value; saveReaderPreferences(); applyReaderPreferences(); readerDialogMarkup('settings');
-    }
-    return;
-  }
+  if (choice) return applyReaderDialogChoice(choice);
   const animation = event.target.closest('[data-reader-animation]');
   if (animation) { state.readerPreferences.pageAnimation = animation.dataset.readerAnimation; saveReaderPreferences(); closeReaderDialog(); return; }
   if (event.target.closest('[data-annotate-selection]')) return renderAnnotationDialog();

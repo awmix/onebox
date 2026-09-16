@@ -5032,30 +5032,30 @@ html[data-color="mono"] #workspace[data-tool="calendar"] .day i {
    leave global-theme borders and text behind. */
 #readerDialog[data-reader-theme],
 #annotationDialog[data-reader-theme] {
-  color: var(--reader-ink);
+  color: var(--reader-ui-ink);
 }
 #readerDialog[data-reader-theme] .reader-dialog-card,
 #annotationDialog[data-reader-theme] .reader-dialog-card {
-  background: var(--reader-panel);
-  border-color: var(--reader-line);
-  color: var(--reader-ink);
+  background: var(--reader-ui-panel);
+  border-color: var(--reader-ui-line);
+  color: var(--reader-ui-ink);
 }
 #readerDialog[data-reader-theme] .reader-dialog-head,
 #annotationDialog[data-reader-theme] .reader-dialog-head {
-  border-bottom-color: var(--reader-line);
+  border-bottom-color: var(--reader-ui-line);
 }
 #readerDialog[data-reader-theme] .reader-dialog-title small,
 #annotationDialog[data-reader-theme] .reader-dialog-head p,
 #readerDialog[data-reader-theme] .reader-dialog-empty,
 #annotationDialog[data-reader-theme] .reader-annotation-field,
 #annotationDialog[data-reader-theme] .reader-annotation-quote {
-  color: var(--reader-muted);
+  color: var(--reader-ui-muted);
 }
 #readerDialog[data-reader-theme] .reader-dialog-close,
 #annotationDialog[data-reader-theme] .reader-dialog-close {
-  border-color: var(--reader-line);
-  background: color-mix(in srgb, var(--reader-bg) 72%, var(--reader-panel));
-  color: var(--reader-ink);
+  border-color: var(--reader-ui-line);
+  background: var(--reader-ui-panel);
+  color: var(--reader-ui-ink);
 }
 
 /* 2.18.71: book removal follows the same deliberate long-press affordance
@@ -5115,22 +5115,22 @@ html[data-color="mono"] #workspace[data-tool="calendar"] .day i {
   flex: 0 1 auto;
 }
 #readerDialog[data-reader-theme] .reader-comment-item {
-  border-color: var(--reader-line);
-  background: color-mix(in srgb, var(--reader-bg) 72%, var(--reader-panel));
-  color: var(--reader-ink);
+  border-color: var(--reader-ui-line);
+  background: var(--reader-ui-panel);
+  color: var(--reader-ui-ink);
 }
 #readerDialog[data-reader-theme] .reader-comment-item:hover,
 #readerDialog[data-reader-theme] .reader-comment-item:focus-visible {
   background: color-mix(in srgb, var(--primary) 10%, var(--reader-panel));
 }
 #readerDialog[data-reader-theme] .reader-comment-item-copy strong {
-  color: var(--reader-ink);
+  color: var(--reader-ui-ink);
 }
 #readerDialog[data-reader-theme] .reader-comment-item-copy small {
-  color: var(--reader-muted);
+  color: var(--reader-ui-muted);
 }
 #readerDialog[data-reader-theme] .reader-comment-item-number {
-  border-color: color-mix(in srgb, var(--primary) 58%, var(--reader-line));
+  border-color: color-mix(in srgb, var(--primary) 58%, var(--reader-ui-line));
   color: var(--primary);
 }
 #readerDialog[data-reader-theme] .reader-comments-list {
@@ -5141,22 +5141,22 @@ html[data-color="mono"] #workspace[data-tool="calendar"] .day i {
 #readerDialog[data-reader-theme] .reader-sheet-choice,
 #readerDialog[data-reader-theme] .reader-setting-choice,
 #readerDialog[data-reader-theme] .reader-theme-choice {
-  border-color: var(--reader-line);
-  background: color-mix(in srgb, var(--reader-bg) 72%, var(--reader-panel));
-  color: var(--reader-ink);
+  border-color: var(--reader-ui-line);
+  background: var(--reader-ui-panel);
+  color: var(--reader-ui-ink);
 }
 #readerDialog[data-reader-theme] .reader-setting-choice.active,
 #readerDialog[data-reader-theme] .reader-theme-choice.active {
-  border-color: var(--reader-ink);
-  background: color-mix(in srgb, var(--reader-ink) 10%, var(--reader-panel));
-  color: var(--reader-ink);
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--reader-ink) 28%, transparent);
+  border-color: var(--reader-ui-ink);
+  background: var(--reader-ui-panel);
+  color: var(--reader-ui-ink);
+  box-shadow: none;
 }
 #readerDialog[data-reader-theme] .reader-sheet-choice.active {
-  border-color: var(--reader-ink);
-  background: color-mix(in srgb, var(--reader-ink) 10%, var(--reader-panel));
-  color: var(--reader-ink);
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--reader-ink) 28%, transparent);
+  border-color: var(--reader-ui-ink);
+  background: var(--reader-ui-panel);
+  color: var(--reader-ui-ink);
+  box-shadow: none;
 }
 #readerDialog[data-reader-theme] .reader-setting-choice:hover,
 #readerDialog[data-reader-theme] .reader-setting-choice:focus-visible,
@@ -5164,9 +5164,9 @@ html[data-color="mono"] #workspace[data-tool="calendar"] .day i {
 #readerDialog[data-reader-theme] .reader-theme-choice:focus-visible,
 #readerDialog[data-reader-theme] .reader-sheet-choice:hover,
 #readerDialog[data-reader-theme] .reader-sheet-choice:focus-visible {
-  border-color: var(--reader-line);
-  background: color-mix(in srgb, var(--reader-bg) 82%, var(--reader-panel));
-  color: var(--reader-ink);
+  border-color: var(--reader-ui-line);
+  background: var(--reader-ui-panel);
+  color: var(--reader-ui-ink);
   transform: none;
 }
 #readerDialog[data-reader-theme] .reader-setting-choice.active:hover,
@@ -5175,9 +5175,21 @@ html[data-color="mono"] #workspace[data-tool="calendar"] .day i {
 #readerDialog[data-reader-theme] .reader-theme-choice.active:focus-visible,
 #readerDialog[data-reader-theme] .reader-sheet-choice.active:hover,
 #readerDialog[data-reader-theme] .reader-sheet-choice.active:focus-visible {
-  border-color: var(--reader-ink);
-  background: color-mix(in srgb, var(--reader-ink) 10%, var(--reader-panel));
-  color: var(--reader-ink);
+  border-color: var(--reader-ui-ink);
+  background: var(--reader-ui-panel);
+  color: var(--reader-ui-ink);
+}
+
+#annotationDialog[data-reader-theme] .reader-annotation-quote,
+#annotationDialog[data-reader-theme] .reader-annotation-field textarea {
+  border-color: var(--reader-ui-line);
+  background: var(--reader-ui-panel);
+  color: var(--reader-ui-ink);
+}
+#annotationDialog[data-reader-theme] .reader-dialog-secondary {
+  border-color: var(--reader-ui-line);
+  background: var(--reader-ui-panel);
+  color: var(--reader-ui-muted);
 }
 
 /* The bottom reader controls are rendered inside the themed shell. Icons use
@@ -5431,6 +5443,13 @@ html[data-theme-mode="dark-gray"] .key {
   transform: scale(.985);
   transition: none;
   z-index: 3;
+}
+.reader-book-card,
+.reader-book-open {
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-user-drag: none;
 }
 
 /* The shelf count is intentionally a quiet inline suffix, not a second
