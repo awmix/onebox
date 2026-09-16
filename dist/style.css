@@ -1913,6 +1913,55 @@ html.layout-simple #languageControl { display: none !important; }
   #eventDialog .event-date-time-grid input { padding-inline: 8px; font-size: 13px; }
 }
 
+/* Mobile native date/time controls need their own labels and width. Keeping
+   them in one row makes WebKit compress the seconds field into unreadable
+   placeholder fragments on narrow screens. */
+#eventDialog .event-date-time-grid { align-items: start; }
+#eventDialog .event-date-time-field {
+  display: grid;
+  min-width: 0;
+  gap: 5px;
+  margin: 0;
+}
+#eventDialog .event-date-time-label {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+#eventDialog .event-date-time-field input {
+  box-sizing: border-box;
+  min-width: 0;
+  width: 100%;
+  font-variant-numeric: tabular-nums;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+@media (max-width: 600px) {
+  #eventDialog .event-dialog-card {
+    max-height: calc(100dvh - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  }
+  #eventDialog .event-date-time-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+  }
+  #eventDialog .event-date-time-field { gap: 4px; }
+  #eventDialog .event-date-time-field input {
+    height: 48px;
+    padding-inline: 12px;
+    font-size: 16px;
+  }
+  #eventDialog input[type="date"]::-webkit-date-and-time-value,
+  #eventDialog input[type="time"]::-webkit-date-and-time-value {
+    text-align: left;
+  }
+  #eventDialog input[type="date"]::-webkit-calendar-picker-indicator,
+  #eventDialog input[type="time"]::-webkit-calendar-picker-indicator {
+    margin-left: auto;
+  }
+}
+
 /* User-selectable accent palettes. The neutral palette is the default; the
    other presets only replace the accent tokens so every existing surface and
    icon follows the same color without creating parallel component themes. */
@@ -5190,6 +5239,69 @@ html[data-color="mono"] #workspace[data-tool="calendar"] .day i {
   border-color: var(--reader-ui-line);
   background: var(--reader-ui-panel);
   color: var(--reader-ui-muted);
+}
+#readerDialog[data-reader-theme] .reader-dialog-primary,
+#annotationDialog[data-reader-theme] .reader-dialog-primary {
+  border-color: var(--reader-ui-ink) !important;
+  background: var(--reader-ui-ink);
+  color: var(--reader-ui-panel);
+}
+#annotationDialog[data-reader-theme] .reader-annotation-field textarea::placeholder {
+  color: var(--reader-ui-muted);
+  opacity: 1;
+}
+
+/* Keep the TOC header visible while only the chapter list scrolls. The active
+   chapter uses a quiet inset marker so the current position remains legible
+   without adding a second selection surface. */
+#readerDialog .reader-dialog-card:has(.reader-toc-list) {
+  min-height: 0;
+  max-height: min(720px, calc(100dvh - 24px));
+}
+#readerDialog .reader-dialog-card:has(.reader-toc-list) .reader-dialog-head {
+  position: relative;
+  z-index: 2;
+  flex: 0 0 auto;
+  min-height: 58px;
+  background: var(--reader-ui-panel);
+}
+#readerDialog .reader-dialog-card:has(.reader-toc-list) .reader-dialog-title {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+#readerDialog .reader-dialog-card:has(.reader-toc-list) .reader-dialog-close {
+  z-index: 3;
+  flex: 0 0 32px;
+}
+#readerDialog .reader-dialog-card:has(.reader-toc-list) .reader-toc-list {
+  min-height: 0;
+  max-height: none;
+  flex: 1 1 auto;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+  padding-bottom: max(18px, env(safe-area-inset-bottom));
+}
+#readerDialog[data-reader-theme] .reader-toc-item.active,
+#readerDialog[data-reader-theme] .reader-toc-item.active:hover,
+#readerDialog[data-reader-theme] .reader-toc-item.active:focus-visible {
+  background: transparent;
+  color: var(--reader-ui-ink);
+  font-weight: 750;
+  box-shadow: inset 3px 0 var(--reader-ui-ink);
+}
+@media (max-width: 600px) {
+  #readerDialog .reader-dialog-card:has(.reader-toc-list) {
+    width: 100%;
+    max-height: calc(100dvh - 18px);
+    border-radius: 20px;
+  }
+  #readerDialog .reader-dialog-card:has(.reader-toc-list) .reader-dialog-head {
+    min-height: 56px;
+    padding: 13px 14px 11px;
+  }
 }
 
 /* The bottom reader controls are rendered inside the themed shell. Icons use

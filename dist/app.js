@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.79';
+const APP_VERSION = '2.18.80';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -1157,12 +1157,14 @@ function saveReaderPreferences() { saveStored(STORAGE.readerPreferences, state.r
 function applyReaderPreferences() {
   const shell = $('.reader-reference-shell, .reader-reading-shell'); if (!shell) return;
   const prefs = state.readerPreferences; const palette = READER_THEME_VALUES[prefs.theme] || READER_THEME_VALUES.paper;
-  const rootStyles = getComputedStyle(document.documentElement);
-  const globalTheme = document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light';
-  const readerUiInk = globalTheme === 'dark' ? '#ffffff' : '#000000';
-  const readerUiMuted = globalTheme === 'dark' ? '#bdbdbd' : '#606060';
-  const readerUiPanel = rootStyles.getPropertyValue('--panel').trim() || (globalTheme === 'dark' ? '#0b0b0b' : '#ffffff');
-  const readerUiLine = rootStyles.getPropertyValue('--line').trim() || (globalTheme === 'dark' ? '#2b2b2b' : '#dfe4ee');
+  // Reader dialogs are mounted outside the reading shell. Their contrast must
+  // follow the selected reading surface, not the app-wide theme, otherwise a
+  // light note sheet can inherit light text from the global dark mode.
+  const readerUiDark = prefs.theme === 'dark';
+  const readerUiInk = readerUiDark ? '#ffffff' : '#000000';
+  const readerUiMuted = readerUiDark ? '#bdbdbd' : '#606060';
+  const readerUiPanel = palette.panel;
+  const readerUiLine = palette.line;
   shell.dataset.readerTheme = prefs.theme;
   shell.style.setProperty('--reader-bg', palette.bg);
   shell.style.setProperty('--reader-panel', palette.panel);
@@ -1201,7 +1203,8 @@ function readerDialogMarkup(kind) {
   const choiceGroup = (heading, group, current, choices, className) => '<div class="reader-setting-row"><h3>' + heading + '</h3><div class="reader-choice-grid ' + (className || '') + '">' + choices.map(([value, label]) => choiceButton(group, value, label, current)).join('') + '</div></div>';
   if (kind === 'toc') {
     const items = state.readerToc || [];
-    const body = items.length ? items.map((item) => '<button class="reader-toc-item depth-' + Math.min(3, Number(item.depth) || 0) + '" data-reader-toc-id="' + escapeHtml(item.id || '') + '" data-reader-toc-section="' + (item.section == null ? '' : item.section) + '" data-reader-toc-anchor="' + escapeHtml(item.anchor || '') + '"><span>' + escapeHtml(item.label || '—') + '</span></button>').join('') : '<p class="empty compact reader-dialog-empty">' + t('readerNoContents') + '</p>';
+    const currentIndex = currentReaderChapterIndex();
+    const body = items.length ? items.map((item, position) => '<button class="reader-toc-item depth-' + Math.min(3, Number(item.depth) || 0) + (position === currentIndex ? ' active' : '') + '" data-reader-toc-id="' + escapeHtml(item.id || '') + '" data-reader-toc-section="' + (item.section == null ? '' : item.section) + '" data-reader-toc-anchor="' + escapeHtml(item.anchor || '') + '"' + (position === currentIndex ? ' aria-current="true"' : '') + '><span>' + escapeHtml(item.label || '—') + '</span></button>').join('') : '<p class="empty compact reader-dialog-empty">' + t('readerNoContents') + '</p>';
     dialog.innerHTML = '<div class="reader-dialog-card reader-panel-card" role="dialog" aria-modal="true"><div class="dialog-head reader-dialog-head">' + title(t('readerContents'), t('readerTocHint')) + closeButton + '</div><div class="reader-toc-list">' + body + '</div></div>';
   } else if (kind === 'background') {
     dialog.innerHTML = '<div class="reader-dialog-card reader-panel-card reader-sheet-card" role="dialog" aria-modal="true"><div class="dialog-head reader-dialog-head">' + title(t('readerTheme'), t('readerSettingsHint')) + closeButton + '</div><div class="reader-sheet-body"><div class="reader-theme-grid reader-theme-grid-large">' + themeButton('paper', t('readerThemePaper')) + themeButton('sepia', t('readerThemeSepia')) + themeButton('green', t('readerThemeGreen')) + themeButton('dark', t('readerThemeDark')) + '</div></div></div>';
@@ -1239,7 +1242,7 @@ function readerDialogMarkup(kind) {
   dialog.hidden = false;
 }
 function closeReaderDialog() { const dialog = $('#readerDialog'); if (dialog) dialog.hidden = true; state.readerDialog = ''; }
-function openReaderDialog(kind) { state.readerDialog = kind; readerDialogMarkup(kind); updateReaderReferenceChrome(); }
+function openReaderDialog(kind) { state.readerDialog = kind; readerDialogMarkup(kind); updateReaderReferenceChrome(); if (kind === 'toc') requestAnimationFrame(() => updateReaderTocActiveState(true)); }
 function readerPreferenceLabel(key, value) {
   if (key === 'fontSize' || key === 'paragraphSpacing') return value + 'px';
   if (key === 'lineHeight') return Number(value).toFixed(2);
@@ -1446,10 +1449,22 @@ function currentReaderChapterIndex() {
   state.readerToc.forEach((item, position) => { const target = readerTocTarget(item); if (target && target.getBoundingClientRect().top <= top) index = position; });
   return index;
 }
+function updateReaderTocActiveState(reveal = false) {
+  const currentIndex = currentReaderChapterIndex();
+  const tocItems = $$('#readerDialog [data-reader-toc-id]');
+  tocItems.forEach((node, index) => {
+    const active = index === currentIndex;
+    node.classList.toggle('active', active);
+    if (active) node.setAttribute('aria-current', 'true');
+    else node.removeAttribute('aria-current');
+  });
+  if (reveal) tocItems[currentIndex]?.scrollIntoView({ block: 'nearest' });
+}
 function updateReaderReferenceChrome() {
   const shell = $('.reader-reference-shell'); if (!shell) return;
   shell.classList.toggle('chrome-hidden', state.readerReadingMode === 'pages' && state.readerChromeHidden);
   const index = currentReaderChapterIndex(); const item = state.readerToc[index];
+  updateReaderTocActiveState();
   const name = $('[data-reader-chapter-name]'); const chapterIndex = $('[data-reader-chapter-index]');
   if (name) name.textContent = item?.label || '—';
   if (chapterIndex) chapterIndex.textContent = state.readerToc.length ? (index + 1) + '/' + state.readerToc.length : '0/0';
@@ -1850,7 +1865,7 @@ function renderEventDialog() {
   const options = ['once', 'daily', 'workdays', 'restdays', 'weekly'].map((value) => '<option value="' + value + '">' + t(value === 'daily' ? 'everyDay' : value) + '</option>').join('');
   const eventWeekdayLabels = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
   const weekdays = eventWeekdayLabels.map((label, index) => '<label class="weekday-option"><input type="checkbox" name="eventWeekday" value="' + index + '" ' + (index < 5 ? 'checked' : '') + '><span>' + (state.language === 'en' ? ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][index] : label) + '</span></label>').join('');
-  dialog.innerHTML = '<div class="dialog-card event-dialog-card" role="dialog" aria-modal="true"><div class="dialog-head"><h2>' + t('newReminder') + '</h2><button class="icon-btn small" data-close-event-dialog aria-label="' + t('close') + '">×</button></div><form id="eventForm" class="event-form"><div class="field"><label for="eventTitle">' + t('eventContent') + '</label><input id="eventTitle" required maxlength="60" placeholder="' + t('eventPlaceholder') + '"></div><div class="field"><label>' + t('reminderSchedule') + '</label><div class="event-date-time-grid"><input id="eventDate" type="date" value="' + escapeHtml(state.selectedDate) + '" aria-label="' + t('eventDate') + '" required><input id="eventTime" type="time" step="1" aria-label="' + t('eventTime') + '"></div></div><div class="field"><label for="eventRepeat">' + t('eventRepeat') + '</label><select id="eventRepeat">' + options + '</select></div><div class="field event-weekdays-field" hidden><label>' + t('weekdays') + '</label><div class="weekday-options">' + weekdays + '</div></div><button class="primary full-width" type="submit">' + t('addEvent') + '</button></form></div>';
+  dialog.innerHTML = '<div class="dialog-card event-dialog-card" role="dialog" aria-modal="true"><div class="dialog-head"><h2>' + t('newReminder') + '</h2><button class="icon-btn small" data-close-event-dialog aria-label="' + t('close') + '">×</button></div><form id="eventForm" class="event-form"><div class="field"><label for="eventTitle">' + t('eventContent') + '</label><input id="eventTitle" required maxlength="60" placeholder="' + t('eventPlaceholder') + '"></div><div class="field"><label>' + t('reminderSchedule') + '</label><div class="event-date-time-grid"><label class="event-date-time-field"><span class="event-date-time-label">' + t('eventDate') + '</span><input id="eventDate" type="date" value="' + escapeHtml(state.selectedDate) + '" aria-label="' + t('eventDate') + '" required></label><label class="event-date-time-field"><span class="event-date-time-label">' + t('eventTime') + '</span><input id="eventTime" type="time" step="1" aria-label="' + t('eventTime') + '"></label></div></div><div class="field"><label for="eventRepeat">' + t('eventRepeat') + '</label><select id="eventRepeat">' + options + '</select></div><div class="field event-weekdays-field" hidden><label>' + t('weekdays') + '</label><div class="weekday-options">' + weekdays + '</div></div><button class="primary full-width" type="submit">' + t('addEvent') + '</button></form></div>';
   dialog.hidden = false;
 }
 function closeEventDialog() { const dialog = $('#eventDialog'); if (dialog) dialog.hidden = true; }
