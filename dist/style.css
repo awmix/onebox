@@ -4811,3 +4811,162 @@ html[data-color="mono"] #workspace[data-tool="calendar"] .day i {
   height: 100%;
   max-height: none;
 }
+
+/* 2.18.66: mobile surfaces should be content-sized.  The earlier shared
+   483/681px workspace was useful as a calculator reference, but it left an
+   empty scrollable tail on short calendar/weather/conversion pages. */
+@media (max-width: 760px) {
+  #workspace[data-tool="calendar"],
+  #workspace[data-tool="weather"],
+  #workspace[data-tool="translate"] {
+    height: auto;
+    min-height: 0;
+    max-height: none;
+    overflow: visible;
+  }
+
+  #pageSwipeStage:has(> #workspace[data-tool="calendar"]),
+  #pageSwipeStage:has(> #workspace[data-tool="weather"]),
+  #pageSwipeStage:has(> #workspace[data-tool="translate"]) {
+    height: auto;
+    min-height: 0;
+  }
+}
+
+/* 2.18.66: comment numbers are real circular badges, not superscript dots.
+   Keep the glyph centered even when the label changes to "..". */
+.reader-comment-badge {
+  display: inline-grid;
+  box-sizing: border-box;
+  width: 16px;
+  height: 16px;
+  min-width: 16px;
+  margin: 0 0 0 3px;
+  place-items: center;
+  padding: 0;
+  border: 1px solid color-mix(in srgb, var(--primary) 68%, var(--reader-line));
+  border-radius: 50%;
+  background: var(--reader-panel);
+  color: var(--primary);
+  font-size: 8px;
+  font-weight: 850;
+  line-height: 1;
+  text-align: center;
+  vertical-align: super;
+  cursor: pointer;
+}
+.reader-comment-badge::before { content: none; }
+
+/* The shelf count is an unobtrusive, readable numeral next to the layout
+   switch.  Its vertical center matches the switch rather than floating above
+   the shelf title. */
+.reader-library-actions {
+  position: relative;
+  padding-right: 10px;
+}
+.reader-library-actions .reader-book-count {
+  position: absolute;
+  top: 50%;
+  right: -8px;
+  display: grid;
+  width: 18px;
+  min-width: 18px;
+  height: 18px;
+  place-items: center;
+  padding: 0;
+  transform: translateY(-50%);
+  background: transparent;
+  color: var(--ink);
+  font-size: 11px;
+  font-weight: 850;
+  line-height: 1;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
+.reader-library-actions .reader-book-count::before { content: none; }
+
+/* A trash glyph reads as an action and keeps the long-press affordance quiet
+   until it is needed. */
+.reader-book-delete {
+  display: none;
+  place-items: center;
+  box-sizing: border-box;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 2px solid var(--panel);
+  border-radius: 50%;
+  background: var(--danger);
+  color: #fff;
+  box-shadow: 0 5px 14px color-mix(in srgb, var(--danger) 32%, transparent);
+  cursor: pointer;
+}
+.reader-book-delete:hover,
+.reader-book-delete:focus-visible {
+  background: color-mix(in srgb, var(--danger) 82%, var(--ink));
+  color: #fff;
+}
+.reader-book-delete svg {
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+}
+
+/* Safe-area padding belongs to the app header in windowed mode.  Applying it
+   again to the reader title is what creates the large PWA-only gap. */
+.reader-reference-shell.reader-windowed .reader-reference-top {
+  box-sizing: border-box;
+  padding-top: 0;
+}
+
+/* Give translation both panes a larger, responsive reading surface and let an
+   opened history list use the lower portion of the result card. */
+#workspace[data-tool="translate"] .translation-input-pane,
+#workspace[data-tool="translate"] .translation-result-pane,
+#workspace[data-tool="translate"] .translation-input-wrap,
+#workspace[data-tool="translate"] .translation-result-pane .translation-result-panel {
+  height: clamp(200px, 28dvh, 240px);
+  min-height: clamp(200px, 28dvh, 240px) !important;
+}
+#workspace[data-tool="translate"] .translation-result-pane .translation-result-current {
+  align-items: flex-start;
+  padding-top: 2px !important;
+  font-size: 14px;
+  line-height: 1.5;
+}
+#workspace[data-tool="translate"] .translation-result-pane .translation-result-history {
+  max-height: 124px;
+}
+#workspace[data-tool="translate"] .translation-result-pane .translation-history-list {
+  max-height: 94px;
+}
+
+@media (max-width: 600px) {
+  #workspace[data-tool="translate"] .translation-input-pane,
+  #workspace[data-tool="translate"] .translation-result-pane,
+  #workspace[data-tool="translate"] .translation-input-wrap,
+  #workspace[data-tool="translate"] .translation-result-pane .translation-result-panel {
+    height: clamp(204px, 29dvh, 238px);
+    min-height: clamp(204px, 29dvh, 238px) !important;
+  }
+  #workspace[data-tool="translate"] .translation-result-pane .translation-result-history {
+    max-height: 118px;
+  }
+  #workspace[data-tool="translate"] .translation-result-pane .translation-history-list {
+    max-height: 88px;
+  }
+}
+
+/* The bottom rail is floating by design.  Do not reserve a second 94px
+   document footer in standalone PWA mode, otherwise short tools acquire an
+   unnecessary vertical scrollbar and the reader leaves a blank tail. */
+@media (max-width: 760px) {
+  html.standalone-pwa main {
+    padding-bottom: 0;
+  }
+}
