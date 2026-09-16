@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.82';
+const APP_VERSION = '2.18.83';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -1101,6 +1101,7 @@ function ensureReaderFullscreenTool() {
 }
 function toggleReaderFullscreen() {
   state.readerImmersive = !state.readerImmersive;
+  state.readerChromeHidden = state.readerImmersive;
   state.readerPreferences.fullscreenOnOpen = state.readerImmersive;
   saveReaderPreferences();
   if (state.readerImmersive) requestReaderFullscreen(); else exitReaderFullscreen();
@@ -1112,7 +1113,7 @@ function renderReaderView(content, hint = '', toc = [], readingMode = 'pages') {
   state.readerToc = Array.isArray(toc) ? toc : [];
   state.readerMode = 'reading';
   state.readerReadingMode = readingMode === 'scroll' ? 'scroll' : 'pages';
-  state.readerChromeHidden = false;
+  state.readerChromeHidden = state.readerImmersive;
   state.readerPage = 0;
   render();
   scheduleReaderPositionRestore();
@@ -1462,7 +1463,7 @@ function updateReaderTocActiveState(reveal = false) {
 }
 function updateReaderReferenceChrome() {
   const shell = $('.reader-reference-shell'); if (!shell) return;
-  shell.classList.toggle('chrome-hidden', state.readerReadingMode === 'pages' && state.readerChromeHidden);
+  shell.classList.toggle('chrome-hidden', state.readerImmersive && state.readerChromeHidden);
   const index = currentReaderChapterIndex(); const item = state.readerToc[index];
   updateReaderTocActiveState();
   const name = $('[data-reader-chapter-name]'); const chapterIndex = $('[data-reader-chapter-index]');
@@ -1514,7 +1515,7 @@ function goReaderChapter(step) {
   jumpToReaderToc(state.readerToc[target]);
 }
 function toggleReaderChrome() {
-  if (state.readerReadingMode !== 'pages') return;
+  if (!state.readerImmersive) return;
   state.readerChromeHidden = !state.readerChromeHidden;
   updateReaderReferenceChrome();
 }
@@ -1557,7 +1558,7 @@ function readerReadingView(book) {
   const pageLabel = isPdf ? hint : (state.readerReadingMode === 'pages' ? '1 / 1' : hint);
   const icon = (path) => '<svg viewBox="0 0 24 24" aria-hidden="true">' + path + '</svg>';
   const tool = (action, path, label) => '<button class="reader-reference-tool" data-' + action + '>' + icon(path) + '<span>' + label + '</span></button>';
-  const chromeClass = (state.readerReadingMode === 'pages' && state.readerChromeHidden ? ' chrome-hidden' : '') + (state.readerImmersive ? '' : ' reader-windowed');
+  const chromeClass = (state.readerImmersive && state.readerChromeHidden ? ' chrome-hidden' : '') + (state.readerImmersive ? '' : ' reader-windowed');
   const commentsIcon = '<path d="M6 4.5h9l3 3v12H6z"/><path d="M15 4.5v3h3M9 11h6M9 14h6M9 17h3"/>';
   const selectionActions = '<button type="button" data-reader-selection-action="copy">' + (state.language === 'en' ? 'Copy' : '复制') + '</button><button type="button" data-reader-selection-action="underline">' + (state.language === 'en' ? 'Underline' : '划线') + '</button><button type="button" data-reader-selection-action="highlight">' + (state.language === 'en' ? 'Highlight' : '高亮') + '</button><button type="button" data-reader-selection-action="comment">' + t('readerComments') + '</button><button type="button" data-reader-selection-action="share">' + (state.language === 'en' ? 'Share' : '分享') + '</button>';
   return '<div class="reader-reference-shell' + chromeClass + '" data-reader-theme="' + escapeHtml(state.readerPreferences.theme) + '">' +
@@ -1859,13 +1860,27 @@ function calendar() {
 }
 function saveEvents() { saveStored(STORAGE.events, state.events); }
 
+function eventDateOptions(selectedKey) {
+  const validKey = /^\d{4}-\d{2}-\d{2}$/.test(String(selectedKey || ''));
+  const selectedDate = validKey ? dateFromKey(selectedKey) : new Date();
+  const value = validKey ? selectedKey : dateKey(selectedDate);
+  const start = new Date(selectedDate); start.setDate(start.getDate() - 180);
+  const end = new Date(selectedDate); end.setDate(end.getDate() + 365);
+  const formatter = new Intl.DateTimeFormat(state.language === 'en' ? 'en-US' : 'zh-CN', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' });
+  let options = '';
+  for (const cursor = new Date(start); cursor <= end; cursor.setDate(cursor.getDate() + 1)) {
+    const key = dateKey(cursor);
+    options += '<option value="' + key + '"' + (key === value ? ' selected' : '') + '>' + escapeHtml(formatter.format(cursor)) + '</option>';
+  }
+  return options;
+}
 function renderEventDialog() {
   const dialog = $('#eventDialog');
   if (!dialog) return;
   const options = ['once', 'daily', 'workdays', 'restdays', 'weekly'].map((value) => '<option value="' + value + '">' + t(value === 'daily' ? 'everyDay' : value) + '</option>').join('');
   const eventWeekdayLabels = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
   const weekdays = eventWeekdayLabels.map((label, index) => '<label class="weekday-option"><input type="checkbox" name="eventWeekday" value="' + index + '" ' + (index < 5 ? 'checked' : '') + '><span>' + (state.language === 'en' ? ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][index] : label) + '</span></label>').join('');
-  dialog.innerHTML = '<div class="dialog-card event-dialog-card" role="dialog" aria-modal="true"><div class="dialog-head"><h2>' + t('newReminder') + '</h2><button class="icon-btn small" data-close-event-dialog aria-label="' + t('close') + '">×</button></div><form id="eventForm" class="event-form"><div class="field"><label for="eventTitle">' + t('eventContent') + '</label><input id="eventTitle" required maxlength="60" placeholder="' + t('eventPlaceholder') + '"></div><div class="field"><label>' + t('reminderSchedule') + '</label><div class="event-date-time-grid"><label class="event-date-time-field"><span class="event-date-time-label">' + t('eventDate') + '</span><input id="eventDate" type="date" value="' + escapeHtml(state.selectedDate) + '" aria-label="' + t('eventDate') + '" required></label><label class="event-date-time-field"><span class="event-date-time-label">' + t('eventTime') + '</span><input id="eventTime" type="time" step="1" aria-label="' + t('eventTime') + '"></label></div></div><div class="field"><label for="eventRepeat">' + t('eventRepeat') + '</label><select id="eventRepeat">' + options + '</select></div><div class="field event-weekdays-field" hidden><label>' + t('weekdays') + '</label><div class="weekday-options">' + weekdays + '</div></div><button class="primary full-width" type="submit">' + t('addEvent') + '</button></form></div>';
+  dialog.innerHTML = '<div class="dialog-card event-dialog-card" role="dialog" aria-modal="true"><div class="dialog-head"><h2>' + t('newReminder') + '</h2><button class="icon-btn small" data-close-event-dialog aria-label="' + t('close') + '">×</button></div><form id="eventForm" class="event-form"><div class="field"><label for="eventTitle">' + t('eventContent') + '</label><textarea id="eventTitle" rows="3" required maxlength="60" placeholder="' + t('eventPlaceholder') + '"></textarea></div><div class="field"><label>' + t('reminderSchedule') + '</label><div class="event-date-time-grid"><label class="event-date-time-field"><span class="event-date-time-label">' + t('eventDate') + '</span><select id="eventDate" aria-label="' + t('eventDate') + '" required>' + eventDateOptions(state.selectedDate) + '</select></label><label class="event-date-time-field"><span class="event-date-time-label">' + t('eventTime') + '</span><input id="eventTime" type="time" step="1" aria-label="' + t('eventTime') + '"></label></div></div><div class="field"><label for="eventRepeat">' + t('eventRepeat') + '</label><select id="eventRepeat">' + options + '</select></div><div class="field event-weekdays-field" hidden><label>' + t('weekdays') + '</label><div class="weekday-options">' + weekdays + '</div></div><button class="primary full-width" type="submit">' + t('addEvent') + '</button></form></div>';
   dialog.hidden = false;
 }
 function closeEventDialog() { const dialog = $('#eventDialog'); if (dialog) dialog.hidden = true; }
@@ -2034,6 +2049,9 @@ function weather() {
   const updatedTime = active.updatedAt ? new Intl.DateTimeFormat(state.language === 'en' ? 'en-US' : 'zh-CN', { hour: '2-digit', minute: '2-digit' }).format(active.updatedAt) : '—';
   const weatherDataNote = t('weatherData').replace('{time}', updatedTime);
   setTimeout(() => {
+    const activeCard = $$('.weather-card[data-weather-card]').find((card) => card.dataset.weatherCard === state.activeWeatherId);
+    const cardList = $('.weather-card-list');
+    if (activeCard && cardList) cardList.scrollTo({ left: Math.max(0, activeCard.offsetLeft - 2), behavior: 'smooth' });
     [['[data-current-hour]', '.hourly-strip'], ['[data-current-day]', '.weather-days']].forEach(([cardSelector, stripSelector]) => {
       const card = $(cardSelector); const strip = $(stripSelector); if (!card || !strip) return;
       // Keep the selected period at the leading edge. Centering the current
@@ -3053,7 +3071,7 @@ workspace.addEventListener('click', async (event) => {
         if (x < rect.width * .32) turnReaderPage(-1);
         else if (x > rect.width * .68) turnReaderPage(1);
         else toggleReaderChrome();
-      } else if (state.readerReadingMode === 'pages') toggleReaderChrome();
+      } else if (state.readerImmersive) toggleReaderChrome();
       return;
     }
   }
@@ -3242,7 +3260,7 @@ function applyReaderDialogChoice(choice) {
   if (group === 'readingMode') {
     state.readerReadingMode = value === 'scroll' ? 'scroll' : 'pages';
     if (value !== 'scroll') state.readerPreferences.pageAnimation = value.slice('pages-'.length) || 'slide';
-    state.readerChromeHidden = false; state.readerPage = 0; saveReaderPreferences(); closeReaderDialog(); render(); scheduleReaderPositionRestore();
+    state.readerChromeHidden = state.readerImmersive; state.readerPage = 0; saveReaderPreferences(); closeReaderDialog(); render(); scheduleReaderPositionRestore();
   } else if (group === 'fontSize') {
     state.readerPreferences.fontSize = Math.min(26, Math.max(15, Number(value) || 18)); saveReaderPreferences(); applyReaderPreferences(); readerDialogMarkup('settings');
   } else if (group === 'lineHeight' || group === 'paragraphSpacing' || group === 'letterSpacing') {
@@ -3293,7 +3311,7 @@ $('#readerDialog').addEventListener('click', (event) => {
 $('#readerDialog').addEventListener('input', (event) => { if (event.target.matches('[data-reader-preference]')) readerPreferenceChanged(event.target); });
 $('#readerDialog').addEventListener('change', (event) => {
   if (event.target.matches('[data-reader-preference]')) readerPreferenceChanged(event.target);
-  if (event.target.matches('[data-reader-reading-mode]')) { state.readerReadingMode = event.target.value === 'pages' ? 'pages' : 'scroll'; state.readerChromeHidden = false; state.readerPage = 0; closeReaderDialog(); render(); scheduleReaderPositionRestore(); }
+  if (event.target.matches('[data-reader-reading-mode]')) { state.readerReadingMode = event.target.value === 'pages' ? 'pages' : 'scroll'; state.readerChromeHidden = state.readerImmersive; state.readerPage = 0; closeReaderDialog(); render(); scheduleReaderPositionRestore(); }
 });
 workspace.addEventListener('scroll', (event) => {
   scheduleReaderProgress(event.target.closest('[data-reader-content]'));

@@ -5634,3 +5634,75 @@ html[data-theme-mode="dark-gray"] .key {
   letter-spacing: -.12em;
   line-height: 1;
 }
+
+/* Calendar reminder controls: keep the date as one native dropdown and give
+   the event description enough room to be useful on a phone. */
+#eventDialog .event-form textarea#eventTitle {
+  height: 104px;
+  min-height: 104px;
+  resize: vertical;
+  line-height: 1.5;
+}
+#eventDialog .event-date-time-grid {
+  grid-template-columns: minmax(0, 1.2fr) minmax(108px, .8fr);
+  gap: 8px;
+}
+#eventDialog .event-date-time-field select,
+#eventDialog .event-date-time-field input[type="time"] {
+  box-sizing: border-box;
+  width: 100%;
+  height: 42px;
+  min-width: 0;
+  padding: 8px 10px;
+  font-size: 14px;
+}
+#workspace[data-tool="calendar"] .calendar-month { gap: 16px; }
+
+/* The location action follows the light/dark theme surfaces, not the user's
+   accent-color preference. */
+#workspace[data-tool="weather"] .weather-search .weather-location-button,
+#workspace[data-tool="weather"] .weather-search .weather-location-button:hover,
+#workspace[data-tool="weather"] .weather-search .weather-location-button:focus-visible {
+  color: var(--ink);
+  background: transparent;
+  border-color: var(--line);
+  transform: translateY(-50%);
+}
+
+/* The selected weather place starts at the leading edge of the card rail. */
+#workspace[data-tool="weather"] .weather-card-list {
+  scroll-snap-type: x proximity;
+}
+
+/* Slightly reduce the translation action and keep its bilingual mark a shade
+   quieter than the configured accent. */
+#workspace[data-tool="translate"] .translation-input-actions .input-action {
+  width: 30px;
+  height: 30px;
+  color: color-mix(in srgb, var(--primary) 72%, var(--ink));
+}
+#workspace[data-tool="translate"] .translation-input-actions .input-action::before {
+  min-width: 18px;
+  font-size: 10px;
+}
+
+/* In fullscreen reading the chrome is an overlay, not reserved layout space:
+   hiding it lets the reader body and its content occupy the full viewport. */
+.reader-reference-shell .reader-reference-top,
+.reader-reference-shell .reader-reference-bottom {
+  transition: transform .22s ease, max-height .22s ease, min-height .22s ease, height .22s ease, padding .22s ease, opacity .18s ease;
+}
+.reader-reference-shell.chrome-hidden .reader-reference-top,
+.reader-reference-shell.chrome-hidden .reader-reference-bottom {
+  flex: 0 0 0;
+  height: 0;
+  min-height: 0;
+  max-height: 0;
+  margin: 0;
+  padding: 0;
+  border-width: 0;
+  overflow: hidden;
+  opacity: 0;
+  transform: none;
+  pointer-events: none;
+}
