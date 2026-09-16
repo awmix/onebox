@@ -1943,8 +1943,8 @@ html.layout-simple #languageControl { display: none !important; }
     max-height: calc(100dvh - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
   }
   #eventDialog .event-date-time-grid {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 10px;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, .85fr);
+    gap: 8px;
   }
   #eventDialog .event-date-time-field { gap: 4px; }
   #eventDialog .event-date-time-field input {
@@ -5179,8 +5179,8 @@ html[data-color="mono"] #workspace[data-tool="calendar"] .day i {
   color: var(--reader-ui-muted);
 }
 #readerDialog[data-reader-theme] .reader-comment-item-number {
-  border-color: color-mix(in srgb, var(--primary) 58%, var(--reader-ui-line));
-  color: var(--primary);
+  border-color: color-mix(in srgb, var(--reader-ui-ink) 58%, var(--reader-ui-line));
+  color: var(--reader-ui-ink);
 }
 #readerDialog[data-reader-theme] .reader-comments-list {
   gap: 8px;
@@ -5589,4 +5589,63 @@ html[data-theme-mode="dark-gray"] .key {
 #readerDialog[data-reader-theme],
 #annotationDialog[data-reader-theme] {
   background: rgba(0, 0, 0, .58);
+}
+
+/* Calendar actions use the same quiet outlined treatment as the weather
+   search action: no filled accent surface, just a compact border and the
+   configured accent for the label. */
+#workspace[data-tool="calendar"] .calendar-today,
+#workspace[data-tool="calendar"] .calendar-add-event {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  height: 38px;
+  min-height: 38px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  background: transparent;
+  color: var(--primary);
+  font-size: 12px;
+  font-weight: 750;
+  line-height: 1;
+}
+#workspace[data-tool="calendar"] .calendar-today:hover,
+#workspace[data-tool="calendar"] .calendar-today:focus-visible,
+#workspace[data-tool="calendar"] .calendar-add-event:hover,
+#workspace[data-tool="calendar"] .calendar-add-event:focus-visible {
+  border-color: var(--line);
+  background: var(--soft);
+  color: var(--primary);
+  transform: none;
+}
+#workspace[data-tool="calendar"] .calendar-add-event {
+  width: max-content;
+  margin: 10px 0 0 auto;
+}
+
+/* Keep the selected weather period anchored to the leading edge of its strip
+   instead of letting scroll snapping pull it into the center. */
+#workspace[data-tool="weather"] .hour-card,
+#workspace[data-tool="weather"] .forecast {
+  scroll-snap-align: start;
+}
+
+/* The previous paper-plane glyph suggested sending rather than translating.
+   Use a compact bilingual mark while keeping the existing accessible label. */
+#workspace[data-tool="translate"] .translation-input-actions .input-action svg {
+  display: none;
+}
+#workspace[data-tool="translate"] .translation-input-actions .input-action::before {
+  content: '文A';
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 850;
+  letter-spacing: -.12em;
+  line-height: 1;
 }

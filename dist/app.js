@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.80';
+const APP_VERSION = '2.18.81';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -2036,7 +2036,9 @@ function weather() {
   setTimeout(() => {
     [['[data-current-hour]', '.hourly-strip'], ['[data-current-day]', '.weather-days']].forEach(([cardSelector, stripSelector]) => {
       const card = $(cardSelector); const strip = $(stripSelector); if (!card || !strip) return;
-      strip.scrollTo({ left: Math.max(0, card.offsetLeft - (strip.clientWidth - card.offsetWidth) / 2), behavior: 'smooth' });
+      // Keep the selected period at the leading edge. Centering the current
+      // card made the strip jump on refresh and hid the beginning of the list.
+      strip.scrollTo({ left: Math.max(0, card.offsetLeft - 2), behavior: 'smooth' });
     });
   }, 0);
   return heading(t('weather'), escapeHtml(title) + ' · ' + (state.language === 'en' ? 'updated' : '更新于') + ' ' + (active.updatedAt ? new Intl.DateTimeFormat(state.language === 'en' ? 'en-US' : 'zh-CN', { hour: '2-digit', minute: '2-digit' }).format(active.updatedAt) : (state.language === 'en' ? 'cached' : '本机缓存'))) +
