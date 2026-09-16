@@ -5764,3 +5764,86 @@ html[data-theme-mode="dark-gray"] .key {
   transform: none;
   pointer-events: none;
 }
+
+/* Home feed source management: a compact multi-select dropdown keeps new
+   sources opt-in without changing the order of the source rail. */
+#settingsDialog .settings-home-feeds-row { align-items: start; }
+#settingsDialog .settings-home-feeds-control { display: grid; gap: 6px; }
+#settingsDialog .settings-multiselect { position: relative; width: 100%; min-width: 0; }
+#settingsDialog .settings-multiselect summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 36px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--panel-2);
+  color: var(--ink);
+  cursor: pointer;
+  list-style: none;
+  font-size: 13px;
+}
+#settingsDialog .settings-multiselect summary::-webkit-details-marker { display: none; }
+#settingsDialog .settings-multiselect[open] summary { border-color: var(--primary); }
+#settingsDialog .settings-multiselect-menu {
+  position: absolute;
+  z-index: 3;
+  top: calc(100% + 5px);
+  left: 0;
+  right: 0;
+  display: grid;
+  gap: 3px;
+  padding: 6px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--panel);
+  box-shadow: var(--shadow);
+}
+#settingsDialog .settings-multiselect-option {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 32px;
+  padding: 4px 6px;
+  border-radius: 8px;
+  color: var(--ink);
+  cursor: pointer;
+  font-size: 13px;
+}
+#settingsDialog .settings-multiselect-option:hover { background: var(--panel-2); }
+#settingsDialog .settings-multiselect-option input { width: 15px; height: 15px; margin: 0; flex: 0 0 auto; accent-color: var(--primary); }
+#settingsDialog .settings-multiselect-option .feed-source-mark { width: 18px; height: 18px; border-radius: 5px; }
+#settingsDialog .settings-multiselect-option .feed-source-mark img { width: 100%; height: 100%; object-fit: contain; border-radius: inherit; }
+#settingsDialog .settings-multiselect-option .feed-source-fallback { display: none; }
+#settingsDialog .settings-inline-hint { color: var(--muted); font-size: 11px; line-height: 1.35; }
+
+/* Source marks remain legible on a true-black surface.  The source websites
+   can receive their own dark-theme query, while these local controls use the
+   same OneBox variables as every other tab. */
+html[data-theme="dark"] #workspace[data-tool="home"] .feed-source-tab.active { background: #171717; border-color: #555; color: #fff; }
+html[data-theme="dark"] #workspace[data-tool="home"] .feed-source-mark.huxiu,
+html[data-theme="dark"] #workspace[data-tool="home"] .feed-source-tag.huxiu b { background: #252525; border-color: #555; color: #f3d7a0; }
+html[data-theme="dark"] #workspace[data-tool="home"] .feed-source-mark.zhihu,
+html[data-theme="dark"] #workspace[data-tool="home"] .feed-source-tag.zhihu b { background: #075dcc; color: #fff; }
+html[data-theme="dark"] #workspace[data-tool="home"] .feed-source-mark.bilibili,
+html[data-theme="dark"] #workspace[data-tool="home"] .feed-source-tag.bilibili b { background: #00a8e8; color: #fff; }
+
+/* The Home source rail sits beside, rather than inside, #workspace. Keep its
+   active state and source marks on the same true-black palette as the page. */
+html[data-theme="dark"] #homeSourceNav .feed-source-tab.active { background: #171717; border-color: #555; color: #fff; }
+html[data-theme="dark"] #homeSourceNav .feed-source-mark.huxiu { background: #252525; border-color: #555; color: #f3d7a0; }
+html[data-theme="dark"] #homeSourceNav .feed-source-mark.zhihu { background: #075dcc; color: #fff; }
+html[data-theme="dark"] #homeSourceNav .feed-source-mark.bilibili { background: #00a8e8; color: #fff; }
+
+/* Leave a trailing touch-sized runway so the selected source can glide to the
+   leading edge instead of getting trapped against the right viewport edge. */
+@media (max-width: 760px) {
+  #homeSourceNav .feed-source-tab-spacer { flex: 0 0 calc(100% - 60px); height: 1px; }
+}
+
+@media (max-width: 600px) {
+  #settingsDialog .settings-home-feeds-row { align-items: start; }
+  #settingsDialog .settings-multiselect-menu { max-height: 240px; overflow-y: auto; }
+}
