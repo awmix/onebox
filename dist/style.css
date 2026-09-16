@@ -5664,6 +5664,16 @@ html[data-theme-mode="dark-gray"] .key {
   scroll-snap-type: x proximity;
 }
 
+/* Weather place cards use the same thin selected outline as the selected
+   hourly/daily cards. Keep the selection treatment consistent without
+   changing card dimensions or the content surface. */
+#workspace[data-tool="weather"] .weather-card.active,
+#workspace[data-tool="weather"] .hour-card.current,
+#workspace[data-tool="weather"] .forecast.current {
+  border: 1px solid var(--primary);
+  box-shadow: none;
+}
+
 /* Calendar date/time controls: use small, explicit year/month/day and
    hour/minute selectors so mobile WebKit never collapses a native date field
    into an unreadable mixed-format control. */
