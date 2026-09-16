@@ -4983,27 +4983,137 @@ html[data-color="mono"] #workspace[data-tool="calendar"] .day i {
   color: var(--reader-ink);
 }
 
-/* The shelf count belongs to the layout switch group. Give it a real circle
-   and align its center to the switch instead of floating it above the title. */
+/* The shelf count is a compact badge anchored to the layout switch's upper
+   right corner. Keep it small and use the current surface as its fill so it
+   remains readable in dark mode without looking like a second button. */
 .reader-library-actions .reader-book-count {
-  width: 22px;
-  min-width: 22px;
-  height: 22px;
+  width: 16px;
+  min-width: 16px;
+  height: 16px;
   right: -12px;
-  top: 50%;
+  top: -6px;
   padding: 0;
-  transform: translateY(-50%);
+  transform: none;
   display: grid;
   place-items: center;
-  border: 1px solid color-mix(in srgb, var(--primary) 64%, var(--line));
+  border: 1px solid var(--line);
   border-radius: 50%;
-  background: transparent;
-  color: var(--ink);
-  font-size: 11px;
-  font-weight: 850;
+  background: var(--panel);
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 800;
   line-height: 1;
   text-align: center;
 }
+
+/* A long-press delete affordance sits at the row's upper-right corner in
+   list mode, matching the grid card position and avoiding the book metadata. */
+.reader-book-list .reader-book-delete {
+  top: 8px;
+  right: 8px;
+  transform: none;
+}
+
+/* The translation result placeholder should sit a touch lower inside the
+   result surface instead of visually kissing the result heading. */
+#workspace[data-tool="translate"] .translation-result-pane .translation-result-current {
+  padding-top: 8px !important;
+}
+
+/* Mine is a compact system list; tighten only the icon-to-copy rhythm by 2px. */
+.mine-page .mine-row { gap: 9px; }
+
+/* Reader theme variables are copied to the dialogs by applyReaderPreferences.
+   Use them for every part of the modal so green/sepia/dark backgrounds do not
+   leave global-theme borders and text behind. */
+#readerDialog[data-reader-theme],
+#annotationDialog[data-reader-theme] {
+  color: var(--reader-ink);
+}
+#readerDialog[data-reader-theme] .reader-dialog-card,
+#annotationDialog[data-reader-theme] .reader-dialog-card {
+  background: var(--reader-panel);
+  border-color: var(--reader-line);
+  color: var(--reader-ink);
+}
+#readerDialog[data-reader-theme] .reader-dialog-head,
+#annotationDialog[data-reader-theme] .reader-dialog-head {
+  border-bottom-color: var(--reader-line);
+}
+#readerDialog[data-reader-theme] .reader-dialog-title small,
+#annotationDialog[data-reader-theme] .reader-dialog-head p,
+#readerDialog[data-reader-theme] .reader-dialog-empty,
+#annotationDialog[data-reader-theme] .reader-annotation-field,
+#annotationDialog[data-reader-theme] .reader-annotation-quote {
+  color: var(--reader-muted);
+}
+#readerDialog[data-reader-theme] .reader-dialog-close,
+#annotationDialog[data-reader-theme] .reader-dialog-close {
+  border-color: var(--reader-line);
+  background: color-mix(in srgb, var(--reader-bg) 72%, var(--reader-panel));
+  color: var(--reader-ink);
+}
+#readerDialog[data-reader-theme] .reader-comment-item {
+  border-color: var(--reader-line);
+  background: color-mix(in srgb, var(--reader-bg) 72%, var(--reader-panel));
+  color: var(--reader-ink);
+}
+#readerDialog[data-reader-theme] .reader-comment-item:hover,
+#readerDialog[data-reader-theme] .reader-comment-item:focus-visible {
+  background: color-mix(in srgb, var(--primary) 10%, var(--reader-panel));
+}
+#readerDialog[data-reader-theme] .reader-comment-item-copy strong {
+  color: var(--reader-ink);
+}
+#readerDialog[data-reader-theme] .reader-comment-item-copy small {
+  color: var(--reader-muted);
+}
+#readerDialog[data-reader-theme] .reader-comment-item-number {
+  border-color: color-mix(in srgb, var(--primary) 58%, var(--reader-line));
+  color: var(--primary);
+}
+#readerDialog[data-reader-theme] .reader-comments-list {
+  gap: 8px;
+  padding: 10px;
+}
+#readerDialog[data-reader-theme] .reader-toc-item,
+#readerDialog[data-reader-theme] .reader-sheet-choice,
+#readerDialog[data-reader-theme] .reader-setting-choice,
+#readerDialog[data-reader-theme] .reader-theme-choice {
+  border-color: var(--reader-line);
+  background: color-mix(in srgb, var(--reader-bg) 72%, var(--reader-panel));
+  color: var(--reader-ink);
+}
+#readerDialog[data-reader-theme] .reader-setting-choice.active,
+#readerDialog[data-reader-theme] .reader-theme-choice.active {
+  border-color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 10%, var(--reader-panel));
+  color: var(--primary);
+}
+
+/* The bottom reader controls are rendered inside the themed shell. Icons use
+   the reader ink rather than the global muted color so fullscreen enter/exit
+   stay legible on every reading background. */
+.reader-reference-shell .reader-reference-tool svg,
+.reader-reference-shell .reader-fullscreen-tool {
+  color: var(--reader-ink);
+}
+.reader-reference-shell .reader-fullscreen-tool {
+  border: 1px solid var(--reader-line);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--reader-bg) 72%, transparent);
+}
+.reader-reference-shell .reader-fullscreen-tool span { color: var(--reader-ink); }
+.reader-reference-shell .reader-fullscreen-tool:hover,
+.reader-reference-shell .reader-fullscreen-tool:focus-visible {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+/* The program selection bar must remain above the reading surface and the
+   contextmenu handler prevents the native callout in either event order. */
+.reader-reference-shell { isolation: isolate; }
+.reader-reference-shell .reader-selection-menu { z-index: 140; }
 
 /* Reader dialogs use the same centered card interaction in fullscreen as in
    windowed mode. A bottom sheet is especially awkward for the comments list

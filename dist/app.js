@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.67';
+const APP_VERSION = '2.18.69';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -1150,6 +1150,18 @@ function applyReaderPreferences() {
   shell.style.setProperty('--reader-line-height', prefs.lineHeight);
   shell.style.setProperty('--reader-paragraph-spacing', prefs.paragraphSpacing + 'px');
   shell.style.setProperty('--reader-letter-spacing', prefs.letterSpacing + 'px');
+  // The dialogs are mounted outside the reader shell, so copy the same local
+  // palette onto them instead of letting comments/settings fall back to the
+  // application's global theme colors.
+  ['#readerDialog', '#annotationDialog'].forEach((selector) => {
+    const dialog = $(selector); if (!dialog) return;
+    dialog.dataset.readerTheme = prefs.theme;
+    dialog.style.setProperty('--reader-bg', palette.bg);
+    dialog.style.setProperty('--reader-panel', palette.panel);
+    dialog.style.setProperty('--reader-ink', palette.ink);
+    dialog.style.setProperty('--reader-muted', palette.muted);
+    dialog.style.setProperty('--reader-line', palette.line);
+  });
 }
 function readerDialogMarkup(kind) {
   const dialog = $('#readerDialog'); if (!dialog) return;
@@ -2857,10 +2869,14 @@ workspace.addEventListener('dragstart', (event) => { const source = event.target
 workspace.addEventListener('dragover', (event) => { if (event.target.closest('[data-feed-source]')) event.preventDefault(); });
 workspace.addEventListener('drop', (event) => { event.preventDefault(); const source = event.target.closest('[data-feed-source]'); if (source) swapHomeFeedSources(Number(event.dataTransfer.getData('text/plain')), Number(source.dataset.feedSourceIndex)); });
 workspace.addEventListener('contextmenu', (event) => {
-  if (state.readerMode !== 'reading' || !event.target.closest('[data-reader-content]') || !state.readerSelection) return;
+  if (state.readerMode !== 'reading' || !event.target.closest('[data-reader-content]')) return;
+  // On iOS/PWA the contextmenu event can arrive before selectionchange. Stop
+  // the system callout in both orders, while leaving the native Range intact
+  // so the visible selection handles/highlight remain available.
   event.preventDefault();
+  event.stopPropagation();
   const selection = window.getSelection();
-  if (selection?.rangeCount) readerShowSelectionMenu(selection.getRangeAt(0));
+  if (selection?.rangeCount && !selection.isCollapsed) readerShowSelectionMenu(selection.getRangeAt(0));
 });
 workspace.addEventListener('click', async (event) => {
   if (Date.now() < pageSwipeSuppressClickUntil) { event.preventDefault(); return; }
