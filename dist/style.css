@@ -5649,7 +5649,6 @@ html[data-theme-mode="dark-gray"] .key {
   padding: 8px 10px;
   font-size: 14px;
   font-variant-numeric: tabular-nums;
-  color-scheme: light;
 }
 #workspace[data-tool="calendar"] .calendar-month { gap: 16px; }
 
