@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.74';
+const APP_VERSION = '2.18.75';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -336,8 +336,7 @@ function applyTheme() {
   document.documentElement.dataset.themeMode = state.theme;
   document.documentElement.dataset.color = state.color;
   document.documentElement.style.colorScheme = resolved;
-  const meta = $('meta[name="theme-color"]');
-  if (meta) meta.content = resolved === 'dark' ? '#0d0f14' : '#f3f5fa';
+  $$('meta[name="theme-color"]').forEach((meta) => { meta.content = resolved === 'dark' ? '#000000' : '#f3f5fa'; });
   const appleStatusBar = $('meta[name="apple-mobile-web-app-status-bar-style"]');
   if (appleStatusBar) appleStatusBar.content = resolved === 'dark' ? 'black-translucent' : 'default';
   const button = $('#themeBtn');
