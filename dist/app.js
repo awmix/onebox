@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.76';
+const APP_VERSION = '2.18.77';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -195,7 +195,7 @@ const DICT = {
     notificationsPermission: '消息通知', enableNotifications: '允许通知', disableNotifications: '不允许通知', notificationDescription: 'iPhone 需要先将 OneBox 添加到主屏幕并允许消息通知；应用关闭后的后台提醒仍需要 Push 服务端。',
     userAgreement: '用户协议', viewAgreement: '查看协议', agreementTitle: 'OneBox 用户协议', agreementBody: 'OneBox 是一款本地优先的日常工具应用。计算记录、日程、翻译历史和天气卡片默认保存在当前设备；使用 GitHub 云同步时，数据会写入你自己的私有 Gist。天气和翻译功能会请求对应的开源服务，服务商可能记录必要的请求信息。请在使用提醒、定位和消息通知功能前确认已授予相应权限。',
     addReminder: '添加提醒', reminderText: '提醒内容', remindAt: '提醒时间', noNotifications: '还没有提醒。', once: '指定时间', everyDay: '每天', workdays: '工作日', restdays: '非工作日', weekly: '每周', weekdays: '重复星期',
-    markRead: '全部已读', close: '关闭', system: '跟随系统', light: '浅色', dark: '深色',
+    markRead: '全部已读', close: '关闭', system: '跟随系统', light: '浅色', dark: '深色', darkGray: '黑灰',
     layout: '布局', classicLayout: '经典布局', simpleLayout: '简约布局', openMode: '打开方式', openCurrent: '当前页打开', openNewTab: '新标签页打开', language: '语言', theme: '主题', color: '颜色', blackWhite: '黑白配', noblePurple: '贵族紫', skyBlue: '天空蓝', notBananaGreen: '不蕉绿', meituanYellow: '美团黄', topDisplay: '顶部显示', footprint: '足迹', showFootprint: '在首页显示', hideFootprint: '不在首页显示', reorderHint: '长按工具标签可以调整顺序',
     languagePending: '日语、韩语语言包已预留，当前版本先提供中文和英文。',
     bookshelf: '书架', addBook: '添加文档', noBooks: '还没有本地文档。', readerHint: '支持 Markdown、TXT、PDF、EPUB；文档仅保存在当前设备。', openBook: '打开阅读', deleteBook: '删除文档', annotations: '笔记', readerComments: '笔记', readerNotesHint: '已保存的阅读笔记', addAnnotation: '笔记', annotationPlaceholder: '添加你的感受…', saveAnnotation: '保存', annotationHint: '选择文字后长按或点击笔记按钮。', noAnnotations: '还没有笔记。', reading: '正在阅读', closeReader: '关闭阅读', unsupportedFile: '请选择 .md、.markdown、.txt、.pdf 或 .epub 文件。', importFailed: '文档读取失败，请重试。', deleteConfirm: '确定删除这本文档吗？', pdfHint: 'PDF 使用浏览器原生阅读器打开。', epubHint: 'EPUB 已转换为适合 OneBox 的连续阅读视图。', readerContents: '目录', readerSettings: '阅读设置', readerReadingMethod: '阅读方式', readerTheme: '阅读背景', readerThemePaper: '纸张', readerThemeSepia: '暖白', readerThemeGreen: '护眼绿', readerThemeDark: '夜间', readerFontSize: '字号', readerFontFamily: '字体', readerLineHeight: '行距', readerParagraphSpacing: '段落间距', readerLetterSpacing: '字间距', readerAnimation: '翻页动画', readerAnimationSlide: '滑动', readerAnimationCover: '覆盖', readerAnimationNone: '无', readerScroll: '滚动', readerPages: '翻页', readerProgress: '进度', readerFullscreen: '全屏', readerExitFullscreen: '退出全屏', readerFullscreenOnOpen: '是否全屏', readerFullscreenOnOpenHint: '下次打开文档时按此设置进入', readerNoContents: '暂无章节目录。', readerSettingsHint: '设置仅作用于当前设备上的阅读内容。', readerTocHint: '选择章节后跳转到对应位置。',
@@ -236,7 +236,7 @@ const DICT = {
     notificationsPermission: 'Message notifications', enableNotifications: 'Allow notifications', disableNotifications: 'Do not allow notifications', notificationDescription: 'On iPhone, add OneBox to the Home Screen and allow notifications first; background alerts after the app is closed still require a Push server.',
     userAgreement: 'User agreement', viewAgreement: 'View agreement', agreementTitle: 'OneBox user agreement', agreementBody: 'OneBox is a local-first daily tools app. Calculator history, events, translation history and weather cards stay on this device by default; when GitHub sync is enabled, they are written to your own private Gist. Weather and translation features request open-source services, which may record necessary request metadata. Review the permissions before enabling reminders, location or message notifications.',
     addReminder: 'Add reminder', reminderText: 'Reminder', remindAt: 'When', noNotifications: 'No reminders yet.', once: 'Once', everyDay: 'Every day', workdays: 'Workdays', restdays: 'Rest days', weekly: 'Weekly', weekdays: 'Weekdays',
-    markRead: 'Mark all read', close: 'Close', system: 'System', light: 'Light', dark: 'Dark',
+    markRead: 'Mark all read', close: 'Close', system: 'System', light: 'Light', dark: 'Dark', darkGray: 'Black gray',
     layout: 'Layout', classicLayout: 'Classic layout', simpleLayout: 'Simple layout', openMode: 'Open links', openCurrent: 'Current page', openNewTab: 'New tab', theme: 'Theme', language: 'Language', color: 'Color', blackWhite: 'Black and white', noblePurple: 'Noble purple', skyBlue: 'Sky blue', notBananaGreen: 'WeChat green', meituanYellow: 'Meituan yellow', topDisplay: 'Show at top', footprint: 'Footprints', showFootprint: 'Show on Home', hideFootprint: 'Hide from Home', reorderHint: 'Long-press a tool tab to reorder',
     languagePending: 'Japanese and Korean are reserved for a future language pack. Chinese and English are available now.',
     bookshelf: 'Bookshelf', addBook: 'Add document', noBooks: 'No local documents yet.', readerHint: 'Supports Markdown, TXT, PDF and EPUB. Files stay on this device.', openBook: 'Open', deleteBook: 'Delete', annotations: 'Notes', readerComments: 'Notes', readerNotesHint: 'Saved reading notes', addAnnotation: 'Note', annotationPlaceholder: 'Add your thoughts…', saveAnnotation: 'Save', annotationHint: 'Select text, long-press or use the notes button.', noAnnotations: 'No notes yet.', reading: 'Reading', closeReader: 'Close reader', unsupportedFile: 'Choose a .md, .markdown, .txt, .pdf or .epub file.', importFailed: 'Could not read this document.', deleteConfirm: 'Delete this document?', pdfHint: 'PDF opens in the browser native reader.', epubHint: 'EPUB is converted into a continuous OneBox reading view.', readerContents: 'Contents', readerSettings: 'Reading settings', readerReadingMethod: 'Reading mode', readerTheme: 'Reading background', readerThemePaper: 'Paper', readerThemeSepia: 'Warm', readerThemeGreen: 'Green', readerThemeDark: 'Night', readerFontSize: 'Font size', readerFontFamily: 'Font', readerLineHeight: 'Line height', readerParagraphSpacing: 'Paragraph spacing', readerLetterSpacing: 'Letter spacing', readerAnimation: 'Page animation', readerAnimationSlide: 'Slide', readerAnimationCover: 'Cover', readerAnimationNone: 'None', readerScroll: 'Scroll', readerPages: 'Pages', readerProgress: 'Progress', readerFullscreen: 'Fullscreen', readerExitFullscreen: 'Exit fullscreen', readerFullscreenOnOpen: 'Open in fullscreen', readerFullscreenOnOpenHint: 'Apply this choice the next time a document opens', readerNoContents: 'No chapter contents.', readerSettingsHint: 'These settings apply only to reading on this device.', readerTocHint: 'Choose a chapter to jump to it.',
@@ -282,10 +282,21 @@ const initialHash = location.hash.slice(1);
 const initialToolHash = initialHash === 'convert' ? 'translate' : initialHash;
 const initialTool = Object.keys(TOOL_DEFS).includes(initialToolHash) ? initialToolHash : 'calculator';
 const initialSection = ['home', 'messages', 'mine'].includes(initialHash) ? initialHash : Object.keys(TOOL_DEFS).includes(initialToolHash) ? 'tools' : 'home';
+const normalizeReaderLibrary = (value) => {
+  const books = Array.isArray(value) ? value.filter((book) => book && book.id && book.name) : [];
+  const ordered = [...books].sort((a, b) => {
+    const aOrder = Number(a.order); const bOrder = Number(b.order);
+    if (Number.isFinite(aOrder) && Number.isFinite(bOrder) && aOrder !== bOrder) return bOrder - aOrder;
+    if (Number.isFinite(aOrder) !== Number.isFinite(bOrder)) return Number.isFinite(aOrder) ? -1 : 1;
+    return Number(b.lastOpenedAt || b.createdAt || 0) - Number(a.lastOpenedAt || a.createdAt || 0);
+  });
+  let nextOrder = ordered.reduce((max, book) => Math.max(max, Number(book.order) || 0), 0);
+  return ordered.map((book, index) => ({ ...book, order: Number.isFinite(Number(book.order)) ? Number(book.order) : nextOrder + (ordered.length - index) }));
+};
 const state = {
   tool: initialTool,
   section: initialSection,
-  theme: ['light', 'dark', 'system'].includes(storedTheme) ? storedTheme : 'system',
+  theme: ['light', 'dark', 'dark-gray', 'system'].includes(storedTheme) ? storedTheme : 'system',
   color: ['mono', 'purple', 'blue', 'green', 'yellow'].includes(storedColor) && (storedColor !== 'mono' || storedColorExplicit) ? storedColor : 'purple',
   languageMode: ['zh', 'en', 'system'].includes(storedLanguage) ? storedLanguage : 'system',
   language: resolveLanguageMode(storedLanguage),
@@ -301,7 +312,7 @@ const state = {
   translation: { source: 'auto', target: 'zh', input: '', result: '', loading: false, error: '' },
   translationHistory: parseStored(STORAGE.translationHistory, []),
   translationHistoryOpen: storedTranslationHistoryOpen,
-  library: (Array.isArray(storedLibrary) ? storedLibrary : []).filter((book) => book && book.id && book.name),
+  library: normalizeReaderLibrary(storedLibrary),
   readerBookId: null, readerUrl: '', readerContent: '', readerHint: '', readerToc: [], readerDialog: '', readerChromeHidden: false, readerImmersive: false, readerMode: 'library', readerReadingMode: 'scroll', readerPage: 0, readerSelectedText: '', readerSelection: null, readerSelectionInput: 'mouse', readerLayout: storedReaderLayout === 'list' ? 'list' : 'grid', annotationBookId: null,
   readerPreferences: { theme: ['paper', 'sepia', 'green', 'dark'].includes(storedReaderPreferences.theme) ? storedReaderPreferences.theme : 'paper', fontSize: Number.isFinite(Number(storedReaderPreferences.fontSize)) ? Math.min(26, Math.max(15, Number(storedReaderPreferences.fontSize))) : 18, fontFamily: ['system', 'serif', 'mono'].includes(storedReaderPreferences.fontFamily) ? storedReaderPreferences.fontFamily : 'system', lineHeight: Number.isFinite(Number(storedReaderPreferences.lineHeight)) ? Math.min(2.2, Math.max(1.35, Number(storedReaderPreferences.lineHeight))) : 1.8, paragraphSpacing: Number.isFinite(Number(storedReaderPreferences.paragraphSpacing)) ? Math.min(28, Math.max(6, Number(storedReaderPreferences.paragraphSpacing))) : 14, letterSpacing: Number.isFinite(Number(storedReaderPreferences.letterSpacing)) ? Math.min(2, Math.max(0, Number(storedReaderPreferences.letterSpacing))) : 0, pageAnimation: ['slide', 'cover', 'none'].includes(storedReaderPreferences.pageAnimation) ? storedReaderPreferences.pageAnimation : 'slide', fullscreenOnOpen: storedReaderPreferences.fullscreenOnOpen === true },
   homeFeed: { active: DEFAULT_HOME_FEED_ORDER[0], order: normalizeHomeFeedOrder(storedHomeFeedOrder), hasNew: false, loading: false, errors: {}, updatedAt: Number(storedHomeFeeds.updatedAt || 0), cacheVersion: storedHomeFeeds.cacheVersion || '', sources: storedHomeFeeds.sources && typeof storedHomeFeeds.sources === 'object' ? storedHomeFeeds.sources : {} },
@@ -331,7 +342,7 @@ function languageIcon() {
   return '<svg class="header-line-icon language-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M3.8 9h16.4M3.8 15h16.4M12 3.5c2.2 2.3 3.4 5.1 3.4 8.5S14.2 18.2 12 20.5C9.8 18.2 8.6 15.4 8.6 12S9.8 5.8 12 3.5Z"/></svg>';
 }
 function applyTheme() {
-  const resolved = state.theme === 'system' ? (window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : state.theme;
+  const resolved = state.theme === 'dark-gray' ? 'dark' : state.theme === 'system' ? (window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : state.theme;
   document.documentElement.dataset.theme = resolved;
   document.documentElement.dataset.themeMode = state.theme;
   document.documentElement.dataset.color = state.color;
@@ -342,7 +353,7 @@ function applyTheme() {
   const button = $('#themeBtn');
   if (button) {
     button.innerHTML = themeIcon(resolved);
-    button.setAttribute('aria-label', t('theme') + '：' + t(state.theme));
+    button.setAttribute('aria-label', t('theme') + '：' + t(state.theme === 'dark-gray' ? 'darkGray' : state.theme));
     button.dataset.themeMode = state.theme;
     button.dataset.resolvedTheme = resolved;
   }
@@ -388,7 +399,7 @@ function saveTopDisplay() { saveStored(STORAGE.topDisplay, state.topDisplay); }
 function saveFootprintPreference() { saveStored(STORAGE.footprint, state.footprint); }
 function saveLayoutPreference() { localStorage.setItem(STORAGE.layout, state.layoutMode); queuePersistentSnapshot(); }
 function cycleTheme() {
-  state.theme = state.theme === 'system' ? 'light' : state.theme === 'light' ? 'dark' : 'system';
+  state.theme = state.theme === 'system' ? 'light' : state.theme === 'light' ? 'dark' : state.theme === 'dark' ? 'dark-gray' : 'system';
   saveThemeLanguage(); applyTheme(); render();
 }
 function cycleLanguage() {
@@ -965,7 +976,7 @@ async function importReaderFiles(fileList) {
       const fingerprint = [type, file.name.trim().toLocaleLowerCase(), file.size, file.lastModified || 0].join('|');
       const duplicate = state.library.some((book) => book.fingerprint === fingerprint || (!book.fingerprint && book.type === type && book.name.trim().toLocaleLowerCase() === file.name.trim().toLocaleLowerCase() && Number(book.size) === file.size));
       if (duplicate) { duplicateCount += 1; continue; }
-      const book = { id, name: file.name, type, size: file.size, fingerprint, createdAt: Date.now(), lastOpenedAt: 0, progress: 0, annotations: [], hasCover: false };
+      const book = { id, name: file.name, type, size: file.size, fingerprint, createdAt: Date.now(), lastOpenedAt: 0, order: state.library.reduce((max, item) => Math.max(max, Number(item.order) || 0), 0) + 1, progress: 0, annotations: [], hasCover: false };
       let cover = '';
       if (book.type === 'md') {
         book.content = await file.text();
@@ -1550,7 +1561,7 @@ function readerAddCardMarkup() {
 function reader() {
   const activeBook = readerBookById(state.readerBookId);
   if (state.readerMode === 'reading' && activeBook) return readerReadingView(activeBook);
-  const books = [...state.library].sort((a, b) => Number(b.lastOpenedAt || b.createdAt) - Number(a.lastOpenedAt || a.createdAt));
+  const books = [...state.library].sort((a, b) => Number(b.order || 0) - Number(a.order || 0) || Number(b.lastOpenedAt || b.createdAt) - Number(a.lastOpenedAt || a.createdAt));
   books.forEach((book) => { if (book.hasCover !== false && !book._coverData) hydrateReaderBookCover(book); });
   const cards = books.map((book) => {
     const progress = typeof book.progress === 'number' ? book.progress : Number(book.progress?.percent || 0);
@@ -2295,7 +2306,7 @@ async function githubDownload() {
     const gist = await response.json(); const content = gist.files?.['onebox-settings.json']?.content;
     if (!content) throw Error();
     const remote = JSON.parse(content);
-    if (remote.theme) state.theme = remote.theme;
+    if (['light', 'dark', 'dark-gray', 'system'].includes(remote.theme)) state.theme = remote.theme;
     if (['mono', 'purple', 'blue', 'green', 'yellow'].includes(remote.color)) { state.color = remote.color; saveColorPreference(); }
     if (remote.languageMode || remote.language) state.languageMode = ['zh', 'en', 'system'].includes(remote.languageMode || remote.language) ? (remote.languageMode || remote.language) : 'system';
     if (Array.isArray(remote.toolOrder)) state.toolOrder = normalizeToolOrder(remote.toolOrder);
@@ -2343,6 +2354,11 @@ function renderSettings() {
   dialog.innerHTML = '<div class="dialog-card settings-dialog-card" role="dialog" aria-modal="true"><div class="dialog-head"><h2>' + t('settings') + '</h2><button class="icon-btn small" data-close-settings aria-label="' + t('close') + '">×</button></div>' +
     '<div class="settings-preferences"><div class="settings-preference-row"><h3>' + t('layout') + '</h3><div class="settings-preference-control"><select id="settingsLayout"><option value="classic" ' + (state.layoutMode === 'classic' ? 'selected' : '') + '>' + t('classicLayout') + '</option><option value="simple" ' + (state.layoutMode === 'simple' ? 'selected' : '') + '>' + t('simpleLayout') + '</option></select></div></div>' + topDisplay + '<div class="settings-preference-row"><h3>' + t('theme') + '</h3><div class="settings-preference-control"><select id="settingsTheme"><option value="system" ' + (state.theme === 'system' ? 'selected' : '') + '>' + t('system') + '</option><option value="light" ' + (state.theme === 'light' ? 'selected' : '') + '>' + t('light') + '</option><option value="dark" ' + (state.theme === 'dark' ? 'selected' : '') + '>' + t('dark') + '</select></div></div><div class="settings-preference-row"><h3>' + t('color') + '</h3><div class="settings-preference-control"><select id="settingsColor"><option value="mono" ' + (state.color === 'mono' ? 'selected' : '') + '>' + t('blackWhite') + '</option><option value="purple" ' + (state.color === 'purple' ? 'selected' : '') + '>' + t('noblePurple') + '</option><option value="blue" ' + (state.color === 'blue' ? 'selected' : '') + '>' + t('skyBlue') + '</option><option value="green" ' + (state.color === 'green' ? 'selected' : '') + '>' + t('notBananaGreen') + '</option><option value="yellow" ' + (state.color === 'yellow' ? 'selected' : '') + '>' + t('meituanYellow') + '</option></select></div></div><div class="settings-preference-row"><h3>' + t('language') + '</h3><div class="settings-preference-control"><select id="settingsLanguage"><option value="system" ' + (state.languageMode === 'system' ? 'selected' : '') + '>' + t('system') + '</option><option value="zh" ' + (state.languageMode === 'zh' ? 'selected' : '') + '>中文</option><option value="en" ' + (state.languageMode === 'en' ? 'selected' : '') + '>English</option></select></div></div><div class="settings-preference-row"><h3>' + t('messages') + '</h3><div class="settings-preference-control"><select id="settingsNotifications"><option value="allow" ' + (notificationPreference === 'allow' ? 'selected' : '') + '>' + t('enableNotifications') + '</option><option value="deny" ' + (notificationPreference === 'deny' ? 'selected' : '') + '>' + t('disableNotifications') + '</option></select></div></div><div class="settings-preference-row"><h3>' + t('footprint') + '</h3><div class="settings-preference-control"><select id="settingsFootprint"><option value="hide" ' + (!state.footprint ? 'selected' : '') + '>' + t('hideFootprint') + '</option><option value="show" ' + (state.footprint ? 'selected' : '') + '>' + t('showFootprint') + '</option></select></div></div>' + openMode + '</div>';
   dialog.hidden = false; state.settingsOpen = true;
+  const themeSelect = $('#settingsTheme');
+  if (themeSelect && !themeSelect.querySelector('option[value="dark-gray"]')) {
+    const option = document.createElement('option'); option.value = 'dark-gray'; option.textContent = t('darkGray'); themeSelect.append(option);
+  }
+  if (themeSelect) themeSelect.value = state.theme;
 }
 function closeSettings() { $('#settingsDialog').hidden = true; state.settingsOpen = false; }
 function refreshUpdateIndicator() {
@@ -2474,23 +2490,77 @@ let pageSwipeSuppressClickUntil = 0;
 let pageSwipeTrackState = null;
 let pageSwipeNavState = null;
 let readerSurfaceGesture = null;
-function startLongPress(target, type, index) {
+let readerBookDrag = null;
+let readerBookSuppressClickUntil = 0;
+function startLongPress(target, type, index, pointerEvent = null) {
   clearTimeout(reorderTimer);
-  reorderTarget = { target, type, index };
+  if (readerBookDrag?.active) finishReaderBookDrag(pointerEvent);
+  readerBookDrag = type === 'book' ? { target, type, index, pointerId: pointerEvent?.pointerId, startX: pointerEvent?.clientX || 0, startY: pointerEvent?.clientY || 0, active: false } : null;
+  reorderTarget = { target, type, index, pointerId: pointerEvent?.pointerId };
   reorderTimer = setTimeout(() => {
     target.classList.add('reorder-hold'); target.dataset.longPressed = 'true';
     if (type === 'weather') target.classList.add('weather-delete-ready');
-    else if (type === 'book') target.classList.add('reader-delete-ready');
+    else if (type === 'book') { target.classList.add('reader-delete-ready'); if (readerBookDrag) readerBookDrag.longPressed = true; }
     if (type !== 'weather' && type !== 'book') toast(state.language === 'en' ? 'Reorder mode: tap another item' : '排序模式：再点一下目标位置');
   }, 520);
 }
 function endLongPress() { clearTimeout(reorderTimer); reorderTimer = null; }
+function readerBookCardsInDom() {
+  return [...document.querySelectorAll('[data-reader-book-card]')];
+}
+function updateReaderBookDrag(event) {
+  const drag = readerBookDrag;
+  if (!drag || (drag.pointerId != null && event.pointerId !== drag.pointerId)) return;
+  const dx = event.clientX - drag.startX; const dy = event.clientY - drag.startY;
+  if (!drag.active) {
+    if (!drag.longPressed) {
+      if (Math.hypot(dx, dy) > 10) { endLongPress(); reorderTarget = null; readerBookDrag = null; }
+      return;
+    }
+    if (Math.hypot(dx, dy) < 8) return;
+    drag.active = true;
+    drag.target.classList.add('reader-book-dragging');
+    drag.target.classList.remove('reader-delete-ready');
+    if (event.cancelable) event.preventDefault();
+  }
+  const over = event.target.closest?.('[data-reader-book-card]');
+  if (!over || over === drag.target || !over.parentElement) return;
+  const rect = over.getBoundingClientRect();
+  const insertAfter = event.clientY > rect.top + rect.height / 2;
+  const parent = over.parentElement;
+  if (insertAfter) {
+    if (over.nextElementSibling !== drag.target) parent.insertBefore(drag.target, over.nextElementSibling);
+  } else if (over !== drag.target.nextElementSibling) {
+    parent.insertBefore(drag.target, over);
+  }
+  if (event.cancelable) event.preventDefault();
+}
+function finishReaderBookDrag(event = null) {
+  const drag = readerBookDrag;
+  if (!drag || (event?.pointerId != null && drag.pointerId != null && event.pointerId !== drag.pointerId)) return false;
+  const wasActive = drag.active;
+  if (wasActive) {
+    const cards = readerBookCardsInDom();
+    const books = cards.map((card) => readerBookById(card.dataset.id)).filter(Boolean);
+    books.forEach((book, index) => { book.order = books.length - index; });
+    saveLibrary();
+    readerBookSuppressClickUntil = Date.now() + 500;
+    drag.target.classList.remove('reader-book-dragging');
+    reorderTarget = null;
+    render();
+    toast(state.language === 'en' ? 'Shelf order saved' : '书架顺序已保存');
+  }
+  readerBookDrag = null;
+  return wasActive;
+}
 function clearReaderDeleteMode() {
   endLongPress();
   $$('.reader-book-card.reader-delete-ready, .reader-book-card.reorder-hold').forEach((card) => {
     card.classList.remove('reader-delete-ready', 'reorder-hold');
     delete card.dataset.longPressed;
   });
+  $$('.reader-book-card.reader-book-dragging').forEach((card) => card.classList.remove('reader-book-dragging'));
+  readerBookDrag = null;
   if (reorderTarget?.type === 'book') reorderTarget = null;
 }
 function handleReorderClick(target, type, index) {
@@ -2631,7 +2701,7 @@ function pageSwipeIndex(items) {
 function pageSwipeTarget(event) {
   const main = event.target.closest('main');
   if (!main || event.pointerType === 'mouse' || pageSwipeAnimationToken) return null;
-  if (event.target.closest('[data-reader-surface], .reader-reference-shell, [data-swipe-row], input, textarea, select, [contenteditable="true"], .weather-card-list, .weather-days, .hourly-strip, .advice-strip, .translation-history-list')) return null;
+  if (event.target.closest('[data-reader-surface], .reader-reference-shell, [data-reader-book-card], [data-swipe-row], input, textarea, select, [contenteditable="true"], .weather-card-list, .weather-days, .hourly-strip, .advice-strip, .translation-history-list')) return null;
   const items = pageSwipeItems();
   const index = pageSwipeIndex(items);
   if (index < 0 || items.length < 2) return null;
@@ -2845,11 +2915,13 @@ workspace.addEventListener('pointerdown', (event) => { const source = event.targ
 workspace.addEventListener('pointerdown', (event) => {
   const book = event.target.closest('[data-reader-book-card]');
   if (book && event.target.closest('[data-delete-book]')) return;
-  if (book) startLongPress(book, 'book', Number(book.dataset.readerBookIndex));
+  if (book) startLongPress(book, 'book', Number(book.dataset.readerBookIndex), event);
   else if (state.tool === 'reader' && state.readerMode === 'library') clearReaderDeleteMode();
 });
 workspace.addEventListener('pointerup', endLongPress);
 workspace.addEventListener('pointercancel', endLongPress);
+document.addEventListener('pointermove', updateReaderBookDrag, { passive: false });
+document.addEventListener('pointerup', (event) => { if (finishReaderBookDrag(event)) endLongPress(); }, { passive: false });
 document.addEventListener('pointerdown', (event) => {
   if (state.tool !== 'reader' || state.readerMode !== 'library') return;
   if (event.target.closest('[data-reader-book-card], [data-reader-layout-toggle], [data-open-reader-file]')) return;
@@ -2893,6 +2965,7 @@ workspace.addEventListener('contextmenu', (event) => {
 });
 workspace.addEventListener('click', async (event) => {
   if (Date.now() < pageSwipeSuppressClickUntil) { event.preventDefault(); return; }
+  if (Date.now() < readerBookSuppressClickUntil && event.target.closest('[data-reader-book-card]')) { event.preventDefault(); return; }
   if (Date.now() < swipeSuppressClickUntil && event.target.closest('[data-swipe-row]') && !event.target.closest('.swipe-delete')) return;
   if (state.tool === 'reader' && state.readerMode === 'library' && !event.target.closest('[data-reader-book-card]')) clearReaderDeleteMode();
   const section = event.target.closest('[data-section]');

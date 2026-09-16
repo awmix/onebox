@@ -5147,9 +5147,37 @@ html[data-color="mono"] #workspace[data-tool="calendar"] .day i {
 }
 #readerDialog[data-reader-theme] .reader-setting-choice.active,
 #readerDialog[data-reader-theme] .reader-theme-choice.active {
-  border-color: var(--primary);
-  background: color-mix(in srgb, var(--primary) 10%, var(--reader-panel));
-  color: var(--primary);
+  border-color: var(--reader-ink);
+  background: color-mix(in srgb, var(--reader-ink) 10%, var(--reader-panel));
+  color: var(--reader-ink);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--reader-ink) 28%, transparent);
+}
+#readerDialog[data-reader-theme] .reader-sheet-choice.active {
+  border-color: var(--reader-ink);
+  background: color-mix(in srgb, var(--reader-ink) 10%, var(--reader-panel));
+  color: var(--reader-ink);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--reader-ink) 28%, transparent);
+}
+#readerDialog[data-reader-theme] .reader-setting-choice:hover,
+#readerDialog[data-reader-theme] .reader-setting-choice:focus-visible,
+#readerDialog[data-reader-theme] .reader-theme-choice:hover,
+#readerDialog[data-reader-theme] .reader-theme-choice:focus-visible,
+#readerDialog[data-reader-theme] .reader-sheet-choice:hover,
+#readerDialog[data-reader-theme] .reader-sheet-choice:focus-visible {
+  border-color: var(--reader-line);
+  background: color-mix(in srgb, var(--reader-bg) 82%, var(--reader-panel));
+  color: var(--reader-ink);
+  transform: none;
+}
+#readerDialog[data-reader-theme] .reader-setting-choice.active:hover,
+#readerDialog[data-reader-theme] .reader-setting-choice.active:focus-visible,
+#readerDialog[data-reader-theme] .reader-theme-choice.active:hover,
+#readerDialog[data-reader-theme] .reader-theme-choice.active:focus-visible,
+#readerDialog[data-reader-theme] .reader-sheet-choice.active:hover,
+#readerDialog[data-reader-theme] .reader-sheet-choice.active:focus-visible {
+  border-color: var(--reader-ink);
+  background: color-mix(in srgb, var(--reader-ink) 10%, var(--reader-panel));
+  color: var(--reader-ink);
 }
 
 /* The bottom reader controls are rendered inside the themed shell. Icons use
@@ -5167,8 +5195,30 @@ html[data-color="mono"] #workspace[data-tool="calendar"] .day i {
 .reader-reference-shell .reader-fullscreen-tool span { color: var(--reader-ink); }
 .reader-reference-shell .reader-fullscreen-tool:hover,
 .reader-reference-shell .reader-fullscreen-tool:focus-visible {
-  border-color: var(--primary);
-  color: var(--primary);
+  border-color: var(--reader-line);
+  color: var(--reader-ink);
+  transform: none;
+  background: color-mix(in srgb, var(--reader-bg) 72%, transparent);
+}
+
+/* Reader controls keep their palette on hover. This is especially important
+   for the fullscreen action: switching between enter/exit must not make its
+   label disappear against sepia, green, or night reading surfaces. */
+.reader-reference-shell .reader-reference-tool:hover,
+.reader-reference-shell .reader-reference-tool:focus-visible {
+  color: var(--reader-muted);
+  background: transparent;
+  transform: none;
+}
+.reader-reference-shell .reader-fullscreen-tool:hover,
+.reader-reference-shell .reader-fullscreen-tool:focus-visible {
+  color: var(--reader-ink);
+}
+.reader-reading-shell .reader-tool-button:hover,
+.reader-reading-shell .reader-tool-button:focus-visible {
+  color: var(--reader-muted);
+  border-color: var(--reader-line);
+  transform: none;
 }
 
 /* The program selection bar must remain above the reading surface and the
@@ -5342,6 +5392,45 @@ html.reader-focus .reader-reference-bottom {
   align-items: center;
   justify-content: center;
   text-align: center;
+}
+
+/* 2.18.77: a softer dark theme for users who want a dark surface without
+   the absolute-black contrast of Night mode.  It resolves as the existing
+   dark theme so all dark-specific controls keep their behavior, while these
+   variables supply the warmer gray surfaces. */
+html[data-theme-mode="dark-gray"] {
+  --bg: #1a1a1a;
+  --bg-top: #202020;
+  --panel: #242424;
+  --panel-2: #2e2e2e;
+  --ink: #f2f2f2;
+  --muted: #b4b4b4;
+  --line: #464646;
+  --soft: #383838;
+  --shadow: 0 20px 60px rgba(0, 0, 0, .48);
+  color-scheme: dark;
+}
+html[data-theme-mode="dark-gray"] body,
+html[data-theme-mode="dark-gray"] .app-header {
+  background: var(--bg);
+}
+html[data-theme-mode="dark-gray"] .tab:not(.active),
+html[data-theme-mode="dark-gray"] .key {
+  background: var(--panel-2);
+}
+
+/* Long-pressing a shelf card enters a quiet drag state. The card itself is
+   reordered in-place while the pointer moves, then the order is persisted on
+   release so the reader does not re-render under the user's finger. */
+.reader-book-card.reorder-hold {
+  outline: 2px solid var(--primary);
+  outline-offset: 3px;
+}
+.reader-book-card.reader-book-dragging {
+  opacity: .72;
+  transform: scale(.985);
+  transition: none;
+  z-index: 3;
 }
 
 /* The shelf count is intentionally a quiet inline suffix, not a second
