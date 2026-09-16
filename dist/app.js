@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.64';
+const APP_VERSION = '2.18.65';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -198,7 +198,7 @@ const DICT = {
     markRead: '全部已读', close: '关闭', system: '跟随系统', light: '浅色', dark: '深色',
     layout: '布局', classicLayout: '经典布局', simpleLayout: '简约布局', openMode: '打开方式', openCurrent: '当前页打开', openNewTab: '新标签页打开', language: '语言', theme: '主题', color: '颜色', blackWhite: '黑白配', noblePurple: '贵族紫', skyBlue: '天空蓝', notBananaGreen: '不蕉绿', meituanYellow: '美团黄', topDisplay: '顶部显示', footprint: '足迹', showFootprint: '在首页显示', hideFootprint: '不在首页显示', reorderHint: '长按工具标签可以调整顺序',
     languagePending: '日语、韩语语言包已预留，当前版本先提供中文和英文。',
-    bookshelf: '书架', addBook: '添加文档', noBooks: '还没有本地文档。', readerHint: '支持 Markdown、TXT、PDF、EPUB；文档仅保存在当前设备。', openBook: '打开阅读', deleteBook: '删除文档', annotations: '标注', readerComments: '评论', addAnnotation: '添加标注', annotationPlaceholder: '写下你的标注…', saveAnnotation: '保存标注', annotationHint: '选择文字后长按或点击标注按钮。', noAnnotations: '还没有标注。', reading: '正在阅读', closeReader: '关闭阅读', unsupportedFile: '请选择 .md、.markdown、.txt、.pdf 或 .epub 文件。', importFailed: '文档读取失败，请重试。', deleteConfirm: '确定删除这本文档吗？', pdfHint: 'PDF 使用浏览器原生阅读器打开。', epubHint: 'EPUB 已转换为适合 OneBox 的连续阅读视图。', readerContents: '目录', readerSettings: '阅读设置', readerReadingMethod: '阅读方式', readerTheme: '阅读背景', readerThemePaper: '纸张', readerThemeSepia: '暖白', readerThemeGreen: '护眼绿', readerThemeDark: '夜间', readerFontSize: '字号', readerFontFamily: '字体', readerLineHeight: '行距', readerParagraphSpacing: '段落间距', readerLetterSpacing: '字间距', readerAnimation: '翻页动画', readerAnimationSlide: '滑动', readerAnimationCover: '覆盖', readerAnimationNone: '无', readerScroll: '滚动', readerPages: '翻页', readerProgress: '进度', readerFullscreen: '全屏', readerExitFullscreen: '退出全屏', readerFullscreenOnOpen: '进入阅读时全屏', readerFullscreenOnOpenHint: '下次打开文档时按此设置进入', readerNoContents: '暂无章节目录。', readerSettingsHint: '设置仅作用于当前设备上的阅读内容。', readerTocHint: '选择章节后跳转到对应位置。',
+    bookshelf: '书架', addBook: '添加文档', noBooks: '还没有本地文档。', readerHint: '支持 Markdown、TXT、PDF、EPUB；文档仅保存在当前设备。', openBook: '打开阅读', deleteBook: '删除文档', annotations: '标注', readerComments: '评论', addAnnotation: '添加标注', annotationPlaceholder: '写下你的标注…', saveAnnotation: '保存标注', annotationHint: '选择文字后长按或点击标注按钮。', noAnnotations: '还没有标注。', reading: '正在阅读', closeReader: '关闭阅读', unsupportedFile: '请选择 .md、.markdown、.txt、.pdf 或 .epub 文件。', importFailed: '文档读取失败，请重试。', deleteConfirm: '确定删除这本文档吗？', pdfHint: 'PDF 使用浏览器原生阅读器打开。', epubHint: 'EPUB 已转换为适合 OneBox 的连续阅读视图。', readerContents: '目录', readerSettings: '阅读设置', readerReadingMethod: '阅读方式', readerTheme: '阅读背景', readerThemePaper: '纸张', readerThemeSepia: '暖白', readerThemeGreen: '护眼绿', readerThemeDark: '夜间', readerFontSize: '字号', readerFontFamily: '字体', readerLineHeight: '行距', readerParagraphSpacing: '段落间距', readerLetterSpacing: '字间距', readerAnimation: '翻页动画', readerAnimationSlide: '滑动', readerAnimationCover: '覆盖', readerAnimationNone: '无', readerScroll: '滚动', readerPages: '翻页', readerProgress: '进度', readerFullscreen: '全屏', readerExitFullscreen: '退出全屏', readerFullscreenOnOpen: '是否全屏', readerFullscreenOnOpenHint: '下次打开文档时按此设置进入', readerNoContents: '暂无章节目录。', readerSettingsHint: '设置仅作用于当前设备上的阅读内容。', readerTocHint: '选择章节后跳转到对应位置。',
   },
   en: {
     calculator: 'Calculator', calendar: 'Calendar', weather: 'Weather', convert: 'Convert', unitConvert: 'Convert', translate: 'Translate', translateConvert: 'Convert', reader: 'Reader',
@@ -1129,9 +1129,9 @@ function closeReader() {
   render();
 }
 const READER_THEME_VALUES = {
-  paper: { bg: '#ffffff', panel: '#ffffff', ink: '#161a22', muted: '#6f7788', line: '#dfe4ee' },
-  sepia: { bg: '#f6f0e5', panel: '#fffaf1', ink: '#403a32', muted: '#7e7467', line: '#e3d8c8' },
-  green: { bg: '#edf4ed', panel: '#f8fcf8', ink: '#263b2e', muted: '#65756a', line: '#d5e3d7' },
+  paper: { bg: '#fffefa', panel: '#ffffff', ink: '#161a22', muted: '#6f7788', line: '#dfe4ee' },
+  sepia: { bg: '#f2e6d1', panel: '#fff8eb', ink: '#40382e', muted: '#7e7467', line: '#dfd0b9' },
+  green: { bg: '#e7f1e7', panel: '#f5fbf5', ink: '#263b2e', muted: '#65756a', line: '#cbdcca' },
   dark: { bg: '#171a21', panel: '#20252e', ink: '#e8ebf2', muted: '#9da7b8', line: '#343b49' },
 };
 const READER_FONT_VALUES = { system: 'var(--font-sans)', serif: 'Georgia, "Times New Roman", serif', mono: 'ui-monospace, SFMono-Regular, Menlo, monospace' };
@@ -1158,7 +1158,7 @@ function readerDialogMarkup(kind) {
   const title = (heading, hint) => '<div class="reader-dialog-title"><h2>' + heading + '</h2><small>' + hint + '</small></div>';
   const themeButton = (id, label) => '<button class="reader-theme-choice ' + (prefs.theme === id ? 'active' : '') + '" data-reader-theme="' + id + '"><span class="reader-theme-dot theme-' + id + '"></span>' + label + '</button>';
   const choiceButton = (group, value, label, current) => '<button type="button" class="reader-theme-choice reader-setting-choice ' + (String(current) === String(value) ? 'active' : '') + '" data-reader-choice="' + group + '" data-reader-choice-value="' + value + '">' + label + '</button>';
-  const choiceGroup = (heading, group, current, choices, className) => '<div class="reader-setting-group"><h3>' + heading + '</h3><div class="reader-choice-grid ' + (className || '') + '">' + choices.map(([value, label]) => choiceButton(group, value, label, current)).join('') + '</div></div>';
+  const choiceGroup = (heading, group, current, choices, className) => '<div class="reader-setting-row"><h3>' + heading + '</h3><div class="reader-choice-grid ' + (className || '') + '">' + choices.map(([value, label]) => choiceButton(group, value, label, current)).join('') + '</div></div>';
   if (kind === 'toc') {
     const items = state.readerToc || [];
     const body = items.length ? items.map((item) => '<button class="reader-toc-item depth-' + Math.min(3, Number(item.depth) || 0) + '" data-reader-toc-id="' + escapeHtml(item.id || '') + '" data-reader-toc-section="' + (item.section == null ? '' : item.section) + '" data-reader-toc-anchor="' + escapeHtml(item.anchor || '') + '"><span>' + escapeHtml(item.label || '—') + '</span></button>').join('') : '<p class="empty compact reader-dialog-empty">' + t('readerNoContents') + '</p>';
@@ -1185,7 +1185,7 @@ function readerDialogMarkup(kind) {
     if (prefs.fontSize !== fontSizeCurrent || prefs.lineHeight !== lineHeightCurrent || prefs.paragraphSpacing !== paragraphSpacingCurrent || prefs.letterSpacing !== letterSpacingCurrent) {
       prefs.fontSize = fontSizeCurrent; prefs.lineHeight = lineHeightCurrent; prefs.paragraphSpacing = paragraphSpacingCurrent; prefs.letterSpacing = letterSpacingCurrent; saveReaderPreferences(); applyReaderPreferences();
     }
-    const fullscreenChoice = '<div class="reader-setting-group reader-setting-toggle-group"><h3>' + t('readerFullscreenOnOpen') + '</h3><label class="setting-toggle reader-setting-toggle"><input type="checkbox" data-reader-fullscreen-on-open ' + (prefs.fullscreenOnOpen ? 'checked' : '') + '><span>' + t('readerFullscreenOnOpenHint') + '</span></label></div>';
+    const fullscreenChoice = choiceGroup(t('readerFullscreenOnOpen'), 'fullscreenOnOpen', prefs.fullscreenOnOpen ? 'true' : 'false', [['true', state.language === 'en' ? 'Fullscreen' : '全屏'], ['false', state.language === 'en' ? 'Windowed' : '非全屏']], 'reader-choice-grid-2');
     const readingCurrent = state.readerReadingMode === 'scroll' ? 'scroll' : 'pages-' + (prefs.pageAnimation || 'slide');
     const readingChoices = choiceGroup(t('readerReadingMethod'), 'readingMode', readingCurrent, [['scroll', t('readerScroll')], ['pages-slide', t('readerPages') + ' · ' + t('readerAnimationSlide')], ['pages-cover', t('readerPages') + ' · ' + t('readerAnimationCover')], ['pages-none', t('readerPages') + ' · ' + t('readerAnimationNone')]], 'reader-choice-grid-4');
     const fontSizeChoices = choiceGroup(t('readerFontSize'), 'fontSize', fontSizeCurrent, fontSizeValues.map((value) => [String(value), value + 'px']), 'reader-choice-grid-5');
@@ -1193,7 +1193,8 @@ function readerDialogMarkup(kind) {
     const lineHeightChoices = choiceGroup(t('readerLineHeight'), 'lineHeight', lineHeightCurrent, lineHeightValues.map((value) => [String(value), value.toFixed(1)]), 'reader-choice-grid-3');
     const paragraphSpacingChoices = choiceGroup(t('readerParagraphSpacing'), 'paragraphSpacing', paragraphSpacingCurrent, paragraphSpacingValues.map((value) => [String(value), value + 'px']), 'reader-choice-grid-3');
     const letterSpacingChoices = choiceGroup(t('readerLetterSpacing'), 'letterSpacing', letterSpacingCurrent, [['0', '标准'], ['0.5', '0.5px'], ['1', '1px']], 'reader-choice-grid-3');
-    dialog.innerHTML = '<div class="reader-dialog-card reader-panel-card" role="dialog" aria-modal="true"><div class="dialog-head reader-dialog-head">' + title(t('settings'), t('readerSettingsHint')) + closeButton + '</div><div class="reader-settings-body"><div class="reader-setting-group"><h3>' + t('readerTheme') + '</h3><div class="reader-theme-grid">' + themeButton('paper', t('readerThemePaper')) + themeButton('sepia', t('readerThemeSepia')) + themeButton('green', t('readerThemeGreen')) + themeButton('dark', t('readerThemeDark')) + '</div></div>' + fullscreenChoice + readingChoices + fontSizeChoices + fontChoices + lineHeightChoices + paragraphSpacingChoices + letterSpacingChoices + '</div></div>';
+    const themeChoices = '<div class="reader-setting-row"><h3>' + t('readerTheme') + '</h3><div class="reader-theme-grid reader-theme-grid-inline">' + themeButton('paper', t('readerThemePaper')) + themeButton('sepia', t('readerThemeSepia')) + themeButton('green', t('readerThemeGreen')) + themeButton('dark', t('readerThemeDark')) + '</div></div>';
+    dialog.innerHTML = '<div class="reader-dialog-card reader-panel-card" role="dialog" aria-modal="true"><div class="dialog-head reader-dialog-head">' + title(t('settings'), t('readerSettingsHint')) + closeButton + '</div><div class="reader-settings-body">' + themeChoices + fullscreenChoice + readingChoices + fontSizeChoices + fontChoices + lineHeightChoices + paragraphSpacingChoices + letterSpacingChoices + '</div></div>';
   }
   dialog.hidden = false;
 }
@@ -1477,7 +1478,7 @@ function turnReaderPage(direction) {
   updateReaderPager();
   const count = Math.max(1, Math.ceil(viewport.scrollWidth / Math.max(1, viewport.clientWidth)));
   state.readerPage = Math.min(Math.max(0, state.readerPage + direction), count - 1);
-  const animationTarget = $('.reader-page-flow') || viewport;
+  const animationTarget = viewport;
   animationTarget.classList.remove('reader-turn-forward', 'reader-turn-back', 'reader-turn-cover-forward', 'reader-turn-cover-back');
   if (state.readerPreferences.pageAnimation !== 'none') {
     void animationTarget.offsetWidth;
@@ -2528,7 +2529,8 @@ function beginPageSwipeNav(container, direction) {
     fromLeft,
     toLeft,
     fromWidth: fromRect.width,
-    toWidth: toRect.width
+    toWidth: toRect.width,
+    navDistance: Math.max(1, Math.abs(toLeft - fromLeft))
   };
   setPageSwipeNavProgress(0);
   return pageSwipeNavState;
@@ -2604,7 +2606,7 @@ function pageSwipeIndex(items) {
 function pageSwipeTarget(event) {
   const main = event.target.closest('main');
   if (!main || event.pointerType === 'mouse' || pageSwipeAnimationToken) return null;
-  if (event.target.closest('#toolNav, .feed-source-tabs, [data-reader-surface], .reader-reference-shell, [data-swipe-row], input, textarea, select, [contenteditable="true"], .weather-card-list, .weather-days, .hourly-strip, .advice-strip, .translation-history-list')) return null;
+  if (event.target.closest('[data-reader-surface], .reader-reference-shell, [data-swipe-row], input, textarea, select, [contenteditable="true"], .weather-card-list, .weather-days, .hourly-strip, .advice-strip, .translation-history-list')) return null;
   const items = pageSwipeItems();
   const index = pageSwipeIndex(items);
   if (index < 0 || items.length < 2) return null;
@@ -2733,7 +2735,9 @@ function updatePageSwipe(event) {
   pageSwipeStage.classList.add('page-swipe-dragging');
   const baseOffset = direction === 1 ? 0 : -track.pageWidth;
   pageSwipeStage.style.transform = 'translate3d(' + (baseOffset + gesture.dx) + 'px, 0, 0)';
-  setPageSwipeNavProgress(Math.abs(gesture.dx) / track.pageWidth);
+  const swipeThreshold = Math.max(56, Math.min(112, window.innerWidth * 0.18));
+  const indicatorDistance = Math.min(swipeThreshold, track.nav?.navDistance || swipeThreshold);
+  setPageSwipeNavProgress(Math.abs(gesture.dx) / indicatorDistance);
 }
 function finishPageSwipe(event) {
   const gesture = pageSwipeGesture;
@@ -2741,6 +2745,7 @@ function finishPageSwipe(event) {
   if (!gesture || (gesture.pointerId != null && event.pointerId !== gesture.pointerId)) return;
   if (gesture.cancelled || !gesture.dragging) return;
   pageSwipeSuppressClickUntil = Date.now() + 460;
+  tabSwipeSuppressClickUntil = pageSwipeSuppressClickUntil;
   const direction = gesture.dx < 0 ? 1 : -1;
   const distance = Math.abs(gesture.dx);
   const threshold = Math.max(56, Math.min(112, window.innerWidth * 0.18));
@@ -2784,7 +2789,7 @@ nav.addEventListener('pointerup', endLongPress);
 nav.addEventListener('pointercancel', endLongPress);
 nav.addEventListener('click', (event) => {
   const tab = event.target.closest('[data-tool]'); if (!tab) return;
-  if (Date.now() < tabSwipeSuppressClickUntil) { event.preventDefault(); return; }
+  if (Date.now() < tabSwipeSuppressClickUntil || Date.now() < pageSwipeSuppressClickUntil) { event.preventDefault(); return; }
   if (handleReorderClick(tab, 'tool', Number(tab.dataset.toolIndex))) { event.preventDefault(); return; }
   selectTool(tab.dataset.tool);
   if (tab.dataset.tool === 'weather') refreshWeatherCard(state.weatherCards.find((card) => card.id === state.activeWeatherId));
@@ -2795,14 +2800,14 @@ nav.addEventListener('dragover', (event) => { if (event.target.closest('[data-to
 
 homeSourceNav.addEventListener('pointerdown', (event) => {
   const source = event.target.closest('[data-feed-source]');
-  if (source) { startLongPress(source, 'feed', Number(source.dataset.feedSourceIndex)); beginTabSwipe(source.closest('.feed-source-tabs'), event); }
+  if (source) startLongPress(source, 'feed', Number(source.dataset.feedSourceIndex));
 });
 homeSourceNav.addEventListener('pointerup', endLongPress);
 homeSourceNav.addEventListener('pointercancel', endLongPress);
 homeSourceNav.addEventListener('click', (event) => {
   const feedSource = event.target.closest('[data-feed-source]');
   if (!feedSource) return;
-  if (Date.now() < tabSwipeSuppressClickUntil) { event.preventDefault(); return; }
+  if (Date.now() < tabSwipeSuppressClickUntil || Date.now() < pageSwipeSuppressClickUntil) { event.preventDefault(); return; }
   if (feedSource.dataset.feedSourceIndex != null && handleReorderClick(feedSource, 'feed', Number(feedSource.dataset.feedSourceIndex))) { event.preventDefault(); return; }
   selectHomeFeedSource(feedSource.dataset.feedSource);
 });
@@ -2811,17 +2816,14 @@ homeSourceNav.addEventListener('dragover', (event) => { if (event.target.closest
 homeSourceNav.addEventListener('drop', (event) => { event.preventDefault(); const source = event.target.closest('[data-feed-source]'); if (source) swapHomeFeedSources(Number(event.dataTransfer.getData('text/plain')), Number(source.dataset.feedSourceIndex)); });
 
 workspace.addEventListener('pointerdown', (event) => { const card = event.target.closest('[data-weather-card]'); if (card) startLongPress(card, 'weather', Number(card.dataset.weatherIndex)); });
-workspace.addEventListener('pointerdown', (event) => { const source = event.target.closest('[data-feed-source]'); if (source) { startLongPress(source, 'feed', Number(source.dataset.feedSourceIndex)); beginTabSwipe(source.closest('.feed-source-tabs'), event); } });
+workspace.addEventListener('pointerdown', (event) => { const source = event.target.closest('[data-feed-source]'); if (source) startLongPress(source, 'feed', Number(source.dataset.feedSourceIndex)); });
 workspace.addEventListener('pointerdown', (event) => { const book = event.target.closest('[data-reader-book-card]'); if (book && !event.target.closest('[data-delete-book]')) startLongPress(book, 'book', Number(book.dataset.readerBookIndex)); });
 workspace.addEventListener('pointerup', endLongPress);
 workspace.addEventListener('pointercancel', endLongPress);
 document.querySelector('main')?.addEventListener('pointerdown', beginPageSwipe);
-document.addEventListener('pointermove', updateTabSwipe, { passive: true });
-document.addEventListener('pointerup', finishTabSwipe, { passive: true });
-document.addEventListener('pointercancel', () => { tabSwipeGesture = null; endLongPress(); clearPageSwipeNav(); }, { passive: true });
 document.addEventListener('pointermove', updatePageSwipe, { passive: false });
 document.addEventListener('pointerup', finishPageSwipe, { passive: true });
-document.addEventListener('pointercancel', () => { pageSwipeGesture = null; resetPageSwipeTransform(); }, { passive: true });
+document.addEventListener('pointercancel', () => { tabSwipeGesture = null; pageSwipeGesture = null; endLongPress(); resetPageSwipeTransform(); }, { passive: true });
 workspace.addEventListener('pointerdown', (event) => {
   const surface = event.target.closest('[data-reader-surface]');
   if (state.readerMode === 'reading' && surface) {
@@ -3093,6 +3095,8 @@ $('#readerDialog').addEventListener('click', (event) => {
       state.readerPreferences.fontSize = Math.min(26, Math.max(15, Number(value) || 18)); saveReaderPreferences(); applyReaderPreferences(); readerDialogMarkup('settings');
     } else if (group === 'lineHeight' || group === 'paragraphSpacing' || group === 'letterSpacing') {
       state.readerPreferences[group] = Number(value); saveReaderPreferences(); applyReaderPreferences(); readerDialogMarkup('settings');
+    } else if (group === 'fullscreenOnOpen') {
+      state.readerPreferences.fullscreenOnOpen = value === 'true'; saveReaderPreferences(); readerDialogMarkup('settings');
     } else if (group === 'fontFamily' || group === 'pageAnimation') {
       state.readerPreferences[group] = value; saveReaderPreferences(); applyReaderPreferences(); readerDialogMarkup('settings');
     }
@@ -3108,7 +3112,6 @@ $('#readerDialog').addEventListener('click', (event) => {
 });
 $('#readerDialog').addEventListener('input', (event) => { if (event.target.matches('[data-reader-preference]')) readerPreferenceChanged(event.target); });
 $('#readerDialog').addEventListener('change', (event) => {
-  if (event.target.matches('[data-reader-fullscreen-on-open]')) { state.readerPreferences.fullscreenOnOpen = event.target.checked; saveReaderPreferences(); return; }
   if (event.target.matches('[data-reader-preference]')) readerPreferenceChanged(event.target);
   if (event.target.matches('[data-reader-reading-mode]')) { state.readerReadingMode = event.target.value === 'pages' ? 'pages' : 'scroll'; state.readerChromeHidden = false; state.readerPage = 0; closeReaderDialog(); render(); scheduleReaderPositionRestore(); }
 });

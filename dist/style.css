@@ -1075,7 +1075,7 @@ main { padding-bottom: calc(94px + env(safe-area-inset-bottom)); }
 .reader-reference-viewer { position: absolute; inset: 0; z-index: 1; width: 100%; height: 100%; box-sizing: border-box; border: 0 !important; border-radius: 0 !important; background: var(--reader-bg) !important; color: var(--reader-ink); font-family: var(--reader-font); font-size: var(--reader-size); line-height: var(--reader-line-height); letter-spacing: var(--reader-letter-spacing); box-shadow: none !important; }
 .reader-reference-viewer.reader-scroll-content { overflow: auto; padding: 34px clamp(24px, 7vw, 72px) 54px; overscroll-behavior: contain; }
 .reader-reference-viewer.reader-page-viewport { overflow-x: hidden; overflow-y: hidden; padding: 0; scroll-behavior: smooth; }
-.reader-reference-viewer .reader-page-flow { width: auto; height: 100%; padding: 34px clamp(24px, 7vw, 72px) 54px; box-sizing: border-box; background: var(--reader-bg); color: var(--reader-ink); column-width: calc(100% - 0px); column-gap: 0; }
+.reader-reference-viewer .reader-page-flow { width: auto; height: 100%; padding: 34px clamp(24px, 7vw, 72px) 54px; box-sizing: border-box; background: var(--reader-bg); color: var(--reader-ink); column-width: calc(100% - 0px); column-gap: 0; column-fill: auto; }
 .reader-reference-viewer .reader-pdf { width: 100%; height: 100%; min-height: 0; border: 0; border-radius: 0; background: var(--reader-bg); }
 .reader-reference-viewer .reader-content p { margin-bottom: var(--reader-paragraph-spacing); }
 .reader-reference-viewer .reader-content, .reader-reference-viewer p, .reader-reference-viewer li { color: var(--reader-ink); }
@@ -3417,8 +3417,14 @@ main:has(#workspace[data-tool="calculator"]) {
 .reader-toc-item.depth-2, .reader-toc-item.depth-3 { padding-left: 38px; color: var(--muted); font-size: 12px; }
 .reader-dialog-empty { padding: 34px 10px; }
 .reader-settings-body { overflow: auto; padding: 12px 16px 18px; }
+.reader-setting-row { display: grid; grid-template-columns: 66px minmax(0, 1fr); align-items: center; gap: 9px; min-width: 0; }
+.reader-setting-row + .reader-setting-row { margin-top: 12px; }
+.reader-setting-row h3 { min-width: 0; margin: 0; font-size: 13px; line-height: 1.25; }
+.reader-setting-row .reader-choice-grid,
+.reader-setting-row .reader-theme-grid { min-width: 0; }
 .reader-setting-group h3 { margin: 0 0 9px; font-size: 13px; }
 .reader-theme-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 7px; }
+.reader-theme-grid-inline { gap: 6px; }
 .reader-theme-choice { display: flex; align-items: center; justify-content: center; gap: 6px; min-height: 38px; padding: 7px 5px; border: 1px solid var(--line); border-radius: 11px; background: var(--panel-2); color: var(--muted); font-size: 11px; cursor: pointer; }
 .reader-theme-choice.active { border-color: var(--primary); color: var(--primary); box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary) 14%, transparent); }
 .reader-theme-dot { width: 14px; height: 14px; flex: 0 0 14px; border: 1px solid rgba(0,0,0,.12); border-radius: 50%; }
@@ -3445,11 +3451,14 @@ main:has(#workspace[data-tool="calculator"]) {
   .reader-theme-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .reader-panel-card { max-height: calc(100dvh - 18px); border-radius: 20px; }
   .reader-settings-body { padding: 10px 14px 16px; }
+  .reader-setting-row { grid-template-columns: 58px minmax(0, 1fr); gap: 7px; }
+  .reader-setting-row h3 { font-size: 12px; }
+  .reader-theme-grid-inline { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; }
+  .reader-setting-row .reader-theme-choice { gap: 3px; padding-inline: 2px; font-size: 9px; }
 }
 
 /* Reader follow-up fixes: keep the shelf add tile complete, make the drawer
-   return action explicit, and animate the visible page flow instead of the
-   overflow viewport. */
+   return action explicit, and animate the visible page viewport. */
 .reader-book-grid .reader-empty-card { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; color: var(--primary); }
 .reader-book-grid .reader-empty-card strong { display: block; color: var(--ink); font-size: 12px; white-space: normal !important; }
 .reader-empty-hint { display: block; max-width: 90%; color: var(--muted); font-size: 9px; line-height: 1.35; white-space: normal; overflow: visible; overflow-wrap: anywhere; }
@@ -3467,8 +3476,12 @@ main:has(#workspace[data-tool="calculator"]) {
 .reader-reference-viewer .reader-page-flow.reader-turn-back { animation: reader-reference-page-back .34s ease; }
 .reader-reference-viewer .reader-page-flow.reader-turn-cover-forward { animation: reader-reference-page-cover-forward .38s ease; }
 .reader-reference-viewer .reader-page-flow.reader-turn-cover-back { animation: reader-reference-page-cover-back .38s ease; }
-@keyframes reader-reference-page-forward { 0% { transform: translateX(0); opacity: 1; } 48% { transform: translateX(-12px); opacity: .55; } 100% { transform: translateX(0); opacity: 1; } }
-@keyframes reader-reference-page-back { 0% { transform: translateX(0); opacity: 1; } 48% { transform: translateX(12px); opacity: .55; } 100% { transform: translateX(0); opacity: 1; } }
+.reader-reference-viewer.reader-page-viewport.reader-turn-forward { animation: reader-reference-page-forward .36s cubic-bezier(.22,.8,.22,1); }
+.reader-reference-viewer.reader-page-viewport.reader-turn-back { animation: reader-reference-page-back .36s cubic-bezier(.22,.8,.22,1); }
+.reader-reference-viewer.reader-page-viewport.reader-turn-cover-forward { animation: reader-reference-page-cover-forward .42s cubic-bezier(.22,.8,.22,1); transform-origin: 100% 50%; }
+.reader-reference-viewer.reader-page-viewport.reader-turn-cover-back { animation: reader-reference-page-cover-back .42s cubic-bezier(.22,.8,.22,1); transform-origin: 0 50%; }
+@keyframes reader-reference-page-forward { 0% { transform: translate3d(0,0,0); opacity: 1; } 42% { transform: translate3d(-18px,0,0); opacity: .7; } 100% { transform: translate3d(0,0,0); opacity: 1; } }
+@keyframes reader-reference-page-back { 0% { transform: translate3d(0,0,0); opacity: 1; } 42% { transform: translate3d(18px,0,0); opacity: .7; } 100% { transform: translate3d(0,0,0); opacity: 1; } }
 
 /* 2.18.42: make the shelf a bordered workspace and keep all reader actions
    in one evenly spaced footer row. The fixed reader remains a CSS fullscreen
@@ -4039,7 +4052,7 @@ html[data-theme="dark"][data-color="mono"] #settingsDialog .setting-toggle input
 }
 #toolNav,
 #workspace[data-tool="home"] .feed-source-tabs {
-  touch-action: pan-x;
+  touch-action: pan-y;
   overscroll-behavior-x: contain;
 }
 #workspace {
