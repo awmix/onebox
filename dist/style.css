@@ -5013,6 +5013,9 @@ html[data-color="mono"] #workspace[data-tool="calendar"] .day i {
   right: 8px;
   transform: none;
 }
+.reader-library-actions {
+  padding-right: 0;
+}
 
 /* The translation result placeholder should sit a touch lower inside the
    result surface instead of visually kissing the result heading. */
@@ -5054,55 +5057,50 @@ html[data-color="mono"] #workspace[data-tool="calendar"] .day i {
   color: var(--reader-ink);
 }
 
-/* 2.18.70: the shelf count is anchored to the layout button's actual edge,
-   not to the action group. This removes the recurring floating gap on both
-   list and grid layouts. Book removal follows the same revealed-action model
-   as calculator history: hold, swipe left, then tap the action. */
-.reader-library-actions .reader-book-count {
-  right: -6px;
-}
-.reader-book-card.swipe-row {
-  overflow: hidden;
-  border: 0;
-  background: transparent;
-}
-.reader-book-card.swipe-row .reader-book-open {
-  position: relative;
-  z-index: 1;
-  transform: translateX(0);
-  transition: transform .18s ease;
-  background: transparent !important;
-}
-.reader-book-card.swipe-row .reader-book-delete {
-  inset: 0 0 0 auto;
-  z-index: 0;
+/* 2.18.71: book removal follows the same deliberate long-press affordance
+   as weather cards. The action is a compact corner control rather than a
+   swipe surface, so a normal tap remains a clean open-reader action. */
+.reader-book-card.reader-delete-ready .reader-book-delete {
   display: grid;
-  width: 68px;
-  height: auto;
-  min-height: 0;
+}
+.reader-book-card.reader-delete-ready .reader-book-open {
+  filter: brightness(.9);
+}
+.reader-book-delete {
+  position: absolute;
+  top: 7px;
+  right: 7px;
+  z-index: 2;
+  place-items: center;
+  box-sizing: border-box;
+  width: 30px;
+  height: 30px;
   padding: 0;
-  border: 0;
-  border-radius: 0;
-  transform: none;
+  border: 2px solid var(--panel);
+  border-radius: 50%;
   background: var(--danger);
   color: #fff;
-  opacity: 0;
-  pointer-events: none;
-  box-shadow: none;
-  font: inherit;
-  font-size: 12px;
-  font-weight: 750;
+  box-shadow: 0 5px 14px color-mix(in srgb, var(--danger) 32%, transparent);
+  cursor: pointer;
 }
-.reader-book-card.swipe-row.swiped .reader-book-open {
-  transform: translateX(-68px);
+.reader-book-delete:hover,
+.reader-book-delete:focus-visible {
+  background: color-mix(in srgb, var(--danger) 82%, var(--ink));
+  color: #fff;
 }
-.reader-book-card.swipe-row.swiped .reader-book-delete {
-  opacity: 1;
-  pointer-events: auto;
+.reader-book-delete svg {
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
 }
-.reader-book-list .reader-book-card.swipe-row {
-  border: 1px solid var(--line);
-  background: var(--panel-2);
+.reader-book-list .reader-book-delete {
+  top: 8px;
+  right: 8px;
+  transform: none;
 }
 
 /* Keep both converter headings compact and explicitly adjacent to their

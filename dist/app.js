@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.70';
+const APP_VERSION = '2.18.71';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -1547,12 +1547,12 @@ function reader() {
   books.forEach((book) => { if (book.hasCover !== false && !book._coverData) hydrateReaderBookCover(book); });
   const cards = books.map((book) => {
     const progress = typeof book.progress === 'number' ? book.progress : Number(book.progress?.percent || 0);
-    return '<article class="book-card reader-book-card swipe-row" data-swipe-row data-reader-book-card data-reader-book-index="' + books.indexOf(book) + '" data-id="' + escapeHtml(book.id) + '"><button class="book-open reader-book-open swipe-content" data-open-reader="' + escapeHtml(book.id) + '"><span class="book-cover reader-book-cover ' + book.type + '">' + readerBookCoverMarkup(book) + '</span><span class="book-copy reader-book-copy"><strong>' + escapeHtml(book.name) + '</strong><span class="reader-book-meta"><span>' + book.type.toUpperCase() + '</span><i></i><span>' + Math.max(1, Math.round(book.size / 1024)) + ' KB</span></span><span class="reader-book-progress"><span class="prog-bar"><i style="width:' + Math.round(progress * 100) + '%"></i></span><em>' + Math.round(progress * 100) + '%</em></span></span></button><button class="swipe-delete reader-book-delete" data-delete-book="' + escapeHtml(book.id) + '" aria-label="' + t('deleteBook') + '" title="' + t('deleteBook') + '">' + t('deleteBook') + '</button></article>';
+    return '<article class="book-card reader-book-card" data-reader-book-card data-reader-book-index="' + books.indexOf(book) + '" data-id="' + escapeHtml(book.id) + '"><button class="book-open reader-book-open" data-open-reader="' + escapeHtml(book.id) + '"><span class="book-cover reader-book-cover ' + book.type + '">' + readerBookCoverMarkup(book) + '</span><span class="book-copy reader-book-copy"><strong>' + escapeHtml(book.name) + '</strong><span class="reader-book-meta"><span>' + book.type.toUpperCase() + '</span><i></i><span>' + Math.max(1, Math.round(book.size / 1024)) + ' KB</span></span><span class="reader-book-progress"><span class="prog-bar"><i style="width:' + Math.round(progress * 100) + '%"></i></span><em>' + Math.round(progress * 100) + '%</em></span></span></button><button class="book-delete reader-book-delete" data-delete-book="' + escapeHtml(book.id) + '" aria-label="' + t('deleteBook') + '" title="' + t('deleteBook') + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M9 7V4h6v3M8 10v7M12 10v7M16 10v7M7 7l1 14h8l1-14"/></svg></button></article>';
   }).join('');
   const empty = readerAddCardMarkup();
   const libraryBody = books.length ? '<div class="reader-book-grid ' + (state.readerLayout === 'list' ? 'reader-book-list' : 'reader-book-grid-cards') + '">' + cards + readerAddCardMarkup() + '</div>' : empty;
   const layoutIcon = state.readerLayout === 'list' ? '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 6h14M5 12h14M5 18h14"/><path d="M5 6h.01M5 12h.01M5 18h.01"/></svg><span>宫格</span>' : '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/></svg><span>列表</span>';
-  return '<div class="reader-library-view"><section class="reader-library-panel"><div class="reader-library-head"><div class="reader-library-title-row"><h2>' + t('bookshelf') + '</h2><small>' + t('readerHint') + '</small></div><div class="reader-library-actions"><button class="reader-layout-toggle" data-reader-layout-toggle aria-label="切换书架布局">' + layoutIcon + '</button><span class="reader-book-count" aria-label="' + books.length + '" title="' + books.length + '">' + books.length + '</span></div></div>' + libraryBody + '</section><input id="readerFileInput" type="file" hidden multiple accept=".md,.markdown,.txt,.pdf,.epub,text/markdown,text/plain,application/pdf,application/epub+zip"></div>';
+  return '<div class="reader-library-view"><section class="reader-library-panel"><div class="reader-library-head"><div class="reader-library-title-row"><h2>' + t('bookshelf') + '</h2><small>' + t('readerHint') + '</small></div><div class="reader-library-actions"><button class="reader-layout-toggle" data-reader-layout-toggle aria-label="切换书架布局">' + layoutIcon + '</button></div></div>' + libraryBody + '</section><input id="readerFileInput" type="file" hidden multiple accept=".md,.markdown,.txt,.pdf,.epub,text/markdown,text/plain,application/pdf,application/epub+zip"></div>';
 }
 
 // Calendar data --------------------------------------------------------------
@@ -2459,7 +2459,6 @@ let reorderTimer = null;
 let reorderTarget = null;
 let swipeGesture = null;
 let swipeSuppressClickUntil = 0;
-let readerBookSwipeTimer = null;
 let tabSwipeGesture = null;
 let tabSwipeSuppressClickUntil = 0;
 let pageSwipeGesture = null;
@@ -2479,12 +2478,10 @@ function startLongPress(target, type, index) {
   }, 520);
 }
 function endLongPress() { clearTimeout(reorderTimer); reorderTimer = null; }
-function endReaderBookSwipe() { clearTimeout(readerBookSwipeTimer); readerBookSwipeTimer = null; }
 function clearReaderDeleteMode() {
   endLongPress();
-  endReaderBookSwipe();
-  $$('.reader-book-card.reader-delete-ready, .reader-book-card.reorder-hold, .reader-book-card.reader-swipe-ready, .reader-book-card.swiped').forEach((card) => {
-    card.classList.remove('reader-delete-ready', 'reorder-hold', 'reader-swipe-ready', 'swiped');
+  $$('.reader-book-card.reader-delete-ready, .reader-book-card.reorder-hold').forEach((card) => {
+    card.classList.remove('reader-delete-ready', 'reorder-hold');
     delete card.dataset.longPressed;
   });
   if (reorderTarget?.type === 'book') reorderTarget = null;
@@ -2780,23 +2777,10 @@ workspace.addEventListener('pointerdown', (event) => {
   const row = event.target.closest('[data-swipe-row]');
   if (!row || event.target.closest('.swipe-delete')) {
     if (!row) $$('.swipe-row.swiped').forEach((item) => item.classList.remove('swiped'));
-    endReaderBookSwipe();
     swipeGesture = null;
     return;
   }
-  const readerBook = row.closest('[data-reader-book-card]');
-  if (readerBook) {
-    endReaderBookSwipe();
-    $$('.reader-book-card.swiped').forEach((item) => { if (item !== readerBook) item.classList.remove('swiped'); });
-  }
-  swipeGesture = { row, startX: event.clientX, startY: event.clientY, dx: 0, dy: 0, dragging: false, cancelled: false, readerBook: Boolean(readerBook), longPressed: !readerBook };
-  if (readerBook) {
-    readerBookSwipeTimer = setTimeout(() => {
-      if (swipeGesture?.row !== row || swipeGesture.cancelled) return;
-      swipeGesture.longPressed = true;
-      row.classList.add('reader-swipe-ready');
-    }, 520);
-  }
+  swipeGesture = { row, startX: event.clientX, startY: event.clientY, dx: 0, dy: 0, dragging: false, cancelled: false };
 });
 $('#notificationPanel').addEventListener('pointerdown', (event) => {
   const row = event.target.closest('[data-swipe-row]');
@@ -2807,27 +2791,15 @@ workspace.addEventListener('pointermove', (event) => {
   if (!swipeGesture) return;
   swipeGesture.dx = event.clientX - swipeGesture.startX; swipeGesture.dy = event.clientY - swipeGesture.startY;
   if (Math.abs(swipeGesture.dy) > Math.abs(swipeGesture.dx) + 10 && Math.abs(swipeGesture.dy) > 8) { swipeGesture.cancelled = true; return; }
-  if (swipeGesture.readerBook && !swipeGesture.longPressed) {
-    if (Math.abs(swipeGesture.dx) > 8 || Math.abs(swipeGesture.dy) > 8) {
-      swipeGesture.cancelled = true;
-      endReaderBookSwipe();
-    }
-    return;
-  }
   if (Math.abs(swipeGesture.dx) > 14) swipeGesture.dragging = true;
 });
 document.addEventListener('pointerup', () => {
   const gesture = swipeGesture; swipeGesture = null;
-  if (!gesture) { endReaderBookSwipe(); return; }
-  if (gesture.readerBook && !gesture.longPressed) { endReaderBookSwipe(); return; }
-  endReaderBookSwipe();
-  if (gesture.cancelled) { gesture.row.classList.remove('reader-swipe-ready'); return; }
+  if (!gesture || gesture.cancelled) return;
   if (gesture.dx < -52 && Math.abs(gesture.dx) > Math.abs(gesture.dy) + 12) {
     $$('.swipe-row.swiped').forEach((row) => { if (row !== gesture.row) row.classList.remove('swiped'); });
-    gesture.row.classList.remove('reader-swipe-ready');
     gesture.row.classList.add('swiped'); swipeSuppressClickUntil = Date.now() + 350;
-  } else if (gesture.dx > 24) gesture.row.classList.remove('swiped', 'reader-swipe-ready');
-  else gesture.row.classList.remove('reader-swipe-ready');
+  } else if (gesture.dx > 24) gesture.row.classList.remove('swiped');
 }, { passive: true });
 
 nav.addEventListener('pointerdown', (event) => { const tab = event.target.closest('[data-tool]'); if (tab) { startLongPress(tab, 'tool', Number(tab.dataset.toolIndex)); beginTabSwipe(nav, event); } });
@@ -2866,14 +2838,15 @@ workspace.addEventListener('pointerdown', (event) => { const source = event.targ
 workspace.addEventListener('pointerdown', (event) => {
   const book = event.target.closest('[data-reader-book-card]');
   if (book && event.target.closest('[data-delete-book]')) return;
-  if (!book && state.tool === 'reader' && state.readerMode === 'library') clearReaderDeleteMode();
+  if (book) startLongPress(book, 'book', Number(book.dataset.readerBookIndex));
+  else if (state.tool === 'reader' && state.readerMode === 'library') clearReaderDeleteMode();
 });
 workspace.addEventListener('pointerup', endLongPress);
 workspace.addEventListener('pointercancel', endLongPress);
 document.querySelector('main')?.addEventListener('pointerdown', beginPageSwipe);
 document.addEventListener('pointermove', updatePageSwipe, { passive: false });
 document.addEventListener('pointerup', finishPageSwipe, { passive: true });
-document.addEventListener('pointercancel', () => { tabSwipeGesture = null; pageSwipeGesture = null; endLongPress(); endReaderBookSwipe(); swipeGesture = null; resetPageSwipeTransform(); }, { passive: true });
+document.addEventListener('pointercancel', () => { tabSwipeGesture = null; pageSwipeGesture = null; endLongPress(); swipeGesture = null; resetPageSwipeTransform(); }, { passive: true });
 workspace.addEventListener('pointerdown', (event) => {
   const surface = event.target.closest('[data-reader-surface]');
   if (state.readerMode === 'reading' && surface) {
