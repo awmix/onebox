@@ -5286,25 +5286,6 @@ html.reader-focus .reader-reference-bottom {
   padding-bottom: max(10px, env(safe-area-inset-bottom));
 }
 
-/* 2.18.72: fullscreen-on-open is a two-state preference, not a boxed
-   segmented control. Keep the active state legible without the extra frame. */
-#readerDialog[data-reader-theme] .reader-setting-choice[data-reader-choice="fullscreenOnOpen"],
-#readerDialog[data-reader-theme] .reader-setting-choice[data-reader-choice="fullscreenOnOpen"].active {
-  border-color: transparent;
-  box-shadow: none;
-  background: transparent;
-}
-#readerDialog[data-reader-theme] .reader-setting-choice[data-reader-choice="fullscreenOnOpen"].active {
-  color: var(--primary);
-  font-weight: 800;
-}
-#readerDialog[data-reader-theme] .reader-setting-choice[data-reader-choice="fullscreenOnOpen"]:hover,
-#readerDialog[data-reader-theme] .reader-setting-choice[data-reader-choice="fullscreenOnOpen"]:focus-visible {
-  border-color: transparent;
-  box-shadow: none;
-  background: var(--soft);
-}
-
 /* 2.18.73: the reading toolbar's fullscreen action is a tool like the other
    bottom actions. Do not turn the focused/active state into a selected card. */
 .reader-reference-shell .reader-fullscreen-tool,
@@ -5317,4 +5298,67 @@ html.reader-focus .reader-reference-bottom {
   box-shadow: none;
   border-radius: 0;
   background: transparent;
+}
+
+/* 2.18.74: dialog close controls share one quiet rounded-square treatment in
+   the contents, settings, notes and annotation panels. */
+#readerDialog[data-reader-theme] .reader-dialog-card .reader-dialog-close,
+#annotationDialog[data-reader-theme] .reader-dialog-card .reader-dialog-close {
+  width: 32px;
+  height: 32px;
+  flex-basis: 32px;
+  border-color: color-mix(in srgb, var(--reader-line) 88%, var(--reader-ink));
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--reader-bg) 76%, var(--reader-panel));
+  color: var(--reader-muted);
+}
+#readerDialog[data-reader-theme] .reader-dialog-card .reader-dialog-close:hover,
+#readerDialog[data-reader-theme] .reader-dialog-card .reader-dialog-close:focus-visible,
+#annotationDialog[data-reader-theme] .reader-dialog-card .reader-dialog-close:hover,
+#annotationDialog[data-reader-theme] .reader-dialog-card .reader-dialog-close:focus-visible {
+  border-color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 10%, var(--reader-panel));
+  color: var(--primary);
+  outline: none;
+  box-shadow: none;
+}
+
+/* Keep the gallery add action vertically and horizontally centered in its
+   tile, including the large mobile grid tile. */
+.reader-book-grid .reader-add-card {
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+.reader-book-grid .reader-add-card .reader-empty-book,
+.reader-book-grid .reader-add-card strong {
+  flex: 0 0 auto;
+  margin-inline: auto;
+}
+#workspace[data-tool="reader"] .reader-book-grid-cards .reader-add-card {
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+/* The shelf count is intentionally a quiet inline suffix, not a second
+   badge beside the layout switch. */
+.reader-library-title-row h2 .reader-book-count {
+  display: inline;
+  min-width: 0;
+  height: auto;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: .62em;
+  font-weight: 700;
+  letter-spacing: 0;
+  vertical-align: .12em;
+}
+.reader-library-title-row h2 .reader-book-count::before {
+  content: none;
+  margin: 0;
 }
