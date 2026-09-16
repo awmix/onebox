@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.75';
+const APP_VERSION = '2.18.76';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -1139,7 +1139,7 @@ const READER_THEME_VALUES = {
   paper: { bg: '#fffefa', panel: '#ffffff', ink: '#161a22', muted: '#6f7788', line: '#dfe4ee' },
   sepia: { bg: '#f2e6d1', panel: '#fff8eb', ink: '#40382e', muted: '#7e7467', line: '#dfd0b9' },
   green: { bg: '#e7f1e7', panel: '#f5fbf5', ink: '#263b2e', muted: '#65756a', line: '#cbdcca' },
-  dark: { bg: '#171a21', panel: '#20252e', ink: '#e8ebf2', muted: '#9da7b8', line: '#343b49' },
+  dark: { bg: '#000000', panel: '#0b0b0b', ink: '#f5f5f5', muted: '#9b9b9b', line: '#2b2b2b' },
 };
 const READER_FONT_VALUES = { system: 'var(--font-sans)', serif: 'Georgia, "Times New Roman", serif', mono: 'ui-monospace, SFMono-Regular, Menlo, monospace' };
 function saveReaderPreferences() { saveStored(STORAGE.readerPreferences, state.readerPreferences); }

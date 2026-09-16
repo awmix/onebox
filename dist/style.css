@@ -966,7 +966,7 @@ select, input, textarea { background: color-mix(in srgb, var(--panel) 88%, var(-
 .book-copy strong, .book-copy small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .book-copy small { margin-top: 4px; color: var(--muted); font-size: 11px; }
 .book-delete { align-self: center; margin-right: 8px; }
-#readerDialog, #annotationDialog { z-index: 90; display: flex; align-items: center; justify-content: center; padding: 18px; background: rgba(12, 16, 28, .62); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
+#readerDialog, #annotationDialog { z-index: 90; display: flex; align-items: center; justify-content: center; padding: 18px; background: rgba(0, 0, 0, .62); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
 #readerDialog[hidden], #annotationDialog[hidden] { display: none; }
 .reader-dialog-card { width: min(820px, 100%); max-height: calc(100vh - 36px); display: flex; flex-direction: column; overflow: hidden; background: var(--panel); border: 1px solid var(--line); border-radius: 24px; box-shadow: 0 24px 90px rgba(0,0,0,.4); }
 .reader-dialog-card .dialog-head { flex: 0 0 auto; align-items: center; margin: 0; padding: 16px 18px 13px; border-bottom: 1px solid var(--line); }
@@ -1100,7 +1100,7 @@ main { padding-bottom: calc(94px + env(safe-area-inset-bottom)); }
 .reader-reference-tool:hover, .reader-reference-tool:focus-visible { color: var(--primary); }
 .reader-reference-tool svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.7; }
 .reader-reference-tool[hidden] { display: none; }
-html.reader-focus #readerDialog { align-items: flex-end; padding: 0; background: rgba(10, 14, 24, .38); z-index: 160; }
+html.reader-focus #readerDialog { align-items: flex-end; padding: 0; background: rgba(0, 0, 0, .38); z-index: 160; }
 html.reader-focus #readerDialog .reader-dialog-card { width: min(720px, 100%); max-height: min(78dvh, 720px); margin: 0 auto; border-radius: 20px 20px 0 0; border-bottom: 0; box-shadow: 0 -18px 70px rgba(0, 0, 0, .22); }
 .reader-sheet-body { padding: 16px 18px calc(22px + env(safe-area-inset-bottom)); }
 .reader-theme-grid-large { grid-template-columns: repeat(4, minmax(0, 1fr)); }
@@ -3432,7 +3432,7 @@ main:has(#workspace[data-tool="calculator"]) {
 .reader-theme-dot.theme-paper { background: #fff; }
 .reader-theme-dot.theme-sepia { background: #f6f0e5; }
 .reader-theme-dot.theme-green { background: #edf4ed; }
-.reader-theme-dot.theme-dark { background: #171a21; border-color: #4b5566; }
+.reader-theme-dot.theme-dark { background: #000; border-color: #2b2b2b; }
 .reader-range-row, .reader-select-row { display: grid; gap: 6px; margin-top: 14px; color: var(--muted); font-size: 12px; }
 .reader-range-row > span, .reader-select-row > span { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .reader-range-row b { color: var(--ink); font-variant-numeric: tabular-nums; font-weight: 700; }
@@ -3916,7 +3916,7 @@ html[data-theme="dark"] .language-tool-card {
   box-shadow: 0 24px 80px rgba(0, 0, 0, .72);
 }
 html[data-theme="dark"] .reader-theme-dot.theme-dark {
-  background: #050505;
+  background: #000;
   border-color: var(--line);
 }
 
@@ -4283,7 +4283,7 @@ main { overflow-x: hidden; }
   border: 1px solid var(--reader-line);
   border-radius: 12px;
   background: var(--reader-panel);
-  box-shadow: 0 10px 24px rgba(12, 18, 30, .16);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, .16);
 }
 .reader-selection-menu[hidden],
 .reader-comment-popover[hidden] { display: none; }
@@ -4349,7 +4349,7 @@ main { overflow-x: hidden; }
   border-radius: 12px;
   background: var(--reader-panel);
   color: var(--reader-ink);
-  box-shadow: 0 10px 28px rgba(12, 18, 30, .18);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, .18);
   font-size: 12px;
   line-height: 1.5;
 }
@@ -4422,7 +4422,7 @@ main { overflow-x: hidden; }
   border: 1px solid var(--reader-line);
   border-radius: 13px;
   background: color-mix(in srgb, var(--reader-panel) 94%, transparent);
-  box-shadow: 0 10px 24px rgba(12, 18, 30, .18);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, .18);
   -webkit-backdrop-filter: blur(14px);
   backdrop-filter: blur(14px);
 }
@@ -5183,7 +5183,7 @@ html.reader-focus #readerDialog {
   align-items: center;
   justify-content: center;
   padding: 12px;
-  background: rgba(10, 14, 24, .48);
+  background: rgba(0, 0, 0, .48);
 }
 html.reader-focus #readerDialog .reader-dialog-card {
   width: min(520px, 100%);
@@ -5362,4 +5362,11 @@ html.reader-focus .reader-reference-bottom {
 .reader-library-title-row h2 .reader-book-count::before {
   content: none;
   margin: 0;
+}
+
+/* 2.18.76: keep the reader's modal backdrop neutral when night reading is
+   active; the old global overlay was a blue-black tint on mobile. */
+#readerDialog[data-reader-theme],
+#annotationDialog[data-reader-theme] {
+  background: rgba(0, 0, 0, .58);
 }
