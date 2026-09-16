@@ -4970,3 +4970,148 @@ html[data-color="mono"] #workspace[data-tool="calendar"] .day i {
     padding-bottom: 0;
   }
 }
+
+/* 2.18.67: keep the native text range alive so iOS/PWA can paint the
+   selection handles and highlight. The custom action bar is positioned from
+   the same range and does not need to own or clear it. */
+.reader-reference-viewer,
+.reader-reference-viewer * {
+  -webkit-touch-callout: none;
+}
+.reader-reference-viewer ::selection {
+  background: color-mix(in srgb, var(--primary) 30%, transparent);
+  color: var(--reader-ink);
+}
+
+/* The shelf count belongs to the layout switch group. Give it a real circle
+   and align its center to the switch instead of floating it above the title. */
+.reader-library-actions .reader-book-count {
+  width: 22px;
+  min-width: 22px;
+  height: 22px;
+  right: -12px;
+  top: 50%;
+  padding: 0;
+  transform: translateY(-50%);
+  display: grid;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--primary) 64%, var(--line));
+  border-radius: 50%;
+  background: transparent;
+  color: var(--ink);
+  font-size: 11px;
+  font-weight: 850;
+  line-height: 1;
+  text-align: center;
+}
+
+/* Reader dialogs use the same centered card interaction in fullscreen as in
+   windowed mode. A bottom sheet is especially awkward for the comments list
+   because it hides the selected passage and leaves little usable height. */
+html.reader-focus #readerDialog {
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  background: rgba(10, 14, 24, .48);
+}
+html.reader-focus #readerDialog .reader-dialog-card {
+  width: min(520px, 100%);
+  max-height: min(78dvh, 680px);
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  box-shadow: 0 22px 80px rgba(0, 0, 0, .28);
+}
+
+/* Annotation uses the reader card language instead of the legacy generic
+   dialog, with a readable quote, clear field label, and quiet/primary action
+   pair. */
+#annotationDialog .reader-annotation-card {
+  width: min(480px, 100%);
+  gap: 0;
+}
+.reader-annotation-quote {
+  margin: 16px 18px 14px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--primary);
+  border-radius: 12px;
+  background: var(--panel-2);
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.65;
+}
+.reader-annotation-field {
+  display: grid;
+  gap: 7px;
+  margin: 0 18px 16px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 750;
+}
+.reader-annotation-field textarea {
+  width: 100%;
+  min-height: 112px;
+  box-sizing: border-box;
+  resize: vertical;
+  padding: 11px 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  outline: 0;
+  background: var(--panel-2);
+  color: var(--ink);
+  font: inherit;
+  line-height: 1.6;
+}
+.reader-annotation-field textarea:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 14%, transparent);
+}
+.reader-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 0 18px 18px;
+}
+.reader-dialog-actions button {
+  min-height: 38px;
+  padding: 0 15px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 750;
+  cursor: pointer;
+}
+.reader-dialog-secondary {
+  background: var(--panel-2);
+  color: var(--muted);
+}
+.reader-dialog-primary {
+  border-color: var(--primary) !important;
+  background: var(--primary);
+  color: #fff;
+}
+
+/* Installed PWA fullscreen can retain the app's old main height and safe-area
+   padding, which exposes a large blank tail below the reader. Let the fixed
+   reader shell own the visual viewport from edge to edge. */
+html.reader-focus main:has(#workspace[data-tool="reader"]),
+html.reader-focus #pageSwipeStage:has(> #workspace[data-tool="reader"]),
+html.reader-focus #workspace[data-tool="reader"] {
+  height: 100dvh !important;
+  min-height: 0 !important;
+  max-height: 100dvh !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+}
+html.reader-focus #workspace[data-tool="reader"] .reader-reference-shell {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100dvh;
+  min-height: 0;
+  max-height: none;
+}
+html.reader-focus .reader-reference-bottom {
+  padding-bottom: max(10px, env(safe-area-inset-bottom));
+}

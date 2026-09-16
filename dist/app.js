@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.66';
+const APP_VERSION = '2.18.67';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -1269,20 +1269,10 @@ function readerShowSelectionMenu(range) {
   state.readerSelection = anchor;
   const menu = $('[data-reader-selection-menu]');
   if (menu) menu.hidden = false;
-  requestAnimationFrame(() => {
-    readerSelectionMenuPosition(range);
-    // iOS Safari owns the native copy/share callout for a live text
-    // selection. Keep the captured range in OneBox state, then clear the
-    // native range on touch so only the OneBox menu remains visible.
-    if (state.readerSelectionInput === 'touch') {
-      const selection = window.getSelection();
-      if (selection && !selection.isCollapsed) {
-        readerNativeSelectionClearing = true;
-        selection.removeAllRanges();
-        setTimeout(() => { readerNativeSelectionClearing = false; }, 120);
-      }
-    }
-  });
+  // Keep the browser's live range intact. Clearing it here makes the native
+  // selection highlight disappear on iOS/PWA and also breaks subsequent
+  // copy/share actions. The OneBox menu is positioned independently.
+  requestAnimationFrame(() => readerSelectionMenuPosition(range));
 }
 function readerFindQuoteRange(root, quote) {
   const text = String(quote || '').trim(); if (!text) return null;
@@ -1437,7 +1427,16 @@ function updateReaderReferenceChrome() {
   if (slider && document.activeElement !== slider) slider.value = String(Math.round(progress * 100));
   const percent = Math.round(progress * 100);
   const pageInfo = $('[data-reader-page-info]');
-  if (pageInfo) pageInfo.textContent = state.readerReadingMode === 'pages' && content?.classList.contains('reader-page-viewport') ? (state.readerPage + 1) + ' / ' + pageCount : '—';
+  let currentPage = 1;
+  if (content) {
+    if (state.readerReadingMode === 'pages' && content.classList.contains('reader-page-viewport')) {
+      currentPage = Math.min(pageCount, state.readerPage + 1);
+    } else {
+      pageCount = Math.max(1, Math.ceil(content.scrollHeight / Math.max(1, content.clientHeight)));
+      currentPage = Math.min(pageCount, Math.floor(content.scrollTop / Math.max(1, content.clientHeight)) + 1);
+    }
+  }
+  if (pageInfo) pageInfo.textContent = currentPage + ' / ' + pageCount;
   $$('[data-reader-progress-label]').forEach((node) => { node.textContent = percent + '%'; });
   $$('[data-reader-progress-ring]').forEach((ring) => {
     ring.style.setProperty('--reader-progress', percent + '%');
@@ -1448,7 +1447,7 @@ function updateReaderReferenceChrome() {
   const fill = $('[data-reader-progress-fill]'); if (fill) fill.style.width = Math.round(progress * 100) + '%';
   const progressLine = $('[data-reader-progress-line]');
   if (progressLine) progressLine.setAttribute('aria-valuenow', String(percent));
-  if (chapterIndex) chapterIndex.textContent = state.readerReadingMode === 'pages' && content?.classList.contains('reader-page-viewport') ? (state.readerPage + 1) + ' / ' + pageCount : state.readerToc.length ? (index + 1) + ' / ' + state.readerToc.length : '—';
+  if (chapterIndex) chapterIndex.textContent = state.readerReadingMode === 'pages' && content?.classList.contains('reader-page-viewport') ? currentPage + ' / ' + pageCount : state.readerToc.length ? (index + 1) + ' / ' + state.readerToc.length : '—';
   const previous = $('[data-reader-chapter-prev]'); const next = $('[data-reader-chapter-next]');
   if (previous) previous.disabled = !state.readerToc.length || index <= 0;
   if (next) next.disabled = !state.readerToc.length || index >= state.readerToc.length - 1;
@@ -1491,7 +1490,7 @@ function turnReaderPage(direction) {
 function renderAnnotationDialog() {
   if (!state.readerSelectedText) return;
   const dialog = $('#annotationDialog'); if (!dialog) return;
-  dialog.innerHTML = '<div class="dialog-card annotation-dialog-card" role="dialog" aria-modal="true"><div class="dialog-head"><h2>' + t('addAnnotation') + '</h2><button class="icon-btn small" data-close-annotation aria-label="' + t('close') + '">×</button></div><blockquote class="annotation-quote">' + escapeHtml(state.readerSelectedText) + '</blockquote><textarea id="annotationText" maxlength="500" placeholder="' + t('annotationPlaceholder') + '"></textarea><button class="primary full-width" data-save-annotation>' + t('saveAnnotation') + '</button></div>';
+  dialog.innerHTML = '<div class="reader-dialog-card reader-panel-card reader-annotation-card" role="dialog" aria-modal="true"><div class="dialog-head reader-dialog-head"><div><h2>' + t('addAnnotation') + '</h2><p>' + (state.language === 'en' ? 'Keep a note with this passage' : '为这段文字留下阅读笔记') + '</p></div><button class="reader-dialog-close" data-close-annotation aria-label="' + t('close') + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 7 10 10M17 7 7 17"/></svg></button></div><blockquote class="reader-annotation-quote">' + escapeHtml(state.readerSelectedText) + '</blockquote><label class="reader-annotation-field"><span>' + (state.language === 'en' ? 'Comment' : '评论内容') + '</span><textarea id="annotationText" maxlength="500" placeholder="' + t('annotationPlaceholder') + '"></textarea></label><div class="reader-dialog-actions"><button type="button" class="reader-dialog-secondary" data-close-annotation>' + (state.language === 'en' ? 'Cancel' : '取消') + '</button><button type="button" class="reader-dialog-primary" data-save-annotation>' + t('saveAnnotation') + '</button></div></div>';
   dialog.hidden = false;
 }
 function readerReadingView(book) {
@@ -2456,7 +2455,6 @@ let pageSwipeSuppressClickUntil = 0;
 let pageSwipeTrackState = null;
 let pageSwipeNavState = null;
 let readerSurfaceGesture = null;
-let readerNativeSelectionClearing = false;
 function startLongPress(target, type, index) {
   clearTimeout(reorderTimer);
   reorderTarget = { target, type, index };
@@ -2468,6 +2466,14 @@ function startLongPress(target, type, index) {
   }, 520);
 }
 function endLongPress() { clearTimeout(reorderTimer); reorderTimer = null; }
+function clearReaderDeleteMode() {
+  endLongPress();
+  $$('.reader-book-card.reader-delete-ready, .reader-book-card.reorder-hold').forEach((card) => {
+    card.classList.remove('reader-delete-ready', 'reorder-hold');
+    delete card.dataset.longPressed;
+  });
+  if (reorderTarget?.type === 'book') reorderTarget = null;
+}
 function handleReorderClick(target, type, index) {
   if (!reorderTarget || reorderTarget.type !== type || !reorderTarget.target.dataset.longPressed) return false;
   if (type === 'book') {
@@ -2817,7 +2823,11 @@ homeSourceNav.addEventListener('drop', (event) => { event.preventDefault(); cons
 
 workspace.addEventListener('pointerdown', (event) => { const card = event.target.closest('[data-weather-card]'); if (card) startLongPress(card, 'weather', Number(card.dataset.weatherIndex)); });
 workspace.addEventListener('pointerdown', (event) => { const source = event.target.closest('[data-feed-source]'); if (source) startLongPress(source, 'feed', Number(source.dataset.feedSourceIndex)); });
-workspace.addEventListener('pointerdown', (event) => { const book = event.target.closest('[data-reader-book-card]'); if (book && !event.target.closest('[data-delete-book]')) startLongPress(book, 'book', Number(book.dataset.readerBookIndex)); });
+workspace.addEventListener('pointerdown', (event) => {
+  const book = event.target.closest('[data-reader-book-card]');
+  if (book && !event.target.closest('[data-delete-book]')) startLongPress(book, 'book', Number(book.dataset.readerBookIndex));
+  else if (state.tool === 'reader' && state.readerMode === 'library') clearReaderDeleteMode();
+});
 workspace.addEventListener('pointerup', endLongPress);
 workspace.addEventListener('pointercancel', endLongPress);
 document.querySelector('main')?.addEventListener('pointerdown', beginPageSwipe);
@@ -2855,6 +2865,7 @@ workspace.addEventListener('contextmenu', (event) => {
 workspace.addEventListener('click', async (event) => {
   if (Date.now() < pageSwipeSuppressClickUntil) { event.preventDefault(); return; }
   if (Date.now() < swipeSuppressClickUntil && event.target.closest('[data-swipe-row]')) return;
+  if (state.tool === 'reader' && state.readerMode === 'library' && !event.target.closest('[data-reader-book-card]')) clearReaderDeleteMode();
   const section = event.target.closest('[data-section]');
   if (section) return selectSection(section.dataset.section);
   const homeTool = event.target.closest('[data-home-tool]');
@@ -3128,7 +3139,6 @@ $('#annotationDialog').addEventListener('click', (event) => {
   state.readerSelection = null; state.readerSelectedText = ''; hideReaderSelectionMenu(); saveLibrary(); $('#annotationDialog').hidden = true; render();
 });
 document.addEventListener('selectionchange', () => {
-  if (readerNativeSelectionClearing) { readerNativeSelectionClearing = false; return; }
   if (!state.readerBookId || state.readerMode !== 'reading') return;
   const selection = window.getSelection(); const content = $('[data-reader-content]');
   if (!selection || !content || selection.rangeCount === 0 || selection.isCollapsed) { hideReaderSelectionMenu(); return; }
