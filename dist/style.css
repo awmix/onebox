@@ -4494,3 +4494,109 @@ main { overflow-x: hidden; }
   .reader-choice-grid-5 { gap: 4px; }
   .reader-setting-choice { padding-inline: 2px; font-size: 10px; }
 }
+
+/* 2.18.62: keep the reader progress metadata on the same information line
+   as the bar, and keep the bookshelf controls quiet and utility-like. */
+.reader-reference-progress-line {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  height: 14px;
+  margin: 0 0 7px;
+  overflow: visible;
+  background: transparent;
+}
+.reader-reference-progress-track {
+  display: block;
+  min-width: 0;
+  height: 3px;
+  flex: 1 1 auto;
+  overflow: hidden;
+  border-radius: 99px;
+  background: color-mix(in srgb, var(--reader-line) 72%, transparent);
+}
+.reader-reference-progress-track i {
+  display: block;
+  width: 0;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--primary);
+  transition: width .18s ease-out;
+}
+.reader-reference-progress-meta {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+  gap: 6px;
+  color: var(--reader-muted);
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.reader-reference-progress-meta b { color: var(--reader-muted); font-weight: 700; }
+.reader-reference-progress-meta em { color: var(--reader-line); font-style: normal; }
+.reader-library-actions { display: inline-flex; align-items: center; gap: 8px; flex: 0 0 auto; }
+.reader-book-count {
+  min-width: 0;
+  height: auto;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.reader-book-count::before { content: '▤'; margin-right: 3px; color: var(--muted); font-size: 12px; }
+.reader-book-progress { display: flex; align-items: center; gap: 5px; min-width: 0; }
+.reader-book-progress .prog-bar { min-width: 0; flex: 1 1 auto; }
+.reader-book-progress em { flex: 0 0 auto; color: var(--muted); font-size: 9px; font-style: normal; font-variant-numeric: tabular-nums; }
+.reader-reference-viewer,
+.reader-reference-shell { -webkit-touch-callout: none; }
+.reader-reference-viewer { -webkit-user-select: text; user-select: text; }
+
+/* A single iOS-like selection menu is used on both touch and desktop. On
+   touch Safari the native callout is suppressed for the reader surface. */
+.reader-selection-menu {
+  gap: 0;
+  padding: 4px;
+  border: 0;
+  border-radius: 11px;
+  background: #202124;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .28);
+  color: #fff;
+}
+.reader-selection-menu button {
+  min-height: 31px;
+  padding: 5px 9px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+}
+.reader-selection-menu button + button { border-left: 1px solid rgba(255, 255, 255, .16); border-radius: 0 7px 7px 0; }
+.reader-selection-menu button:hover,
+.reader-selection-menu button:focus-visible { background: rgba(255, 255, 255, .16); color: #fff; }
+.reader-choice-grid-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+
+/* Keep calendar event counts readable in the monochrome palette. The
+   accent becomes white in dark mode, so inheriting a white badge label would
+   otherwise make the count disappear. */
+html[data-color="mono"] #workspace[data-tool="calendar"] .day i {
+  background: var(--ink);
+  color: var(--bg);
+  font-size: 9px;
+  font-weight: 800;
+}
+
+@media (max-width: 600px) {
+  .reader-reference-progress-line { gap: 7px; }
+  .reader-reference-progress-meta { gap: 4px; font-size: 9px; }
+  .reader-library-actions { gap: 6px; }
+  .reader-book-count { font-size: 11px; }
+  .reader-book-count::before { font-size: 11px; }
+  .reader-selection-menu { max-width: calc(100% - 12px); }
+  .reader-selection-menu button { min-height: 30px; padding-inline: 7px; font-size: 10px; }
+  .reader-choice-grid-4 { gap: 4px; }
+}
