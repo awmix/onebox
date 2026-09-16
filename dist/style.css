@@ -4590,6 +4590,109 @@ html[data-color="mono"] #workspace[data-tool="calendar"] .day i {
   font-weight: 800;
 }
 
+/* 2.18.63: the reading progress belongs to the book header. It replaces the
+   title/content divider, while the footer keeps only the original page
+   counter. */
+.reader-reference-top {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0;
+  min-height: 0;
+  padding: env(safe-area-inset-top) 0 0;
+  border-bottom: 0;
+}
+.reader-reference-top .reader-reference-title {
+  flex: 0 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 44px 8px;
+}
+.reader-reference-header-progress {
+  position: relative;
+  display: flex;
+  height: 13px;
+  align-items: flex-end;
+  margin: 0 12px;
+}
+.reader-reference-header-track {
+  display: block;
+  width: 100%;
+  height: 2px;
+  overflow: hidden;
+  border-radius: 99px;
+  background: color-mix(in srgb, var(--reader-line) 76%, transparent);
+}
+.reader-reference-header-track i {
+  display: block;
+  width: 0;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--primary);
+  transition: width .18s ease-out;
+}
+.reader-reference-header-percent {
+  position: absolute;
+  right: 0;
+  bottom: 5px;
+  color: var(--reader-muted);
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  line-height: 1;
+}
+.reader-reference-page-meta {
+  flex: 0 0 auto;
+  margin-left: auto;
+  color: var(--reader-muted);
+  font-variant-numeric: tabular-nums;
+}
+.reader-reference-bottom .reader-reference-chapter { min-height: 17px; }
+.reader-book-progress {
+  width: 100%;
+  justify-content: center;
+}
+.reader-book-progress .prog-bar {
+  flex: 0 1 78px;
+  width: 78px;
+}
+.reader-library-title-row { position: relative; }
+.reader-library-title-row .reader-book-count {
+  position: relative;
+  top: -7px;
+  min-width: 0;
+  height: auto;
+  margin-left: -4px;
+  padding: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1;
+}
+.reader-library-title-row .reader-book-count::before { content: '▤'; margin-right: 2px; color: var(--muted); font-size: 10px; }
+.reader-library-actions .reader-book-count { display: none; }
+.reader-setting-toggle-group { display: grid; gap: 7px; }
+.reader-setting-toggle {
+  display: flex;
+  min-height: 38px;
+  align-items: center;
+  justify-content: space-between;
+  box-sizing: border-box;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: var(--panel-2);
+  color: var(--muted);
+}
+.reader-setting-toggle span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+@media (max-width: 600px) {
+  .reader-reference-top .reader-reference-title { padding-inline: 34px; }
+  .reader-reference-header-progress { margin-inline: 10px; }
+  .reader-reference-header-percent { font-size: 9px; }
+  .reader-book-progress .prog-bar { flex-basis: 66px; width: 66px; }
+}
+
 @media (max-width: 600px) {
   .reader-reference-progress-line { gap: 7px; }
   .reader-reference-progress-meta { gap: 4px; font-size: 9px; }
