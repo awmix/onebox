@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.71';
+const APP_VERSION = '2.18.72';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -2843,6 +2843,11 @@ workspace.addEventListener('pointerdown', (event) => {
 });
 workspace.addEventListener('pointerup', endLongPress);
 workspace.addEventListener('pointercancel', endLongPress);
+document.addEventListener('pointerdown', (event) => {
+  if (state.tool !== 'reader' || state.readerMode !== 'library') return;
+  if (event.target.closest('[data-reader-book-card], [data-reader-layout-toggle], [data-open-reader-file]')) return;
+  clearReaderDeleteMode();
+}, true);
 document.querySelector('main')?.addEventListener('pointerdown', beginPageSwipe);
 document.addEventListener('pointermove', updatePageSwipe, { passive: false });
 document.addEventListener('pointerup', finishPageSwipe, { passive: true });

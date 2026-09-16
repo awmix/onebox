@@ -5285,3 +5285,22 @@ html.reader-focus #workspace[data-tool="reader"] .reader-reference-shell {
 html.reader-focus .reader-reference-bottom {
   padding-bottom: max(10px, env(safe-area-inset-bottom));
 }
+
+/* 2.18.72: fullscreen-on-open is a two-state preference, not a boxed
+   segmented control. Keep the active state legible without the extra frame. */
+#readerDialog[data-reader-theme] .reader-setting-choice[data-reader-choice="fullscreenOnOpen"],
+#readerDialog[data-reader-theme] .reader-setting-choice[data-reader-choice="fullscreenOnOpen"].active {
+  border-color: transparent;
+  box-shadow: none;
+  background: transparent;
+}
+#readerDialog[data-reader-theme] .reader-setting-choice[data-reader-choice="fullscreenOnOpen"].active {
+  color: var(--primary);
+  font-weight: 800;
+}
+#readerDialog[data-reader-theme] .reader-setting-choice[data-reader-choice="fullscreenOnOpen"]:hover,
+#readerDialog[data-reader-theme] .reader-setting-choice[data-reader-choice="fullscreenOnOpen"]:focus-visible {
+  border-color: transparent;
+  box-shadow: none;
+  background: var(--soft);
+}
