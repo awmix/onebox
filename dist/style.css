@@ -4703,3 +4703,98 @@ html[data-color="mono"] #workspace[data-tool="calendar"] .day i {
   .reader-selection-menu button { min-height: 30px; padding-inline: 7px; font-size: 10px; }
   .reader-choice-grid-4 { gap: 4px; }
 }
+
+/* 2.18.64: restore the shelf progress bar to a full-width track. The
+   percentage follows the track and shares its vertical center. */
+.reader-book-progress {
+  align-items: center;
+  justify-content: flex-start;
+}
+.reader-book-progress .prog-bar {
+  flex: 1 1 auto;
+  width: auto;
+  height: 3px;
+  margin-top: 0;
+}
+.reader-book-progress em {
+  align-self: center;
+  line-height: 1;
+}
+.reader-library-title-row .reader-book-count { display: none; }
+.reader-library-actions { position: relative; }
+.reader-library-actions .reader-book-count {
+  position: absolute;
+  top: -8px;
+  right: -7px;
+  display: grid;
+  min-width: 0;
+  height: auto;
+  padding: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  pointer-events: none;
+}
+.reader-library-actions .reader-book-count::before {
+  content: none;
+}
+
+/* Desktop reader chrome should stay available even after a paged-reader tap
+   hides the chrome on touch-sized layouts. */
+@media (min-width: 601px) {
+  .reader-reference-shell.chrome-hidden .reader-reference-top,
+  .reader-reference-shell.chrome-hidden .reader-reference-bottom {
+    transform: none;
+  }
+}
+
+/* Keep translation's empty result aligned with the input placeholder and
+   give both panes a little more vertical breathing room. */
+#workspace[data-tool="translate"] .translation-input-pane,
+#workspace[data-tool="translate"] .translation-result-pane,
+#workspace[data-tool="translate"] .translation-input-wrap,
+#workspace[data-tool="translate"] .translation-result-pane .translation-result-panel {
+  height: 180px;
+  min-height: 180px !important;
+}
+#workspace[data-tool="translate"] .translation-result-pane .translation-result-current {
+  align-items: flex-start;
+}
+#workspace[data-tool="translate"] .translation-result-pane .translation-result-current.placeholder {
+  align-self: flex-start;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+@media (max-width: 600px) {
+  .reader-book-progress .prog-bar {
+    flex-basis: auto;
+    width: auto;
+  }
+  #workspace[data-tool="translate"] .translation-input-pane,
+  #workspace[data-tool="translate"] .translation-result-pane,
+  #workspace[data-tool="translate"] .translation-input-wrap,
+  #workspace[data-tool="translate"] .translation-result-pane .translation-result-panel {
+    height: 180px;
+    min-height: 180px !important;
+  }
+  #workspace[data-tool="translate"] .translation-result-pane .translation-result-current.placeholder {
+    font-size: 14px;
+  }
+}
+
+/* The fixed 483/681px tool workspace is useful for the shelf, but it clips
+   the full reading chrome on desktop. Let an opened document own the
+   remaining viewport instead. */
+#workspace[data-tool="reader"]:has(.reader-reference-shell.reader-windowed) {
+  height: calc(100dvh - var(--app-header-height) - 48px);
+  min-height: 0;
+  max-height: none;
+  overflow: hidden;
+}
+#workspace[data-tool="reader"] .reader-reference-shell.reader-windowed {
+  height: 100%;
+  max-height: none;
+}

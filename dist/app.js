@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.63';
+const APP_VERSION = '2.18.64';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -1268,7 +1268,20 @@ function readerShowSelectionMenu(range) {
   state.readerSelection = anchor;
   const menu = $('[data-reader-selection-menu]');
   if (menu) menu.hidden = false;
-  requestAnimationFrame(() => readerSelectionMenuPosition(range));
+  requestAnimationFrame(() => {
+    readerSelectionMenuPosition(range);
+    // iOS Safari owns the native copy/share callout for a live text
+    // selection. Keep the captured range in OneBox state, then clear the
+    // native range on touch so only the OneBox menu remains visible.
+    if (state.readerSelectionInput === 'touch') {
+      const selection = window.getSelection();
+      if (selection && !selection.isCollapsed) {
+        readerNativeSelectionClearing = true;
+        selection.removeAllRanges();
+        setTimeout(() => { readerNativeSelectionClearing = false; }, 120);
+      }
+    }
+  });
 }
 function readerFindQuoteRange(root, quote) {
   const text = String(quote || '').trim(); if (!text) return null;
@@ -1527,7 +1540,7 @@ function reader() {
   const empty = readerAddCardMarkup();
   const libraryBody = books.length ? '<div class="reader-book-grid ' + (state.readerLayout === 'list' ? 'reader-book-list' : 'reader-book-grid-cards') + '">' + cards + readerAddCardMarkup() + '</div>' : empty;
   const layoutIcon = state.readerLayout === 'list' ? '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 6h14M5 12h14M5 18h14"/><path d="M5 6h.01M5 12h.01M5 18h.01"/></svg><span>宫格</span>' : '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/></svg><span>列表</span>';
-  return '<div class="reader-library-view"><section class="reader-library-panel"><div class="reader-library-head"><div class="reader-library-title-row"><h2>' + t('bookshelf') + '</h2><span class="reader-book-count" aria-label="' + books.length + '" title="' + books.length + '">' + books.length + '</span><small>' + t('readerHint') + '</small></div><div class="reader-library-actions"><button class="reader-layout-toggle" data-reader-layout-toggle aria-label="切换书架布局">' + layoutIcon + '</button></div></div>' + libraryBody + '</section><input id="readerFileInput" type="file" hidden multiple accept=".md,.markdown,.txt,.pdf,.epub,text/markdown,text/plain,application/pdf,application/epub+zip"></div>';
+  return '<div class="reader-library-view"><section class="reader-library-panel"><div class="reader-library-head"><div class="reader-library-title-row"><h2>' + t('bookshelf') + '</h2><small>' + t('readerHint') + '</small></div><div class="reader-library-actions"><button class="reader-layout-toggle" data-reader-layout-toggle aria-label="切换书架布局">' + layoutIcon + '</button><span class="reader-book-count" aria-label="' + books.length + '" title="' + books.length + '">' + books.length + '</span></div></div>' + libraryBody + '</section><input id="readerFileInput" type="file" hidden multiple accept=".md,.markdown,.txt,.pdf,.epub,text/markdown,text/plain,application/pdf,application/epub+zip"></div>';
 }
 
 // Calendar data --------------------------------------------------------------
@@ -2442,6 +2455,7 @@ let pageSwipeSuppressClickUntil = 0;
 let pageSwipeTrackState = null;
 let pageSwipeNavState = null;
 let readerSurfaceGesture = null;
+let readerNativeSelectionClearing = false;
 function startLongPress(target, type, index) {
   clearTimeout(reorderTimer);
   reorderTarget = { target, type, index };
@@ -3111,6 +3125,7 @@ $('#annotationDialog').addEventListener('click', (event) => {
   state.readerSelection = null; state.readerSelectedText = ''; hideReaderSelectionMenu(); saveLibrary(); $('#annotationDialog').hidden = true; render();
 });
 document.addEventListener('selectionchange', () => {
+  if (readerNativeSelectionClearing) { readerNativeSelectionClearing = false; return; }
   if (!state.readerBookId || state.readerMode !== 'reading') return;
   const selection = window.getSelection(); const content = $('[data-reader-content]');
   if (!selection || !content || selection.rangeCount === 0 || selection.isCollapsed) { hideReaderSelectionMenu(); return; }
