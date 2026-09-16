@@ -4352,3 +4352,145 @@ main { overflow-x: hidden; }
   .reader-selection-menu { gap: 3px; padding: 4px; }
   .reader-selection-menu button { min-height: 27px; padding-inline: 7px; font-size: 10px; }
 }
+
+/* 2.18.61: reader progress and text actions stay in one quiet bottom rail.
+   Touch selection keeps Safari's native copy/share sheet; this dock adds the
+   OneBox annotation actions without creating a second floating popup. */
+.reader-reference-progress-line {
+  position: relative;
+  width: 100%;
+  height: 3px;
+  margin: 0 0 8px;
+  overflow: hidden;
+  border-radius: 99px;
+  background: color-mix(in srgb, var(--reader-line) 72%, transparent);
+}
+.reader-reference-progress-line i {
+  display: block;
+  width: 0;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--primary);
+  transition: width .18s ease-out;
+}
+.reader-comments-tool svg { stroke-width: 1.75; }
+.reader-comment-badge {
+  display: inline-grid;
+  width: 14px;
+  height: 14px;
+  min-width: 14px;
+  margin: 0 0 0 3px;
+  place-items: center;
+  padding: 0;
+  border: 1px solid color-mix(in srgb, var(--primary) 68%, var(--reader-line));
+  border-radius: 50%;
+  background: var(--reader-panel);
+  color: var(--primary);
+  font-size: 8px;
+  font-weight: 800;
+  line-height: 1;
+  vertical-align: super;
+  cursor: pointer;
+}
+.reader-comment-badge::before { content: none; }
+.reader-selection-dock {
+  position: absolute;
+  right: 10px;
+  bottom: calc(74px + env(safe-area-inset-bottom));
+  left: 10px;
+  z-index: 32;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  max-width: calc(100% - 20px);
+  padding: 5px;
+  border: 1px solid var(--reader-line);
+  border-radius: 13px;
+  background: color-mix(in srgb, var(--reader-panel) 94%, transparent);
+  box-shadow: 0 10px 24px rgba(12, 18, 30, .18);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+}
+.reader-selection-dock[hidden] { display: none; }
+.reader-selection-dock button {
+  min-height: 29px;
+  min-width: 0;
+  padding: 4px 7px;
+  border: 1px solid color-mix(in srgb, var(--reader-line) 82%, var(--primary));
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--reader-panel) 86%, var(--reader-bg));
+  color: var(--reader-ink);
+  font-size: 10px;
+  white-space: nowrap;
+}
+.reader-selection-dock button:active,
+.reader-selection-dock button:focus-visible { border-color: var(--primary); color: var(--primary); }
+.reader-comments-card { min-height: 0; }
+.reader-comments-list {
+  display: grid;
+  min-height: 0;
+  max-height: min(62dvh, 560px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+}
+.reader-comment-item {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  gap: 9px;
+  align-items: start;
+  width: 100%;
+  padding: 12px 16px;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  background: transparent;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+}
+.reader-comment-item:last-child { border-bottom: 0; }
+.reader-comment-item-number {
+  display: grid;
+  width: 24px;
+  height: 24px;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--primary) 62%, var(--line));
+  border-radius: 50%;
+  color: var(--primary);
+  font-size: 10px;
+  font-weight: 800;
+}
+.reader-comment-item-copy { display: grid; gap: 4px; min-width: 0; }
+.reader-comment-item-copy strong,
+.reader-comment-item-copy small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.reader-comment-item-copy strong { color: var(--ink); font-size: 12px; font-weight: 700; }
+.reader-comment-item-copy small { color: var(--muted); font-size: 11px; }
+.reader-comment-item:hover,
+.reader-comment-item:focus-visible { background: var(--soft); }
+
+/* Windowed reader must consume the space that actually remains after the
+   app chrome; the old minimum height was the source of the post-fullscreen
+   blank block on short mobile viewports. */
+.reader-reference-shell.reader-windowed {
+  height: calc(100svh - var(--app-header-height) - 48px);
+  max-height: calc(100svh - var(--app-header-height) - 48px);
+  min-height: 0;
+}
+.reader-choice-grid-5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+
+@media (max-width: 600px) {
+  .reader-selection-dock {
+    right: 6px;
+    bottom: calc(70px + env(safe-area-inset-bottom));
+    left: 6px;
+    gap: 2px;
+    max-width: calc(100% - 12px);
+    padding: 4px;
+  }
+  .reader-selection-dock button { flex: 1 1 0; padding-inline: 3px; font-size: 9px; }
+  .reader-comment-item { padding-inline: 14px; }
+  .reader-choice-grid-5 { gap: 4px; }
+  .reader-setting-choice { padding-inline: 2px; font-size: 10px; }
+}
