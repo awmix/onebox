@@ -5625,8 +5625,8 @@ html[data-theme-mode="dark-gray"] .key {
   line-height: 1;
 }
 
-/* Calendar reminder controls: keep the date as one native dropdown and give
-   the event description enough room to be useful on a phone. */
+/* Calendar reminder controls: use one native date-time picker so mobile users
+   get a single platform picker instead of five cramped input boxes. */
 #eventDialog .event-form textarea#eventTitle {
   height: 104px;
   min-height: 104px;
@@ -5634,17 +5634,22 @@ html[data-theme-mode="dark-gray"] .key {
   line-height: 1.5;
 }
 #eventDialog .event-date-time-grid {
-  grid-template-columns: minmax(0, 1.2fr) minmax(108px, .8fr);
-  gap: 8px;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0;
 }
-#eventDialog .event-date-time-field select,
-#eventDialog .event-date-time-field input[type="time"] {
+#eventDialog .event-datetime-field {
+  display: grid;
+  gap: 6px;
+}
+#eventDialog .event-datetime-input {
   box-sizing: border-box;
   width: 100%;
   height: 42px;
   min-width: 0;
   padding: 8px 10px;
   font-size: 14px;
+  font-variant-numeric: tabular-nums;
+  color-scheme: light;
 }
 #workspace[data-tool="calendar"] .calendar-month { gap: 16px; }
 
@@ -5664,58 +5669,24 @@ html[data-theme-mode="dark-gray"] .key {
   scroll-snap-type: x proximity;
 }
 
-/* Weather place cards use the same thin selected outline as the selected
-   hourly/daily cards. Keep the selection treatment consistent without
-   changing card dimensions or the content surface. */
+/* Weather place, hourly and daily selections use one thin, softened outline.
+   Keep the card dimensions and content surfaces unchanged. */
 #workspace[data-tool="weather"] .weather-card.active,
 #workspace[data-tool="weather"] .hour-card.current,
 #workspace[data-tool="weather"] .forecast.current {
-  border: 1px solid var(--primary);
+  border: 1px solid var(--line);
   box-shadow: none;
 }
+@supports (border-color: color-mix(in srgb, black 50%, transparent)) {
+  #workspace[data-tool="weather"] .weather-card.active,
+  #workspace[data-tool="weather"] .hour-card.current,
+  #workspace[data-tool="weather"] .forecast.current {
+    border-color: color-mix(in srgb, var(--primary) 48%, transparent);
+  }
+}
 
-/* Calendar date/time controls: use small, explicit year/month/day and
-   hour/minute selectors so mobile WebKit never collapses a native date field
-   into an unreadable mixed-format control. */
-#eventDialog .event-date-time-grid {
-  grid-template-columns: minmax(0, 1.25fr) minmax(108px, .75fr);
-  gap: 8px;
-}
-#eventDialog .event-date-selectors,
-#eventDialog .event-time-selectors {
-  display: flex;
-  align-items: center;
-  min-width: 0;
-  gap: 4px;
-}
-#eventDialog .event-date-selectors select,
-#eventDialog .event-time-selectors select {
-  box-sizing: border-box;
-  height: 42px;
-  min-width: 0;
-  padding: 8px 6px;
-  font-size: 14px;
-  text-align: center;
-  font-variant-numeric: tabular-nums;
-}
-#eventDialog .event-date-selectors select:first-of-type { flex: 1.25 1 0; }
-#eventDialog .event-date-selectors select:nth-of-type(2),
-#eventDialog .event-date-selectors select:nth-of-type(3) { flex: .9 1 0; }
-#eventDialog .event-time-selectors select { flex: 1 1 0; }
-#eventDialog .event-date-unit,
-#eventDialog .event-time-separator {
-  flex: 0 0 auto;
-  color: var(--muted);
-  font-weight: 750;
-  line-height: 1;
-}
 @media (max-width: 600px) {
-  #eventDialog .event-date-time-grid { grid-template-columns: minmax(0, 1.2fr) minmax(108px, .8fr); gap: 6px; }
-  #eventDialog .event-date-selectors,
-  #eventDialog .event-time-selectors { gap: 2px; }
-  #eventDialog .event-date-selectors select,
-  #eventDialog .event-time-selectors select { height: 42px; padding-inline: 4px; font-size: 13px; }
-  #eventDialog .event-date-unit { font-size: 11px; }
+  #eventDialog .event-datetime-input { height: 42px; padding-inline: 9px; font-size: 13px; }
 }
 
 /* Slightly reduce the translation action and keep its bilingual mark a shade
