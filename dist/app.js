@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.127';
+const APP_VERSION = '2.18.128';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -193,7 +193,7 @@ const DICT = {
     commute: '出行', sport: '运动', clothing: '穿衣', sunscreen: '防晒', hiking: '爬山',
     addCard: '添加', noResults: '没有找到匹配地点，请换个关键词。',
     home: '首页', tools: '工具', messages: '消息', mine: '我的', quickTools: '常用工具', openSettings: '打开设置', noMessages: '还没有消息。', homeTabs: '首页', homeTabsSelected: '已选择 {count} 项',
-    allFeeds: '全部', feedRefresh: '刷新', feedLoading: '正在加载信息流…', feedEmpty: '暂时没有可显示的内容。', feedUpdated: '更新于', feedOpen: '打开原文', feedPartial: '部分订阅源暂时不可用', feedProxyHint: '内容来自公开 RSS 订阅，首页只保留最近内容。',
+    allFeeds: '全部', feedRefresh: '刷新', feedLoading: '正在加载信息流…', feedEmpty: '暂时没有可显示的内容。', feedUpdated: '更新于', feedOpen: '打开原文', feedPartial: '部分订阅源暂时不可用', feedProxyHint: '内容来自公开 RSS 订阅，首页只保留最近内容。', feedTabPrevious: '查看前面的首页 Tab', feedTabNext: '查看后面的首页 Tab',
     converterType: '换算类型', from: '从', to: '到', result: '结果', swap: '交换单位', copyResult: '复制结果',
     copied: '已复制', translationInput: '输入待翻译内容', translateNow: '开始翻译', saveTranslation: '保存到本机',
     source: '源语言', target: '目标语言', translationResult: '翻译结果', translationHistory: '最近翻译',
@@ -235,7 +235,7 @@ const DICT = {
     commute: 'Travel', sport: 'Sport', clothing: 'Clothing', sunscreen: 'Sun care', hiking: 'Hiking',
     addCard: 'Add', noResults: 'No matching place. Try another query.',
     home: 'Home', tools: 'Tools', messages: 'Messages', mine: 'Me', quickTools: 'Quick tools', openSettings: 'Open settings', noMessages: 'No messages yet.', homeTabs: 'Home', homeTabsSelected: '{count} selected',
-    allFeeds: 'All', feedRefresh: 'Refresh', feedLoading: 'Loading feeds…', feedEmpty: 'No items to show yet.', feedUpdated: 'Updated', feedOpen: 'Open original', feedPartial: 'Some feeds are temporarily unavailable', feedProxyHint: 'Public RSS subscriptions; only recent items are kept on this device.',
+    allFeeds: 'All', feedRefresh: 'Refresh', feedLoading: 'Loading feeds…', feedEmpty: 'No items to show yet.', feedUpdated: 'Updated', feedOpen: 'Open original', feedPartial: 'Some feeds are temporarily unavailable', feedProxyHint: 'Public RSS subscriptions; only recent items are kept on this device.', feedTabPrevious: 'Show previous home tabs', feedTabNext: 'Show more home tabs',
     converterType: 'Conversion', from: 'From', to: 'To', result: 'Result', swap: 'Swap units', copyResult: 'Copy result',
     copied: 'Copied', translationInput: 'Text to translate', translateNow: 'Translate', saveTranslation: 'Save locally',
     source: 'Source', target: 'Target', translationResult: 'Translation', translationHistory: 'Recent translations',
@@ -551,6 +551,27 @@ function focusActiveHomeFeedTab(smooth = false) {
   else if (active.offsetLeft + active.offsetWidth > visibleRight) target = active.offsetLeft + active.offsetWidth - tabs.clientWidth + padding;
   target = Math.min(maxScroll, Math.max(0, target));
   tabs.scrollTo({ left: target, behavior: smooth ? 'smooth' : 'auto' });
+}
+function updateHomeFeedOverflowControls() {
+  const panel = homeSourceNav.querySelector('.feed-source-panel');
+  const tabs = homeSourceNav.querySelector('.feed-source-tabs');
+  const previous = homeSourceNav.querySelector('[data-feed-source-scroll="previous"]');
+  const next = homeSourceNav.querySelector('[data-feed-source-scroll="next"]');
+  if (!panel || !tabs || !previous || !next) return;
+  const maxScroll = Math.max(0, tabs.scrollWidth - tabs.clientWidth);
+  const hasOverflow = maxScroll > 1;
+  const hasPrevious = tabs.scrollLeft > 1;
+  const hasNext = tabs.scrollLeft < maxScroll - 1;
+  panel.classList.toggle('has-feed-overflow', hasOverflow);
+  panel.classList.toggle('has-feed-overflow-left', hasPrevious);
+  panel.classList.toggle('has-feed-overflow-right', hasNext);
+  previous.hidden = !hasPrevious;
+  next.hidden = !hasNext;
+}
+function scrollHomeFeedTabs(direction) {
+  const tabs = homeSourceNav.querySelector('.feed-source-tabs');
+  if (!tabs) return;
+  tabs.scrollBy({ left: direction * Math.max(120, Math.round(tabs.clientWidth * .72)), behavior: 'smooth' });
 }
 
 function feedText(value = '') { return String(value).replace(/<[^>]*>/g, ' ').replace(/!\[[^\]]*\]\([^)]*\)/g, ' ').replace(/\[([^\]]+)\]\([^)]*\)/g, '$1').replace(/&nbsp;/gi, ' ').replace(/\s+/g, ' ').trim(); }
@@ -1002,9 +1023,13 @@ function renderHomeSourceNav() {
   homeSourceNav.hidden = state.section !== 'home';
   const previousTabs = homeSourceNav.querySelector('.feed-source-tabs');
   const previousScrollLeft = previousTabs?.scrollLeft || 0;
-  homeSourceNav.innerHTML = state.section === 'home' ? '<div class="feed-source-panel"><div class="feed-source-tabs" role="tablist" aria-label="RSS 来源">' + homeSourceTabsMarkup() + '</div></div>' : '';
+  homeSourceNav.innerHTML = state.section === 'home' ? '<div class="feed-source-panel"><button class="feed-source-scroll-button" data-feed-source-scroll="previous" type="button" hidden aria-label="' + escapeHtml(t('feedTabPrevious')) + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14.5 5-7 7 7 7"/></svg></button><div class="feed-source-tabs" role="tablist" aria-label="RSS 来源">' + homeSourceTabsMarkup() + '</div><button class="feed-source-scroll-button" data-feed-source-scroll="next" type="button" hidden aria-label="' + escapeHtml(t('feedTabNext')) + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9.5 5 7 7-7 7"/></svg></button></div>' : '';
   const nextTabs = homeSourceNav.querySelector('.feed-source-tabs');
-  if (nextTabs) nextTabs.scrollLeft = Math.min(previousScrollLeft, Math.max(0, nextTabs.scrollWidth - nextTabs.clientWidth));
+  if (nextTabs) {
+    nextTabs.scrollLeft = Math.min(previousScrollLeft, Math.max(0, nextTabs.scrollWidth - nextTabs.clientWidth));
+    nextTabs.addEventListener('scroll', updateHomeFeedOverflowControls, { passive: true });
+    requestAnimationFrame(updateHomeFeedOverflowControls);
+  }
 }
 function renderHome() {
   const isFootprint = state.homeFeed.active === 'footprint';
@@ -3039,6 +3064,8 @@ function swapWeatherCards(from, to) {
 }
 let reorderTimer = null;
 let reorderTarget = null;
+let reorderDrag = null;
+let reorderSuppressClickUntil = 0;
 let swipeGesture = null;
 let swipeSuppressClickUntil = 0;
 let tabSwipeGesture = null;
@@ -3055,15 +3082,113 @@ function startLongPress(target, type, index, pointerEvent = null) {
   clearTimeout(reorderTimer);
   if (readerBookDrag?.active) finishReaderBookDrag(pointerEvent);
   readerBookDrag = type === 'book' ? { target, type, index, pointerId: pointerEvent?.pointerId, startX: pointerEvent?.clientX || 0, startY: pointerEvent?.clientY || 0, active: false } : null;
+  reorderDrag = type !== 'book' && pointerEvent?.pointerType !== 'mouse' ? { target, type, index, pointerId: pointerEvent?.pointerId, startX: pointerEvent?.clientX || 0, startY: pointerEvent?.clientY || 0, longPressed: false, active: false, over: null } : null;
   reorderTarget = { target, type, index, pointerId: pointerEvent?.pointerId };
   reorderTimer = setTimeout(() => {
     target.classList.add('reorder-hold'); target.dataset.longPressed = 'true';
     if (type === 'weather') target.classList.add('weather-delete-ready');
     else if (type === 'book') { target.classList.add('reader-delete-ready'); if (readerBookDrag) readerBookDrag.longPressed = true; }
-    if (type !== 'weather' && type !== 'book') toast(state.language === 'en' ? 'Reorder mode: tap another item' : '排序模式：再点一下目标位置');
+    if (reorderDrag) reorderDrag.longPressed = true;
+    if (type !== 'weather' && type !== 'book' && !reorderDrag) toast(state.language === 'en' ? 'Reorder mode: tap another item' : '排序模式：再点一下目标位置');
   }, 520);
 }
 function endLongPress() { clearTimeout(reorderTimer); reorderTimer = null; }
+function reorderDragSelector(type) {
+  if (type === 'tool') return '[data-tool]';
+  if (type === 'feed') return '[data-feed-source-index]';
+  return '[data-weather-card]';
+}
+function reorderDragContainer(type) {
+  if (type === 'tool') return nav;
+  if (type === 'feed') return homeSourceNav.querySelector('.feed-source-tabs');
+  return workspace.querySelector('.weather-card-list');
+}
+function captureReorderPointer(drag) {
+  if (!drag || drag.pointerId == null) return;
+  try { drag.target.setPointerCapture?.(drag.pointerId); } catch {}
+}
+function releaseReorderPointer(drag) {
+  if (!drag || drag.pointerId == null) return;
+  try { if (drag.target.hasPointerCapture?.(drag.pointerId)) drag.target.releasePointerCapture(drag.pointerId); } catch {}
+}
+function updateReorderDrag(event) {
+  const drag = reorderDrag;
+  if (!drag || (drag.pointerId != null && event.pointerId !== drag.pointerId)) return;
+  const dx = event.clientX - drag.startX; const dy = event.clientY - drag.startY;
+  if (!drag.longPressed) {
+    if (Math.hypot(dx, dy) > 10) { endLongPress(); reorderTarget = null; reorderDrag = null; }
+    return;
+  }
+  if (!drag.active) {
+    if (Math.hypot(dx, dy) < 8) return;
+    drag.active = true;
+    captureReorderPointer(drag);
+    drag.target.classList.add('reorder-dragging');
+    drag.target.classList.remove('reorder-hold', 'weather-delete-ready');
+  }
+  const hit = document.elementFromPoint?.(event.clientX, event.clientY) || event.target;
+  const over = hit?.closest?.(reorderDragSelector(drag.type));
+  if (drag.over && drag.over !== over) drag.over.classList.remove('reorder-over');
+  drag.over = over && over !== drag.target ? over : null;
+  if (!drag.over || !drag.over.parentElement) {
+    if (event.cancelable) event.preventDefault();
+    return;
+  }
+  drag.over.classList.add('reorder-over');
+  const rect = drag.over.getBoundingClientRect();
+  const centerX = rect.left + rect.width / 2; const centerY = rect.top + rect.height / 2;
+  const horizontal = drag.type === 'feed' || Math.abs(event.clientX - centerX) > Math.abs(event.clientY - centerY);
+  const insertAfter = horizontal ? event.clientX > centerX : event.clientY > centerY;
+  const parent = drag.over.parentElement;
+  if (insertAfter) {
+    if (drag.over.nextElementSibling !== drag.target) parent.insertBefore(drag.target, drag.over.nextElementSibling);
+  } else if (drag.over !== drag.target.nextElementSibling) {
+    parent.insertBefore(drag.target, drag.over);
+  }
+  if (event.cancelable) event.preventDefault();
+}
+function finishReorderDrag(event = null) {
+  const drag = reorderDrag;
+  if (!drag || (event?.pointerId != null && drag.pointerId != null && event.pointerId !== drag.pointerId)) return false;
+  if (drag.over) drag.over.classList.remove('reorder-over');
+  const wasActive = drag.active;
+  if (!wasActive) { reorderDrag = null; return false; }
+  drag.target.classList.remove('reorder-dragging', 'reorder-hold', 'weather-delete-ready');
+  delete drag.target.dataset.longPressed;
+  releaseReorderPointer(drag);
+  const container = reorderDragContainer(drag.type);
+  const items = container ? [...container.querySelectorAll(reorderDragSelector(drag.type))] : [];
+  if (drag.type === 'tool') {
+    state.toolOrder = normalizeToolOrder(items.map((item) => item.dataset.tool));
+    saveToolOrder(); renderNav();
+  } else if (drag.type === 'feed') {
+    const visibleIds = items.map((item) => item.dataset.feedSource).filter(Boolean);
+    const visibleSet = new Set(visibleIds); let cursor = 0;
+    state.homeFeed.order = state.homeFeed.order.map((id) => visibleSet.has(id) ? visibleIds[cursor++] : id);
+    saveHomeFeedOrder(); render();
+  } else {
+    const cards = items.map((item) => state.weatherCards.find((card) => card.id === item.dataset.weatherCard)).filter(Boolean);
+    state.weatherCards = cards; saveWeatherCards(); render();
+  }
+  reorderSuppressClickUntil = Date.now() + 500;
+  reorderTarget = null; reorderDrag = null;
+  toast(state.language === 'en' ? 'Order saved' : '顺序已保存');
+  return true;
+}
+function cancelReorderDrag() {
+  if (reorderDrag?.over) reorderDrag.over.classList.remove('reorder-over');
+  if (reorderDrag?.target) {
+    releaseReorderPointer(reorderDrag);
+    reorderDrag.target.classList.remove('reorder-dragging', 'reorder-hold', 'weather-delete-ready');
+    delete reorderDrag.target.dataset.longPressed;
+  }
+  if (reorderTarget && reorderTarget.type !== 'book') {
+    reorderTarget.target.classList.remove('reorder-hold', 'weather-delete-ready');
+    delete reorderTarget.target.dataset.longPressed;
+    reorderTarget = null;
+  }
+  reorderDrag = null;
+}
 function readerBookCardsInDom() {
   return [...document.querySelectorAll('[data-reader-book-card]')];
 }
@@ -3088,14 +3213,20 @@ function updateReaderBookDrag(event) {
   }
   const hit = document.elementFromPoint?.(event.clientX, event.clientY) || event.target;
   const over = hit?.closest?.('[data-reader-book-card]');
-  if (!over || over === drag.target || !over.parentElement) return;
-  const rect = over.getBoundingClientRect();
+  if (drag.over && drag.over !== over) drag.over.classList.remove('reorder-over');
+  drag.over = over && over !== drag.target ? over : null;
+  if (!drag.over || !drag.over.parentElement) {
+    if (event.cancelable) event.preventDefault();
+    return;
+  }
+  drag.over.classList.add('reorder-over');
+  const rect = drag.over.getBoundingClientRect();
   const insertAfter = event.clientY > rect.top + rect.height / 2;
-  const parent = over.parentElement;
+  const parent = drag.over.parentElement;
   if (insertAfter) {
-    if (over.nextElementSibling !== drag.target) parent.insertBefore(drag.target, over.nextElementSibling);
-  } else if (over !== drag.target.nextElementSibling) {
-    parent.insertBefore(drag.target, over);
+    if (drag.over.nextElementSibling !== drag.target) parent.insertBefore(drag.target, drag.over.nextElementSibling);
+  } else if (drag.over !== drag.target.nextElementSibling) {
+    parent.insertBefore(drag.target, drag.over);
   }
   if (event.cancelable) event.preventDefault();
 }
@@ -3104,6 +3235,7 @@ function finishReaderBookDrag(event = null) {
   if (!drag || (event?.pointerId != null && drag.pointerId != null && event.pointerId !== drag.pointerId)) return false;
   const wasActive = drag.active;
   if (wasActive) {
+    if (drag.over) drag.over.classList.remove('reorder-over');
     const cards = readerBookCardsInDom();
     const books = cards.map((card) => readerBookById(card.dataset.id)).filter(Boolean);
     books.forEach((book, index) => { book.order = books.length - index; });
@@ -3122,6 +3254,7 @@ function finishReaderBookDrag(event = null) {
 }
 function clearReaderDeleteMode() {
   endLongPress();
+  readerBookDrag?.over?.classList.remove('reorder-over');
   releaseReaderBookPointer(readerBookDrag);
   $$('.reader-book-card.reader-delete-ready, .reader-book-card.reorder-hold').forEach((card) => {
     card.classList.remove('reader-delete-ready', 'reorder-hold');
@@ -3447,12 +3580,12 @@ document.addEventListener('pointerup', () => {
   } else if (gesture.dx > 24) gesture.row.classList.remove('swiped');
 }, { passive: true });
 
-nav.addEventListener('pointerdown', (event) => { const tab = event.target.closest('[data-tool]'); if (tab) { startLongPress(tab, 'tool', Number(tab.dataset.toolIndex)); beginTabSwipe(nav, event); } });
+nav.addEventListener('pointerdown', (event) => { const tab = event.target.closest('[data-tool]'); if (tab) { startLongPress(tab, 'tool', Number(tab.dataset.toolIndex), event); beginTabSwipe(nav, event); } });
 nav.addEventListener('pointerup', endLongPress);
 nav.addEventListener('pointercancel', endLongPress);
 nav.addEventListener('click', (event) => {
   const tab = event.target.closest('[data-tool]'); if (!tab) return;
-  if (Date.now() < tabSwipeSuppressClickUntil || Date.now() < pageSwipeSuppressClickUntil) { event.preventDefault(); return; }
+  if (Date.now() < reorderSuppressClickUntil || Date.now() < tabSwipeSuppressClickUntil || Date.now() < pageSwipeSuppressClickUntil) { event.preventDefault(); return; }
   if (handleReorderClick(tab, 'tool', Number(tab.dataset.toolIndex))) { event.preventDefault(); return; }
   selectTool(tab.dataset.tool);
   if (tab.dataset.tool === 'weather') refreshWeatherCard(state.weatherCards.find((card) => card.id === state.activeWeatherId));
@@ -3463,14 +3596,20 @@ nav.addEventListener('dragover', (event) => { if (event.target.closest('[data-to
 
 homeSourceNav.addEventListener('pointerdown', (event) => {
   const source = event.target.closest('[data-feed-source]');
-  if (source) startLongPress(source, 'feed', Number(source.dataset.feedSourceIndex));
+  if (source?.dataset.feedSourceIndex != null) startLongPress(source, 'feed', Number(source.dataset.feedSourceIndex), event);
 });
 homeSourceNav.addEventListener('pointerup', endLongPress);
 homeSourceNav.addEventListener('pointercancel', endLongPress);
 homeSourceNav.addEventListener('click', (event) => {
+  const scrollButton = event.target.closest('[data-feed-source-scroll]');
+  if (scrollButton) {
+    event.preventDefault();
+    scrollHomeFeedTabs(scrollButton.dataset.feedSourceScroll === 'previous' ? -1 : 1);
+    return;
+  }
   const feedSource = event.target.closest('[data-feed-source]');
   if (!feedSource) return;
-  if (Date.now() < tabSwipeSuppressClickUntil || Date.now() < pageSwipeSuppressClickUntil) { event.preventDefault(); return; }
+  if (Date.now() < reorderSuppressClickUntil || Date.now() < tabSwipeSuppressClickUntil || Date.now() < pageSwipeSuppressClickUntil) { event.preventDefault(); return; }
   if (feedSource.dataset.feedSourceIndex != null && handleReorderClick(feedSource, 'feed', Number(feedSource.dataset.feedSourceIndex))) { event.preventDefault(); return; }
   selectHomeFeedSource(feedSource.dataset.feedSource);
 });
@@ -3478,8 +3617,8 @@ homeSourceNav.addEventListener('dragstart', (event) => { const source = event.ta
 homeSourceNav.addEventListener('dragover', (event) => { if (event.target.closest('[data-feed-source]')) event.preventDefault(); });
 homeSourceNav.addEventListener('drop', (event) => { event.preventDefault(); const source = event.target.closest('[data-feed-source]'); if (source) swapHomeFeedSources(Number(event.dataTransfer.getData('text/plain')), Number(source.dataset.feedSourceIndex)); });
 
-workspace.addEventListener('pointerdown', (event) => { const card = event.target.closest('[data-weather-card]'); if (card) startLongPress(card, 'weather', Number(card.dataset.weatherIndex)); });
-workspace.addEventListener('pointerdown', (event) => { const source = event.target.closest('[data-feed-source]'); if (source) startLongPress(source, 'feed', Number(source.dataset.feedSourceIndex)); });
+workspace.addEventListener('pointerdown', (event) => { const card = event.target.closest('[data-weather-card]'); if (card) startLongPress(card, 'weather', Number(card.dataset.weatherIndex), event); });
+workspace.addEventListener('pointerdown', (event) => { const source = event.target.closest('[data-feed-source]'); if (source?.dataset.feedSourceIndex != null) startLongPress(source, 'feed', Number(source.dataset.feedSourceIndex), event); });
 workspace.addEventListener('pointerdown', (event) => {
   const book = event.target.closest('[data-reader-book-card]');
   if (book && event.target.closest('[data-delete-book]')) return;
@@ -3491,8 +3630,9 @@ workspace.addEventListener('pointerdown', (event) => {
 });
 workspace.addEventListener('pointerup', endLongPress);
 workspace.addEventListener('pointercancel', endLongPress);
+document.addEventListener('pointermove', updateReorderDrag, { passive: false });
 document.addEventListener('pointermove', updateReaderBookDrag, { passive: false });
-document.addEventListener('pointerup', (event) => { if (finishReaderBookDrag(event)) endLongPress(); }, { passive: false });
+document.addEventListener('pointerup', (event) => { if (finishReorderDrag(event) || finishReaderBookDrag(event)) endLongPress(); }, { passive: false });
 document.addEventListener('pointerdown', (event) => {
   if (state.tool !== 'reader' || state.readerMode !== 'library') return;
   if (event.target.closest('[data-reader-book-card], [data-reader-layout-toggle], [data-open-reader-file]')) return;
@@ -3502,9 +3642,10 @@ document.querySelector('main')?.addEventListener('pointerdown', beginPageSwipe);
 document.addEventListener('pointermove', updatePageSwipe, { passive: false });
 document.addEventListener('pointerup', finishPageSwipe, { passive: true });
 document.addEventListener('pointercancel', () => {
-  tabSwipeGesture = null; pageSwipeGesture = null; endLongPress(); swipeGesture = null; resetPageSwipeTransform();
+  tabSwipeGesture = null; pageSwipeGesture = null; endLongPress(); cancelReorderDrag(); swipeGesture = null; resetPageSwipeTransform();
   if (readerBookDrag) {
     releaseReaderBookPointer(readerBookDrag);
+    readerBookDrag.over?.classList.remove('reorder-over');
     readerBookDrag.target.classList.remove('reader-book-dragging', 'reader-delete-ready', 'reorder-hold');
     readerBookDrag = null;
     if (reorderTarget?.type === 'book') reorderTarget = null;
@@ -3543,7 +3684,7 @@ workspace.addEventListener('contextmenu', (event) => {
   if (selection?.rangeCount && !selection.isCollapsed) readerShowSelectionMenu(selection.getRangeAt(0));
 });
 workspace.addEventListener('click', async (event) => {
-  if (Date.now() < pageSwipeSuppressClickUntil) { event.preventDefault(); return; }
+  if (Date.now() < reorderSuppressClickUntil || Date.now() < pageSwipeSuppressClickUntil) { event.preventDefault(); return; }
   if (Date.now() < readerBookSuppressClickUntil && event.target.closest('[data-reader-book-card]')) { event.preventDefault(); return; }
   if (Date.now() < swipeSuppressClickUntil && event.target.closest('[data-swipe-row]') && !event.target.closest('.swipe-delete')) return;
   if (state.tool === 'reader' && state.readerMode === 'library' && !event.target.closest('[data-reader-book-card]')) clearReaderDeleteMode();

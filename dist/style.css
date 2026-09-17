@@ -65,6 +65,8 @@ nav { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin: 1
 .tab span svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; vertical-align: -4px; }
 .tab.active { color: var(--ink); background: var(--panel); border-color: var(--primary); box-shadow: none; }
 .tab.reorder-hold, .weather-card.reorder-hold { outline: 3px solid var(--primary); box-shadow: 0 0 0 5px var(--soft); }
+.tab.reorder-dragging, .feed-source-tab.reorder-dragging, .weather-card.reorder-dragging { position: relative; z-index: 4; opacity: .72; transform: scale(.98); transition: none; }
+.tab.reorder-over, .feed-source-tab.reorder-over, .weather-card.reorder-over { outline: 2px dashed var(--primary); outline-offset: 3px; }
 .workspace { background: var(--panel); border: 1px solid var(--line); border-radius: 28px; padding: 28px; min-height: 460px; box-shadow: var(--shadow); }
 .hero { display: flex; justify-content: space-between; align-items: center; gap: 30px; }
 .hero-bottom { min-height: 250px; padding: 54px 2px 36px; }
@@ -1138,9 +1140,14 @@ html.reader-focus #readerDialog .reader-dialog-card { width: min(720px, 100%); m
 /* Home RSS stream -------------------------------------------------------- */
 .feed-home { padding: 0; min-height: 0; background: transparent; border: 0; box-shadow: none; }
 .feed-source-panel, .feed-panel { background: var(--panel); border: 1px solid var(--line); box-shadow: var(--shadow); }
-.feed-source-panel { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 16px; }
+.feed-source-panel { display: flex; align-items: center; gap: 4px; padding: 8px 10px; border-radius: 16px; }
 .feed-source-tabs { min-width: 0; flex: 1; display: flex; align-items: center; gap: 5px; overflow-x: auto; scrollbar-width: none; }
 .feed-source-tabs::-webkit-scrollbar { display: none; }
+.feed-source-scroll-button { display: grid; flex: 0 0 28px; place-items: center; width: 28px; height: 30px; padding: 0; border: 0; border-radius: 9px; background: var(--soft); color: var(--primary); cursor: pointer; }
+.feed-source-scroll-button[hidden] { display: none; }
+.feed-source-scroll-button svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 2; }
+.feed-source-panel.has-feed-overflow-right .feed-source-tabs { box-shadow: inset -12px 0 12px -13px var(--ink); }
+.feed-source-panel.has-feed-overflow-left .feed-source-tabs { box-shadow: inset 12px 0 12px -13px var(--ink); }
 .feed-source-tab { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 7px; padding: 8px 11px; border: 1px solid transparent; border-radius: 11px; background: transparent; color: var(--muted); font-weight: 700; cursor: pointer; white-space: nowrap; }
 .feed-source-tab.active { background: var(--soft); border-color: var(--primary); color: var(--primary); }
 .feed-source-mark, .feed-source-tag b { display: inline-grid; place-items: center; flex: 0 0 auto; width: 22px; height: 22px; border-radius: 7px; font-size: 10px; font-weight: 850; letter-spacing: -.04em; }
@@ -1278,6 +1285,7 @@ html.reader-focus #readerDialog .reader-dialog-card { width: min(720px, 100%); m
   outline: 2px solid var(--primary);
   box-shadow: 0 0 0 4px var(--soft);
 }
+#workspace[data-tool="home"] .feed-source-tab.reorder-dragging { background: var(--soft); }
 #workspace[data-tool="home"] .feed-source-mark.huxiu,
 #workspace[data-tool="home"] .feed-source-tag.huxiu b { background: #e39a35; color: #fff; border: 0; }
 #workspace[data-tool="home"] .feed-source-mark.v2ex,
@@ -5600,6 +5608,10 @@ html[data-theme-mode="dark-gray"] .key {
   transform: scale(.985);
   transition: none;
   z-index: 3;
+}
+.reader-book-card.reorder-over {
+  outline: 2px dashed var(--primary);
+  outline-offset: 4px;
 }
 .reader-book-card,
 .reader-book-open {
