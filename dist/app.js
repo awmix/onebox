@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.105';
+const APP_VERSION = '2.18.106';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -2147,12 +2147,21 @@ function eventDateTimeMarkup(selectedKey) {
   const parts = eventDateTimeParts(selectedKey);
   return {
     parts,
-    control: '<input id="eventDateTime" class="event-datetime-input" type="datetime-local" value="' + parts.dateTimeValue + '" step="60" aria-label="' + escapeHtml(t('eventDateTime')) + '">',
+    control: '<span class="event-datetime-control"><span id="eventDateTimeDisplay" class="event-datetime-display" aria-hidden="true">' + escapeHtml(formatEventDateTimeDisplay(parts.dateTimeValue)) + '</span><svg class="event-datetime-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 9h16"/></svg><input id="eventDateTime" class="event-datetime-input" type="datetime-local" value="' + parts.dateTimeValue + '" step="60" aria-label="' + escapeHtml(t('eventDateTime')) + '"></span>',
     hidden: '<input type="hidden" id="eventDate" value="' + parts.dateValue + '"><input type="hidden" id="eventTime" value="' + parts.timeValue + '">',
   };
 }
+function formatEventDateTimeDisplay(value) {
+  const match = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/.exec(String(value || ''));
+  return match ? match.slice(1, 4).join('/') + ' ' + match[4] + ':' + match[5] : String(value || '');
+}
+function updateEventDateTimeDisplay(value = $('#eventDateTime')?.value || '') {
+  const display = $('#eventDateTimeDisplay');
+  if (display) display.textContent = formatEventDateTimeDisplay(value);
+}
 function syncEventDateTimeFields() {
   const value = $('#eventDateTime')?.value || '';
+  updateEventDateTimeDisplay(value);
   const match = /^(\d{4}-\d{2}-\d{2})T(\d{2}):(\d{2})$/.exec(value);
   if (!match) return;
   const date = $('#eventDate'); if (date) date.value = match[1];
@@ -3530,6 +3539,9 @@ $('#eventDialog').addEventListener('change', (event) => {
     const weekly = $('.event-weekdays-field', $('#eventDialog')); if (weekly) weekly.hidden = event.target.value !== 'weekly';
     const time = $('#eventTime'); if (time) time.required = event.target.value !== 'once';
   }
+});
+$('#eventDialog').addEventListener('input', (event) => {
+  if (event.target.id === 'eventDateTime') syncEventDateTimeFields();
 });
 $('#eventDialog').addEventListener('submit', (event) => {
   event.preventDefault();

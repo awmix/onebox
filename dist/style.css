@@ -5877,7 +5877,7 @@ html[data-theme="dark"] #homeSourceNav .feed-source-mark.bilibili { background: 
   #settingsDialog .settings-multiselect-menu { max-height: 240px; overflow-y: auto; }
 }
 
-/* 2.18.105: the homepage source picker is a real multi-select. Keep the
+/* 2.18.106: the homepage source picker is a real multi-select. Keep the
    menu open while choices change, and show the selected source marks and
    labels in the same compact control height as the other settings selects. */
 #settingsDialog .settings-multiselect summary {
@@ -5980,5 +5980,74 @@ html[data-theme="dark"] #homeSourceNav .feed-source-mark.bilibili { background: 
     min-height: 46px;
     padding-inline: 12px;
     font-size: 13px;
+  }
+}
+
+/* iOS/PWA keeps its own baseline for datetime-local's date segments. On
+   narrow surfaces, keep the native input as the picker hit target and render
+   the value through a centered, theme-aware visual layer. Desktop retains the
+   native control because its alignment is already correct there. */
+#eventDialog .event-datetime-control {
+  position: relative;
+  display: block;
+  width: 100%;
+  min-width: 0;
+}
+#eventDialog .event-datetime-display,
+#eventDialog .event-datetime-icon { display: none; }
+@media (max-width: 760px) {
+  #eventDialog .event-datetime-control {
+    height: 46px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--panel-2);
+  }
+  #eventDialog .event-datetime-input {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    width: 100%;
+    height: 100%;
+    padding: 0 !important;
+    border: 0;
+    border-radius: 10px;
+    background: transparent;
+    color: transparent;
+    opacity: 0;
+    outline: none !important;
+    box-shadow: none !important;
+  }
+  #eventDialog .event-datetime-display {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    padding: 0 38px 0 12px;
+    color: var(--ink);
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    pointer-events: none;
+  }
+  #eventDialog .event-datetime-icon {
+    position: absolute;
+    top: 50%;
+    right: 12px;
+    z-index: 1;
+    display: block;
+    width: 16px;
+    height: 16px;
+    transform: translateY(-50%);
+    fill: none;
+    stroke: var(--muted);
+    stroke-width: 1.7;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    pointer-events: none;
   }
 }
