@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.109';
+const APP_VERSION = '2.18.110';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -51,7 +51,7 @@ const FEED_SOURCE_REGISTRY = [
   { id: 'v2ex', name: 'V2EX', badge: 'V', icon: 'https://www.v2ex.com/favicon.ico', className: 'v2ex', visibleByDefault: true, siteUrl: 'https://www.v2ex.com/?tab=all', fetchers: [{ kind: 'v2ex-latest', url: 'https://www.v2ex.com/api/topics/latest.json' }, { kind: 'rss', url: 'https://www.v2ex.com/index.xml' }] },
   { id: 'weibo', name: '微博', badge: '博', icon: 'icons/weibo.png?v=2.18.105', className: 'weibo', mobileHost: 'm.weibo.cn', visibleByDefault: true, siteUrl: 'https://s.weibo.com/top/summary?cate=realtimehot', fetchers: [{ kind: 'weibo-hot', url: 'https://baiapi.cn/api/weibo?type=json' }, { kind: 'weibo-hot-v2', url: 'https://weibo.com/ajax/side/hotSearch' }] },
   { id: 'bilibili', name: 'B站', badge: 'B', icon: 'icons/bilibili.svg', className: 'bilibili', mobileHost: 'm.bilibili.com', visibleByDefault: true, siteUrl: 'https://search.bilibili.com/all', fetchers: [{ kind: 'bilibili-hot', url: 'https://api.bilibili.com/x/web-interface/search/square?limit=30&platform=web' }, { kind: 'bilibili-hotword', url: 'https://s.search.bilibili.com/main/hotword' }] },
-  { id: 'guancha', name: '风闻', badge: '风', icon: 'icons/guancha.png?v=2.18.109', className: 'guancha', mobileHost: 'user.guancha.cn', visibleByDefault: false, siteUrl: 'https://user.guancha.cn/main/index?s=fwdhsy', fetchers: [{ kind: 'guancha-fengwen', url: 'https://user.guancha.cn/main/index-list.json?page=1&order=1' }, { kind: 'guancha-fengwen', url: 'https://rsshub.app/guancha/topic/0/1' }] },
+  { id: 'guancha', name: '风闻', badge: '风', icon: 'icons/guancha.png?v=2.18.110', className: 'guancha', mobileHost: 'user.guancha.cn', visibleByDefault: false, siteUrl: 'https://user.guancha.cn/main/index?s=fwdhsy', fetchers: [{ kind: 'guancha-fengwen', url: 'https://user.guancha.cn/main/index-list.json?page=1&order=1' }, { kind: 'guancha-fengwen', url: 'https://rsshub.app/guancha/topic/0/1' }] },
 ];
 const RSS_SOURCES = FEED_SOURCE_REGISTRY.filter((source) => source.enabled !== false);
 const RSS_REFRESH_INTERVAL = 2 * 60 * 1000;
@@ -201,9 +201,9 @@ const DICT = {
     githubClientId: 'GitHub OAuth Client ID', githubClientHint: '首次使用需在 GitHub OAuth App 中开启 Device Flow，并填入 Client ID。',
     githubLogin: '连接 GitHub', githubLogout: '退出 GitHub', upload: '上传到 GitHub', download: '从 GitHub 恢复',
     githubConnected: '已连接', githubNotConnected: '尚未连接', openDevice: '打开验证页面',
-    appUpdate: '应用更新', checkUpdate: '更新', updateAvailable: '有新版本可用', upToDate: '已是最新版本', updating: '正在检查…', applyUpdate: '立即更新',
+    appUpdate: '应用更新', checkUpdate: '检查更新', updateAvailable: '有新版本可用', upToDate: '已是最新版本', updating: '正在检查…', updateApplying: '正在应用…', updateCheckFailed: '检查失败，可重试', applyUpdate: '立即更新',
     notificationsPermission: '消息通知', enableNotifications: '允许通知', disableNotifications: '不允许通知', notificationDescription: 'iPhone 需要先将 OneBox 添加到主屏幕并允许消息通知；应用关闭后的后台提醒仍需要 Push 服务端。',
-    userAgreement: '用户协议', viewAgreement: '查看协议', agreementTitle: 'OneBox 用户协议', agreementBody: 'OneBox 是一款本地优先的日常工具应用。计算记录、日程、翻译历史和天气卡片默认保存在当前设备；使用 GitHub 云同步时，数据会写入你自己的私有 Gist。天气和翻译功能会请求对应的开源服务，服务商可能记录必要的请求信息。请在使用提醒、定位和消息通知功能前确认已授予相应权限。',
+    userAgreement: '用户协议', viewAgreement: '查看协议', agreementTitle: 'OneBox 用户协议', agreementIntro: 'OneBox 是一款本地优先的日常工具应用，主要功能在当前设备上运行。', agreementLocal: '本地数据：计算历史、日程、天气卡片、翻译历史、通知记录、阅读书架、阅读进度和笔记等，默认保存在当前设备。你可以在应用内删除对应记录或文档。', agreementNetwork: '网络服务：首页订阅源、天气和翻译会请求对应的第三方或开源服务；首页文章来自公开订阅源，内容、时效和可用性由来源网站决定。点击文章会打开来源网站，OneBox 不控制第三方页面的登录、广告或隐私规则。', agreementGithub: 'GitHub 云同步：只有在你主动配置 OAuth Client ID 并连接 GitHub 后才会启用。同步内容写入你自己的私有 Gist，访问令牌保存在当前设备；你可以随时退出连接或删除该 Gist。', agreementPermissions: '权限说明：定位仅用于查找当前位置天气；通知仅用于提醒日程和消息；文件选择仅用于导入本地阅读文档。未授权时，相应功能不会正常工作，但不影响其他功能。', agreementDisclaimer: '使用提示：天气、翻译、订阅源和第三方网页可能因网络、服务策略或接口变化而暂时不可用。请不要在同步数据、日程或笔记中保存不适合上传到个人 GitHub Gist 的敏感信息。', agreementUpdated: '最后更新',
     addReminder: '添加提醒', reminderText: '提醒内容', remindAt: '提醒时间', noNotifications: '还没有提醒。', once: '指定时间', everyDay: '每天', workdays: '工作日', restdays: '非工作日', weekly: '每周', weekdays: '重复星期',
     markRead: '全部已读', close: '关闭', system: '跟随系统', light: '浅色', dark: '深色', darkGray: '黑灰',
     layout: '布局', classicLayout: '经典布局', simpleLayout: '简约布局', openMode: '打开方式', openCurrent: '当前页打开', openNewTab: '新标签页打开', language: '语言', theme: '主题', color: '颜色', blackWhite: '黑白配', noblePurple: '贵族紫', skyBlue: '天空蓝', notBananaGreen: '不蕉绿', meituanYellow: '美团黄', topDisplay: '顶部显示', footprint: '足迹', showFootprint: '在首页显示', hideFootprint: '不在首页显示', reorderHint: '长按工具标签可以调整顺序',
@@ -242,9 +242,9 @@ const DICT = {
     githubClientId: 'GitHub OAuth Client ID', githubClientHint: 'Enable Device Flow in a GitHub OAuth App and paste its Client ID here once.',
     githubLogin: 'Connect GitHub', githubLogout: 'Disconnect GitHub', upload: 'Upload to GitHub', download: 'Restore from GitHub',
     githubConnected: 'Connected', githubNotConnected: 'Not connected', openDevice: 'Open verification page',
-    appUpdate: 'App update', checkUpdate: 'Update', updateAvailable: 'A new version is ready', upToDate: 'You are up to date', updating: 'Checking…', applyUpdate: 'Update now',
+    appUpdate: 'App update', checkUpdate: 'Check for updates', updateAvailable: 'A new version is ready', upToDate: 'You are up to date', updating: 'Checking…', updateApplying: 'Applying…', updateCheckFailed: 'Check failed. Try again.', applyUpdate: 'Update now',
     notificationsPermission: 'Message notifications', enableNotifications: 'Allow notifications', disableNotifications: 'Do not allow notifications', notificationDescription: 'On iPhone, add OneBox to the Home Screen and allow notifications first; background alerts after the app is closed still require a Push server.',
-    userAgreement: 'User agreement', viewAgreement: 'View agreement', agreementTitle: 'OneBox user agreement', agreementBody: 'OneBox is a local-first daily tools app. Calculator history, events, translation history and weather cards stay on this device by default; when GitHub sync is enabled, they are written to your own private Gist. Weather and translation features request open-source services, which may record necessary request metadata. Review the permissions before enabling reminders, location or message notifications.',
+    userAgreement: 'User agreement', viewAgreement: 'View agreement', agreementTitle: 'OneBox user agreement', agreementIntro: 'OneBox is a local-first daily tools app. Most features run on this device.', agreementLocal: 'Local data: calculator history, events, weather cards, translation history, notifications, the reading shelf, reading progress and notes stay on this device by default. You can delete the related records or documents in the app.', agreementNetwork: 'Network services: Home subscriptions, weather and translation may request third-party or open-source services. Home articles come from public feeds; their freshness and availability depend on the source site. Opening an article takes you to that site, whose login, advertising and privacy rules are outside OneBox.', agreementGithub: 'GitHub cloud sync: it is enabled only after you configure an OAuth Client ID and connect GitHub. Synced data is written to your own private Gist, while the access token stays on this device. You can disconnect at any time or delete the Gist.', agreementPermissions: 'Permissions: location is used only to find weather for your current place; notifications are used for event and message reminders; file access is used to import local reading documents. Other features remain available when these permissions are denied.', agreementDisclaimer: 'Use note: weather, translation, feeds and third-party pages may be temporarily unavailable because of network conditions, service policies or API changes. Do not put sensitive information that should not be uploaded to a personal GitHub Gist into synced settings, events or notes.', agreementUpdated: 'Last updated',
     addReminder: 'Add reminder', reminderText: 'Reminder', remindAt: 'When', noNotifications: 'No reminders yet.', once: 'Once', everyDay: 'Every day', workdays: 'Workdays', restdays: 'Rest days', weekly: 'Weekly', weekdays: 'Weekdays',
     markRead: 'Mark all read', close: 'Close', system: 'System', light: 'Light', dark: 'Dark', darkGray: 'Black gray',
     layout: 'Layout', classicLayout: 'Classic layout', simpleLayout: 'Simple layout', openMode: 'Open links', openCurrent: 'Current page', openNewTab: 'New tab', theme: 'Theme', language: 'Language', color: 'Color', blackWhite: 'Black and white', noblePurple: 'Noble purple', skyBlue: 'Sky blue', notBananaGreen: 'WeChat green', meituanYellow: 'Meituan yellow', topDisplay: 'Show at top', footprint: 'Footprints', showFootprint: 'Show on Home', hideFootprint: 'Hide from Home', reorderHint: 'Long-press a tool tab to reorder',
@@ -354,7 +354,7 @@ const state = {
   topDisplay: { theme: storedTopDisplay.theme !== false, language: storedTopDisplay.language !== false, messages: storedTopDisplay.messages !== false },
   footprint: storedFootprint,
   openMode: storedOpenMode === 'new-tab' ? 'new-tab' : 'current',
-  swRegistration: null, updateAvailable: false, updateChecking: false, updateApplying: false,
+  swRegistration: null, updateAvailable: false, updateChecking: false, updateApplying: false, updateError: false,
   github: (() => { const value = parseStored(STORAGE.github, {}) || {}; return { clientId: value.clientId || '', token: value.token || '', user: value.user || null, gistId: value.gistId || '', deviceCode: '', userCode: '', verificationUri: '', expiresAt: 0, interval: 5 }; })(),
 };
 function formatNumber(value) {
@@ -946,7 +946,6 @@ function openFeedLink(link) {
   item?.classList.add('is-opening');
   item?.setAttribute('aria-busy', 'true');
   feedNavigationPending = true;
-  toast(state.language === 'en' ? 'Opening article…' : '正在打开文章…');
   if (state.openMode === 'new-tab') {
     const opened = window.open(target, '_blank', 'noopener,noreferrer');
     clearFeedNavigationPending();
@@ -1013,8 +1012,8 @@ function renderMine() {
     agreement: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l3 3v15H6zM15 3v4h4M9 12h6M9 16h6"/></svg>',
   })[name];
   const row = (action, glyph, title, description) => '<button class="mine-row" ' + action + '><span class="mine-row-icon">' + icon(glyph) + '</span><span class="mine-row-copy"><strong>' + title + '</strong><small class="mine-row-description">' + description + '</small></span><span>›</span></button>';
-  const updateStatus = state.updateAvailable ? t('updateAvailable') : state.updateChecking ? t('updating') : t('upToDate');
-  const updateButton = state.updateAvailable ? '<button class="primary mine-update-button" data-apply-update>' + t('applyUpdate') + '</button>' : '<button class="primary mine-update-button" data-check-update ' + (state.updateChecking ? 'disabled' : '') + '>' + t('checkUpdate') + '</button>';
+  const updateStatus = state.updateApplying ? t('updateApplying') : state.updateAvailable ? t('updateAvailable') : state.updateChecking ? t('updating') : state.updateError ? t('updateCheckFailed') : t('upToDate');
+  const updateButton = state.updateAvailable ? '<button class="primary mine-update-button" data-apply-update ' + (state.updateApplying ? 'disabled' : '') + '>' + (state.updateApplying ? t('updateApplying') : t('applyUpdate')) + '</button>' : '<button class="primary mine-update-button" data-check-update ' + (state.updateChecking || state.updateApplying ? 'disabled' : '') + '>' + t('checkUpdate') + '</button>';
   const updateRow = '<div class="mine-row mine-update-row"><span class="mine-row-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v10M8 10l4 4 4-4M5 19h14"/></svg></span><span class="mine-row-copy mine-update-copy"><strong>' + t('appUpdate') + '</strong><small class="mine-row-description">v' + APP_VERSION + ' · ' + updateStatus + '</small></span><span class="mine-row-action">' + updateButton + '</span></div>';
   return '<div class="section-page mine-page"><div class="mine-list">' + row('data-open-settings-page', 'settings', t('settings'), state.language === 'en' ? 'Theme, language, color and display' : '主题、语言、颜色与显示设置') + row('data-open-github-page', 'github', 'GitHub', escapeHtml(githubStatus)) + updateRow + row('data-open-agreement-page', 'agreement', t('userAgreement'), state.language === 'en' ? 'Learn how OneBox handles data' : '了解 OneBox 如何处理数据') + '</div></div>';
 }
@@ -2759,7 +2758,9 @@ function disconnectGithub() {
 function renderAgreementDialog() {
   const dialog = $('#agreementDialog');
   if (!dialog) return;
-  dialog.innerHTML = '<div class="dialog-card agreement-dialog-card" role="dialog" aria-modal="true"><div class="dialog-head"><h2>' + t('agreementTitle') + '</h2><button class="icon-btn small" data-close-agreement aria-label="' + t('close') + '">×</button></div><p class="agreement-copy">' + t('agreementBody') + '</p><p class="settings-note">' + (state.language === 'en' ? 'Last updated with app version ' : '随应用版本更新：') + APP_VERSION + '</p></div>';
+  const sections = ['agreementIntro', 'agreementLocal', 'agreementNetwork', 'agreementGithub', 'agreementPermissions', 'agreementDisclaimer'];
+  const body = sections.map((key, index) => index === 0 ? '<p class="agreement-intro">' + escapeHtml(t(key)) + '</p>' : '<section class="agreement-section"><h3>' + escapeHtml(t(key).split('：')[0].split(':')[0]) + '</h3><p>' + escapeHtml(t(key)) + '</p></section>').join('');
+  dialog.innerHTML = '<div class="dialog-card agreement-dialog-card" role="dialog" aria-modal="true"><div class="dialog-head"><div><span class="dialog-kicker">OneBox</span><h2>' + t('agreementTitle') + '</h2></div><button class="icon-btn small" data-close-agreement aria-label="' + t('close') + '">×</button></div><div class="agreement-body">' + body + '</div><p class="settings-note agreement-updated">' + t('agreementUpdated') + ' · OneBox ' + APP_VERSION + '</p></div>';
   dialog.hidden = false;
 }
 function closeAgreementDialog() { const dialog = $('#agreementDialog'); if (dialog) dialog.hidden = true; }
@@ -2768,10 +2769,13 @@ function renderGithubDialog() {
   if (!dialog) return;
   const connected = Boolean(state.github.token && state.github.user);
   const account = connected
-    ? '<div class="github-user"><img src="' + escapeHtml(state.github.user.avatar_url || '') + '" alt=""><div><strong>' + escapeHtml(state.github.user.login || 'GitHub') + '</strong><small>' + t('githubConnected') + '</small></div></div>'
-    : '<span class="settings-note">' + t('githubNotConnected') + '</span>';
-  const code = state.github.userCode ? '<div class="device-code"><small>' + (state.language === 'en' ? 'Enter this code at GitHub' : '请在 GitHub 验证页面输入') + '</small><strong>' + escapeHtml(state.github.userCode) + '</strong><p><a href="' + escapeHtml(state.github.verificationUri || 'https://github.com/login/device') + '" target="_blank" rel="noreferrer">' + t('openDevice') + '</a></p></div>' : '';
-  dialog.innerHTML = '<div class="dialog-card github-dialog-card" role="dialog" aria-modal="true"><div class="dialog-head"><h2>GitHub</h2><button class="icon-btn small" data-close-github aria-label="' + t('close') + '">×</button></div><p class="settings-note">' + t('githubDescription') + '</p><div class="settings-row github-account-row"><h3>' + t('githubSync') + '</h3>' + account + '</div><div class="field"><label for="githubClientId">' + t('githubClientId') + '</label><input id="githubClientId" value="' + escapeHtml(state.github.clientId) + '" placeholder="Iv1.xxxxxxxxxxxxx"></div>' + code + '<div class="settings-actions">' + (connected ? '<button class="secondary" data-github-upload>' + t('upload') + '</button><button class="secondary" data-github-download>' + t('download') + '</button><button class="text-btn" data-github-logout>' + t('githubLogout') + '</button>' : '<button class="primary" data-github-login>' + t('githubLogin') + '</button>') + '</div></div>';
+    ? '<div class="github-status-card is-connected"><span class="github-status-icon github-avatar"><img src="' + escapeHtml(state.github.user.avatar_url || '') + '" alt="" onerror="this.hidden=true;this.parentElement.classList.add(\'is-fallback\')"></span><span class="github-status-copy"><strong>' + escapeHtml(state.github.user.login || 'GitHub') + '</strong><small>' + t('githubConnected') + '</small></span><span class="github-status-badge">✓</span></div>'
+    : '<div class="github-status-card"><span class="github-status-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 18h10a3.5 3.5 0 0 0 .5-6.96A5.5 5.5 0 0 0 7 9.5a4.25 4.25 0 0 0 0 8.5Z"/><path d="m12 12 2-2m-2 2-2-2m2 2v4"/></svg></span><span class="github-status-copy"><strong>' + t('githubNotConnected') + '</strong><small>' + t('githubDescription') + '</small></span></div>';
+  const code = state.github.userCode ? '<div class="device-code"><div><small>' + (state.language === 'en' ? 'Enter this code at GitHub' : '请在 GitHub 验证页面输入') + '</small><strong>' + escapeHtml(state.github.userCode) + '</strong></div><a class="secondary github-device-link" href="' + escapeHtml(state.github.verificationUri || 'https://github.com/login/device') + '" target="_blank" rel="noreferrer">' + t('openDevice') + '</a></div>' : '';
+  const actions = connected
+    ? '<div class="github-action-grid"><button class="primary" data-github-upload>' + t('upload') + '</button><button class="secondary" data-github-download>' + t('download') + '</button></div><button class="text-btn github-disconnect" data-github-logout>' + t('githubLogout') + '</button>'
+    : '<button class="primary github-connect" data-github-login>' + t('githubLogin') + '</button>';
+  dialog.innerHTML = '<div class="dialog-card github-dialog-card" role="dialog" aria-modal="true"><div class="dialog-head github-dialog-head"><div><span class="dialog-kicker">OneBox</span><h2>GitHub</h2><p>' + escapeHtml(t('githubDescription')) + '</p></div><button class="icon-btn small" data-close-github aria-label="' + t('close') + '">×</button></div><div class="github-dialog-body"><section class="github-status-section"><div class="github-section-label"><h3>' + t('githubSync') + '</h3><span>' + (connected ? t('githubConnected') : t('githubNotConnected')) + '</span></div>' + account + '</section><section class="github-credentials"><label for="githubClientId">' + t('githubClientId') + '</label><input id="githubClientId" value="' + escapeHtml(state.github.clientId) + '" placeholder="Iv1.xxxxxxxxxxxxx" autocomplete="off"><p>' + t('githubClientHint') + '</p></section>' + code + '<section class="github-actions">' + actions + '</section><p class="github-dialog-footnote">' + (state.language === 'en' ? 'Only your private Gist is used for sync. OneBox does not receive your GitHub password.' : '同步只使用你自己的私有 Gist，OneBox 不会获取你的 GitHub 密码。') + '</p></div></div>';
   dialog.hidden = false; state.githubDialogOpen = true;
 }
 function closeGithubDialog() { const dialog = $('#githubDialog'); if (dialog) dialog.hidden = true; state.githubDialogOpen = false; }
@@ -2801,6 +2805,7 @@ function refreshUpdateIndicator() {
 }
 function markUpdateAvailable() {
   state.updateAvailable = true;
+  state.updateError = false;
   refreshUpdateIndicator();
   if (state.settingsOpen) renderSettings();
   if (state.section === 'mine') render();
@@ -2825,38 +2830,74 @@ function observeUpdateWorker(registration) {
       }, { once: false });
     };
     if (registration.waiting) return finish(registration.waiting);
-    if (registration.installing?.state === 'installed') finish(registration.installing);
+    if (registration.installing) watch(registration.installing);
     registration.addEventListener('updatefound', () => watch(registration.installing), { once: true });
     timeout = setTimeout(() => finish(registration.waiting), 15000);
   });
 }
+async function updateServiceWorkerRegistration(registration) {
+  let lastError = null;
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    try {
+      await Promise.race([registration.update(), sleep(9000).then(() => { throw Error('Update check timed out'); })]);
+      return;
+    } catch (error) {
+      lastError = error;
+      if (attempt === 0) await sleep(350);
+    }
+  }
+  throw lastError || Error('Update check failed');
+}
 async function checkForUpdate() {
+  if (state.updateChecking || state.updateApplying) return;
   const registration = state.swRegistration || await navigator.serviceWorker?.getRegistration();
   if (!registration) return toast(state.language === 'en' ? 'Updates are unavailable in this browser' : '当前浏览器暂不支持更新检查', 'error');
   state.swRegistration = registration;
+  state.updateError = false;
   state.updateChecking = true;
   if (state.settingsOpen) renderSettings();
   if (state.section === 'mine') render();
   try {
     const installingBeforeCheck = registration.installing;
     const workerPromise = observeUpdateWorker(registration);
-    await registration.update();
+    await updateServiceWorkerRegistration(registration);
     let worker = registration.waiting;
     if (!worker) {
       const newWorkerStarted = registration.installing && registration.installing !== installingBeforeCheck;
-      worker = await Promise.race([workerPromise, sleep(newWorkerStarted ? 15000 : 900).then(() => null)]);
+      worker = await Promise.race([workerPromise, sleep(newWorkerStarted ? 9000 : 1400).then(() => null)]);
     }
-    if (worker || registration.waiting) markUpdateAvailable();
-    else { state.updateAvailable = false; refreshUpdateIndicator(); if (state.settingsOpen) renderSettings(); if (state.section === 'mine') render(); toast(t('upToDate')); }
-  } catch { toast(state.language === 'en' ? 'Update check failed' : '更新检查失败', 'error'); }
+    if (worker || registration.waiting || registration.installing?.state === 'installed') markUpdateAvailable();
+    else { state.updateAvailable = false; state.updateError = false; refreshUpdateIndicator(); if (state.settingsOpen) renderSettings(); if (state.section === 'mine') render(); toast(t('upToDate')); }
+  } catch {
+    state.updateError = true;
+    toast(state.language === 'en' ? 'Update check failed. Please try again.' : '更新检查失败，请重试', 'error');
+  }
   finally { state.updateChecking = false; if (state.settingsOpen) renderSettings(); if (state.section === 'mine') render(); }
 }
 function applyUpdate() {
+  if (state.updateApplying) return;
   const worker = state.swRegistration?.waiting;
   if (!worker) return checkForUpdate();
   state.updateApplying = true;
   if (state.settingsOpen) renderSettings();
-  worker.postMessage({ type: 'SKIP_WAITING' });
+  if (state.section === 'mine') render();
+  try {
+    worker.postMessage({ type: 'SKIP_WAITING' });
+    window.setTimeout(() => {
+      if (!state.updateApplying) return;
+      state.updateApplying = false;
+      state.updateError = true;
+      if (state.settingsOpen) renderSettings();
+      if (state.section === 'mine') render();
+      toast(state.language === 'en' ? 'The update did not finish. Please try again.' : '更新没有完成，请重试', 'error');
+    }, 8000);
+  } catch {
+    state.updateApplying = false;
+    state.updateError = true;
+    if (state.settingsOpen) renderSettings();
+    if (state.section === 'mine') render();
+    toast(state.language === 'en' ? 'The update could not be applied' : '更新应用失败，请重试', 'error');
+  }
 }
 function setupServiceWorker() {
   if (!('serviceWorker' in navigator)) return;
