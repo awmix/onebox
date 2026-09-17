@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.122';
+const APP_VERSION = '2.18.123';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -45,13 +45,14 @@ const TOOL_DEFS = {
 // The fetchers are intentionally source-specific: using one RSS aggregator for
 // every site was the reason several feeds lagged by hours and hit rate limits.
 const FEED_SOURCE_REGISTRY = [
-  { id: 'ithome', name: 'IT之家', badge: 'IT', icon: 'https://www.ithome.com/favicon.ico', className: 'ithome', mobileHost: 'm.ithome.com', visibleByDefault: true, siteUrl: 'https://www.ithome.com/', fetchers: [{ kind: 'rss', url: 'https://www.ithome.com/rss/' }, { kind: 'rss', url: 'https://www.ithome.com/rss', direct: true }] },
+  { id: 'ithome', name: '之家', badge: 'IT', icon: 'https://www.ithome.com/favicon.ico', className: 'ithome', mobileHost: 'm.ithome.com', visibleByDefault: true, siteUrl: 'https://www.ithome.com/', fetchers: [{ kind: 'rss', url: 'https://www.ithome.com/rss/' }, { kind: 'rss', url: 'https://www.ithome.com/rss', direct: true }] },
   { id: 'huxiu', name: '虎嗅', badge: '虎', icon: 'https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/be/4c/7f/be4c7f2c-0ebc-7ba8-a60e-c5707c67b0ee/AppIcon-0-0-1x_U007epad-0-1-0-85-220.png/128x128bb.png', className: 'huxiu', mobileHost: 'm.huxiu.com', visibleByDefault: true, siteUrl: 'https://www.huxiu.com/', fetchers: [{ kind: 'rss', url: 'https://www.huxiu.com/rss/0.xml' }, { kind: 'rss', url: 'https://rsshub.rssforever.com/huxiu/article' }, { kind: 'rss', url: 'https://rsshub.app/huxiu/article' }] },
   { id: 'zhihu', name: '知乎', badge: '知', icon: 'https://www.zhihu.com/favicon.ico', className: 'zhihu', mobileHost: 'www.zhihu.com', visibleByDefault: true, siteUrl: 'https://www.zhihu.com/hot', fetchers: [{ kind: 'zhihu-hot', url: 'https://www.zhihu.com/api/v4/search/hot_search' }, { kind: 'zhihu-hot', url: 'https://www.zhihu.com/api/v4/search/hot_search?limit=50' }] },
   { id: 'v2ex', name: 'V2EX', badge: 'V', icon: 'https://www.v2ex.com/favicon.ico', className: 'v2ex', visibleByDefault: true, siteUrl: 'https://www.v2ex.com/?tab=all', fetchers: [{ kind: 'v2ex-latest', url: 'https://www.v2ex.com/api/topics/latest.json' }, { kind: 'rss', url: 'https://www.v2ex.com/index.xml' }] },
   { id: 'weibo', name: '微博', badge: '博', icon: 'icons/weibo.png?v=2.18.105', className: 'weibo', mobileHost: 'm.weibo.cn', visibleByDefault: true, siteUrl: 'https://s.weibo.com/top/summary?cate=realtimehot', fetchers: [{ kind: 'weibo-hot', url: 'https://baiapi.cn/api/weibo?type=json' }, { kind: 'weibo-hot-v2', url: 'https://weibo.com/ajax/side/hotSearch' }] },
-  { id: 'bilibili', name: 'B站', badge: 'B', icon: 'icons/bilibili.ico?v=2.18.122', className: 'bilibili', mobileHost: 'm.bilibili.com', visibleByDefault: true, siteUrl: 'https://search.bilibili.com/all', fetchers: [{ kind: 'bilibili-hot', url: 'https://api.bilibili.com/x/web-interface/search/square?limit=30&platform=web' }, { kind: 'bilibili-hotword', url: 'https://s.search.bilibili.com/main/hotword' }] },
-  { id: 'guancha', name: '风闻', badge: '风', icon: 'icons/guancha.png?v=2.18.122', className: 'guancha', mobileHost: 'user.guancha.cn', visibleByDefault: false, siteUrl: 'https://user.guancha.cn/main/index?s=fwdhsy', fetchers: [{ kind: 'guancha-fengwen', url: 'https://user.guancha.cn/main/index-list.json?page=1&order=1' }, { kind: 'guancha-fengwen', url: 'https://rsshub.app/guancha/topic/0/1' }] },
+  { id: 'bilibili', name: 'B站', badge: 'B', icon: 'icons/bilibili.ico?v=2.18.123', className: 'bilibili', mobileHost: 'm.bilibili.com', visibleByDefault: true, siteUrl: 'https://search.bilibili.com/all', fetchers: [{ kind: 'bilibili-hot', url: 'https://api.bilibili.com/x/web-interface/search/square?limit=30&platform=web' }, { kind: 'bilibili-hotword', url: 'https://s.search.bilibili.com/main/hotword' }] },
+  { id: 'guancha', name: '风闻', badge: '风', icon: 'icons/guancha.png?v=2.18.123', className: 'guancha', mobileHost: 'user.guancha.cn', visibleByDefault: false, siteUrl: 'https://user.guancha.cn/main/index?s=fwdhsy', fetchers: [{ kind: 'guancha-fengwen', url: 'https://user.guancha.cn/main/index-list.json?page=1&order=1' }, { kind: 'guancha-fengwen', url: 'https://rsshub.app/guancha/topic/0/1' }] },
+  { id: 'hupu', name: '虎扑', badge: '虎', icon: 'icons/hupu.ico?v=2.18.123', className: 'hupu', mobileHost: 'm.hupu.com', visibleByDefault: false, siteUrl: 'https://bbs.hupu.com/bxj', fetchers: [{ kind: 'hupu-bbs', url: 'https://bbs.hupu.com/bxj' }, { kind: 'hupu-bbs', url: 'https://bbs.hupu.com/topic-daily' }] },
 ];
 const RSS_SOURCES = FEED_SOURCE_REGISTRY.filter((source) => source.enabled !== false);
 const RSS_REFRESH_INTERVAL = 2 * 60 * 1000;
@@ -633,6 +634,13 @@ function jinaJson(value) {
   }
 }
 function syntheticFeedTime(index) { return Date.now() - index * 60 * 1000; }
+function hupuTimestamp(value, index) {
+  const match = String(value || '').match(/(?:^|\s)(\d{1,2})-(\d{1,2})\s+(\d{1,2}):(\d{2})(?:\s|$)/);
+  if (!match) return syntheticFeedTime(index);
+  const now = new Date();
+  const timestamp = new Date(now.getFullYear(), Number(match[1]) - 1, Number(match[2]), Number(match[3]), Number(match[4])).getTime();
+  return timestamp > Date.now() + 7 * 24 * 60 * 60 * 1000 ? new Date(now.getFullYear() - 1, Number(match[1]) - 1, Number(match[2]), Number(match[3]), Number(match[4])).getTime() : timestamp;
+}
 function rssMarkdownItems(value, source) {
   const content = jinaContent(value);
   const headings = [...content.matchAll(/^#{2,6}\s+\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/gm)];
@@ -655,6 +663,15 @@ function rssMarkdownItems(value, source) {
       enclosure: { url: node.querySelector('enclosure')?.getAttribute('url') || '' },
     }, source, { approximate: false, publishedMs: parseFeedTimestamp(node.querySelector('pubDate, published, updated')?.textContent) || syntheticFeedTime(index) });
   }).filter(Boolean);
+}
+function hupuBbsItems(value, source) {
+  const content = jinaContent(value);
+  const matches = [...content.matchAll(/\[([^\]]+)\]\((https?:\/\/(?:www\.)?bbs\.hupu\.com\/\d+(?:-\d+)?\.html)\)([^\n]*)/g)];
+  return matches.map((match, index) => normalizeFeedItem({
+    title: match[1],
+    link: match[2].replace(/^http:/i, 'https:'),
+    description: feedText(match[3]).slice(0, 180),
+  }, source, { approximate: false, publishedMs: hupuTimestamp(match[3], index) })).filter(Boolean);
 }
 function structuredHotItems(payload, source, kind) {
   if (!payload) return [];
@@ -771,7 +788,7 @@ async function fetchFeedSource(source) {
       if (!response.ok) throw Error('HTTP ' + response.status);
       const text = await response.text();
       const payload = fetcher.kind === 'rss' || fetcher.kind === 'guancha-fengwen' ? null : jinaJson(text);
-      const items = fetcher.kind === 'rss' ? rssMarkdownItems(text, source) : fetcher.kind === 'guancha-fengwen' ? guanchaFengwenItems(text, source) : structuredHotItems(payload, source, fetcher.kind);
+      const items = fetcher.kind === 'rss' ? rssMarkdownItems(text, source) : fetcher.kind === 'hupu-bbs' ? hupuBbsItems(text, source) : fetcher.kind === 'guancha-fengwen' ? guanchaFengwenItems(text, source) : structuredHotItems(payload, source, fetcher.kind);
       if (items.length) { successful.push({ items, feedUrl: fetcher.url }); break; }
     } catch { /* try the next source-specific fallback */ }
   }
@@ -849,6 +866,15 @@ function mobileFeedLink(item) {
     } catch { return link; }
   }
   if (source.id === 'bilibili') return link.replace('https://search.bilibili.com/all', 'https://m.bilibili.com/search');
+  if (source.id === 'hupu') {
+    try {
+      const url = new URL(link);
+      const match = url.pathname.match(/^\/(\d+)(-\d+)?\.html$/i);
+      if (match) return 'https://m.hupu.com/bbs/' + match[1] + (match[2] || '') + '.html';
+      url.hostname = 'm.hupu.com';
+      return url.href;
+    } catch { return link; }
+  }
   if (!source.mobileHost) return link;
   try {
     const url = new URL(link);

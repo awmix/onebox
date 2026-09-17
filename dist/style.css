@@ -1152,6 +1152,7 @@ html.reader-focus #readerDialog .reader-dialog-card { width: min(720px, 100%); m
 .feed-source-mark.weibo, .feed-source-tag.weibo b { background: transparent; color: #fff; }
 .feed-source-mark.bilibili, .feed-source-tag.bilibili b { background: transparent; color: #00aeec; }
 .feed-source-mark.guancha, .feed-source-tag.guancha b { background: transparent; color: #fff; }
+.feed-source-mark.hupu, .feed-source-tag.hupu b { background: #d52b2b; color: #fff; }
 .feed-source-mark.footprint { background: var(--soft); color: var(--primary); }
 .feed-source-mark.footprint svg { width: 16px; height: 16px; fill: currentColor; }
 .feed-refresh { flex: 0 0 auto; width: 38px; height: 38px; padding: 8px; border-radius: 11px; }
