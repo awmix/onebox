@@ -2,15 +2,15 @@
   <title id="title">OneBox</title>
   <desc id="desc">OneBox four-cell mark in a rounded square.</desc>
   <style>
-    .tile { fill: #ffffff; stroke: #e5e8f0; }
+    .tile { fill: #ffffff; }
     .dark-dot { fill: #11131a; }
     .blue-dot { fill: #405cf5; }
     @media (prefers-color-scheme: dark) {
-      .tile { fill: #171a22; stroke: #292e3b; }
+      .tile { fill: #171a22; }
       .dark-dot { fill: #f5f6fa; }
     }
   </style>
-  <rect class="tile" x="4" y="4" width="504" height="504" rx="142" stroke-width="8"/>
+  <rect class="tile" x="0" y="0" width="512" height="512"/>
   <rect class="blue-dot" x="112" y="112" width="112" height="112" rx="24"/>
   <rect class="dark-dot" x="288" y="112" width="112" height="112" rx="24"/>
   <rect class="dark-dot" x="112" y="288" width="112" height="112" rx="24"/>

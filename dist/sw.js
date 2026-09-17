@@ -1,5 +1,5 @@
-const CACHE = 'onebox-v160';
-const APP_SHELL = ['./', 'index.html', 'style.css?v=2.18.112', 'app.js?v=2.18.112', 'calendar-data.js?v=2.18.112', 'manifest.webmanifest', 'icons/icon.svg', 'icons/icon-180.png', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-dark-180.png', 'icons/icon-dark-192.png', 'icons/icon-dark-512.png', 'icons/bell.svg', 'icons/bell-192.png', 'icons/weibo.png', 'icons/guancha.png?v=2.18.112', 'icons/bilibili.svg'];
+const CACHE = 'onebox-v161';
+const APP_SHELL = ['./', 'index.html', 'style.css?v=2.18.113', 'app.js?v=2.18.113', 'calendar-data.js?v=2.18.113', 'manifest.webmanifest', 'icons/icon.svg', 'icons/icon.svg?v=2.18.113', 'icons/icon-180.png', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-dark-180.png', 'icons/icon-dark-192.png', 'icons/icon-dark-512.png', 'icons/apple-touch-icon.png', 'icons/apple-touch-icon.png?v=2.18.113', 'icons/apple-touch-icon-dark.png', 'icons/apple-touch-icon-dark.png?v=2.18.113', 'icons/bell.svg', 'icons/bell-192.png', 'icons/weibo.png', 'icons/guancha.png?v=2.18.113', 'icons/bilibili.svg'];
 const OPEN_METEO = /(^|\.)open-meteo\.com$/;
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(APP_SHELL)).then(() => self.skipWaiting()));
