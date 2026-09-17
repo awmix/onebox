@@ -5874,3 +5874,102 @@ html[data-theme="dark"] #homeSourceNav .feed-source-mark.bilibili { background: 
   #settingsDialog .settings-home-feeds-row { align-items: center; }
   #settingsDialog .settings-multiselect-menu { max-height: 240px; overflow-y: auto; }
 }
+
+/* 2.18.100: the homepage source picker is a real multi-select. Keep the
+   menu open while choices change, and show the selected source marks and
+   labels in the same compact control height as the other settings selects. */
+#settingsDialog .settings-multiselect summary {
+  overflow: hidden;
+}
+#settingsDialog .settings-multiselect-summary-items {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 3px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  color: var(--ink) !important;
+}
+#settingsDialog .settings-multiselect-summary-items::-webkit-scrollbar { display: none; }
+#settingsDialog .settings-multiselect-summary-item {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 2px;
+  color: var(--ink) !important;
+  font-size: 9px;
+  font-weight: 650;
+}
+#settingsDialog .settings-multiselect-summary-item .feed-source-mark {
+  width: 15px;
+  height: 15px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: var(--panel-2);
+}
+#settingsDialog .settings-multiselect-summary-item .feed-source-mark img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: inherit;
+}
+#settingsDialog .settings-multiselect-summary-empty { color: var(--muted) !important; }
+#settingsDialog .settings-multiselect-chevron {
+  flex: 0 0 auto;
+  color: var(--muted) !important;
+  font-size: 12px;
+}
+#settingsDialog .settings-multiselect-option .feed-source-mark {
+  width: 20px;
+  height: 20px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--panel-2);
+}
+#settingsDialog .settings-multiselect-option .feed-source-mark img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: inherit;
+}
+
+/* Keep the unified native date-time picker the same size and surface as the
+   repeat select. text-align is explicit because iOS otherwise centers the
+   selected value in this control. */
+#eventDialog .event-datetime-input,
+#eventDialog #eventRepeat {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  height: 46px;
+  min-height: 46px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel-2);
+  color: var(--ink);
+  font: inherit;
+  font-size: 14px;
+  line-height: 1.2;
+  text-align: left;
+  text-align-last: left;
+}
+#eventDialog .event-datetime-input {
+  appearance: none;
+  -webkit-appearance: none;
+  display: block;
+}
+#eventDialog .event-datetime-input::-webkit-calendar-picker-indicator {
+  margin-left: auto;
+  opacity: .58;
+}
+@media (max-width: 600px) {
+  #eventDialog .event-datetime-input,
+  #eventDialog #eventRepeat {
+    height: 46px;
+    min-height: 46px;
+    padding-inline: 12px;
+    font-size: 13px;
+  }
+}

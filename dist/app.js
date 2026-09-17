@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.99';
+const APP_VERSION = '2.18.100';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -49,8 +49,8 @@ const FEED_SOURCE_REGISTRY = [
   { id: 'huxiu', name: '虎嗅', badge: '虎', icon: 'https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/be/4c/7f/be4c7f2c-0ebc-7ba8-a60e-c5707c67b0ee/AppIcon-0-0-1x_U007epad-0-1-0-85-220.png/128x128bb.png', className: 'huxiu', mobileHost: 'm.huxiu.com', visibleByDefault: true, siteUrl: 'https://www.huxiu.com/', fetchers: [{ kind: 'rss', url: 'https://www.huxiu.com/rss/0.xml' }, { kind: 'rss', url: 'https://rsshub.rssforever.com/huxiu/article' }, { kind: 'rss', url: 'https://rsshub.app/huxiu/article' }] },
   { id: 'zhihu', name: '知乎', badge: '知', icon: 'https://www.zhihu.com/favicon.ico', className: 'zhihu', mobileHost: 'www.zhihu.com', visibleByDefault: true, siteUrl: 'https://www.zhihu.com/hot', fetchers: [{ kind: 'zhihu-hot', url: 'https://www.zhihu.com/api/v4/search/hot_search' }, { kind: 'zhihu-hot', url: 'https://www.zhihu.com/api/v4/search/hot_search?limit=50' }] },
   { id: 'v2ex', name: 'V2EX', badge: 'V', icon: 'https://www.v2ex.com/favicon.ico', className: 'v2ex', visibleByDefault: true, siteUrl: 'https://www.v2ex.com/?tab=all', fetchers: [{ kind: 'v2ex-latest', url: 'https://www.v2ex.com/api/topics/latest.json' }, { kind: 'rss', url: 'https://www.v2ex.com/index.xml' }] },
-  { id: 'weibo', name: '微博', badge: '博', icon: 'https://weibo.com/favicon.ico', className: 'weibo', mobileHost: 'm.weibo.cn', visibleByDefault: false, siteUrl: 'https://s.weibo.com/top/summary?cate=realtimehot', fetchers: [{ kind: 'weibo-hot', url: 'https://baiapi.cn/api/weibo?type=json' }, { kind: 'weibo-hot-v2', url: 'https://weibo.com/ajax/side/hotSearch' }] },
-  { id: 'bilibili', name: 'B站', badge: 'B', icon: 'icons/bilibili.svg', className: 'bilibili', mobileHost: 'm.bilibili.com', visibleByDefault: false, siteUrl: 'https://search.bilibili.com/all', fetchers: [{ kind: 'bilibili-hot', url: 'https://api.bilibili.com/x/web-interface/search/square?limit=30&platform=web' }, { kind: 'bilibili-hotword', url: 'https://s.search.bilibili.com/main/hotword' }] },
+  { id: 'weibo', name: '微博', badge: '博', icon: 'https://m.weibo.cn/favicon.ico', className: 'weibo', mobileHost: 'm.weibo.cn', visibleByDefault: true, siteUrl: 'https://s.weibo.com/top/summary?cate=realtimehot', fetchers: [{ kind: 'weibo-hot', url: 'https://baiapi.cn/api/weibo?type=json' }, { kind: 'weibo-hot-v2', url: 'https://weibo.com/ajax/side/hotSearch' }] },
+  { id: 'bilibili', name: 'B站', badge: 'B', icon: 'icons/bilibili.svg', className: 'bilibili', mobileHost: 'm.bilibili.com', visibleByDefault: true, siteUrl: 'https://search.bilibili.com/all', fetchers: [{ kind: 'bilibili-hot', url: 'https://api.bilibili.com/x/web-interface/search/square?limit=30&platform=web' }, { kind: 'bilibili-hotword', url: 'https://s.search.bilibili.com/main/hotword' }] },
 ];
 const RSS_SOURCES = FEED_SOURCE_REGISTRY.filter((source) => source.enabled !== false);
 const RSS_REFRESH_INTERVAL = 2 * 60 * 1000;
@@ -288,6 +288,22 @@ const normalizeHomeFeedVisibility = (value) => {
   const visible = Array.isArray(value) ? value : DEFAULT_HOME_FEED_VISIBLE;
   return [...new Set(visible.filter((id) => DEFAULT_HOME_FEED_ORDER.includes(id)))];
 };
+function homeFeedSourceMarkMarkup(source, extraClass = '') {
+  return '<span class="feed-source-mark ' + escapeHtml(source.className) + (extraClass ? ' ' + extraClass : '') + '"><img src="' + escapeHtml(source.icon) + '" alt="" loading="eager" onerror="this.hidden=true;this.nextElementSibling.style.display=\'inline\'"><span class="feed-source-fallback">' + escapeHtml(source.badge) + '</span></span>';
+}
+function homeFeedSelectionSummaryMarkup() {
+  const selected = RSS_SOURCES.filter((source) => state?.homeFeed?.visible?.includes(source.id));
+  if (!selected.length) return '<span class="settings-multiselect-summary-empty">未选择</span>';
+  return '<span class="settings-multiselect-summary-items">' + selected.map((source) => '<span class="settings-multiselect-summary-item">' + homeFeedSourceMarkMarkup(source) + '<span>' + escapeHtml(source.name) + '</span></span>').join('') + '</span>';
+}
+function updateHomeFeedSelectionSummary() {
+  const details = $('#settingsDialog .settings-multiselect');
+  const summary = details?.querySelector('summary');
+  if (!summary) return;
+  const wasOpen = details.open;
+  summary.innerHTML = homeFeedSelectionSummaryMarkup() + '<span class="settings-multiselect-chevron" aria-hidden="true">⌄</span>';
+  details.open = wasOpen;
+}
 const initialWeatherCards = (Array.isArray(rawWeatherCards) && rawWeatherCards.length ? rawWeatherCards : legacyWeather ? [legacyWeather] : []).map((item) => ({
   ...item,
   isCurrentLocation: Boolean(item.isCurrentLocation || item.name === '当前位置' || item.name === 'Current location'),
@@ -828,7 +844,11 @@ function restoreNavigationPosition() {
   const restore = () => {
     clearPageSwipeTrack();
     const main = $('main'); const tabs = $('.feed-source-tabs');
-    if (main) main.scrollTo({ top: Math.max(0, Number(saved.mainScrollTop) || 0), behavior: 'auto' });
+    if (main) {
+      const requestedTop = Math.max(0, Number(saved.mainScrollTop) || 0);
+      const maxTop = Math.max(0, main.scrollHeight - main.clientHeight);
+      main.scrollTo({ top: Math.min(requestedTop, maxTop), behavior: 'auto' });
+    }
     if (tabs) tabs.scrollLeft = Math.max(0, Number(saved.sourceScrollLeft) || 0);
     $('#bottomNav')?.classList.remove('is-blurred'); main?.classList.remove('bottom-nav-blurred'); lastMainScrollTop = main?.scrollTop || 0;
   };
@@ -2628,9 +2648,8 @@ function renderSettings() {
   const dialog = $('#settingsDialog');
   const notificationPreference = state.notificationPreference === 'deny' ? 'deny' : 'allow';
   const openMode = '<div class="settings-preference-row"><h3>' + t('openMode') + '</h3><div class="settings-preference-control"><select id="settingsOpenMode"><option value="current" ' + (state.openMode === 'current' ? 'selected' : '') + '>' + t('openCurrent') + '</option><option value="new-tab" ' + (state.openMode === 'new-tab' ? 'selected' : '') + '>' + t('openNewTab') + '</option></select></div></div>';
-  const selectedHomeFeeds = state.homeFeed.visible.length;
-  const homeFeedOptions = RSS_SOURCES.map((source) => '<label class="settings-multiselect-option"><input type="checkbox" data-home-feed-visibility="' + escapeHtml(source.id) + '" aria-label="' + escapeHtml(source.name) + '" ' + (state.homeFeed.visible.includes(source.id) ? 'checked' : '') + '><span class="feed-source-mark ' + escapeHtml(source.className) + '"><img src="' + escapeHtml(source.icon) + '" alt="" onerror="this.hidden=true;this.nextElementSibling.style.display=\'inline\'"><span class="feed-source-fallback">' + escapeHtml(source.badge) + '</span></span><span>' + escapeHtml(source.name) + '</span></label>').join('');
-  const homeFeeds = '<div class="settings-preference-row settings-home-feeds-row"><h3>' + t('homeTabs') + '</h3><div class="settings-preference-control settings-home-feeds-control"><details class="settings-multiselect"><summary>' + escapeHtml(t('homeTabsSelected').replace('{count}', String(selectedHomeFeeds))) + '<span aria-hidden="true">⌄</span></summary><div class="settings-multiselect-menu">' + homeFeedOptions + '</div></details></div></div>';
+  const homeFeedOptions = RSS_SOURCES.map((source) => '<label class="settings-multiselect-option"><input type="checkbox" data-home-feed-visibility="' + escapeHtml(source.id) + '" aria-label="' + escapeHtml(source.name) + '" ' + (state.homeFeed.visible.includes(source.id) ? 'checked' : '') + '>' + homeFeedSourceMarkMarkup(source) + '<span>' + escapeHtml(source.name) + '</span></label>').join('');
+  const homeFeeds = '<div class="settings-preference-row settings-home-feeds-row"><h3>' + t('homeTabs') + '</h3><div class="settings-preference-control settings-home-feeds-control"><details class="settings-multiselect"><summary>' + homeFeedSelectionSummaryMarkup() + '<span class="settings-multiselect-chevron" aria-hidden="true">⌄</span></summary><div class="settings-multiselect-menu">' + homeFeedOptions + '</div></details></div></div>';
   const topDisplay = state.layoutMode === 'classic' ? '<div class="settings-preference-row settings-top-display-row"><h3>' + t('topDisplay') + '</h3><div class="settings-preference-control settings-top-display-control"><label class="setting-toggle"><input type="checkbox" data-top-display="theme" ' + (state.topDisplay.theme ? 'checked' : '') + '><span>' + t('theme') + '</span></label><label class="setting-toggle"><input type="checkbox" data-top-display="language" ' + (state.topDisplay.language ? 'checked' : '') + '><span>' + t('language') + '</span></label></div></div>' : '';
   dialog.innerHTML = '<div class="dialog-card settings-dialog-card" role="dialog" aria-modal="true"><div class="dialog-head"><h2>' + t('settings') + '</h2><button class="icon-btn small" data-close-settings aria-label="' + t('close') + '">×</button></div>' +
     '<div class="settings-preferences"><div class="settings-preference-row"><h3>' + t('layout') + '</h3><div class="settings-preference-control"><select id="settingsLayout"><option value="classic" ' + (state.layoutMode === 'classic' ? 'selected' : '') + '>' + t('classicLayout') + '</option><option value="simple" ' + (state.layoutMode === 'simple' ? 'selected' : '') + '>' + t('simpleLayout') + '</option></select></div></div>' + topDisplay + '<div class="settings-preference-row"><h3>' + t('theme') + '</h3><div class="settings-preference-control"><select id="settingsTheme"><option value="system" ' + (state.theme === 'system' ? 'selected' : '') + '>' + t('system') + '</option><option value="light" ' + (state.theme === 'light' ? 'selected' : '') + '>' + t('light') + '</option><option value="dark" ' + (state.theme === 'dark' ? 'selected' : '') + '>' + t('dark') + '</select></div></div><div class="settings-preference-row"><h3>' + t('color') + '</h3><div class="settings-preference-control"><select id="settingsColor"><option value="mono" ' + (state.color === 'mono' ? 'selected' : '') + '>' + t('blackWhite') + '</option><option value="purple" ' + (state.color === 'purple' ? 'selected' : '') + '>' + t('noblePurple') + '</option><option value="blue" ' + (state.color === 'blue' ? 'selected' : '') + '>' + t('skyBlue') + '</option><option value="green" ' + (state.color === 'green' ? 'selected' : '') + '>' + t('notBananaGreen') + '</option><option value="yellow" ' + (state.color === 'yellow' ? 'selected' : '') + '>' + t('meituanYellow') + '</option></select></div></div><div class="settings-preference-row"><h3>' + t('language') + '</h3><div class="settings-preference-control"><select id="settingsLanguage"><option value="system" ' + (state.languageMode === 'system' ? 'selected' : '') + '>' + t('system') + '</option><option value="zh" ' + (state.languageMode === 'zh' ? 'selected' : '') + '>中文</option><option value="en" ' + (state.languageMode === 'en' ? 'selected' : '') + '>English</option></select></div></div><div class="settings-preference-row"><h3>' + t('messages') + '</h3><div class="settings-preference-control"><select id="settingsNotifications"><option value="allow" ' + (notificationPreference === 'allow' ? 'selected' : '') + '>' + t('enableNotifications') + '</option><option value="deny" ' + (notificationPreference === 'deny' ? 'selected' : '') + '>' + t('disableNotifications') + '</option></select></div></div><div class="settings-preference-row"><h3>' + t('footprint') + '</h3><div class="settings-preference-control"><select id="settingsFootprint"><option value="hide" ' + (!state.footprint ? 'selected' : '') + '>' + t('hideFootprint') + '</option><option value="show" ' + (state.footprint ? 'selected' : '') + '>' + t('showFootprint') + '</option></select></div></div>' + homeFeeds + openMode + '</div>';
@@ -2734,6 +2753,10 @@ function setupServiceWorker() {
 
 // Rendering and interaction --------------------------------------------------
 function render() {
+  // A page swipe preview is transient. Clear it before any route/content
+  // render so iOS Safari/PWA cannot retain the old 200% stage and expose an
+  // empty lower half after returning from an external feed page.
+  if (pageSwipeTrackState || pageSwipeStage.classList.contains('is-active')) clearPageSwipeTrack();
   applyLanguage();
   if (state.section === 'home') loadHomeFeeds();
   nav.hidden = state.section !== 'tools';
@@ -3658,7 +3681,7 @@ $('#settingsDialog').addEventListener('change', (event) => {
     state.homeFeed.visible = DEFAULT_HOME_FEED_ORDER.filter((id) => visible.has(id));
     if (state.homeFeed.active !== 'footprint' && !state.homeFeed.visible.includes(state.homeFeed.active)) state.homeFeed.active = homeFeedSources()[0]?.id || 'footprint';
     saveStored(STORAGE.homeFeedVisibility, state.homeFeed.visible);
-    render(); renderSettings();
+    render(); updateHomeFeedSelectionSummary();
     requestAnimationFrame(() => focusActiveHomeFeedTab(false));
     if (state.section === 'home') loadHomeFeeds(true);
   }
