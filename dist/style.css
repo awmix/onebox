@@ -1149,9 +1149,9 @@ html.reader-focus #readerDialog .reader-dialog-card { width: min(720px, 100%); m
 .feed-source-mark.huxiu, .feed-source-tag.huxiu b { background: #20242b; color: #f1d7a4; }
 .feed-source-mark.zhihu, .feed-source-tag.zhihu b { background: #1677ff; color: #fff; }
 .feed-source-mark.v2ex, .feed-source-tag.v2ex b { background: var(--panel-2); border: 1px solid var(--line); color: var(--ink); }
-.feed-source-mark.weibo, .feed-source-tag.weibo b { background: #e6162d; color: #fff; }
+.feed-source-mark.weibo, .feed-source-tag.weibo b { background: transparent; color: #fff; }
 .feed-source-mark.bilibili, .feed-source-tag.bilibili b { background: #00aeec; color: #fff; }
-.feed-source-mark.guancha, .feed-source-tag.guancha b { background: #49657a; color: #fff; }
+.feed-source-mark.guancha, .feed-source-tag.guancha b { background: transparent; color: #fff; }
 .feed-source-mark.footprint { background: var(--soft); color: var(--primary); }
 .feed-source-mark.footprint svg { width: 16px; height: 16px; fill: currentColor; }
 .feed-refresh { flex: 0 0 auto; width: 38px; height: 38px; padding: 8px; border-radius: 11px; }
@@ -4069,7 +4069,7 @@ html[data-theme="dark"][data-color="mono"] #settingsDialog .setting-toggle input
 #homeSourceNav .feed-source-mark:has(img[hidden]) .feed-source-fallback { display: inline; }
 #homeSourceNav .feed-source-mark.huxiu { background: #e39a35; color: #fff; border: 0; }
 #homeSourceNav .feed-source-mark.v2ex { background: #5c86a8; color: #fff; border: 0; }
-#homeSourceNav .feed-source-mark.guancha { background: #49657a; color: #fff; border: 0; }
+#homeSourceNav .feed-source-mark.guancha { background: transparent; color: #fff; border: 0; }
 #homeSourceNav .feed-source-mark.footprint svg { width: 14px; height: 14px; }
 #toolNav {
   position: fixed;
@@ -5877,7 +5877,7 @@ html[data-theme="dark"] #homeSourceNav .feed-source-mark.bilibili { background: 
   #settingsDialog .settings-multiselect-menu { max-height: 240px; overflow-y: auto; }
 }
 
-/* 2.18.104: the homepage source picker is a real multi-select. Keep the
+/* 2.18.105: the homepage source picker is a real multi-select. Keep the
    menu open while choices change, and show the selected source marks and
    labels in the same compact control height as the other settings selects. */
 #settingsDialog .settings-multiselect summary {
