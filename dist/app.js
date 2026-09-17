@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.141';
+const APP_VERSION = '2.18.142';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -45,7 +45,7 @@ const TOOL_DEFS = {
 // The fetchers are intentionally source-specific: using one RSS aggregator for
 // every site was the reason several feeds lagged by hours and hit rate limits.
 const FEED_SOURCE_REGISTRY = [
-  { id: 'ithome', name: '之家', badge: 'IT', icon: 'icons/ithome.ico?v=2.18.141', className: 'ithome', mobileHost: 'm.ithome.com', visibleByDefault: true, siteUrl: 'https://www.ithome.com/', fetchers: [{ kind: 'rss', url: 'https://www.ithome.com/rss/' }, { kind: 'rss', url: 'https://www.ithome.com/rss', direct: true }] },
+  { id: 'ithome', name: '之家', badge: 'IT', icon: 'icons/ithome.ico?v=2.18.142', className: 'ithome', mobileHost: 'm.ithome.com', visibleByDefault: true, siteUrl: 'https://www.ithome.com/', fetchers: [{ kind: 'rss', url: 'https://www.ithome.com/rss/' }, { kind: 'rss', url: 'https://www.ithome.com/rss', direct: true }] },
   { id: 'huxiu', name: '虎嗅', badge: '虎', icon: 'https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/be/4c/7f/be4c7f2c-0ebc-7ba8-a60e-c5707c67b0ee/AppIcon-0-0-1x_U007epad-0-1-0-85-220.png/128x128bb.png', className: 'huxiu', mobileHost: 'm.huxiu.com', visibleByDefault: true, siteUrl: 'https://www.huxiu.com/', fetchers: [{ kind: 'rss', url: 'https://www.huxiu.com/rss/0.xml' }, { kind: 'rss', url: 'https://rsshub.rssforever.com/huxiu/article' }, { kind: 'rss', url: 'https://rsshub.app/huxiu/article' }] },
   { id: 'zhihu', name: '知乎', badge: '知', icon: 'https://www.zhihu.com/favicon.ico', className: 'zhihu', mobileHost: 'www.zhihu.com', visibleByDefault: true, siteUrl: 'https://www.zhihu.com/hot', fetchers: [{ kind: 'zhihu-hot', url: 'https://www.zhihu.com/api/v4/search/hot_search' }, { kind: 'zhihu-hot', url: 'https://www.zhihu.com/api/v4/search/hot_search?limit=50' }] },
   { id: 'v2ex', name: 'V站', badge: 'V', icon: 'https://www.v2ex.com/favicon.ico', className: 'v2ex', visibleByDefault: false, siteUrl: 'https://www.v2ex.com/?tab=all', fetchers: [{ kind: 'v2ex-latest', url: 'https://www.v2ex.com/api/topics/latest.json' }, { kind: 'rss', url: 'https://www.v2ex.com/index.xml' }] },
@@ -485,7 +485,7 @@ function renderBottomNav() {
   if (!classic) {
     bottomNav.classList.remove('is-blurred');
     $('main')?.classList.remove('bottom-nav-blurred');
-  } else if ($('main')?.scrollTop <= 8) {
+  } else if (appScrollTop() <= 8) {
     bottomNav.classList.remove('is-blurred');
   }
   bottomNav.innerHTML = Object.values(SECTION_DEFS).map((item) => {
@@ -934,10 +934,23 @@ function mobileFeedLink(item) {
 function feedItemByLink(link) {
   return RSS_SOURCES.flatMap((source) => state.homeFeed.sources[source.id]?.items || []).find((item) => item.link === link) || recentFeedItems().find((item) => item.link === link) || { link };
 }
+function appScrollElement() {
+  return isIosSafariBrowser() ? (document.scrollingElement || document.documentElement) : $('main');
+}
+function appScrollTop() {
+  const scrollElement = appScrollElement();
+  if (!scrollElement) return 0;
+  return scrollElement === document.documentElement ? (window.scrollY || document.documentElement.scrollTop || 0) : scrollElement.scrollTop;
+}
+function scrollAppTo(top, behavior = 'auto') {
+  const scrollElement = appScrollElement();
+  if (!scrollElement) return;
+  scrollElement.scrollTo({ top: Math.max(0, Number(top) || 0), behavior });
+}
 function saveNavigationPosition() {
   try {
-    const main = $('main'); const tabs = $('.feed-source-tabs');
-    sessionStorage.setItem(NAVIGATION_SESSION_KEY, JSON.stringify({ hash: location.hash, section: state.section, tool: state.tool, homeFeedActive: state.homeFeed.active, mainScrollTop: main?.scrollTop || 0, sourceScrollLeft: tabs?.scrollLeft || 0, savedAt: Date.now() }));
+    const tabs = $('.feed-source-tabs');
+    sessionStorage.setItem(NAVIGATION_SESSION_KEY, JSON.stringify({ hash: location.hash, section: state.section, tool: state.tool, homeFeedActive: state.homeFeed.active, mainScrollTop: appScrollTop(), sourceScrollLeft: tabs?.scrollLeft || 0, savedAt: Date.now() }));
   } catch { /* session storage may be disabled */ }
 }
 function restoreNavigationPosition() {
@@ -950,14 +963,15 @@ function restoreNavigationPosition() {
   }
   const restore = () => {
     clearPageSwipeTrack();
-    const main = $('main'); const tabs = $('.feed-source-tabs');
-    if (main) {
+    const tabs = $('.feed-source-tabs');
+    const scrollElement = appScrollElement();
+    if (scrollElement) {
       const requestedTop = Math.max(0, Number(saved.mainScrollTop) || 0);
-      const maxTop = Math.max(0, main.scrollHeight - main.clientHeight);
-      main.scrollTo({ top: Math.min(requestedTop, maxTop), behavior: 'auto' });
+      const maxTop = Math.max(0, scrollElement.scrollHeight - scrollElement.clientHeight);
+      scrollAppTo(Math.min(requestedTop, maxTop));
     }
     if (tabs) tabs.scrollLeft = Math.max(0, Number(saved.sourceScrollLeft) || 0);
-    $('#bottomNav')?.classList.remove('is-blurred'); main?.classList.remove('bottom-nav-blurred'); lastMainScrollTop = main?.scrollTop || 0;
+    $('#bottomNav')?.classList.remove('is-blurred'); $('main')?.classList.remove('bottom-nav-blurred'); lastMainScrollTop = appScrollTop();
   };
   requestAnimationFrame(restore);
   window.setTimeout(restore, 120);
@@ -981,8 +995,7 @@ function recoverHomeLayoutAfterReturn() {
   pageSwipeGesture = null;
   clearFeedNavigationPending();
   if (state.section !== 'home') return;
-  const main = $('main');
-  const currentTop = main?.scrollTop || 0;
+  const currentTop = appScrollTop();
   // A feed request can be interrupted while the document is kept in the
   // browser's back-forward cache. Release that stale loading state before
   // rebuilding the page, otherwise the return view can look frozen forever.
@@ -993,12 +1006,12 @@ function recoverHomeLayoutAfterReturn() {
   render();
   const restore = () => {
     syncOneBoxViewportMetrics();
-    const currentMain = $('main');
-    if (currentMain) {
-      const maxTop = Math.max(0, currentMain.scrollHeight - currentMain.clientHeight);
-      currentMain.scrollTo({ top: Math.min(Math.max(0, currentTop), maxTop), behavior: 'auto' });
-      currentMain.classList.remove('bottom-nav-blurred');
+    const scrollElement = appScrollElement();
+    if (scrollElement) {
+      const maxTop = Math.max(0, scrollElement.scrollHeight - scrollElement.clientHeight);
+      scrollAppTo(Math.min(Math.max(0, currentTop), maxTop));
     }
+    $('main')?.classList.remove('bottom-nav-blurred');
     $('#bottomNav')?.classList.remove('is-blurred');
   };
   requestAnimationFrame(restore);
@@ -4097,15 +4110,17 @@ $('#layoutNav').addEventListener('click', (event) => {
 $('#brandLink').addEventListener('click', (event) => { event.preventDefault(); selectSection('home'); });
 $('#languagePicker').addEventListener('change', (event) => { state.languageMode = event.target.value; saveThemeLanguage(); applyLanguage(); renderNav(); render(); if (state.settingsOpen) renderSettings(); });
 let lastMainScrollTop = 0;
-$('main').addEventListener('scroll', (event) => {
-  const main = event.currentTarget;
+function handleAppScroll(current) {
   const bottomNav = $('#bottomNav');
   if (!bottomNav || state.layoutMode !== 'classic') return;
-  const current = main.scrollTop;
   if (current <= 8 || current < lastMainScrollTop - 4) bottomNav.classList.remove('is-blurred');
   else if (current > lastMainScrollTop + 4) bottomNav.classList.add('is-blurred');
-  main.classList.toggle('bottom-nav-blurred', bottomNav.classList.contains('is-blurred'));
+  $('main')?.classList.toggle('bottom-nav-blurred', bottomNav.classList.contains('is-blurred'));
   lastMainScrollTop = current;
+}
+$('main').addEventListener('scroll', (event) => handleAppScroll(event.currentTarget.scrollTop), { passive: true });
+window.addEventListener('scroll', () => {
+  if (isIosSafariBrowser()) handleAppScroll(appScrollTop());
 }, { passive: true });
 
 document.addEventListener('keydown', (event) => {

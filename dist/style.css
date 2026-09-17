@@ -6625,3 +6625,37 @@ html[data-theme="dark"] #githubDialog .github-dialog-head { background: var(--pa
 @media (prefers-reduced-motion: reduce) {
   .reader-page-turn-overlay::before { animation: none !important; opacity: 0 !important; }
 }
+
+/* 2.18.142: iPhone Safari webpage mode must scroll the document itself so
+   Safari can collapse its address/action bar while the page grows behind it.
+   The installed PWA keeps the existing fixed app viewport and safe-area
+   treatment; reader focus keeps its own fullscreen shell as well. */
+@media (max-width: 760px) {
+  html.ios-safari-browser:not(.standalone-pwa):not(.reader-focus),
+  html.ios-safari-browser:not(.standalone-pwa):not(.reader-focus) body {
+    min-height: 100%;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    overscroll-behavior-y: auto;
+  }
+  html.ios-safari-browser:not(.standalone-pwa):not(.reader-focus) .shell {
+    min-height: 100%;
+  }
+  html.ios-safari-browser:not(.standalone-pwa):not(.reader-focus) main {
+    height: auto !important;
+    min-height: calc(var(--onebox-visual-height, 100dvh) - var(--app-header-height));
+    max-height: none !important;
+    overflow: visible !important;
+    -webkit-overflow-scrolling: auto;
+    padding-bottom: calc(78px + env(safe-area-inset-bottom)) !important;
+  }
+  html.ios-safari-browser:not(.standalone-pwa):not(.reader-focus) #workspace {
+    min-height: calc(var(--onebox-visual-height, 100dvh) - var(--app-header-height) - 42px);
+  }
+  html.ios-safari-browser:not(.standalone-pwa):not(.reader-focus) #workspace[data-tool="home"] .feed-panel {
+    min-height: 0;
+  }
+  html.ios-safari-browser:not(.standalone-pwa):not(.reader-focus) .bottom-nav {
+    bottom: 0;
+  }
+}
