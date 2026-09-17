@@ -997,10 +997,6 @@ select, input, textarea { background: color-mix(in srgb, var(--panel) 88%, var(-
 .bottom-nav { bottom: max(6px, calc(env(safe-area-inset-bottom) - 16px)); }
 main { padding-bottom: calc(94px + env(safe-area-inset-bottom)); }
 
-@media (max-width: 760px) {
-  #settingsDialog .settings-multiselect { width: 112px; min-width: 112px; }
-}
-
 @media (max-width: 600px) {
   #toolNav .tab { min-width: 96px; padding: 11px 9px; }
   .bookshelf-grid { grid-template-columns: 1fr; }
@@ -5771,9 +5767,9 @@ html[data-theme-mode="dark-gray"] .key {
 
 /* Home feed source management: a compact multi-select dropdown keeps new
    sources opt-in without changing the order of the source rail. */
-#settingsDialog .settings-home-feeds-row { align-items: start; }
-#settingsDialog .settings-home-feeds-control { display: grid; gap: 6px; }
-#settingsDialog .settings-multiselect { position: relative; width: 124px; min-width: 124px; }
+#settingsDialog .settings-home-feeds-row { align-items: center; }
+#settingsDialog .settings-home-feeds-control { display: block; width: 100%; align-self: center; }
+#settingsDialog .settings-multiselect { position: relative; width: 100%; min-width: 0; }
 #settingsDialog .settings-multiselect summary {
   display: flex;
   align-items: center;
@@ -5874,14 +5870,7 @@ html[data-theme="dark"] #homeSourceNav .feed-source-mark.huxiu { background: #25
 html[data-theme="dark"] #homeSourceNav .feed-source-mark.zhihu { background: #075dcc; color: #fff; }
 html[data-theme="dark"] #homeSourceNav .feed-source-mark.bilibili { background: #00a8e8; color: #fff; }
 
-/* Leave a trailing touch-sized runway so the selected source can glide to the
-   leading edge instead of getting trapped against the right viewport edge. */
-#homeSourceNav .feed-source-tab-spacer { display: none; }
-@media (max-width: 760px) {
-  #homeSourceNav .feed-source-tab-spacer:not([hidden]) { display: block; flex: 0 0 calc(100% - 60px); height: 1px; }
-}
-
 @media (max-width: 600px) {
-  #settingsDialog .settings-home-feeds-row { align-items: start; }
+  #settingsDialog .settings-home-feeds-row { align-items: center; }
   #settingsDialog .settings-multiselect-menu { max-height: 240px; overflow-y: auto; }
 }
