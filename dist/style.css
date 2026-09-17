@@ -4144,6 +4144,15 @@ html[data-theme="dark"][data-color="mono"] #settingsDialog .setting-toggle input
 }
 main { overflow-x: hidden; }
 
+/* 2.18.109: a feed click can hand control to an external site. Keep the
+   clicked row visibly busy for that short hand-off, but let the app recover
+   and accept another tap if the browser blocks or stalls the navigation. */
+#workspace[data-tool="home"] .feed-item.is-opening {
+  cursor: progress;
+  opacity: .68;
+  pointer-events: none;
+}
+
 /* 2.18.58: reader dialogs keep their hint beside the title, while the
    reading footer stays focused on navigation, settings, progress and mode. */
 .reader-dialog-head {

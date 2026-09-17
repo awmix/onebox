@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.108';
+const APP_VERSION = '2.18.109';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -51,7 +51,7 @@ const FEED_SOURCE_REGISTRY = [
   { id: 'v2ex', name: 'V2EX', badge: 'V', icon: 'https://www.v2ex.com/favicon.ico', className: 'v2ex', visibleByDefault: true, siteUrl: 'https://www.v2ex.com/?tab=all', fetchers: [{ kind: 'v2ex-latest', url: 'https://www.v2ex.com/api/topics/latest.json' }, { kind: 'rss', url: 'https://www.v2ex.com/index.xml' }] },
   { id: 'weibo', name: '微博', badge: '博', icon: 'icons/weibo.png?v=2.18.105', className: 'weibo', mobileHost: 'm.weibo.cn', visibleByDefault: true, siteUrl: 'https://s.weibo.com/top/summary?cate=realtimehot', fetchers: [{ kind: 'weibo-hot', url: 'https://baiapi.cn/api/weibo?type=json' }, { kind: 'weibo-hot-v2', url: 'https://weibo.com/ajax/side/hotSearch' }] },
   { id: 'bilibili', name: 'B站', badge: 'B', icon: 'icons/bilibili.svg', className: 'bilibili', mobileHost: 'm.bilibili.com', visibleByDefault: true, siteUrl: 'https://search.bilibili.com/all', fetchers: [{ kind: 'bilibili-hot', url: 'https://api.bilibili.com/x/web-interface/search/square?limit=30&platform=web' }, { kind: 'bilibili-hotword', url: 'https://s.search.bilibili.com/main/hotword' }] },
-  { id: 'guancha', name: '风闻', badge: '风', icon: 'icons/guancha.png?v=2.18.108', className: 'guancha', mobileHost: 'user.guancha.cn', visibleByDefault: false, siteUrl: 'https://user.guancha.cn/main/index?s=fwdhsy', fetchers: [{ kind: 'guancha-fengwen', url: 'https://user.guancha.cn/main/index-list.json?page=1&order=1' }, { kind: 'guancha-fengwen', url: 'https://rsshub.app/guancha/topic/0/1' }] },
+  { id: 'guancha', name: '风闻', badge: '风', icon: 'icons/guancha.png?v=2.18.109', className: 'guancha', mobileHost: 'user.guancha.cn', visibleByDefault: false, siteUrl: 'https://user.guancha.cn/main/index?s=fwdhsy', fetchers: [{ kind: 'guancha-fengwen', url: 'https://user.guancha.cn/main/index-list.json?page=1&order=1' }, { kind: 'guancha-fengwen', url: 'https://rsshub.app/guancha/topic/0/1' }] },
 ];
 const RSS_SOURCES = FEED_SOURCE_REGISTRY.filter((source) => source.enabled !== false);
 const RSS_REFRESH_INTERVAL = 2 * 60 * 1000;
@@ -889,11 +889,83 @@ function restoreNavigationPosition() {
   window.setTimeout(restore, 120);
   window.setTimeout(restore, 320);
 }
+let feedNavigationPending = false;
+let feedNavigationTimer = null;
+function clearFeedNavigationPending() {
+  feedNavigationPending = false;
+  clearTimeout(feedNavigationTimer);
+  feedNavigationTimer = null;
+  $$('.feed-item.is-opening').forEach((item) => {
+    item.classList.remove('is-opening');
+    item.removeAttribute('aria-busy');
+  });
+}
+function recoverHomeLayoutAfterReturn() {
+  syncOneBoxViewportMetrics();
+  clearPageSwipeTrack();
+  pageSwipeAnimationToken = 0;
+  pageSwipeGesture = null;
+  clearFeedNavigationPending();
+  if (state.section !== 'home') return;
+  const main = $('main');
+  const currentTop = main?.scrollTop || 0;
+  // A feed request can be interrupted while the document is kept in the
+  // browser's back-forward cache. Release that stale loading state before
+  // rebuilding the page, otherwise the return view can look frozen forever.
+  if (state.homeFeed.loading) {
+    state.homeFeedRequest += 1;
+    state.homeFeed.loading = false;
+  }
+  render();
+  const restore = () => {
+    syncOneBoxViewportMetrics();
+    const currentMain = $('main');
+    if (currentMain) {
+      const maxTop = Math.max(0, currentMain.scrollHeight - currentMain.clientHeight);
+      currentMain.scrollTo({ top: Math.min(Math.max(0, currentTop), maxTop), behavior: 'auto' });
+      currentMain.classList.remove('bottom-nav-blurred');
+    }
+    $('#bottomNav')?.classList.remove('is-blurred');
+  };
+  requestAnimationFrame(restore);
+  window.setTimeout(restore, 120);
+  window.setTimeout(restore, 320);
+}
 function openFeedLink(link) {
-  if (!link) return;
   const target = mobileFeedLink(feedItemByLink(link));
-  if (state.openMode === 'new-tab') window.open(target, '_blank', 'noopener,noreferrer');
-  else { saveNavigationPosition(); window.location.assign(target); }
+  if (!target) {
+    toast(state.language === 'en' ? 'This article link is unavailable' : '这篇文章暂时没有可用链接', 'error');
+    return false;
+  }
+  if (!navigator.onLine) {
+    toast(state.language === 'en' ? 'You are offline. Please try again later.' : '当前处于离线状态，请联网后重试', 'error');
+    return false;
+  }
+  if (feedNavigationPending) return false;
+  const item = $$('.feed-item').find((node) => node.dataset.feedLink === link);
+  item?.classList.add('is-opening');
+  item?.setAttribute('aria-busy', 'true');
+  feedNavigationPending = true;
+  toast(state.language === 'en' ? 'Opening article…' : '正在打开文章…');
+  if (state.openMode === 'new-tab') {
+    const opened = window.open(target, '_blank', 'noopener,noreferrer');
+    clearFeedNavigationPending();
+    if (!opened) toast(state.language === 'en' ? 'The new tab was blocked by the browser' : '浏览器拦截了新标签页，请允许后重试', 'error');
+    return Boolean(opened);
+  }
+  saveNavigationPosition();
+  feedNavigationTimer = window.setTimeout(() => {
+    if (document.visibilityState === 'visible') {
+      clearFeedNavigationPending();
+      toast(state.language === 'en' ? 'The article could not be opened. Please try again.' : '文章页面暂时无法打开，请稍后重试', 'error');
+    }
+  }, 4200);
+  try { window.location.assign(target); return true; }
+  catch {
+    clearFeedNavigationPending();
+    toast(state.language === 'en' ? 'The article could not be opened' : '文章页面打开失败', 'error');
+    return false;
+  }
 }
 function homeSourceTabsMarkup() {
   const sources = homeFeedSources();
@@ -3368,7 +3440,12 @@ workspace.addEventListener('click', async (event) => {
   if (event.target.closest('[data-refresh-feeds]')) return loadHomeFeeds(true);
   const feedItem = event.target.closest('[data-feed-link]');
   const feedLink = feedItem?.dataset.feedLink;
-  if (feedLink) { markFeedRead(feedItem.dataset.feedId); feedItem.classList.add('is-read'); openFeedLink(feedLink); return; }
+  if (feedItem) {
+    if (feedLink) {
+      if (openFeedLink(feedLink)) { markFeedRead(feedItem.dataset.feedId); feedItem.classList.add('is-read'); }
+    } else toast(state.language === 'en' ? 'This article link is unavailable' : '这篇文章暂时没有可用链接', 'error');
+    return;
+  }
   if (state.readerMode === 'reading') {
     const selectionAction = event.target.closest('[data-reader-selection-action]');
     if (selectionAction) { await applyReaderSelectionAction(selectionAction.dataset.readerSelectionAction); return; }
@@ -3758,9 +3835,10 @@ $('#recentReadingDialog').addEventListener('click', (event) => {
   if (event.target === $('#recentReadingDialog') || event.target.closest('[data-close-recent-reading]')) return closeRecentReading();
   const feedItem = event.target.closest('[data-feed-link]');
   if (!feedItem) return;
-  markFeedRead(feedItem.dataset.feedId);
-  feedItem.classList.add('is-read');
-  openFeedLink(feedItem.dataset.feedLink);
+  if (openFeedLink(feedItem.dataset.feedLink)) {
+    markFeedRead(feedItem.dataset.feedId);
+    feedItem.classList.add('is-read');
+  }
 });
 $('#githubDialog').addEventListener('click', (event) => {
   if (event.target === $('#githubDialog') || event.target.closest('[data-close-github]')) return closeGithubDialog();
@@ -3780,15 +3858,31 @@ document.addEventListener('click', (event) => {
   if (state.notificationOpen && !event.target.closest('#notificationPanel, #notifyBtn')) closeNotifications();
 });
 document.addEventListener('pointerdown', unlockAlertAudio, { once: true, passive: true });
-window.addEventListener('pagehide', () => { saveNavigationPosition(); flushReaderProgress(); clearTimeout(persistenceTimer); writePersistentSnapshot(); });
-window.addEventListener('pageshow', () => {
+window.addEventListener('pagehide', () => {
+  saveNavigationPosition();
+  // Do not let a request that was in flight before the page was hidden keep
+  // the cached homepage in an endless loading state when iOS restores it.
+  state.homeFeedRequest += 1;
+  state.homeFeed.loading = false;
+  clearFeedNavigationPending();
+  flushReaderProgress(); clearTimeout(persistenceTimer); writePersistentSnapshot();
+});
+window.addEventListener('pageshow', (event) => {
+  let returningToHome = event.persisted;
+  try {
+    const saved = JSON.parse(sessionStorage.getItem(NAVIGATION_SESSION_KEY) || 'null');
+    returningToHome ||= Boolean(saved && saved.hash === location.hash && Date.now() - Number(saved.savedAt || 0) <= 30 * 60 * 1000);
+  } catch { /* session storage may be disabled */ }
   // iOS Safari/PWA can restore the old swipe transform and viewport-sized
   // bottom inset from the external page. Clear those transient styles before
   // restoring the user's exact tab and scroll position.
   pageSwipeAnimationToken = 0;
   pageSwipeGesture = null;
   clearPageSwipeTrack();
+  syncOneBoxViewportMetrics();
+  clearFeedNavigationPending();
   restoreNavigationPosition();
+  if (returningToHome) window.setTimeout(recoverHomeLayoutAfterReturn, 360);
 });
 window.addEventListener('beforeinstallprompt', (event) => { event.preventDefault(); window.installPrompt = event; $('#installBtn').hidden = false; });
 window.addEventListener('online', () => { $('#connectionStatus').textContent = t('online'); toast(state.language === 'en' ? 'Back online' : '网络已恢复'); });
