@@ -6107,7 +6107,12 @@ html[data-theme="dark"] #homeSourceNav .feed-source-mark.bilibili { background: 
   overflow: hidden;
 }
 #githubDialog .github-dialog-card { width: min(520px, 100%); }
-#agreementDialog .agreement-dialog-card { width: min(600px, 100%); }
+#agreementDialog .agreement-dialog-card {
+  display: flex;
+  width: min(600px, 100%);
+  min-height: 0;
+  flex-direction: column;
+}
 #githubDialog .github-dialog-head {
   margin: 0;
   padding: 16px 20px 14px;
@@ -6168,7 +6173,7 @@ html[data-theme="dark"] #homeSourceNav .feed-source-mark.bilibili { background: 
 #githubDialog .device-code small { color: var(--muted); font-size: 11px; }
 #githubDialog .device-code strong { font-size: 22px; letter-spacing: .14em; line-height: 1.1; }
 #githubDialog .github-device-link { flex: 0 0 auto; padding: 8px 10px; font-size: 11px; text-decoration: none; }
-.agreement-body { display: grid; gap: 13px; padding: 18px 22px 0; }
+.agreement-body { display: grid; min-height: 0; gap: 13px; overflow-y: auto; padding: 18px 22px 18px; -webkit-overflow-scrolling: touch; }
 .agreement-intro { margin: 0; color: var(--ink); font-size: 13px; font-weight: 700; line-height: 1.65; }
 .agreement-section { padding-top: 13px; border-top: 1px solid var(--line); }
 .agreement-section h3 { margin: 0 0 4px; font-size: 13px; }
@@ -6181,6 +6186,7 @@ html[data-theme="dark"] #agreementDialog .dialog-head {
 }
 html[data-theme="dark"] #githubDialog .github-dialog-head { background: var(--panel); }
 @media (max-width: 600px) {
+  #agreementDialog .agreement-dialog-card { max-height: calc(100dvh - 110px - env(safe-area-inset-top)); }
   #githubDialog .github-dialog-head, #agreementDialog .dialog-head { padding-inline: 18px; }
   .github-dialog-body, .agreement-body { padding-inline: 18px; }
   .agreement-updated { margin-inline: 18px !important; }
