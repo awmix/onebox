@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.120';
+const APP_VERSION = '2.18.121';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -50,8 +50,8 @@ const FEED_SOURCE_REGISTRY = [
   { id: 'zhihu', name: '知乎', badge: '知', icon: 'https://www.zhihu.com/favicon.ico', className: 'zhihu', mobileHost: 'www.zhihu.com', visibleByDefault: true, siteUrl: 'https://www.zhihu.com/hot', fetchers: [{ kind: 'zhihu-hot', url: 'https://www.zhihu.com/api/v4/search/hot_search' }, { kind: 'zhihu-hot', url: 'https://www.zhihu.com/api/v4/search/hot_search?limit=50' }] },
   { id: 'v2ex', name: 'V2EX', badge: 'V', icon: 'https://www.v2ex.com/favicon.ico', className: 'v2ex', visibleByDefault: true, siteUrl: 'https://www.v2ex.com/?tab=all', fetchers: [{ kind: 'v2ex-latest', url: 'https://www.v2ex.com/api/topics/latest.json' }, { kind: 'rss', url: 'https://www.v2ex.com/index.xml' }] },
   { id: 'weibo', name: '微博', badge: '博', icon: 'icons/weibo.png?v=2.18.105', className: 'weibo', mobileHost: 'm.weibo.cn', visibleByDefault: true, siteUrl: 'https://s.weibo.com/top/summary?cate=realtimehot', fetchers: [{ kind: 'weibo-hot', url: 'https://baiapi.cn/api/weibo?type=json' }, { kind: 'weibo-hot-v2', url: 'https://weibo.com/ajax/side/hotSearch' }] },
-  { id: 'bilibili', name: 'B站', badge: 'B', icon: 'icons/bilibili.ico?v=2.18.120', className: 'bilibili', mobileHost: 'm.bilibili.com', visibleByDefault: true, siteUrl: 'https://search.bilibili.com/all', fetchers: [{ kind: 'bilibili-hot', url: 'https://api.bilibili.com/x/web-interface/search/square?limit=30&platform=web' }, { kind: 'bilibili-hotword', url: 'https://s.search.bilibili.com/main/hotword' }] },
-  { id: 'guancha', name: '风闻', badge: '风', icon: 'icons/guancha.png?v=2.18.119', className: 'guancha', mobileHost: 'user.guancha.cn', visibleByDefault: false, siteUrl: 'https://user.guancha.cn/main/index?s=fwdhsy', fetchers: [{ kind: 'guancha-fengwen', url: 'https://user.guancha.cn/main/index-list.json?page=1&order=1' }, { kind: 'guancha-fengwen', url: 'https://rsshub.app/guancha/topic/0/1' }] },
+  { id: 'bilibili', name: 'B站', badge: 'B', icon: 'icons/bilibili.ico?v=2.18.121', className: 'bilibili', mobileHost: 'm.bilibili.com', visibleByDefault: true, siteUrl: 'https://search.bilibili.com/all', fetchers: [{ kind: 'bilibili-hot', url: 'https://api.bilibili.com/x/web-interface/search/square?limit=30&platform=web' }, { kind: 'bilibili-hotword', url: 'https://s.search.bilibili.com/main/hotword' }] },
+  { id: 'guancha', name: '风闻', badge: '风', icon: 'icons/guancha.png?v=2.18.121', className: 'guancha', mobileHost: 'user.guancha.cn', visibleByDefault: false, siteUrl: 'https://user.guancha.cn/main/index?s=fwdhsy', fetchers: [{ kind: 'guancha-fengwen', url: 'https://user.guancha.cn/main/index-list.json?page=1&order=1' }, { kind: 'guancha-fengwen', url: 'https://rsshub.app/guancha/topic/0/1' }] },
 ];
 const RSS_SOURCES = FEED_SOURCE_REGISTRY.filter((source) => source.enabled !== false);
 const RSS_REFRESH_INTERVAL = 2 * 60 * 1000;
@@ -354,7 +354,7 @@ const state = {
   topDisplay: { theme: storedTopDisplay.theme !== false, language: storedTopDisplay.language !== false, messages: storedTopDisplay.messages !== false },
   footprint: storedFootprint,
   openMode: storedOpenMode === 'new-tab' ? 'new-tab' : 'current',
-  swRegistration: null, updateAvailable: false, updateChecking: false, updateApplying: false, updateError: false,
+  swRegistration: null, updateAvailable: false, updateChecking: false, updateApplying: false, updateReloading: false, updateError: false,
   github: (() => { const value = parseStored(STORAGE.github, {}) || {}; return { clientId: value.clientId || '', token: value.token || '', user: value.user || null, gistId: value.gistId || '', deviceCode: '', userCode: '', verificationUri: '', expiresAt: 0, interval: 5 }; })(),
 };
 function formatNumber(value) {
@@ -2876,7 +2876,32 @@ async function checkForUpdate() {
   }
   finally { state.updateChecking = false; if (state.settingsOpen) renderSettings(); if (state.section === 'mine') render(); }
 }
-function applyUpdate() {
+function waitForServiceWorkerActivation(registration, worker, timeoutMs = 15000) {
+  return new Promise((resolve) => {
+    let settled = false;
+    let timeout = null;
+    const finish = (activated) => {
+      if (settled) return;
+      settled = true;
+      if (timeout) clearTimeout(timeout);
+      worker.removeEventListener('statechange', onStateChange);
+      resolve(activated);
+    };
+    const onStateChange = () => {
+      if (worker.state === 'activated' || registration.active === worker) finish(true);
+      else if (worker.state === 'redundant') finish(false);
+    };
+    if (worker.state === 'activated' || registration.active === worker) return finish(true);
+    worker.addEventListener('statechange', onStateChange);
+    timeout = setTimeout(() => finish(worker.state === 'activated' || registration.active === worker), timeoutMs);
+  });
+}
+function requestAppReload() {
+  if (state.updateReloading) return;
+  state.updateReloading = true;
+  window.location.reload();
+}
+async function applyUpdate() {
   if (state.updateApplying) return;
   const worker = state.swRegistration?.waiting;
   if (!worker) return checkForUpdate();
@@ -2885,14 +2910,9 @@ function applyUpdate() {
   if (state.section === 'mine') render();
   try {
     worker.postMessage({ type: 'SKIP_WAITING' });
-    window.setTimeout(() => {
-      if (!state.updateApplying) return;
-      state.updateApplying = false;
-      state.updateError = true;
-      if (state.settingsOpen) renderSettings();
-      if (state.section === 'mine') render();
-      toast(state.language === 'en' ? 'The update did not finish. Please try again.' : '更新没有完成，请重试', 'error');
-    }, 8000);
+    const activated = await waitForServiceWorkerActivation(state.swRegistration, worker);
+    if (!activated) throw Error('The update worker did not activate');
+    requestAppReload();
   } catch {
     state.updateApplying = false;
     state.updateError = true;
@@ -2907,9 +2927,10 @@ function setupServiceWorker() {
   let didReload = false;
   navigator.serviceWorker.addEventListener('controllerchange', () => {
     if (!controllerReady) { controllerReady = true; return; }
+    if (!state.updateApplying && !state.updateAvailable) return;
     if (didReload) return;
     didReload = true;
-    window.location.reload();
+    requestAppReload();
   });
   navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then((registration) => {
     state.swRegistration = registration;

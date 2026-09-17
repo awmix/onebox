@@ -1150,7 +1150,7 @@ html.reader-focus #readerDialog .reader-dialog-card { width: min(720px, 100%); m
 .feed-source-mark.zhihu, .feed-source-tag.zhihu b { background: #1677ff; color: #fff; }
 .feed-source-mark.v2ex, .feed-source-tag.v2ex b { background: var(--panel-2); border: 1px solid var(--line); color: var(--ink); }
 .feed-source-mark.weibo, .feed-source-tag.weibo b { background: transparent; color: #fff; }
-.feed-source-mark.bilibili, .feed-source-tag.bilibili b { background: #00aeec; color: #fff; }
+.feed-source-mark.bilibili, .feed-source-tag.bilibili b { background: transparent; color: #00aeec; }
 .feed-source-mark.guancha, .feed-source-tag.guancha b { background: transparent; color: #fff; }
 .feed-source-mark.footprint { background: var(--soft); color: var(--primary); }
 .feed-source-mark.footprint svg { width: 16px; height: 16px; fill: currentColor; }
@@ -5906,14 +5906,14 @@ html[data-theme="dark"] #workspace[data-tool="home"] .feed-source-tag.huxiu b { 
 html[data-theme="dark"] #workspace[data-tool="home"] .feed-source-mark.zhihu,
 html[data-theme="dark"] #workspace[data-tool="home"] .feed-source-tag.zhihu b { background: #075dcc; color: #fff; }
 html[data-theme="dark"] #workspace[data-tool="home"] .feed-source-mark.bilibili,
-html[data-theme="dark"] #workspace[data-tool="home"] .feed-source-tag.bilibili b { background: #00a8e8; color: #fff; }
+html[data-theme="dark"] #workspace[data-tool="home"] .feed-source-tag.bilibili b { background: transparent; color: #00a8e8; }
 
 /* The Home source rail sits beside, rather than inside, #workspace. Keep its
    active state and source marks on the same true-black palette as the page. */
 html[data-theme="dark"] #homeSourceNav .feed-source-tab.active { background: transparent; border-color: transparent; color: #fff; box-shadow: none; }
 html[data-theme="dark"] #homeSourceNav .feed-source-mark.huxiu { background: #252525; border-color: #555; color: #f3d7a0; }
 html[data-theme="dark"] #homeSourceNav .feed-source-mark.zhihu { background: #075dcc; color: #fff; }
-html[data-theme="dark"] #homeSourceNav .feed-source-mark.bilibili { background: #00a8e8; color: #fff; }
+html[data-theme="dark"] #homeSourceNav .feed-source-mark.bilibili { background: transparent; color: #00a8e8; }
 
 @media (max-width: 600px) {
   #settingsDialog .settings-home-feeds-row { align-items: center; }
@@ -5984,6 +5984,11 @@ html[data-theme="dark"] #homeSourceNav .feed-source-mark.bilibili { background: 
   height: 100%;
   object-fit: contain;
   border-radius: inherit;
+}
+#settingsDialog .settings-multiselect-summary-item .feed-source-mark.bilibili,
+#settingsDialog .settings-multiselect-option .feed-source-mark.bilibili {
+  background: transparent;
+  border-color: transparent;
 }
 
 /* Keep the unified native date-time picker the same size and surface as the
