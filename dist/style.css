@@ -5877,7 +5877,7 @@ html[data-theme="dark"] #homeSourceNav .feed-source-mark.bilibili { background: 
   #settingsDialog .settings-multiselect-menu { max-height: 240px; overflow-y: auto; }
 }
 
-/* 2.18.102: the homepage source picker is a real multi-select. Keep the
+/* 2.18.103: the homepage source picker is a real multi-select. Keep the
    menu open while choices change, and show the selected source marks and
    labels in the same compact control height as the other settings selects. */
 #settingsDialog .settings-multiselect summary {
