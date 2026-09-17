@@ -1143,13 +1143,13 @@ html.reader-focus #readerDialog .reader-dialog-card { width: min(720px, 100%); m
 .feed-source-panel { --feed-source-panel-bg: var(--panel); position: relative; display: flex; align-items: center; gap: 0; padding: 8px 10px; border-radius: 16px; }
 .feed-source-tabs { min-width: 0; flex: 1; display: flex; align-items: center; gap: 5px; overflow-x: auto; scrollbar-width: none; }
 .feed-source-tabs::-webkit-scrollbar { display: none; }
-.feed-source-scroll-button { position: absolute; top: 0; z-index: 3; display: grid; place-items: center; width: 38px; height: 100%; padding: 0; border: 0; border-radius: 0; background: linear-gradient(90deg, var(--feed-source-panel-bg) 12%, color-mix(in srgb, var(--feed-source-panel-bg) 78%, transparent) 54%, transparent 100%); color: color-mix(in srgb, var(--primary) 82%, var(--ink)); cursor: pointer; opacity: .86; transition: opacity .18s ease; }
+.feed-source-scroll-button { position: absolute; top: 0; z-index: 3; display: grid; place-items: center; width: 38px; height: 100%; padding: 0; border: 0; border-radius: 0; background: linear-gradient(90deg, var(--feed-source-panel-bg) 12%, color-mix(in srgb, var(--feed-source-panel-bg) 78%, transparent) 54%, transparent 100%); color: var(--muted); cursor: pointer; opacity: .92; transition: opacity .18s ease; }
 .feed-source-scroll-button[hidden] { display: none; }
 .feed-source-scroll-button[data-feed-source-scroll="previous"] { left: 0; }
 .feed-source-scroll-button[data-feed-source-scroll="next"] { right: 0; background: linear-gradient(270deg, var(--feed-source-panel-bg) 12%, color-mix(in srgb, var(--feed-source-panel-bg) 78%, transparent) 54%, transparent 100%); }
 .feed-source-scroll-button:hover { opacity: 1; }
-.feed-source-scroll-button:focus-visible { outline: 2px solid var(--primary); outline-offset: -4px; border-radius: 8px; }
-.feed-source-scroll-button svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.8; }
+.feed-source-scroll-button:focus-visible { outline: 2px solid color-mix(in srgb, var(--ink) 45%, transparent); outline-offset: -4px; border-radius: 8px; }
+.feed-source-scroll-button svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 2; }
 .feed-source-tab { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 7px; padding: 8px 11px; border: 1px solid transparent; border-radius: 11px; background: transparent; color: var(--muted); font-weight: 700; cursor: pointer; white-space: nowrap; }
 .feed-source-tab.active { background: var(--soft); border-color: var(--primary); color: var(--primary); }
 .feed-source-mark, .feed-source-tag b { display: inline-grid; place-items: center; flex: 0 0 auto; width: 22px; height: 22px; border-radius: 7px; font-size: 10px; font-weight: 850; letter-spacing: -.04em; }

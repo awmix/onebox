@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.129';
+const APP_VERSION = '2.18.130';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -1023,7 +1023,7 @@ function renderHomeSourceNav() {
   homeSourceNav.hidden = state.section !== 'home';
   const previousTabs = homeSourceNav.querySelector('.feed-source-tabs');
   const previousScrollLeft = previousTabs?.scrollLeft || 0;
-  homeSourceNav.innerHTML = state.section === 'home' ? '<div class="feed-source-panel"><button class="feed-source-scroll-button" data-feed-source-scroll="previous" type="button" hidden aria-label="' + escapeHtml(t('feedTabPrevious')) + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14.5 5-7 7 7 7"/></svg></button><div class="feed-source-tabs" role="tablist" aria-label="RSS 来源">' + homeSourceTabsMarkup() + '</div><button class="feed-source-scroll-button" data-feed-source-scroll="next" type="button" hidden aria-label="' + escapeHtml(t('feedTabNext')) + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9.5 5 7 7-7 7"/></svg></button></div>' : '';
+  homeSourceNav.innerHTML = state.section === 'home' ? '<div class="feed-source-panel"><button class="feed-source-scroll-button" data-feed-source-scroll="previous" type="button" hidden aria-label="' + escapeHtml(t('feedTabPrevious')) + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5.25 8.25 12 15 18.75"/></svg></button><div class="feed-source-tabs" role="tablist" aria-label="RSS 来源">' + homeSourceTabsMarkup() + '</div><button class="feed-source-scroll-button" data-feed-source-scroll="next" type="button" hidden aria-label="' + escapeHtml(t('feedTabNext')) + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5.25 15.75 12 9 18.75"/></svg></button></div>' : '';
   const nextTabs = homeSourceNav.querySelector('.feed-source-tabs');
   if (nextTabs) {
     nextTabs.scrollLeft = Math.min(previousScrollLeft, Math.max(0, nextTabs.scrollWidth - nextTabs.clientWidth));
