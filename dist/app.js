@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.124';
+const APP_VERSION = '2.18.125';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -2820,7 +2820,7 @@ function renderAgreementDialog() {
   if (!dialog) return;
   const sections = ['agreementIntro', 'agreementLocal', 'agreementNetwork', 'agreementGithub', 'agreementPermissions', 'agreementDisclaimer'];
   const body = sections.map((key, index) => index === 0 ? '<p class="agreement-intro">' + escapeHtml(t(key)) + '</p>' : '<section class="agreement-section"><h3>' + escapeHtml(t(key).split('：')[0].split(':')[0]) + '</h3><p>' + escapeHtml(t(key)) + '</p></section>').join('');
-  dialog.innerHTML = '<div class="dialog-card agreement-dialog-card" role="dialog" aria-modal="true"><div class="dialog-head"><div><span class="dialog-kicker">OneBox</span><h2>' + t('agreementTitle') + '</h2></div><button class="icon-btn small" data-close-agreement aria-label="' + t('close') + '">×</button></div><div class="agreement-body">' + body + '</div><p class="settings-note agreement-updated">' + t('agreementUpdated') + ' · OneBox ' + APP_VERSION + '</p></div>';
+  dialog.innerHTML = '<div class="dialog-card agreement-dialog-card" role="dialog" aria-modal="true"><div class="dialog-head"><div><h2>' + t('agreementTitle') + '</h2></div><button class="icon-btn small" data-close-agreement aria-label="' + t('close') + '">×</button></div><div class="agreement-body">' + body + '</div><p class="settings-note agreement-updated">' + t('agreementUpdated') + ' · OneBox ' + APP_VERSION + '</p></div>';
   dialog.hidden = false;
 }
 function closeAgreementDialog() { const dialog = $('#agreementDialog'); if (dialog) dialog.hidden = true; }
