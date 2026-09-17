@@ -1,5 +1,5 @@
-const CACHE = 'onebox-v151';
-const APP_SHELL = ['./', 'index.html', 'style.css?v=2.18.103', 'app.js?v=2.18.103', 'calendar-data.js?v=2.18.103', 'manifest.webmanifest', 'icons/icon.svg', 'icons/icon-180.png', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-dark-180.png', 'icons/icon-dark-192.png', 'icons/icon-dark-512.png', 'icons/bell.svg', 'icons/bell-192.png', 'icons/weibo.svg', 'icons/bilibili.svg'];
+const CACHE = 'onebox-v152';
+const APP_SHELL = ['./', 'index.html', 'style.css?v=2.18.104', 'app.js?v=2.18.104', 'calendar-data.js?v=2.18.104', 'manifest.webmanifest', 'icons/icon.svg', 'icons/icon-180.png', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-dark-180.png', 'icons/icon-dark-192.png', 'icons/icon-dark-512.png', 'icons/bell.svg', 'icons/bell-192.png', 'icons/weibo.svg', 'icons/bilibili.svg'];
 const OPEN_METEO = /(^|\.)open-meteo\.com$/;
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(APP_SHELL)).then(() => self.skipWaiting()));
