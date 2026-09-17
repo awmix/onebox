@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.132';
+const APP_VERSION = '2.18.133';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -48,11 +48,11 @@ const FEED_SOURCE_REGISTRY = [
   { id: 'ithome', name: '之家', badge: 'IT', icon: 'https://www.ithome.com/favicon.ico', className: 'ithome', mobileHost: 'm.ithome.com', visibleByDefault: true, siteUrl: 'https://www.ithome.com/', fetchers: [{ kind: 'rss', url: 'https://www.ithome.com/rss/' }, { kind: 'rss', url: 'https://www.ithome.com/rss', direct: true }] },
   { id: 'huxiu', name: '虎嗅', badge: '虎', icon: 'https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/be/4c/7f/be4c7f2c-0ebc-7ba8-a60e-c5707c67b0ee/AppIcon-0-0-1x_U007epad-0-1-0-85-220.png/128x128bb.png', className: 'huxiu', mobileHost: 'm.huxiu.com', visibleByDefault: true, siteUrl: 'https://www.huxiu.com/', fetchers: [{ kind: 'rss', url: 'https://www.huxiu.com/rss/0.xml' }, { kind: 'rss', url: 'https://rsshub.rssforever.com/huxiu/article' }, { kind: 'rss', url: 'https://rsshub.app/huxiu/article' }] },
   { id: 'zhihu', name: '知乎', badge: '知', icon: 'https://www.zhihu.com/favicon.ico', className: 'zhihu', mobileHost: 'www.zhihu.com', visibleByDefault: true, siteUrl: 'https://www.zhihu.com/hot', fetchers: [{ kind: 'zhihu-hot', url: 'https://www.zhihu.com/api/v4/search/hot_search' }, { kind: 'zhihu-hot', url: 'https://www.zhihu.com/api/v4/search/hot_search?limit=50' }] },
-  { id: 'v2ex', name: 'V2EX', badge: 'V', icon: 'https://www.v2ex.com/favicon.ico', className: 'v2ex', visibleByDefault: true, siteUrl: 'https://www.v2ex.com/?tab=all', fetchers: [{ kind: 'v2ex-latest', url: 'https://www.v2ex.com/api/topics/latest.json' }, { kind: 'rss', url: 'https://www.v2ex.com/index.xml' }] },
-  { id: 'weibo', name: '微博', badge: '博', icon: 'icons/weibo.png?v=2.18.105', className: 'weibo', mobileHost: 'm.weibo.cn', visibleByDefault: true, siteUrl: 'https://s.weibo.com/top/summary?cate=realtimehot', fetchers: [{ kind: 'weibo-hot', url: 'https://baiapi.cn/api/weibo?type=json' }, { kind: 'weibo-hot-v2', url: 'https://weibo.com/ajax/side/hotSearch' }] },
-  { id: 'bilibili', name: 'B站', badge: 'B', icon: 'icons/bilibili.ico?v=2.18.124', className: 'bilibili', mobileHost: 'm.bilibili.com', visibleByDefault: true, siteUrl: 'https://search.bilibili.com/all', fetchers: [{ kind: 'bilibili-hot', url: 'https://api.bilibili.com/x/web-interface/search/square?limit=30&platform=web' }, { kind: 'bilibili-hotword', url: 'https://s.search.bilibili.com/main/hotword' }] },
-  { id: 'guancha', name: '风闻', badge: '风', icon: 'icons/guancha.png?v=2.18.124', className: 'guancha', mobileHost: 'user.guancha.cn', visibleByDefault: false, siteUrl: 'https://user.guancha.cn/main/index?s=fwdhsy', fetchers: [{ kind: 'guancha-fengwen', url: 'https://user.guancha.cn/main/index-list.json?page=1&order=1' }, { kind: 'guancha-fengwen', url: 'https://rsshub.app/guancha/topic/0/1' }] },
-  { id: 'hupu', name: '虎扑', badge: '虎', icon: 'icons/hupu.ico?v=2.18.124', className: 'hupu', mobileHost: 'm.hupu.com', visibleByDefault: false, siteUrl: 'https://bbs.hupu.com/bxj', fetchers: [{ kind: 'hupu-bbs', url: 'https://bbs.hupu.com/bxj' }, { kind: 'hupu-bbs', url: 'https://bbs.hupu.com/topic-daily' }] },
+  { id: 'v2ex', name: 'V2EX', badge: 'V', icon: 'https://www.v2ex.com/favicon.ico', className: 'v2ex', visibleByDefault: false, siteUrl: 'https://www.v2ex.com/?tab=all', fetchers: [{ kind: 'v2ex-latest', url: 'https://www.v2ex.com/api/topics/latest.json' }, { kind: 'rss', url: 'https://www.v2ex.com/index.xml' }] },
+  { id: 'weibo', name: '微博', badge: '博', icon: 'icons/weibo.png?v=2.18.105', className: 'weibo', mobileHost: 'm.weibo.cn', visibleByDefault: false, siteUrl: 'https://s.weibo.com/top/summary?cate=realtimehot', fetchers: [{ kind: 'weibo-hot', url: 'https://baiapi.cn/api/weibo?type=json' }, { kind: 'weibo-hot-v2', url: 'https://weibo.com/ajax/side/hotSearch' }] },
+  { id: 'bilibili', name: 'B站', badge: 'B', icon: 'icons/bilibili.ico?v=2.18.124', className: 'bilibili', mobileHost: 'm.bilibili.com', visibleByDefault: false, siteUrl: 'https://search.bilibili.com/all', fetchers: [{ kind: 'bilibili-hot', url: 'https://api.bilibili.com/x/web-interface/search/square?limit=30&platform=web' }, { kind: 'bilibili-hotword', url: 'https://s.search.bilibili.com/main/hotword' }] },
+  { id: 'guancha', name: '风闻', badge: '风', icon: 'icons/guancha.png?v=2.18.124', className: 'guancha', mobileHost: 'user.guancha.cn', visibleByDefault: true, siteUrl: 'https://user.guancha.cn/main/index?s=fwdhsy', fetchers: [{ kind: 'guancha-fengwen', url: 'https://user.guancha.cn/main/index-list.json?page=1&order=1' }, { kind: 'guancha-fengwen', url: 'https://rsshub.app/guancha/topic/0/1' }] },
+  { id: 'hupu', name: '虎扑', badge: '虎', icon: 'icons/hupu.ico?v=2.18.124', className: 'hupu', mobileHost: 'm.hupu.com', visibleByDefault: true, siteUrl: 'https://bbs.hupu.com/bxj', fetchers: [{ kind: 'hupu-bbs', url: 'https://bbs.hupu.com/bxj' }, { kind: 'hupu-bbs', url: 'https://bbs.hupu.com/topic-daily' }] },
 ];
 const RSS_SOURCES = FEED_SOURCE_REGISTRY.filter((source) => source.enabled !== false);
 const RSS_REFRESH_INTERVAL = 2 * 60 * 1000;
@@ -192,7 +192,7 @@ const DICT = {
     sortWeather: '', hourly: '24 小时', daily: '前 3 天 · 今天 · 未来 15 天', advice: '天气建议',
     commute: '出行', sport: '运动', clothing: '穿衣', sunscreen: '防晒', hiking: '爬山',
     addCard: '添加', noResults: '没有找到匹配地点，请换个关键词。',
-    home: '首页', tools: '工具', messages: '消息', mine: '我的', quickTools: '常用工具', openSettings: '打开设置', noMessages: '还没有消息。', homeTabs: '首页', homeTabsSelected: '已选择 {count} 项',
+    home: '首页', tools: '工具', messages: '消息', mine: '我的', quickTools: '常用工具', openSettings: '打开设置', noMessages: '还没有消息。', homeTabs: '首页', homeTabsSelected: '已选择 {count} 项', homeSourceManage: '首页来源', homeSourceManageHint: '选择要显示在首页导航中的来源', homeSourceAdd: '添加', homeSourceRemove: '移除', homeSourceAdded: '已添加', homeSourceEmpty: '暂时没有其他来源',
     allFeeds: '全部', feedRefresh: '刷新', feedLoading: '正在加载信息流…', feedEmpty: '暂时没有可显示的内容。', feedUpdated: '更新于', feedOpen: '打开原文', feedPartial: '部分订阅源暂时不可用', feedProxyHint: '内容来自公开 RSS 订阅，首页只保留最近内容。', feedTabPrevious: '查看前面的首页 Tab', feedTabNext: '查看后面的首页 Tab',
     converterType: '换算类型', from: '从', to: '到', result: '结果', swap: '交换单位', copyResult: '复制结果',
     copied: '已复制', translationInput: '输入待翻译内容', translateNow: '开始翻译', saveTranslation: '保存到本机',
@@ -250,7 +250,7 @@ const DICT = {
     userAgreement: 'User agreement', viewAgreement: 'View agreement', agreementTitle: 'OneBox user agreement', agreementIntro: 'OneBox is a local-first daily tools app. Most features run on this device.', agreementLocal: 'Local data: calculator history, events, weather cards, translation history, notifications, the reading shelf, reading progress and notes stay on this device by default. You can delete the related records or documents in the app.', agreementNetwork: 'Network services: Home subscriptions, weather and translation may request third-party or open-source services. Home articles come from public feeds; their freshness and availability depend on the source site. Opening an article takes you to that site, whose login, advertising and privacy rules are outside OneBox.', agreementGithub: 'GitHub cloud sync: it is enabled only after you configure an OAuth Client ID and connect GitHub. Synced data is written to your own private Gist, while the access token stays on this device. You can disconnect at any time or delete the Gist.', agreementPermissions: 'Permissions: location is used only to find weather for your current place; notifications are used for event and message reminders; file access is used to import local reading documents. Other features remain available when these permissions are denied.', agreementDisclaimer: 'Use note: weather, translation, feeds and third-party pages may be temporarily unavailable because of network conditions, service policies or API changes. Do not put sensitive information that should not be uploaded to a personal GitHub Gist into synced settings, events or notes.', agreementUpdated: 'Last updated',
     addReminder: 'Add reminder', reminderText: 'Reminder', remindAt: 'When', noNotifications: 'No reminders yet.', once: 'Once', everyDay: 'Every day', workdays: 'Workdays', restdays: 'Rest days', weekly: 'Weekly', weekdays: 'Weekdays',
     markRead: 'Mark all read', close: 'Close', system: 'System', light: 'Light', dark: 'Dark', darkGray: 'Black gray',
-    layout: 'Layout', classicLayout: 'Classic layout', simpleLayout: 'Simple layout', openMode: 'Open links', openCurrent: 'Current page', openNewTab: 'New tab', theme: 'Theme', language: 'Language', color: 'Color', blackWhite: 'Black and white', noblePurple: 'Noble purple', skyBlue: 'Sky blue', notBananaGreen: 'WeChat green', meituanYellow: 'Meituan yellow', topDisplay: 'Show at top', footprint: 'Footprints', showFootprint: 'Show on Home', hideFootprint: 'Hide from Home', reorderHint: 'Long-press a tool tab to reorder',
+    layout: 'Layout', classicLayout: 'Classic layout', simpleLayout: 'Simple layout', openMode: 'Open links', openCurrent: 'Current page', openNewTab: 'New tab', theme: 'Theme', language: 'Language', color: 'Color', blackWhite: 'Black and white', noblePurple: 'Noble purple', skyBlue: 'Sky blue', notBananaGreen: 'WeChat green', meituanYellow: 'Meituan yellow', topDisplay: 'Show at top', footprint: 'Footprints', showFootprint: 'Show on Home', hideFootprint: 'Hide from Home', homeSourceManage: 'Home sources', homeSourceManageHint: 'Choose sources to show in the home navigation', homeSourceAdd: 'Add', homeSourceRemove: 'Remove', homeSourceAdded: 'Added', homeSourceEmpty: 'No other sources available', reorderHint: 'Long-press a tool tab to reorder',
     languagePending: 'Japanese and Korean are reserved for a future language pack. Chinese and English are available now.',
     bookshelf: 'Bookshelf', addBook: 'Add document', noBooks: 'No local documents yet.', readerHint: 'Supports Markdown, TXT, PDF and EPUB. Files stay on this device.', openBook: 'Open', deleteBook: 'Delete', annotations: 'Notes', readerComments: 'Notes', readerNotesHint: 'Saved reading notes', addAnnotation: 'Note', annotationPlaceholder: 'Add your thoughts…', saveAnnotation: 'Save', annotationHint: 'Select text, long-press or use the notes button.', noAnnotations: 'No notes yet.', reading: 'Reading', closeReader: 'Close reader', unsupportedFile: 'Choose a .md, .markdown, .txt, .pdf or .epub file.', importFailed: 'Could not read this document.', deleteConfirm: 'Delete this document?', pdfHint: 'PDF opens in the browser native reader.', epubHint: 'EPUB is converted into a continuous OneBox reading view.', readerContents: 'Contents', readerSettings: 'Reading settings', readerReadingMethod: 'Reading mode', readerTheme: 'Reading background', readerThemePaper: 'Paper', readerThemeSepia: 'Warm', readerThemeGreen: 'Green', readerThemeDark: 'Night', readerFontSize: 'Font size', readerFontFamily: 'Font', readerLineHeight: 'Line height', readerParagraphSpacing: 'Paragraph spacing', readerLetterSpacing: 'Letter spacing', readerAnimation: 'Page animation', readerAnimationSlide: 'Slide', readerAnimationCover: 'Cover', readerAnimationNone: 'None', readerScroll: 'Scroll', readerPages: 'Pages', readerProgress: 'Progress', readerFullscreen: 'Fullscreen', readerExitFullscreen: 'Exit fullscreen', readerFullscreenOnOpen: 'Open in fullscreen', readerFullscreenOnOpenHint: 'Apply this choice the next time a document opens', readerNoContents: 'No chapter contents.', readerSettingsHint: 'These settings apply only to reading on this device.', readerTocHint: 'Choose a chapter to jump to it.',
   },
@@ -284,29 +284,34 @@ const normalizeToolOrder = (value) => {
   const order = Array.isArray(value) ? value.map((id) => id === 'convert' ? 'translate' : id).filter((id) => TOOL_DEFS[id]) : [];
   return [...new Set(order.concat(Object.keys(TOOL_DEFS)))].slice(0, Object.keys(TOOL_DEFS).length);
 };
+const LEGACY_DEFAULT_HOME_FEED_VISIBLE = ['ithome', 'huxiu', 'zhihu', 'v2ex', 'weibo', 'bilibili'];
 const normalizeHomeFeedOrder = (value) => {
   const order = Array.isArray(value) ? value.filter((id) => DEFAULT_HOME_FEED_ORDER.includes(id)) : [];
   return [...new Set(order.concat(DEFAULT_HOME_FEED_ORDER))].slice(0, DEFAULT_HOME_FEED_ORDER.length);
 };
 const normalizeHomeFeedVisibility = (value) => {
   const visible = Array.isArray(value) ? value : DEFAULT_HOME_FEED_VISIBLE;
-  return [...new Set(visible.filter((id) => DEFAULT_HOME_FEED_ORDER.includes(id)))];
+  const normalized = [...new Set(visible.filter((id) => DEFAULT_HOME_FEED_ORDER.includes(id)))];
+  const isLegacyDefault = normalized.length === LEGACY_DEFAULT_HOME_FEED_VISIBLE.length && LEGACY_DEFAULT_HOME_FEED_VISIBLE.every((id) => normalized.includes(id));
+  if (isLegacyDefault) return [...DEFAULT_HOME_FEED_VISIBLE];
+  return normalized;
 };
+function homeTabIsVisible(id) {
+  return id === 'footprint' ? state?.footprint === true : state?.homeFeed?.visible?.includes(id) === true;
+}
+function homeTabEntries() {
+  const sources = state?.homeFeed?.order?.map((id) => RSS_SOURCES.find((source) => source.id === id)).filter(Boolean) || RSS_SOURCES;
+  return [...sources, { id: 'footprint', name: t('footprint'), badge: '足', className: 'footprint', local: true }];
+}
+function homeTabMarkMarkup(entry, extraClass = '') {
+  if (entry.id === 'footprint') return '<span class="feed-source-mark footprint' + (extraClass ? ' ' + extraClass : '') + '"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="7" cy="7" r="2.2"/><circle cx="16.5" cy="8.5" r="2.2"/><circle cx="6" cy="16.5" r="2.2"/><circle cx="15.5" cy="18" r="2.2"/></svg></span>';
+  return homeFeedSourceMarkMarkup(entry, extraClass);
+}
+function homeTabIds() {
+  return [...homeFeedSources().map((source) => source.id), ...(state.footprint ? ['footprint'] : [])];
+}
 function homeFeedSourceMarkMarkup(source, extraClass = '') {
   return '<span class="feed-source-mark ' + escapeHtml(source.className) + (extraClass ? ' ' + extraClass : '') + '"><img src="' + escapeHtml(source.icon) + '" alt="" loading="eager" onerror="this.hidden=true;this.nextElementSibling.style.display=\'inline\'"><span class="feed-source-fallback">' + escapeHtml(source.badge) + '</span></span>';
-}
-function homeFeedSelectionSummaryMarkup() {
-  const selected = RSS_SOURCES.filter((source) => state?.homeFeed?.visible?.includes(source.id));
-  if (!selected.length) return '<span class="settings-multiselect-summary-empty">未选择</span>';
-  return '<span class="settings-multiselect-summary-items">' + selected.map((source) => '<span class="settings-multiselect-summary-item">' + homeFeedSourceMarkMarkup(source) + '<span>' + escapeHtml(source.name) + '</span></span>').join('') + '</span>';
-}
-function updateHomeFeedSelectionSummary() {
-  const details = $('#settingsDialog .settings-multiselect');
-  const summary = details?.querySelector('summary');
-  if (!summary) return;
-  const wasOpen = details.open;
-  summary.innerHTML = homeFeedSelectionSummaryMarkup() + '<svg class="settings-multiselect-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 9 5 5 5-5"/></svg>';
-  details.open = wasOpen;
 }
 const initialWeatherCards = (Array.isArray(rawWeatherCards) && rawWeatherCards.length ? rawWeatherCards : legacyWeather ? [legacyWeather] : []).map((item) => ({
   ...item,
@@ -356,6 +361,7 @@ const state = {
   notificationPreference: storedNotificationPreference === 'deny' ? 'deny' : 'allow',
   topDisplay: { theme: storedTopDisplay.theme !== false, language: storedTopDisplay.language !== false, messages: storedTopDisplay.messages !== false },
   footprint: storedFootprint,
+  homeSourceDialogOpen: false,
   openMode: storedOpenMode === 'new-tab' ? 'new-tab' : 'current',
   swRegistration: null, updateAvailable: false, updateChecking: false, updateApplying: false, updateReloading: false, updateError: false,
   github: (() => { const value = parseStored(STORAGE.github, {}) || {}; return { clientId: value.clientId || '', token: value.token || '', user: value.user || null, gistId: value.gistId || '', deviceCode: '', userCode: '', verificationUri: '', expiresAt: 0, interval: 5, manualTokenOpen: false }; })(),
@@ -521,6 +527,7 @@ function homeFeedSources() {
   return state.homeFeed.order.map((id) => RSS_SOURCES.find((source) => source.id === id)).filter((source) => source && visible.has(source.id));
 }
 function saveHomeFeedOrder() { saveStored(STORAGE.homeFeedOrder, state.homeFeed.order); }
+function saveHomeFeedVisibility() { saveStored(STORAGE.homeFeedVisibility, state.homeFeed.visible); }
 function swapHomeFeedSources(from, to) {
   if (from === to || from == null || to == null) return;
   [state.homeFeed.order[from], state.homeFeed.order[to]] = [state.homeFeed.order[to], state.homeFeed.order[from]];
@@ -528,7 +535,7 @@ function swapHomeFeedSources(from, to) {
   toast(state.language === 'en' ? 'Feed order saved' : '订阅源顺序已保存');
 }
 function selectHomeFeedSource(sourceId) {
-  if (sourceId !== 'footprint' && !homeFeedSources().some((source) => source.id === sourceId)) return;
+  if (!homeTabIds().includes(sourceId)) return;
   state.homeFeed.active = sourceId;
   if (state.section === 'home') {
     render();
@@ -536,6 +543,24 @@ function selectHomeFeedSource(sourceId) {
   }
   if (sourceId !== 'footprint') return loadHomeFeeds(true, sourceId);
   return undefined;
+}
+
+function setHomeTabVisibility(tabId, visible) {
+  if (!homeTabEntries().some((entry) => entry.id === tabId)) return;
+  if (tabId === 'footprint') {
+    state.footprint = visible;
+    saveFootprintPreference();
+  } else {
+    const selected = new Set(state.homeFeed.visible);
+    if (visible) selected.add(tabId); else selected.delete(tabId);
+    state.homeFeed.visible = DEFAULT_HOME_FEED_ORDER.filter((id) => selected.has(id));
+    saveHomeFeedVisibility();
+  }
+  if (!homeTabIds().includes(state.homeFeed.active)) state.homeFeed.active = homeTabIds()[0] || '';
+  render();
+  renderHomeSourceDialog();
+  requestAnimationFrame(() => focusActiveHomeFeedTab(false));
+  if (visible && tabId !== 'footprint') loadHomeFeeds(true, tabId);
 }
 
 function focusActiveHomeFeedTab(smooth = false) {
@@ -919,7 +944,7 @@ function restoreNavigationPosition() {
   let saved = null;
   try { saved = JSON.parse(sessionStorage.getItem(NAVIGATION_SESSION_KEY) || 'null'); sessionStorage.removeItem(NAVIGATION_SESSION_KEY); } catch { saved = null; }
   if (!saved || saved.hash !== location.hash || Date.now() - Number(saved.savedAt || 0) > 30 * 60 * 1000) return;
-  if (state.section === 'home' && (saved.homeFeedActive === 'footprint' || homeFeedSources().some((source) => source.id === saved.homeFeedActive))) {
+  if (state.section === 'home' && homeTabIds().includes(saved.homeFeedActive)) {
     state.homeFeed.active = saved.homeFeedActive;
     render();
   }
@@ -1017,13 +1042,39 @@ function openFeedLink(link) {
 }
 function homeSourceTabsMarkup() {
   const sources = homeFeedSources();
-  return sources.map((source, index) => '<button class="feed-source-tab ' + (state.homeFeed.active === source.id ? 'active' : '') + '" draggable="true" data-feed-source="' + source.id + '" data-feed-source-index="' + index + '"><span class="feed-source-mark ' + source.className + '"><img src="' + escapeHtml(source.icon) + '" alt="" loading="eager" onerror="this.hidden=true;this.nextElementSibling.style.display=\'inline\'"><span class="feed-source-fallback">' + escapeHtml(source.badge) + '</span></span><span>' + escapeHtml(source.name) + '</span></button>').join('') + (state.footprint ? '<button class="feed-source-tab ' + (state.homeFeed.active === 'footprint' ? 'active' : '') + '" data-feed-source="footprint" aria-label="' + t('footprint') + '"><span class="feed-source-mark footprint"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="7" cy="7" r="2.2"/><circle cx="16.5" cy="8.5" r="2.2"/><circle cx="6" cy="16.5" r="2.2"/><circle cx="15.5" cy="18" r="2.2"/></svg></span><span>' + t('footprint') + '</span></button>' : '');
+  const sourceTabs = sources.map((source, index) => '<button class="feed-source-tab ' + (state.homeFeed.active === source.id ? 'active' : '') + '" draggable="true" data-feed-source="' + source.id + '" data-feed-source-index="' + index + '">' + homeTabMarkMarkup(source) + '<span>' + escapeHtml(source.name) + '</span></button>').join('');
+  const footprintTab = state.footprint ? '<button class="feed-source-tab ' + (state.homeFeed.active === 'footprint' ? 'active' : '') + '" data-feed-source="footprint" aria-label="' + t('footprint') + '">' + homeTabMarkMarkup({ id: 'footprint' }) + '<span>' + t('footprint') + '</span></button>' : '';
+  return sourceTabs + footprintTab;
+}
+function homeSourcePickerMarkup() {
+  const options = homeTabEntries().map((entry) => {
+    const selected = homeTabIsVisible(entry.id);
+    const actionLabel = selected ? t('homeSourceRemove') : t('homeSourceAdd');
+    const actionIcon = selected ? '<path d="M6 12h12"/>' : '<path d="M12 6v12M6 12h12"/>';
+    return '<div class="home-source-option ' + (selected ? 'is-selected' : '') + '"><span class="home-source-option-mark">' + homeTabMarkMarkup(entry) + '</span><span class="home-source-option-copy"><strong>' + escapeHtml(entry.name) + '</strong>' + (selected ? '<small>' + escapeHtml(t('homeSourceAdded')) + '</small>' : '') + '</span><button class="home-source-option-action" type="button" data-home-source-toggle="' + escapeHtml(entry.id) + '" aria-label="' + escapeHtml(actionLabel + ' ' + entry.name) + '"><svg viewBox="0 0 24 24" aria-hidden="true">' + actionIcon + '</svg></button></div>';
+  }).join('');
+  return '<div class="dialog-card home-source-dialog-card" role="dialog" aria-modal="true"><div class="dialog-head"><div><h2>' + escapeHtml(t('homeSourceManage')) + '</h2><p class="home-source-dialog-hint">' + escapeHtml(t('homeSourceManageHint')) + '</p></div><button class="icon-btn small" data-close-home-source aria-label="' + t('close') + '">×</button></div><div class="home-source-options">' + (options || '<p class="empty compact">' + escapeHtml(t('homeSourceEmpty')) + '</p>') + '</div></div>';
+}
+function renderHomeSourceDialog() {
+  const dialog = $('#homeSourceDialog');
+  if (!dialog) return;
+  dialog.innerHTML = homeSourcePickerMarkup();
+  dialog.hidden = !state.homeSourceDialogOpen;
+}
+function openHomeSourceDialog() {
+  state.homeSourceDialogOpen = true;
+  renderHomeSourceDialog();
+}
+function closeHomeSourceDialog() {
+  const dialog = $('#homeSourceDialog');
+  if (dialog) dialog.hidden = true;
+  state.homeSourceDialogOpen = false;
 }
 function renderHomeSourceNav() {
   homeSourceNav.hidden = state.section !== 'home';
   const previousTabs = homeSourceNav.querySelector('.feed-source-tabs');
   const previousScrollLeft = previousTabs?.scrollLeft || 0;
-  homeSourceNav.innerHTML = state.section === 'home' ? '<div class="feed-source-panel"><button class="feed-source-scroll-button" data-feed-source-scroll="previous" type="button" hidden aria-label="' + escapeHtml(t('feedTabPrevious')) + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5.25 8.25 12 15 18.75"/></svg></button><div class="feed-source-tabs" role="tablist" aria-label="RSS 来源">' + homeSourceTabsMarkup() + '</div><button class="feed-source-scroll-button" data-feed-source-scroll="next" type="button" hidden aria-label="' + escapeHtml(t('feedTabNext')) + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5.25 15.75 12 9 18.75"/></svg></button></div>' : '';
+  homeSourceNav.innerHTML = state.section === 'home' ? '<div class="feed-source-panel"><button class="feed-source-scroll-button" data-feed-source-scroll="previous" type="button" hidden aria-label="' + escapeHtml(t('feedTabPrevious')) + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5.25 8.25 12 15 18.75"/></svg></button><div class="feed-source-tabs" role="tablist" aria-label="RSS 来源">' + homeSourceTabsMarkup() + '</div><button class="feed-source-scroll-button" data-feed-source-scroll="next" type="button" hidden aria-label="' + escapeHtml(t('feedTabNext')) + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5.25 15.75 12 9 18.75"/></svg></button><button class="feed-source-manage" type="button" data-open-home-source-picker aria-label="' + escapeHtml(t('homeSourceManage')) + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button></div>' : '';
   const nextTabs = homeSourceNav.querySelector('.feed-source-tabs');
   if (nextTabs) {
     nextTabs.scrollLeft = Math.min(previousScrollLeft, Math.max(0, nextTabs.scrollWidth - nextTabs.clientWidth));
@@ -2723,7 +2774,7 @@ function syncPayload() {
     app: 'OneBox', version: APP_VERSION, savedAt: new Date().toISOString(), theme: state.theme, color: state.color, languageMode: state.languageMode, language: state.language,
     toolOrder: state.toolOrder, calculator: parseStored(STORAGE.calculator, {}), events: state.events,
     weatherCards: state.weatherCards, translationHistory: state.translationHistory, notifications: state.notifications, library: state.library,
-    layoutMode: state.layoutMode, topDisplay: state.topDisplay, footprint: state.footprint, openMode: state.openMode,
+    layoutMode: state.layoutMode, topDisplay: state.topDisplay, footprint: state.footprint, homeFeedOrder: state.homeFeed.order, homeFeedVisibility: state.homeFeed.visible, openMode: state.openMode,
   };
 }
 function githubBrowserError(error) {
@@ -2831,6 +2882,8 @@ async function githubDownload() {
     if (Array.isArray(remote.library)) { state.library = remote.library; saveLibrary(); }
     if (remote.layoutMode === 'simple' || remote.layoutMode === 'classic') { state.layoutMode = remote.layoutMode; saveLayoutPreference(); }
     if (remote.topDisplay && typeof remote.topDisplay === 'object') { state.topDisplay = { theme: remote.topDisplay.theme !== false, language: remote.topDisplay.language !== false, messages: remote.topDisplay.messages !== false }; saveTopDisplay(); }
+    if (Array.isArray(remote.homeFeedOrder)) { state.homeFeed.order = normalizeHomeFeedOrder(remote.homeFeedOrder); saveHomeFeedOrder(); }
+    if (Array.isArray(remote.homeFeedVisibility)) { state.homeFeed.visible = normalizeHomeFeedVisibility(remote.homeFeedVisibility); saveHomeFeedVisibility(); }
     if (typeof remote.footprint === 'boolean') { state.footprint = remote.footprint; saveFootprintPreference(); }
     state.github.gistId = id; saveGithub(); applyLanguage(); renderNav(); render(); renderGithubDialog();
     toast(state.language === 'en' ? 'Settings restored from GitHub' : '已从 GitHub 恢复设置');
@@ -2870,11 +2923,12 @@ function renderSettings() {
   const dialog = $('#settingsDialog');
   const notificationPreference = state.notificationPreference === 'deny' ? 'deny' : 'allow';
   const openMode = '<div class="settings-preference-row"><h3>' + t('openMode') + '</h3><div class="settings-preference-control"><select id="settingsOpenMode"><option value="current" ' + (state.openMode === 'current' ? 'selected' : '') + '>' + t('openCurrent') + '</option><option value="new-tab" ' + (state.openMode === 'new-tab' ? 'selected' : '') + '>' + t('openNewTab') + '</option></select></div></div>';
-  const homeFeedOptions = RSS_SOURCES.map((source) => '<label class="settings-multiselect-option"><input type="checkbox" data-home-feed-visibility="' + escapeHtml(source.id) + '" aria-label="' + escapeHtml(source.name) + '" ' + (state.homeFeed.visible.includes(source.id) ? 'checked' : '') + '>' + homeFeedSourceMarkMarkup(source) + '<span>' + escapeHtml(source.name) + '</span></label>').join('');
-  const homeFeeds = '<div class="settings-preference-row settings-home-feeds-row"><h3>' + t('homeTabs') + '</h3><div class="settings-preference-control settings-home-feeds-control"><details class="settings-multiselect"><summary>' + homeFeedSelectionSummaryMarkup() + '<svg class="settings-multiselect-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 9 5 5 5-5"/></svg></summary><div class="settings-multiselect-menu">' + homeFeedOptions + '</div></details></div></div>';
+  const homeFeeds = '';
   const topDisplay = state.layoutMode === 'classic' ? '<div class="settings-preference-row settings-top-display-row"><h3>' + t('topDisplay') + '</h3><div class="settings-preference-control settings-top-display-control"><label class="setting-toggle"><input type="checkbox" data-top-display="theme" ' + (state.topDisplay.theme ? 'checked' : '') + '><span>' + t('theme') + '</span></label><label class="setting-toggle"><input type="checkbox" data-top-display="language" ' + (state.topDisplay.language ? 'checked' : '') + '><span>' + t('language') + '</span></label></div></div>' : '';
   dialog.innerHTML = '<div class="dialog-card settings-dialog-card" role="dialog" aria-modal="true"><div class="dialog-head"><h2>' + t('settings') + '</h2><button class="icon-btn small" data-close-settings aria-label="' + t('close') + '">×</button></div>' +
     '<div class="settings-preferences"><div class="settings-preference-row"><h3>' + t('layout') + '</h3><div class="settings-preference-control"><select id="settingsLayout"><option value="classic" ' + (state.layoutMode === 'classic' ? 'selected' : '') + '>' + t('classicLayout') + '</option><option value="simple" ' + (state.layoutMode === 'simple' ? 'selected' : '') + '>' + t('simpleLayout') + '</option></select></div></div>' + topDisplay + '<div class="settings-preference-row"><h3>' + t('theme') + '</h3><div class="settings-preference-control"><select id="settingsTheme"><option value="system" ' + (state.theme === 'system' ? 'selected' : '') + '>' + t('system') + '</option><option value="light" ' + (state.theme === 'light' ? 'selected' : '') + '>' + t('light') + '</option><option value="dark" ' + (state.theme === 'dark' ? 'selected' : '') + '>' + t('dark') + '</select></div></div><div class="settings-preference-row"><h3>' + t('color') + '</h3><div class="settings-preference-control"><select id="settingsColor"><option value="mono" ' + (state.color === 'mono' ? 'selected' : '') + '>' + t('blackWhite') + '</option><option value="purple" ' + (state.color === 'purple' ? 'selected' : '') + '>' + t('noblePurple') + '</option><option value="blue" ' + (state.color === 'blue' ? 'selected' : '') + '>' + t('skyBlue') + '</option><option value="green" ' + (state.color === 'green' ? 'selected' : '') + '>' + t('notBananaGreen') + '</option><option value="yellow" ' + (state.color === 'yellow' ? 'selected' : '') + '>' + t('meituanYellow') + '</option></select></div></div><div class="settings-preference-row"><h3>' + t('language') + '</h3><div class="settings-preference-control"><select id="settingsLanguage"><option value="system" ' + (state.languageMode === 'system' ? 'selected' : '') + '>' + t('system') + '</option><option value="zh" ' + (state.languageMode === 'zh' ? 'selected' : '') + '>中文</option><option value="en" ' + (state.languageMode === 'en' ? 'selected' : '') + '>English</option></select></div></div><div class="settings-preference-row"><h3>' + t('messages') + '</h3><div class="settings-preference-control"><select id="settingsNotifications"><option value="allow" ' + (notificationPreference === 'allow' ? 'selected' : '') + '>' + t('enableNotifications') + '</option><option value="deny" ' + (notificationPreference === 'deny' ? 'selected' : '') + '>' + t('disableNotifications') + '</option></select></div></div><div class="settings-preference-row"><h3>' + t('footprint') + '</h3><div class="settings-preference-control"><select id="settingsFootprint"><option value="hide" ' + (!state.footprint ? 'selected' : '') + '>' + t('hideFootprint') + '</option><option value="show" ' + (state.footprint ? 'selected' : '') + '>' + t('showFootprint') + '</option></select></div></div>' + homeFeeds + openMode + '</div>';
+  dialog.querySelector('.settings-home-feeds-row')?.remove();
+  dialog.querySelector('#settingsFootprint')?.closest('.settings-preference-row')?.remove();
   dialog.hidden = false; state.settingsOpen = true;
   const themeSelect = $('#settingsTheme');
   if (themeSelect && !themeSelect.querySelector('option[value="dark-gray"]')) {
@@ -3390,7 +3444,7 @@ function finishTabSwipe() {
 
 function pageSwipeItems() {
   if (state.section === 'home') {
-    return [...homeFeedSources().map((source) => ({ kind: 'home', id: source.id })), ...(state.footprint ? [{ kind: 'home', id: 'footprint' }] : [])];
+    return homeTabIds().map((id) => ({ kind: 'home', id }));
   }
   if (state.section === 'tools') return state.toolOrder.map((id) => ({ kind: 'tool', id }));
   return [];
@@ -3601,6 +3655,11 @@ homeSourceNav.addEventListener('pointerdown', (event) => {
 homeSourceNav.addEventListener('pointerup', endLongPress);
 homeSourceNav.addEventListener('pointercancel', endLongPress);
 homeSourceNav.addEventListener('click', (event) => {
+  if (event.target.closest('[data-open-home-source-picker]')) {
+    event.preventDefault();
+    openHomeSourceDialog();
+    return;
+  }
   const scrollButton = event.target.closest('[data-feed-source-scroll]');
   if (scrollButton) {
     event.preventDefault();
@@ -4071,24 +4130,17 @@ $('#settingsDialog').addEventListener('click', (event) => {
   if (event.target.closest('[data-github-download]')) return githubDownload();
   if (event.target.closest('[data-github-logout]')) return disconnectGithub();
 });
+$('#homeSourceDialog').addEventListener('click', (event) => {
+  if (event.target === $('#homeSourceDialog') || event.target.closest('[data-close-home-source]')) return closeHomeSourceDialog();
+  const toggle = event.target.closest('[data-home-source-toggle]');
+  if (toggle) return setHomeTabVisibility(toggle.dataset.homeSourceToggle, !homeTabIsVisible(toggle.dataset.homeSourceToggle));
+});
 $('#settingsDialog').addEventListener('change', (event) => {
   if (event.target.id === 'settingsLayout') { state.layoutMode = event.target.value === 'simple' ? 'simple' : 'classic'; saveLayoutPreference(); render(); renderSettings(); }
   if (event.target.id === 'settingsTheme') { state.theme = event.target.value; saveThemeLanguage(); applyTheme(); render(); }
   if (event.target.id === 'settingsColor') { state.color = ['mono', 'purple', 'blue', 'green', 'yellow'].includes(event.target.value) ? event.target.value : 'mono'; saveColorPreference(); applyTheme(); render(); renderSettings(); }
   if (event.target.id === 'settingsLanguage') { state.languageMode = event.target.value; saveThemeLanguage(); applyLanguage(); renderNav(); render(); renderSettings(); }
   if (event.target.id === 'settingsNotifications') { state.notificationPreference = event.target.value; saveStored(STORAGE.notificationPreference, state.notificationPreference); if (state.notificationPreference === 'allow') requestNotifications(); }
-  if (event.target.id === 'settingsFootprint') { state.footprint = event.target.value === 'show'; saveFootprintPreference(); if (!state.footprint && state.homeFeed.active === 'footprint') state.homeFeed.active = DEFAULT_HOME_FEED_ORDER[0]; render(); renderSettings(); }
-  if (event.target.dataset.homeFeedVisibility) {
-    const sourceId = event.target.dataset.homeFeedVisibility;
-    const visible = new Set(state.homeFeed.visible);
-    if (event.target.checked) visible.add(sourceId); else visible.delete(sourceId);
-    state.homeFeed.visible = DEFAULT_HOME_FEED_ORDER.filter((id) => visible.has(id));
-    if (state.homeFeed.active !== 'footprint' && !state.homeFeed.visible.includes(state.homeFeed.active)) state.homeFeed.active = homeFeedSources()[0]?.id || 'footprint';
-    saveStored(STORAGE.homeFeedVisibility, state.homeFeed.visible);
-    render(); updateHomeFeedSelectionSummary();
-    requestAnimationFrame(() => focusActiveHomeFeedTab(false));
-    if (state.section === 'home') loadHomeFeeds(true);
-  }
   if (event.target.id === 'settingsOpenMode') { state.openMode = event.target.value === 'new-tab' ? 'new-tab' : 'current'; saveStored(STORAGE.openMode, state.openMode); }
   if (event.target.dataset.topDisplay) { state.topDisplay[event.target.dataset.topDisplay] = event.target.checked; saveTopDisplay(); renderHeaderControls(); renderSettings(); }
 });
