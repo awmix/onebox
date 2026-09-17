@@ -6626,7 +6626,7 @@ html[data-theme="dark"] #githubDialog .github-dialog-head { background: var(--pa
   .reader-page-turn-overlay::before { animation: none !important; opacity: 0 !important; }
 }
 
-/* 2.18.142: iPhone Safari webpage mode must scroll the document itself so
+/* 2.18.143: iPhone Safari webpage mode must scroll the document itself so
    Safari can collapse its address/action bar while the page grows behind it.
    The installed PWA keeps the existing fixed app viewport and safe-area
    treatment; reader focus keeps its own fullscreen shell as well. */
@@ -6647,6 +6647,9 @@ html[data-theme="dark"] #githubDialog .github-dialog-head { background: var(--pa
     max-height: none !important;
     overflow: visible !important;
     -webkit-overflow-scrolling: auto;
+    padding-bottom: 0 !important;
+  }
+  html.ios-safari-browser.layout-classic:not(.standalone-pwa):not(.reader-focus) main {
     padding-bottom: calc(78px + env(safe-area-inset-bottom)) !important;
   }
   html.ios-safari-browser:not(.standalone-pwa):not(.reader-focus) #workspace {
