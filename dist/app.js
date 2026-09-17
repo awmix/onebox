@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.97';
+const APP_VERSION = '2.18.98';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -190,7 +190,7 @@ const DICT = {
     sortWeather: '', hourly: '24 小时', daily: '前 3 天 · 今天 · 未来 15 天', advice: '天气建议',
     commute: '出行', sport: '运动', clothing: '穿衣', sunscreen: '防晒', hiking: '爬山',
     addCard: '添加', noResults: '没有找到匹配地点，请换个关键词。',
-    home: '首页', tools: '工具', messages: '消息', mine: '我的', quickTools: '常用工具', openSettings: '打开设置', noMessages: '还没有消息。', homeTabs: '首页 Tab', homeTabsSelected: '已显示 {count} 个 Tab', homeTabsHint: '选择要显示的首页 Tab；新增来源默认不显示。',
+    home: '首页', tools: '工具', messages: '消息', mine: '我的', quickTools: '常用工具', openSettings: '打开设置', noMessages: '还没有消息。', homeTabs: '首页', homeTabsSelected: '已选择 {count} 项',
     allFeeds: '全部', feedRefresh: '刷新', feedLoading: '正在加载信息流…', feedEmpty: '暂时没有可显示的内容。', feedUpdated: '更新于', feedOpen: '打开原文', feedPartial: '部分订阅源暂时不可用', feedProxyHint: '内容来自公开 RSS 订阅，首页只保留最近内容。',
     converterType: '换算类型', from: '从', to: '到', result: '结果', swap: '交换单位', copyResult: '复制结果',
     copied: '已复制', translationInput: '输入待翻译内容', translateNow: '开始翻译', saveTranslation: '保存到本机',
@@ -231,7 +231,7 @@ const DICT = {
     sortWeather: '', hourly: '24 hours', daily: '3 days before · today · next 15 days', advice: 'Advice',
     commute: 'Travel', sport: 'Sport', clothing: 'Clothing', sunscreen: 'Sun care', hiking: 'Hiking',
     addCard: 'Add', noResults: 'No matching place. Try another query.',
-    home: 'Home', tools: 'Tools', messages: 'Messages', mine: 'Me', quickTools: 'Quick tools', openSettings: 'Open settings', noMessages: 'No messages yet.', homeTabs: 'Home tabs', homeTabsSelected: '{count} tabs shown', homeTabsHint: 'Choose which Home tabs to show; newly added sources stay hidden by default.',
+    home: 'Home', tools: 'Tools', messages: 'Messages', mine: 'Me', quickTools: 'Quick tools', openSettings: 'Open settings', noMessages: 'No messages yet.', homeTabs: 'Home', homeTabsSelected: '{count} selected',
     allFeeds: 'All', feedRefresh: 'Refresh', feedLoading: 'Loading feeds…', feedEmpty: 'No items to show yet.', feedUpdated: 'Updated', feedOpen: 'Open original', feedPartial: 'Some feeds are temporarily unavailable', feedProxyHint: 'Public RSS subscriptions; only recent items are kept on this device.',
     converterType: 'Conversion', from: 'From', to: 'To', result: 'Result', swap: 'Swap units', copyResult: 'Copy result',
     copied: 'Copied', translationInput: 'Text to translate', translateNow: 'Translate', saveTranslation: 'Save locally',
@@ -521,9 +521,15 @@ function selectHomeFeedSource(sourceId) {
 function focusActiveHomeFeedTab(smooth = false) {
   const tabs = homeSourceNav.querySelector('.feed-source-tabs');
   const active = tabs?.querySelector('.feed-source-tab.active');
-  if (!tabs || !active) return;
+  if (!tabs || !active || tabs.scrollWidth <= tabs.clientWidth + 1) return;
   const maxScroll = Math.max(0, tabs.scrollWidth - tabs.clientWidth);
-  const target = Math.min(maxScroll, Math.max(0, active.offsetLeft - 8));
+  const padding = 8;
+  const visibleLeft = tabs.scrollLeft + padding;
+  const visibleRight = tabs.scrollLeft + tabs.clientWidth - padding;
+  let target = tabs.scrollLeft;
+  if (active.offsetLeft < visibleLeft) target = active.offsetLeft - padding;
+  else if (active.offsetLeft + active.offsetWidth > visibleRight) target = active.offsetLeft + active.offsetWidth - tabs.clientWidth + padding;
+  target = Math.min(maxScroll, Math.max(0, target));
   tabs.scrollTo({ left: target, behavior: smooth ? 'smooth' : 'auto' });
 }
 
@@ -838,7 +844,13 @@ function openFeedLink(link) {
 }
 function homeSourceTabsMarkup() {
   const sources = homeFeedSources();
-  return sources.map((source, index) => '<button class="feed-source-tab ' + (state.homeFeed.active === source.id ? 'active' : '') + '" draggable="true" data-feed-source="' + source.id + '" data-feed-source-index="' + index + '"><span class="feed-source-mark ' + source.className + '"><img src="' + escapeHtml(source.icon) + '" alt="" loading="eager" onerror="this.hidden=true;this.nextElementSibling.style.display=\'inline\'"><span class="feed-source-fallback">' + escapeHtml(source.badge) + '</span></span><span>' + escapeHtml(source.name) + '</span></button>').join('') + (state.footprint ? '<button class="feed-source-tab ' + (state.homeFeed.active === 'footprint' ? 'active' : '') + '" data-feed-source="footprint" aria-label="' + t('footprint') + '"><span class="feed-source-mark footprint"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="7" cy="7" r="2.2"/><circle cx="16.5" cy="8.5" r="2.2"/><circle cx="6" cy="16.5" r="2.2"/><circle cx="15.5" cy="18" r="2.2"/></svg></span><span>' + t('footprint') + '</span></button>' : '') + '<span class="feed-source-tab-spacer" aria-hidden="true"></span>';
+  return sources.map((source, index) => '<button class="feed-source-tab ' + (state.homeFeed.active === source.id ? 'active' : '') + '" draggable="true" data-feed-source="' + source.id + '" data-feed-source-index="' + index + '"><span class="feed-source-mark ' + source.className + '"><img src="' + escapeHtml(source.icon) + '" alt="" loading="eager" onerror="this.hidden=true;this.nextElementSibling.style.display=\'inline\'"><span class="feed-source-fallback">' + escapeHtml(source.badge) + '</span></span><span>' + escapeHtml(source.name) + '</span></button>').join('') + (state.footprint ? '<button class="feed-source-tab ' + (state.homeFeed.active === 'footprint' ? 'active' : '') + '" data-feed-source="footprint" aria-label="' + t('footprint') + '"><span class="feed-source-mark footprint"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="7" cy="7" r="2.2"/><circle cx="16.5" cy="8.5" r="2.2"/><circle cx="6" cy="16.5" r="2.2"/><circle cx="15.5" cy="18" r="2.2"/></svg></span><span>' + t('footprint') + '</span></button>' : '') + '<span class="feed-source-tab-spacer" hidden aria-hidden="true"></span>';
+}
+function updateHomeFeedTabScrollRail(tabs = homeSourceNav.querySelector('.feed-source-tabs')) {
+  const spacer = tabs?.querySelector('.feed-source-tab-spacer');
+  if (!tabs || !spacer) return;
+  spacer.hidden = true;
+  spacer.hidden = tabs.scrollWidth <= tabs.clientWidth + 1;
 }
 function renderHomeSourceNav() {
   homeSourceNav.hidden = state.section !== 'home';
@@ -846,7 +858,8 @@ function renderHomeSourceNav() {
   const previousScrollLeft = previousTabs?.scrollLeft || 0;
   homeSourceNav.innerHTML = state.section === 'home' ? '<div class="feed-source-panel"><div class="feed-source-tabs" role="tablist" aria-label="RSS 来源">' + homeSourceTabsMarkup() + '</div></div>' : '';
   const nextTabs = homeSourceNav.querySelector('.feed-source-tabs');
-  if (nextTabs) nextTabs.scrollLeft = previousScrollLeft;
+  updateHomeFeedTabScrollRail(nextTabs);
+  if (nextTabs) nextTabs.scrollLeft = Math.min(previousScrollLeft, Math.max(0, nextTabs.scrollWidth - nextTabs.clientWidth));
 }
 function renderHome() {
   const isFootprint = state.homeFeed.active === 'footprint';
@@ -2624,7 +2637,7 @@ function renderSettings() {
   const openMode = '<div class="settings-preference-row"><h3>' + t('openMode') + '</h3><div class="settings-preference-control"><select id="settingsOpenMode"><option value="current" ' + (state.openMode === 'current' ? 'selected' : '') + '>' + t('openCurrent') + '</option><option value="new-tab" ' + (state.openMode === 'new-tab' ? 'selected' : '') + '>' + t('openNewTab') + '</option></select></div></div>';
   const selectedHomeFeeds = state.homeFeed.visible.length;
   const homeFeedOptions = RSS_SOURCES.map((source) => '<label class="settings-multiselect-option"><input type="checkbox" data-home-feed-visibility="' + escapeHtml(source.id) + '" aria-label="' + escapeHtml(source.name) + '" ' + (state.homeFeed.visible.includes(source.id) ? 'checked' : '') + '><span class="feed-source-mark ' + escapeHtml(source.className) + '"><img src="' + escapeHtml(source.icon) + '" alt="" onerror="this.hidden=true;this.nextElementSibling.style.display=\'inline\'"><span class="feed-source-fallback">' + escapeHtml(source.badge) + '</span></span><span>' + escapeHtml(source.name) + '</span></label>').join('');
-  const homeFeeds = '<div class="settings-preference-row settings-home-feeds-row"><h3>' + t('homeTabs') + '</h3><div class="settings-preference-control settings-home-feeds-control"><details class="settings-multiselect"><summary>' + escapeHtml(t('homeTabsSelected').replace('{count}', String(selectedHomeFeeds))) + '<span aria-hidden="true">⌄</span></summary><div class="settings-multiselect-menu">' + homeFeedOptions + '</div></details><small class="settings-inline-hint">' + t('homeTabsHint') + '</small></div></div>';
+  const homeFeeds = '<div class="settings-preference-row settings-home-feeds-row"><h3>' + t('homeTabs') + '</h3><div class="settings-preference-control settings-home-feeds-control"><details class="settings-multiselect"><summary>' + escapeHtml(t('homeTabsSelected').replace('{count}', String(selectedHomeFeeds))) + '<span aria-hidden="true">⌄</span></summary><div class="settings-multiselect-menu">' + homeFeedOptions + '</div></details></div></div>';
   const topDisplay = state.layoutMode === 'classic' ? '<div class="settings-preference-row settings-top-display-row"><h3>' + t('topDisplay') + '</h3><div class="settings-preference-control settings-top-display-control"><label class="setting-toggle"><input type="checkbox" data-top-display="theme" ' + (state.topDisplay.theme ? 'checked' : '') + '><span>' + t('theme') + '</span></label><label class="setting-toggle"><input type="checkbox" data-top-display="language" ' + (state.topDisplay.language ? 'checked' : '') + '><span>' + t('language') + '</span></label></div></div>' : '';
   dialog.innerHTML = '<div class="dialog-card settings-dialog-card" role="dialog" aria-modal="true"><div class="dialog-head"><h2>' + t('settings') + '</h2><button class="icon-btn small" data-close-settings aria-label="' + t('close') + '">×</button></div>' +
     '<div class="settings-preferences"><div class="settings-preference-row"><h3>' + t('layout') + '</h3><div class="settings-preference-control"><select id="settingsLayout"><option value="classic" ' + (state.layoutMode === 'classic' ? 'selected' : '') + '>' + t('classicLayout') + '</option><option value="simple" ' + (state.layoutMode === 'simple' ? 'selected' : '') + '>' + t('simpleLayout') + '</option></select></div></div>' + topDisplay + '<div class="settings-preference-row"><h3>' + t('theme') + '</h3><div class="settings-preference-control"><select id="settingsTheme"><option value="system" ' + (state.theme === 'system' ? 'selected' : '') + '>' + t('system') + '</option><option value="light" ' + (state.theme === 'light' ? 'selected' : '') + '>' + t('light') + '</option><option value="dark" ' + (state.theme === 'dark' ? 'selected' : '') + '>' + t('dark') + '</select></div></div><div class="settings-preference-row"><h3>' + t('color') + '</h3><div class="settings-preference-control"><select id="settingsColor"><option value="mono" ' + (state.color === 'mono' ? 'selected' : '') + '>' + t('blackWhite') + '</option><option value="purple" ' + (state.color === 'purple' ? 'selected' : '') + '>' + t('noblePurple') + '</option><option value="blue" ' + (state.color === 'blue' ? 'selected' : '') + '>' + t('skyBlue') + '</option><option value="green" ' + (state.color === 'green' ? 'selected' : '') + '>' + t('notBananaGreen') + '</option><option value="yellow" ' + (state.color === 'yellow' ? 'selected' : '') + '>' + t('meituanYellow') + '</option></select></div></div><div class="settings-preference-row"><h3>' + t('language') + '</h3><div class="settings-preference-control"><select id="settingsLanguage"><option value="system" ' + (state.languageMode === 'system' ? 'selected' : '') + '>' + t('system') + '</option><option value="zh" ' + (state.languageMode === 'zh' ? 'selected' : '') + '>中文</option><option value="en" ' + (state.languageMode === 'en' ? 'selected' : '') + '>English</option></select></div></div><div class="settings-preference-row"><h3>' + t('messages') + '</h3><div class="settings-preference-control"><select id="settingsNotifications"><option value="allow" ' + (notificationPreference === 'allow' ? 'selected' : '') + '>' + t('enableNotifications') + '</option><option value="deny" ' + (notificationPreference === 'deny' ? 'selected' : '') + '>' + t('disableNotifications') + '</option></select></div></div><div class="settings-preference-row"><h3>' + t('footprint') + '</h3><div class="settings-preference-control"><select id="settingsFootprint"><option value="hide" ' + (!state.footprint ? 'selected' : '') + '>' + t('hideFootprint') + '</option><option value="show" ' + (state.footprint ? 'selected' : '') + '>' + t('showFootprint') + '</option></select></div></div>' + homeFeeds + openMode + '</div>';
