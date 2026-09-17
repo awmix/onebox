@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.123';
+const APP_VERSION = '2.18.124';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -50,9 +50,9 @@ const FEED_SOURCE_REGISTRY = [
   { id: 'zhihu', name: '知乎', badge: '知', icon: 'https://www.zhihu.com/favicon.ico', className: 'zhihu', mobileHost: 'www.zhihu.com', visibleByDefault: true, siteUrl: 'https://www.zhihu.com/hot', fetchers: [{ kind: 'zhihu-hot', url: 'https://www.zhihu.com/api/v4/search/hot_search' }, { kind: 'zhihu-hot', url: 'https://www.zhihu.com/api/v4/search/hot_search?limit=50' }] },
   { id: 'v2ex', name: 'V2EX', badge: 'V', icon: 'https://www.v2ex.com/favicon.ico', className: 'v2ex', visibleByDefault: true, siteUrl: 'https://www.v2ex.com/?tab=all', fetchers: [{ kind: 'v2ex-latest', url: 'https://www.v2ex.com/api/topics/latest.json' }, { kind: 'rss', url: 'https://www.v2ex.com/index.xml' }] },
   { id: 'weibo', name: '微博', badge: '博', icon: 'icons/weibo.png?v=2.18.105', className: 'weibo', mobileHost: 'm.weibo.cn', visibleByDefault: true, siteUrl: 'https://s.weibo.com/top/summary?cate=realtimehot', fetchers: [{ kind: 'weibo-hot', url: 'https://baiapi.cn/api/weibo?type=json' }, { kind: 'weibo-hot-v2', url: 'https://weibo.com/ajax/side/hotSearch' }] },
-  { id: 'bilibili', name: 'B站', badge: 'B', icon: 'icons/bilibili.ico?v=2.18.123', className: 'bilibili', mobileHost: 'm.bilibili.com', visibleByDefault: true, siteUrl: 'https://search.bilibili.com/all', fetchers: [{ kind: 'bilibili-hot', url: 'https://api.bilibili.com/x/web-interface/search/square?limit=30&platform=web' }, { kind: 'bilibili-hotword', url: 'https://s.search.bilibili.com/main/hotword' }] },
-  { id: 'guancha', name: '风闻', badge: '风', icon: 'icons/guancha.png?v=2.18.123', className: 'guancha', mobileHost: 'user.guancha.cn', visibleByDefault: false, siteUrl: 'https://user.guancha.cn/main/index?s=fwdhsy', fetchers: [{ kind: 'guancha-fengwen', url: 'https://user.guancha.cn/main/index-list.json?page=1&order=1' }, { kind: 'guancha-fengwen', url: 'https://rsshub.app/guancha/topic/0/1' }] },
-  { id: 'hupu', name: '虎扑', badge: '虎', icon: 'icons/hupu.ico?v=2.18.123', className: 'hupu', mobileHost: 'm.hupu.com', visibleByDefault: false, siteUrl: 'https://bbs.hupu.com/bxj', fetchers: [{ kind: 'hupu-bbs', url: 'https://bbs.hupu.com/bxj' }, { kind: 'hupu-bbs', url: 'https://bbs.hupu.com/topic-daily' }] },
+  { id: 'bilibili', name: 'B站', badge: 'B', icon: 'icons/bilibili.ico?v=2.18.124', className: 'bilibili', mobileHost: 'm.bilibili.com', visibleByDefault: true, siteUrl: 'https://search.bilibili.com/all', fetchers: [{ kind: 'bilibili-hot', url: 'https://api.bilibili.com/x/web-interface/search/square?limit=30&platform=web' }, { kind: 'bilibili-hotword', url: 'https://s.search.bilibili.com/main/hotword' }] },
+  { id: 'guancha', name: '风闻', badge: '风', icon: 'icons/guancha.png?v=2.18.124', className: 'guancha', mobileHost: 'user.guancha.cn', visibleByDefault: false, siteUrl: 'https://user.guancha.cn/main/index?s=fwdhsy', fetchers: [{ kind: 'guancha-fengwen', url: 'https://user.guancha.cn/main/index-list.json?page=1&order=1' }, { kind: 'guancha-fengwen', url: 'https://rsshub.app/guancha/topic/0/1' }] },
+  { id: 'hupu', name: '虎扑', badge: '虎', icon: 'icons/hupu.ico?v=2.18.124', className: 'hupu', mobileHost: 'm.hupu.com', visibleByDefault: false, siteUrl: 'https://bbs.hupu.com/bxj', fetchers: [{ kind: 'hupu-bbs', url: 'https://bbs.hupu.com/bxj' }, { kind: 'hupu-bbs', url: 'https://bbs.hupu.com/topic-daily' }] },
 ];
 const RSS_SOURCES = FEED_SOURCE_REGISTRY.filter((source) => source.enabled !== false);
 const RSS_REFRESH_INTERVAL = 2 * 60 * 1000;
@@ -198,8 +198,9 @@ const DICT = {
     copied: '已复制', translationInput: '输入待翻译内容', translateNow: '开始翻译', saveTranslation: '保存到本机',
     source: '源语言', target: '目标语言', translationResult: '翻译结果', translationHistory: '最近翻译',
     noTranslation: '翻译结果会显示在这里。', noHistory: '还没有保存翻译。',
-    githubSync: 'GitHub 云同步', githubDescription: '使用 GitHub Gist 保存设置、日历、翻译和天气卡片。令牌只保存在当前设备。',
-    githubClientId: 'GitHub OAuth Client ID', githubClientHint: '首次使用需在 GitHub OAuth App 中开启 Device Flow，并填入 Client ID。',
+    githubSync: 'GitHub 云同步', githubDescription: 'GitHub 保存设置、工具配置，同步只使用你自己的私有 Gist，OneBox 不会获取你的 GitHub 密码。', githubNotConnectedHint: '填写 Client ID 后连接 GitHub。',
+    githubClientId: 'GitHub OAuth Client ID', githubClientHint: '首次使用请打开 GitHub 头像 → Settings → Developer settings → OAuth Apps，选择你的应用，勾选 Enable Device Flow 并点击 Update application；然后复制 Client ID 粘贴到这里。', githubDeveloperSettings: '打开 OAuth Apps 设置',
+    githubBrowserFlowError: '当前网页无法直接读取 GitHub Device Flow，通常不是 Client ID 格式问题。请先确认已开启 Enable Device Flow，也可以使用下方访问令牌方式。', githubAccessToken: 'GitHub 访问令牌', githubTokenHint: '仅将令牌保存在当前设备，并通过 GitHub API 验证；建议使用只包含 gist 权限的令牌。', githubUseToken: '使用访问令牌连接', githubTokenMissing: '请先填写 GitHub 访问令牌。', githubTokenInvalid: '访问令牌无效或没有可用权限。', githubTokenConnected: 'GitHub 已连接',
     githubLogin: '连接 GitHub', githubLogout: '退出 GitHub', upload: '上传到 GitHub', download: '从 GitHub 恢复',
     githubConnected: '已连接', githubNotConnected: '尚未连接', openDevice: '打开验证页面',
     appUpdate: '应用更新', checkUpdate: '更新', updateAvailable: '有新版本可用', upToDate: '已是最新版', updating: '正在检查…', updateApplying: '正在应用…', updateCheckFailed: '检查失败，可重试', applyUpdate: '立即更新',
@@ -239,8 +240,9 @@ const DICT = {
     copied: 'Copied', translationInput: 'Text to translate', translateNow: 'Translate', saveTranslation: 'Save locally',
     source: 'Source', target: 'Target', translationResult: 'Translation', translationHistory: 'Recent translations',
     noTranslation: 'Your translation will appear here.', noHistory: 'No saved translations yet.',
-    githubSync: 'GitHub cloud sync', githubDescription: 'Save settings, calendar, translations and weather cards in a GitHub Gist. The token stays on this device.',
-    githubClientId: 'GitHub OAuth Client ID', githubClientHint: 'Enable Device Flow in a GitHub OAuth App and paste its Client ID here once.',
+    githubSync: 'GitHub cloud sync', githubDescription: 'GitHub saves settings and tool configuration in your private Gist. OneBox never receives your GitHub password.', githubNotConnectedHint: 'Enter a Client ID to connect GitHub.',
+    githubClientId: 'GitHub OAuth Client ID', githubClientHint: 'For first-time setup, open GitHub avatar → Settings → Developer settings → OAuth Apps, select your app, enable Enable Device Flow, click Update application, then paste the Client ID here.', githubDeveloperSettings: 'Open OAuth Apps settings',
+    githubBrowserFlowError: 'This web page cannot read GitHub Device Flow directly. This is usually not a Client ID format problem. Confirm Enable Device Flow is on, or use the access-token fallback below.', githubAccessToken: 'GitHub access token', githubTokenHint: 'The token is stored only on this device and verified through GitHub API. A token with gist permission is recommended.', githubUseToken: 'Connect with access token', githubTokenMissing: 'Enter a GitHub access token first.', githubTokenInvalid: 'The access token is invalid or lacks the required permission.', githubTokenConnected: 'GitHub connected',
     githubLogin: 'Connect GitHub', githubLogout: 'Disconnect GitHub', upload: 'Upload to GitHub', download: 'Restore from GitHub',
     githubConnected: 'Connected', githubNotConnected: 'Not connected', openDevice: 'Open verification page',
     appUpdate: 'App update', checkUpdate: 'Update', updateAvailable: 'A new version is ready', upToDate: 'Latest version', updating: 'Checking…', updateApplying: 'Applying…', updateCheckFailed: 'Check failed. Try again.', applyUpdate: 'Update now',
@@ -356,7 +358,7 @@ const state = {
   footprint: storedFootprint,
   openMode: storedOpenMode === 'new-tab' ? 'new-tab' : 'current',
   swRegistration: null, updateAvailable: false, updateChecking: false, updateApplying: false, updateReloading: false, updateError: false,
-  github: (() => { const value = parseStored(STORAGE.github, {}) || {}; return { clientId: value.clientId || '', token: value.token || '', user: value.user || null, gistId: value.gistId || '', deviceCode: '', userCode: '', verificationUri: '', expiresAt: 0, interval: 5 }; })(),
+  github: (() => { const value = parseStored(STORAGE.github, {}) || {}; return { clientId: value.clientId || '', token: value.token || '', user: value.user || null, gistId: value.gistId || '', deviceCode: '', userCode: '', verificationUri: '', expiresAt: 0, interval: 5, manualTokenOpen: false }; })(),
 };
 function formatNumber(value) {
   if (!Number.isFinite(value)) return '—';
@@ -2699,6 +2701,15 @@ function syncPayload() {
     layoutMode: state.layoutMode, topDisplay: state.topDisplay, footprint: state.footprint, openMode: state.openMode,
   };
 }
+function githubBrowserError(error) {
+  const message = String(error?.message || '');
+  if (/Failed to fetch|NetworkError|Load failed/i.test(message)) {
+    state.github.manualTokenOpen = true;
+    renderGithubDialog();
+    return t('githubBrowserFlowError');
+  }
+  return message;
+}
 async function githubLogin() {
   const clientId = ($('#githubClientId')?.value || state.github.clientId).trim();
   if (!clientId) return toast(state.language === 'en' ? 'Enter a GitHub OAuth Client ID first' : '请先填写 GitHub OAuth Client ID', 'error');
@@ -2712,7 +2723,7 @@ async function githubLogin() {
     window.open(state.github.verificationUri, '_blank', 'noopener,noreferrer');
     toast(state.language === 'en' ? 'Enter the code in GitHub, then keep this page open' : '请在 GitHub 页面输入验证码，并保持此页面打开');
     pollGithubLogin();
-  } catch (error) { toast(error.message, 'error'); }
+  } catch (error) { toast(githubBrowserError(error) || (state.language === 'en' ? 'Unable to start GitHub login' : '无法启动 GitHub 登录'), 'error'); }
 }
 async function pollGithubLogin() {
   while (state.github.deviceCode && Date.now() < state.github.expiresAt) {
@@ -2729,9 +2740,30 @@ async function pollGithubLogin() {
       }
       if (data.error === 'slow_down') state.github.interval += 5;
       if (['access_denied', 'expired_token', 'unsupported_grant_type', 'incorrect_client_credentials'].includes(data.error)) throw Error(data.error_description || data.error);
-    } catch (error) { state.github.deviceCode = ''; renderGithubDialog(); toast(error.message, 'error'); return; }
+    } catch (error) { state.github.deviceCode = ''; const message = githubBrowserError(error); renderGithubDialog(); toast(message || (state.language === 'en' ? 'GitHub login failed' : 'GitHub 登录失败'), 'error'); return; }
   }
   state.github.deviceCode = ''; renderGithubDialog(); toast(state.language === 'en' ? 'GitHub verification expired' : 'GitHub 验证已过期', 'error');
+}
+async function githubUseAccessToken() {
+  const token = ($('#githubAccessToken')?.value || '').trim();
+  if (!token) return toast(t('githubTokenMissing'), 'error');
+  const previousToken = state.github.token;
+  const previousUser = state.github.user;
+  state.github.token = token;
+  try {
+    const response = await fetch('https://api.github.com/user', { headers: githubHeaders() });
+    const data = await response.json();
+    if (!response.ok || !data.login) throw Error(t('githubTokenInvalid'));
+    state.github.user = data;
+    state.github.manualTokenOpen = false;
+    saveGithub(); renderGithubDialog();
+    toast(t('githubTokenConnected'));
+  } catch (error) {
+    state.github.token = previousToken;
+    state.github.user = previousUser;
+    renderGithubDialog();
+    toast(error.message || t('githubTokenInvalid'), 'error');
+  }
 }
 async function findOrCreateGist() {
   if (state.github.gistId) return state.github.gistId;
@@ -2780,7 +2812,7 @@ async function githubDownload() {
   } catch { toast(state.language === 'en' ? 'GitHub restore failed' : 'GitHub 恢复失败', 'error'); }
 }
 function disconnectGithub() {
-  state.github = { clientId: state.github.clientId, token: '', user: null, gistId: '', deviceCode: '', userCode: '', verificationUri: '', expiresAt: 0, interval: 5 };
+  state.github = { clientId: state.github.clientId, token: '', user: null, gistId: '', deviceCode: '', userCode: '', verificationUri: '', expiresAt: 0, interval: 5, manualTokenOpen: false };
   saveGithub(); renderGithubDialog(); toast(state.language === 'en' ? 'GitHub disconnected' : '已退出 GitHub');
 }
 function renderAgreementDialog() {
@@ -2798,12 +2830,14 @@ function renderGithubDialog() {
   const connected = Boolean(state.github.token && state.github.user);
   const account = connected
     ? '<div class="github-status-card is-connected"><span class="github-status-icon github-avatar"><img src="' + escapeHtml(state.github.user.avatar_url || '') + '" alt="" onerror="this.hidden=true;this.parentElement.classList.add(\'is-fallback\')"></span><span class="github-status-copy"><strong>' + escapeHtml(state.github.user.login || 'GitHub') + '</strong><small>' + t('githubConnected') + '</small></span><span class="github-status-badge">✓</span></div>'
-    : '<div class="github-status-card"><span class="github-status-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 18h10a3.5 3.5 0 0 0 .5-6.96A5.5 5.5 0 0 0 7 9.5a4.25 4.25 0 0 0 0 8.5Z"/><path d="m12 12 2-2m-2 2-2-2m2 2v4"/></svg></span><span class="github-status-copy"><strong>' + t('githubNotConnected') + '</strong><small>' + t('githubDescription') + '</small></span></div>';
+    : '<div class="github-status-card"><span class="github-status-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 18h10a3.5 3.5 0 0 0 .5-6.96A5.5 5.5 0 0 0 7 9.5a4.25 4.25 0 0 0 0 8.5Z"/><path d="m12 12 2-2m-2 2-2-2m2 2v4"/></svg></span><span class="github-status-copy"><strong>' + t('githubNotConnected') + '</strong><small>' + t('githubNotConnectedHint') + '</small></span></div>';
   const code = state.github.userCode ? '<div class="device-code"><div><small>' + (state.language === 'en' ? 'Enter this code at GitHub' : '请在 GitHub 验证页面输入') + '</small><strong>' + escapeHtml(state.github.userCode) + '</strong></div><a class="secondary github-device-link" href="' + escapeHtml(state.github.verificationUri || 'https://github.com/login/device') + '" target="_blank" rel="noreferrer">' + t('openDevice') + '</a></div>' : '';
+  const manualToken = state.github.manualTokenOpen && !connected ? '<section class="github-manual-token"><label for="githubAccessToken">' + t('githubAccessToken') + '</label><input id="githubAccessToken" type="password" placeholder="github_pat_…" autocomplete="off"><p>' + t('githubTokenHint') + '</p><button class="secondary" data-github-token>' + t('githubUseToken') + '</button></section>' : '';
   const actions = connected
     ? '<div class="github-action-grid"><button class="primary" data-github-upload>' + t('upload') + '</button><button class="secondary" data-github-download>' + t('download') + '</button></div><button class="text-btn github-disconnect" data-github-logout>' + t('githubLogout') + '</button>'
     : '<button class="primary github-connect" data-github-login>' + t('githubLogin') + '</button>';
-  dialog.innerHTML = '<div class="dialog-card github-dialog-card" role="dialog" aria-modal="true"><div class="dialog-head github-dialog-head"><div><span class="dialog-kicker">OneBox</span><h2>GitHub</h2><p>' + escapeHtml(t('githubDescription')) + '</p></div><button class="icon-btn small" data-close-github aria-label="' + t('close') + '">×</button></div><div class="github-dialog-body"><section class="github-status-section"><div class="github-section-label"><h3>' + t('githubSync') + '</h3><span>' + (connected ? t('githubConnected') : t('githubNotConnected')) + '</span></div>' + account + '</section><section class="github-credentials"><label for="githubClientId">' + t('githubClientId') + '</label><input id="githubClientId" value="' + escapeHtml(state.github.clientId) + '" placeholder="Iv1.xxxxxxxxxxxxx" autocomplete="off"><p>' + t('githubClientHint') + '</p></section>' + code + '<section class="github-actions">' + actions + '</section><p class="github-dialog-footnote">' + (state.language === 'en' ? 'Only your private Gist is used for sync. OneBox does not receive your GitHub password.' : '同步只使用你自己的私有 Gist，OneBox 不会获取你的 GitHub 密码。') + '</p></div></div>';
+  const clientHint = t('githubClientHint') + ' <a class="github-help-link" href="https://github.com/settings/developers" target="_blank" rel="noreferrer">' + t('githubDeveloperSettings') + '</a>';
+  dialog.innerHTML = '<div class="dialog-card github-dialog-card" role="dialog" aria-modal="true"><div class="dialog-head github-dialog-head"><div><h2>GitHub</h2></div><button class="icon-btn small github-dialog-close" data-close-github aria-label="' + t('close') + '">×</button></div><div class="github-dialog-body"><section class="github-status-section"><div class="github-section-label"><h3>' + t('githubSync') + '</h3></div>' + account + '</section><p class="github-dialog-note">' + escapeHtml(t('githubDescription')) + '</p><section class="github-credentials"><label for="githubClientId">' + t('githubClientId') + '</label><input id="githubClientId" value="' + escapeHtml(state.github.clientId) + '" placeholder="Iv1.xxxxxxxxxxxxx" autocomplete="off"><p>' + clientHint + '</p></section>' + code + manualToken + '<section class="github-actions">' + actions + '</section></div></div>';
   dialog.hidden = false; state.githubDialogOpen = true;
 }
 function closeGithubDialog() { const dialog = $('#githubDialog'); if (dialog) dialog.hidden = true; state.githubDialogOpen = false; }
@@ -3933,6 +3967,7 @@ $('#recentReadingDialog').addEventListener('click', (event) => {
 $('#githubDialog').addEventListener('click', (event) => {
   if (event.target === $('#githubDialog') || event.target.closest('[data-close-github]')) return closeGithubDialog();
   if (event.target.closest('[data-github-login]')) return githubLogin();
+  if (event.target.closest('[data-github-token]')) return githubUseAccessToken();
   if (event.target.closest('[data-github-upload]')) return githubUpload();
   if (event.target.closest('[data-github-download]')) return githubDownload();
   if (event.target.closest('[data-github-logout]')) return disconnectGithub();

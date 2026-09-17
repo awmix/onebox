@@ -6108,14 +6108,18 @@ html[data-theme="dark"] #homeSourceNav .feed-source-mark.bilibili { background: 
 }
 #githubDialog .github-dialog-card { width: min(520px, 100%); }
 #agreementDialog .agreement-dialog-card { width: min(600px, 100%); }
-#githubDialog .github-dialog-head,
+#githubDialog .github-dialog-head {
+  margin: 0;
+  padding: 16px 20px 14px;
+  background: color-mix(in srgb, var(--panel) 92%, var(--primary) 8%);
+}
 #agreementDialog .dialog-head {
   margin: 0;
   padding: 20px 22px 17px;
   background: color-mix(in srgb, var(--panel) 92%, var(--primary) 8%);
 }
-#githubDialog .github-dialog-head h2 { margin: 3px 0 4px; font-size: 23px; letter-spacing: -.03em; }
-#githubDialog .github-dialog-head p { max-width: 380px; margin: 0; color: var(--muted); font-size: 12px; line-height: 1.55; }
+#githubDialog .github-dialog-head h2 { margin: 0; font-size: 21px; letter-spacing: -.03em; }
+#githubDialog .github-dialog-close { width: 30px; height: 30px; padding: 0; border-radius: 9px; background: var(--panel-2); color: var(--muted); font-size: 17px; line-height: 1; }
 #agreementDialog .dialog-head h2 { margin-top: 3px; }
 .dialog-kicker { color: var(--primary); font-size: 10px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; }
 .update-progress { display: inline-flex; align-items: baseline; min-width: 24px; color: currentColor; vertical-align: baseline; }
@@ -6130,11 +6134,10 @@ html[data-theme="dark"] #homeSourceNav .feed-source-mark.bilibili { background: 
 @media (prefers-reduced-motion: reduce) {
   .update-progress-dots i { animation: none; opacity: .72; }
 }
-.github-dialog-body { display: grid; gap: 16px; padding: 18px 22px 20px; }
+.github-dialog-body { display: grid; gap: 15px; padding: 18px 20px 20px; }
 .github-status-section, .github-credentials { display: grid; gap: 9px; }
 .github-section-label { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
 .github-section-label h3 { margin: 0; font-size: 13px; }
-.github-section-label > span { color: var(--muted); font-size: 11px; }
 .github-status-card { display: flex; align-items: center; gap: 11px; min-width: 0; padding: 12px; border: 1px solid var(--line); border-radius: 14px; background: var(--panel-2); }
 .github-status-icon { display: grid; flex: 0 0 36px; place-items: center; width: 36px; height: 36px; border-radius: 12px; background: var(--soft); color: var(--primary); }
 .github-status-icon svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.7; }
@@ -6145,15 +6148,21 @@ html[data-theme="dark"] #homeSourceNav .feed-source-mark.bilibili { background: 
 .github-status-copy strong { overflow: hidden; font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
 .github-status-copy small { overflow: hidden; color: var(--muted); font-size: 11px; line-height: 1.35; text-overflow: ellipsis; white-space: nowrap; }
 .github-status-badge { display: grid; flex: 0 0 20px; place-items: center; width: 20px; height: 20px; margin-left: auto; border-radius: 50%; background: color-mix(in srgb, var(--success) 16%, transparent); color: var(--success); font-size: 12px; font-weight: 800; }
-.github-credentials label { color: var(--ink); font-size: 12px; font-weight: 750; }
+.github-dialog-note { margin: -2px 0 0; color: var(--muted); font-size: 11px; line-height: 1.6; }
+.github-credentials label { color: var(--ink); font-size: 13px; font-weight: 750; }
 .github-credentials input { width: 100%; }
-.github-credentials p, .github-dialog-footnote { margin: 0; color: var(--muted); font-size: 11px; line-height: 1.55; }
+.github-credentials p { margin: 0; color: var(--muted); font-size: 11px; line-height: 1.55; }
+.github-help-link { color: var(--primary); text-decoration: none; }
 .github-actions { display: grid; gap: 9px; padding-top: 2px; }
 .github-action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
 .github-actions button { min-height: 40px; }
 .github-connect { width: 100%; }
 .github-disconnect { justify-self: center; color: var(--muted); }
-.github-dialog-footnote { padding-top: 13px; border-top: 1px solid var(--line); }
+.github-manual-token { display: grid; gap: 9px; padding-top: 14px; border-top: 1px solid var(--line); }
+.github-manual-token[hidden] { display: none; }
+.github-manual-token label { color: var(--ink); font-size: 13px; font-weight: 750; }
+.github-manual-token p { margin: 0; color: var(--muted); font-size: 11px; line-height: 1.55; }
+.github-manual-token button { min-height: 40px; }
 #githubDialog .device-code { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin: 0; padding: 12px; border: 1px solid color-mix(in srgb, var(--primary) 22%, var(--line)); border-radius: 14px; background: color-mix(in srgb, var(--primary) 6%, var(--panel-2)); }
 #githubDialog .device-code > div { display: grid; gap: 3px; min-width: 0; }
 #githubDialog .device-code small { color: var(--muted); font-size: 11px; }
@@ -6170,6 +6179,7 @@ html[data-theme="dark"] #githubDialog .github-dialog-head,
 html[data-theme="dark"] #agreementDialog .dialog-head {
   background: color-mix(in srgb, var(--panel) 94%, var(--primary) 6%);
 }
+html[data-theme="dark"] #githubDialog .github-dialog-head { background: var(--panel); }
 @media (max-width: 600px) {
   #githubDialog .github-dialog-head, #agreementDialog .dialog-head { padding-inline: 18px; }
   .github-dialog-body, .agreement-body { padding-inline: 18px; }
