@@ -5912,7 +5912,7 @@ html[data-theme-mode="dark-gray"] .key {
 #settingsDialog .settings-multiselect-option .feed-source-mark img { width: 100%; height: 100%; object-fit: contain; border-radius: inherit; }
 #settingsDialog .settings-multiselect-option .feed-source-fallback { display: none; }
 
-/* 2.18.134: home sources are managed from the source rail itself. Keep the
+/* 2.18.136: home sources are managed from the source rail itself. Keep the
    add affordance pinned to the right while the selected tabs scroll beneath
    the lightweight edge controls. */
 #homeSourceNav .feed-source-panel {
@@ -5981,17 +5981,27 @@ html[data-theme-mode="dark-gray"] .key {
   border-bottom: 1px solid var(--line);
   background: var(--panel);
 }
+#homeSourceDialog .dialog-head > div {
+  display: flex;
+  min-width: 0;
+  align-items: baseline;
+  gap: 10px;
+}
 #homeSourceDialog .dialog-head h2 { margin: 0; font-size: 20px; }
 #homeSourceDialog .home-source-dialog-hint {
-  margin: 4px 0 0;
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
   color: var(--muted);
   font-size: 11px;
   line-height: 1.45;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 #homeSourceDialog .home-source-options {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 7px;
   max-height: min(510px, calc(100dvh - 220px));
   overflow: auto;
   padding: 2px;
@@ -6005,8 +6015,8 @@ html[data-theme-mode="dark-gray"] .key {
   justify-content: center;
   gap: 6px;
   min-width: 0;
-  min-height: 104px;
-  padding: 12px 7px 9px;
+  min-height: 76px;
+  padding: 8px 3px 6px;
   text-align: center;
   border: 1px solid var(--line);
   border-radius: 13px;
@@ -6020,13 +6030,13 @@ html[data-theme-mode="dark-gray"] .key {
 #homeSourceDialog .home-source-option-mark {
   display: grid;
   place-items: center;
-  flex: 0 0 30px;
-  width: 30px;
-  height: 30px;
+  flex: 0 0 23px;
+  width: 23px;
+  height: 23px;
 }
 #homeSourceDialog .home-source-option-mark .feed-source-mark {
-  width: 28px;
-  height: 28px;
+  width: 21px;
+  height: 21px;
   border-radius: 7px;
   overflow: hidden;
 }
@@ -6054,7 +6064,7 @@ html[data-theme-mode="dark-gray"] .key {
   width: 100%;
   overflow: hidden;
   color: var(--ink);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -6067,10 +6077,10 @@ html[data-theme-mode="dark-gray"] .key {
   display: grid;
   place-items: center;
   position: absolute;
-  top: 6px;
-  right: 6px;
-  width: 24px;
-  height: 24px;
+  top: 3px;
+  right: 3px;
+  width: 19px;
+  height: 19px;
   padding: 0;
   border: 1px solid var(--line);
   border-radius: 50%;
@@ -6100,8 +6110,8 @@ html[data-theme-mode="dark-gray"] .key {
   color: var(--panel);
 }
 #homeSourceDialog .home-source-option-action svg {
-  width: 15px;
-  height: 15px;
+  width: 11px;
+  height: 11px;
   fill: none;
   stroke: currentColor;
   stroke-linecap: round;
@@ -6127,8 +6137,11 @@ html[data-theme-mode="dark-gray"] .key {
     margin: -16px -16px 12px;
     padding: 13px 16px 11px;
   }
-  #homeSourceDialog .home-source-options { max-height: calc(100dvh - 170px); gap: 7px; }
-  #homeSourceDialog .home-source-option { min-height: 96px; padding-inline: 5px; }
+  #homeSourceDialog .dialog-head > div { gap: 7px; }
+  #homeSourceDialog .dialog-head h2 { font-size: 18px; }
+  #homeSourceDialog .home-source-dialog-hint { font-size: 10px; }
+  #homeSourceDialog .home-source-options { max-height: calc(100dvh - 170px); gap: 6px; }
+  #homeSourceDialog .home-source-option { min-height: 72px; padding-inline: 2px; }
 }
 
 /* Source marks remain legible on a true-black surface.  The source websites
