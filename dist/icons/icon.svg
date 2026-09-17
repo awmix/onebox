@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
   <title id="title">OneBox</title>
-  <desc id="desc">OneBox four-cell mark in a rounded square.</desc>
+  <desc id="desc">OneBox four-cell mark in a full-bleed square.</desc>
   <style>
     .tile { fill: #ffffff; }
     .dark-dot { fill: #11131a; }
@@ -11,8 +11,8 @@
     }
   </style>
   <rect class="tile" x="0" y="0" width="512" height="512"/>
-  <rect class="blue-dot" x="112" y="112" width="112" height="112" rx="24"/>
-  <rect class="dark-dot" x="288" y="112" width="112" height="112" rx="24"/>
-  <rect class="dark-dot" x="112" y="288" width="112" height="112" rx="24"/>
-  <rect class="blue-dot" x="288" y="288" width="112" height="112" rx="24"/>
+  <rect class="blue-dot" x="64" y="64" width="160" height="160" rx="32"/>
+  <rect class="dark-dot" x="288" y="64" width="160" height="160" rx="32"/>
+  <rect class="dark-dot" x="64" y="288" width="160" height="160" rx="32"/>
+  <rect class="blue-dot" x="288" y="288" width="160" height="160" rx="32"/>
 </svg>
