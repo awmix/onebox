@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.111';
+const APP_VERSION = '2.18.112';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -51,7 +51,7 @@ const FEED_SOURCE_REGISTRY = [
   { id: 'v2ex', name: 'V2EX', badge: 'V', icon: 'https://www.v2ex.com/favicon.ico', className: 'v2ex', visibleByDefault: true, siteUrl: 'https://www.v2ex.com/?tab=all', fetchers: [{ kind: 'v2ex-latest', url: 'https://www.v2ex.com/api/topics/latest.json' }, { kind: 'rss', url: 'https://www.v2ex.com/index.xml' }] },
   { id: 'weibo', name: '微博', badge: '博', icon: 'icons/weibo.png?v=2.18.105', className: 'weibo', mobileHost: 'm.weibo.cn', visibleByDefault: true, siteUrl: 'https://s.weibo.com/top/summary?cate=realtimehot', fetchers: [{ kind: 'weibo-hot', url: 'https://baiapi.cn/api/weibo?type=json' }, { kind: 'weibo-hot-v2', url: 'https://weibo.com/ajax/side/hotSearch' }] },
   { id: 'bilibili', name: 'B站', badge: 'B', icon: 'icons/bilibili.svg', className: 'bilibili', mobileHost: 'm.bilibili.com', visibleByDefault: true, siteUrl: 'https://search.bilibili.com/all', fetchers: [{ kind: 'bilibili-hot', url: 'https://api.bilibili.com/x/web-interface/search/square?limit=30&platform=web' }, { kind: 'bilibili-hotword', url: 'https://s.search.bilibili.com/main/hotword' }] },
-  { id: 'guancha', name: '风闻', badge: '风', icon: 'icons/guancha.png?v=2.18.111', className: 'guancha', mobileHost: 'user.guancha.cn', visibleByDefault: false, siteUrl: 'https://user.guancha.cn/main/index?s=fwdhsy', fetchers: [{ kind: 'guancha-fengwen', url: 'https://user.guancha.cn/main/index-list.json?page=1&order=1' }, { kind: 'guancha-fengwen', url: 'https://rsshub.app/guancha/topic/0/1' }] },
+  { id: 'guancha', name: '风闻', badge: '风', icon: 'icons/guancha.png?v=2.18.112', className: 'guancha', mobileHost: 'user.guancha.cn', visibleByDefault: false, siteUrl: 'https://user.guancha.cn/main/index?s=fwdhsy', fetchers: [{ kind: 'guancha-fengwen', url: 'https://user.guancha.cn/main/index-list.json?page=1&order=1' }, { kind: 'guancha-fengwen', url: 'https://rsshub.app/guancha/topic/0/1' }] },
 ];
 const RSS_SOURCES = FEED_SOURCE_REGISTRY.filter((source) => source.enabled !== false);
 const RSS_REFRESH_INTERVAL = 2 * 60 * 1000;

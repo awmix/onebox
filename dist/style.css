@@ -5082,8 +5082,10 @@ html[data-color="mono"] #workspace[data-tool="calendar"] .day i {
   padding-top: 8px !important;
 }
 
-/* Mine is a compact system list; tighten only the icon-to-copy rhythm by 2px. */
-.mine-page .mine-row { gap: 9px; }
+/* Mine is a compact system list; keep the copy close to each icon. */
+.mine-page .mine-row { gap: 8px; }
+.mine-page .mine-row-copy strong { font-size: 13px; }
+.mine-page .mine-row-copy .mine-row-description { font-size: 11px; }
 
 /* Reader theme variables are copied to the dialogs by applyReaderPreferences.
    Use them for every part of the modal so green/sepia/dark backgrounds do not
