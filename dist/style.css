@@ -5912,7 +5912,7 @@ html[data-theme-mode="dark-gray"] .key {
 #settingsDialog .settings-multiselect-option .feed-source-mark img { width: 100%; height: 100%; object-fit: contain; border-radius: inherit; }
 #settingsDialog .settings-multiselect-option .feed-source-fallback { display: none; }
 
-/* 2.18.136: home sources are managed from the source rail itself. Keep the
+/* 2.18.137: home sources are managed from the source rail itself. Keep the
    add affordance pinned to the right while the selected tabs scroll beneath
    the lightweight edge controls. */
 #homeSourceNav .feed-source-panel {
@@ -6013,19 +6013,19 @@ html[data-theme-mode="dark-gray"] .key {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 4px;
   min-width: 0;
-  min-height: 76px;
-  padding: 8px 3px 6px;
+  min-height: 68px;
+  padding: 7px 3px 5px;
   text-align: center;
   border: 1px solid var(--line);
-  border-radius: 13px;
-  background: var(--panel-2);
+  border-radius: 15px;
+  background: color-mix(in srgb, var(--panel-2) 72%, var(--panel));
+  transition: border-color .16s ease, background-color .16s ease;
 }
 #homeSourceDialog .home-source-option.is-selected {
-  border-color: var(--ink);
-  background: color-mix(in srgb, var(--ink) 5%, var(--panel));
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ink) 14%, transparent);
+  border-color: color-mix(in srgb, var(--ink) 62%, var(--line));
+  background: color-mix(in srgb, var(--ink) 4%, var(--panel));
 }
 #homeSourceDialog .home-source-option-mark {
   display: grid;
@@ -6069,35 +6069,31 @@ html[data-theme-mode="dark-gray"] .key {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-#homeSourceDialog .home-source-option-copy small {
-  color: var(--muted);
-  font-size: 9px;
-}
 #homeSourceDialog .home-source-option-action {
   display: grid;
   place-items: center;
   position: absolute;
-  top: 3px;
-  right: 3px;
-  width: 19px;
-  height: 19px;
+  top: -1px;
+  right: -1px;
+  width: 16px;
+  height: 16px;
   padding: 0;
-  border: 1px solid var(--line);
+  border: 1px solid color-mix(in srgb, var(--ink) 24%, var(--line));
   border-radius: 50%;
   background: var(--panel);
-  color: var(--ink);
+  color: color-mix(in srgb, var(--ink) 72%, var(--muted));
   cursor: pointer;
 }
 #homeSourceDialog .home-source-option.is-selected .home-source-option-action {
-  border-color: var(--ink);
-  background: var(--ink);
-  color: var(--panel);
+  border-color: color-mix(in srgb, var(--ink) 56%, var(--line));
+  background: var(--panel);
+  color: var(--ink);
 }
 #homeSourceDialog .home-source-option-action:hover,
 #homeSourceDialog .home-source-option-action:focus-visible {
   color: var(--ink);
-  border-color: var(--ink);
-  background: var(--panel-2);
+  border-color: color-mix(in srgb, var(--ink) 62%, var(--line));
+  background: color-mix(in srgb, var(--ink) 6%, var(--panel));
 }
 #homeSourceDialog .home-source-option-action:focus-visible {
   outline: 2px solid color-mix(in srgb, var(--ink) 42%, transparent);
@@ -6106,17 +6102,17 @@ html[data-theme-mode="dark-gray"] .key {
 #homeSourceDialog .home-source-option.is-selected .home-source-option-action:hover,
 #homeSourceDialog .home-source-option.is-selected .home-source-option-action:focus-visible {
   border-color: var(--ink);
-  background: var(--ink);
-  color: var(--panel);
+  background: color-mix(in srgb, var(--ink) 6%, var(--panel));
+  color: var(--ink);
 }
 #homeSourceDialog .home-source-option-action svg {
-  width: 11px;
-  height: 11px;
+  width: 9px;
+  height: 9px;
   fill: none;
   stroke: currentColor;
   stroke-linecap: round;
   stroke-linejoin: round;
-  stroke-width: 1.9;
+  stroke-width: 1.6;
 }
 @media (max-width: 600px) {
   #homeSourceNav .feed-source-panel { padding-right: 0; }
@@ -6141,7 +6137,7 @@ html[data-theme-mode="dark-gray"] .key {
   #homeSourceDialog .dialog-head h2 { font-size: 18px; }
   #homeSourceDialog .home-source-dialog-hint { font-size: 10px; }
   #homeSourceDialog .home-source-options { max-height: calc(100dvh - 170px); gap: 6px; }
-  #homeSourceDialog .home-source-option { min-height: 72px; padding-inline: 2px; }
+  #homeSourceDialog .home-source-option { min-height: 66px; padding-inline: 2px; }
 }
 
 /* Source marks remain legible on a true-black surface.  The source websites
