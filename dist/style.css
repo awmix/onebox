@@ -5977,12 +5977,13 @@ html[data-theme="dark"] #homeSourceNav .feed-source-mark.bilibili { background: 
 #settingsDialog .settings-multiselect-summary-empty { color: var(--muted) !important; }
 #settingsDialog .settings-multiselect-chevron {
   flex: 0 0 auto;
-  color: var(--muted) !important;
-  width: 16px;
-  height: 16px;
+  color: var(--ink) !important;
+  width: 14px;
+  height: 14px;
+  margin-right: -1px;
   fill: none;
   stroke: currentColor;
-  stroke-width: 1.8;
+  stroke-width: 2;
   stroke-linecap: round;
   stroke-linejoin: round;
 }
