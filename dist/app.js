@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.106';
+const APP_VERSION = '2.18.107';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -2552,8 +2552,25 @@ function closeNotifications() {
   $('#notifyBtn')?.setAttribute('aria-expanded', 'false');
 }
 function isStandalonePwa() { return window.matchMedia?.('(display-mode: standalone)').matches || window.navigator.standalone === true; }
-document.documentElement.classList.toggle('standalone-pwa', isStandalonePwa());
 function isIosDevice() { return /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1); }
+function isIosSafariBrowser() {
+  const userAgent = navigator.userAgent || '';
+  return isIosDevice() && !isStandalonePwa() && /Safari\//.test(userAgent) && !/(CriOS|FxiOS|EdgiOS|OPiOS|GSA\/)/.test(userAgent);
+}
+function syncOneBoxViewportMetrics() {
+  const visualViewport = window.visualViewport;
+  const height = Math.max(1, Math.round(visualViewport?.height || window.innerHeight || document.documentElement.clientHeight));
+  const top = Math.max(0, Math.round(visualViewport?.offsetTop || 0));
+  const root = document.documentElement;
+  root.style.setProperty('--onebox-visual-height', height + 'px');
+  root.style.setProperty('--onebox-visual-top', top + 'px');
+  root.classList.toggle('ios-safari-browser', isIosSafariBrowser());
+}
+document.documentElement.classList.toggle('standalone-pwa', isStandalonePwa());
+syncOneBoxViewportMetrics();
+window.addEventListener('resize', syncOneBoxViewportMetrics, { passive: true });
+window.visualViewport?.addEventListener('resize', syncOneBoxViewportMetrics, { passive: true });
+window.visualViewport?.addEventListener('scroll', syncOneBoxViewportMetrics, { passive: true });
 async function requestNotifications() {
   if (!('Notification' in window)) return toast(state.language === 'en' ? 'This browser does not support notifications' : '当前浏览器不支持通知', 'error');
   if (isIosDevice() && !isStandalonePwa()) return toast(state.language === 'en' ? 'Add OneBox to the Home Screen before enabling iPhone notifications' : '请先将 OneBox 添加到主屏幕，再开启 iPhone 消息通知', 'error');

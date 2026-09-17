@@ -5767,6 +5767,38 @@ html[data-theme-mode="dark-gray"] .key {
   pointer-events: none;
 }
 
+/* iPhone Safari keeps the page inside a changing visual viewport while its
+   browser bars expand and collapse.  The PWA and desktop paths intentionally
+   keep their existing 100dvh/safe-area layout; only the non-standalone iOS
+   Safari fallback uses the measured visual viewport. */
+@media (max-width: 760px) {
+  html.ios-safari-browser.reader-focus,
+  html.ios-safari-browser.reader-focus body {
+    min-height: var(--onebox-visual-height, 100dvh);
+  }
+  html.ios-safari-browser.reader-focus main:has(#workspace[data-tool="reader"]),
+  html.ios-safari-browser.reader-focus #pageSwipeStage:has(> #workspace[data-tool="reader"]),
+  html.ios-safari-browser.reader-focus #workspace[data-tool="reader"] {
+    height: var(--onebox-visual-height, 100dvh) !important;
+    min-height: var(--onebox-visual-height, 100dvh) !important;
+    max-height: var(--onebox-visual-height, 100dvh) !important;
+  }
+  html.ios-safari-browser.reader-focus #workspace[data-tool="reader"] .reader-reference-shell {
+    top: var(--onebox-visual-top, 0px) !important;
+    right: 0 !important;
+    bottom: auto !important;
+    left: 0 !important;
+    height: var(--onebox-visual-height, 100dvh) !important;
+    min-height: var(--onebox-visual-height, 100dvh) !important;
+  }
+  html.ios-safari-browser.reader-focus .reader-reference-top {
+    padding-top: 0;
+  }
+  html.ios-safari-browser.reader-focus .reader-reference-bottom {
+    padding-bottom: 10px;
+  }
+}
+
 /* Home feed source management: a compact multi-select dropdown keeps new
    sources opt-in without changing the order of the source rail. */
 #settingsDialog .settings-home-feeds-row { align-items: center; }
