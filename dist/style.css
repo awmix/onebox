@@ -5912,7 +5912,7 @@ html[data-theme-mode="dark-gray"] .key {
 #settingsDialog .settings-multiselect-option .feed-source-mark img { width: 100%; height: 100%; object-fit: contain; border-radius: inherit; }
 #settingsDialog .settings-multiselect-option .feed-source-fallback { display: none; }
 
-/* 2.18.138: home sources are managed from the source rail itself. Keep the
+/* 2.18.139: home sources are managed from the source rail itself. Keep the
    add affordance pinned to the right while the selected tabs scroll beneath
    the lightweight edge controls. */
 #homeSourceNav .feed-source-panel {
@@ -5970,6 +5970,9 @@ html[data-theme-mode="dark-gray"] .key {
   max-height: min(660px, calc(100dvh - 112px - env(safe-area-inset-top)));
   margin: 0 auto;
   padding: 18px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
   overflow: hidden;
   border-radius: 22px;
   box-shadow: 0 24px 80px rgba(0, 0, 0, .34);
@@ -6001,11 +6004,14 @@ html[data-theme-mode="dark-gray"] .key {
 #homeSourceDialog .home-source-options {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 6px;
+  gap: 8px;
   max-height: min(510px, calc(100dvh - 220px));
+  min-height: 0;
+  flex: 1 1 auto;
   overflow: auto;
   padding: 6px 5px 4px;
   -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
 }
 #homeSourceDialog .home-source-option {
   position: relative;
@@ -6015,7 +6021,7 @@ html[data-theme-mode="dark-gray"] .key {
   justify-content: center;
   gap: 4px;
   min-width: 0;
-  min-height: 52px;
+  min-height: 46px;
   padding: 5px 6px;
   text-align: center;
   border: 1px solid var(--line);
@@ -6030,14 +6036,14 @@ html[data-theme-mode="dark-gray"] .key {
 #homeSourceDialog .home-source-option-mark {
   display: grid;
   place-items: center;
-  flex: 0 0 19px;
-  width: 19px;
-  height: 19px;
+  flex: 0 0 17px;
+  width: 17px;
+  height: 17px;
 }
 #homeSourceDialog .home-source-option-mark .feed-source-mark {
-  width: 18px;
-  height: 18px;
-  border-radius: 6px;
+  width: 16px;
+  height: 16px;
+  border-radius: 5px;
   overflow: hidden;
 }
 #homeSourceDialog .home-source-option-mark .feed-source-mark img {
@@ -6048,8 +6054,8 @@ html[data-theme-mode="dark-gray"] .key {
   border-radius: inherit;
 }
 #homeSourceDialog .home-source-option-mark .feed-source-mark.footprint svg {
-  width: 14px;
-  height: 14px;
+  width: 13px;
+  height: 13px;
 }
 #homeSourceDialog .home-source-option-copy {
   display: flex;
@@ -6065,7 +6071,7 @@ html[data-theme-mode="dark-gray"] .key {
   max-width: 100%;
   overflow: hidden;
   color: var(--ink);
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 700;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -6077,40 +6083,40 @@ html[data-theme-mode="dark-gray"] .key {
   top: -4px;
   right: -4px;
   z-index: 1;
-  width: 15px;
-  height: 15px;
+  width: 14px;
+  height: 14px;
   padding: 0;
-  border: 1px solid color-mix(in srgb, var(--ink) 24%, var(--line));
-  border-radius: 5px;
-  background: color-mix(in srgb, var(--panel) 92%, transparent);
-  color: color-mix(in srgb, var(--ink) 72%, var(--muted));
+  border: 1px solid color-mix(in srgb, var(--success) 62%, var(--line));
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--success) 10%, var(--panel));
+  color: var(--success);
   cursor: pointer;
 }
 #homeSourceDialog .home-source-option.is-selected .home-source-option-action {
-  border-color: color-mix(in srgb, var(--ink) 56%, var(--line));
+  border-color: color-mix(in srgb, var(--danger) 62%, var(--line));
   border-radius: 50%;
-  background: color-mix(in srgb, var(--ink) 16%, var(--panel));
-  color: var(--ink);
+  background: color-mix(in srgb, var(--danger) 14%, var(--panel));
+  color: var(--danger);
 }
 #homeSourceDialog .home-source-option-action:hover,
 #homeSourceDialog .home-source-option-action:focus-visible {
-  color: var(--ink);
-  border-color: color-mix(in srgb, var(--ink) 62%, var(--line));
-  background: color-mix(in srgb, var(--ink) 6%, var(--panel));
+  color: var(--primary);
+  border-color: color-mix(in srgb, var(--primary) 62%, var(--line));
+  background: color-mix(in srgb, var(--primary) 6%, var(--panel));
 }
 #homeSourceDialog .home-source-option-action:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--ink) 42%, transparent);
+  outline: 2px solid color-mix(in srgb, var(--primary) 42%, transparent);
   outline-offset: 2px;
 }
 #homeSourceDialog .home-source-option.is-selected .home-source-option-action:hover,
 #homeSourceDialog .home-source-option.is-selected .home-source-option-action:focus-visible {
-  border-color: var(--ink);
-  background: color-mix(in srgb, var(--ink) 6%, var(--panel));
-  color: var(--ink);
+  border-color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 7%, var(--panel));
+  color: var(--danger);
 }
 #homeSourceDialog .home-source-option-action svg {
-  width: 9px;
-  height: 9px;
+  width: 8px;
+  height: 8px;
   fill: none;
   stroke: currentColor;
   stroke-linecap: round;
@@ -6139,8 +6145,8 @@ html[data-theme-mode="dark-gray"] .key {
   #homeSourceDialog .dialog-head > div { gap: 7px; }
   #homeSourceDialog .dialog-head h2 { font-size: 18px; }
   #homeSourceDialog .home-source-dialog-hint { font-size: 10px; }
-  #homeSourceDialog .home-source-options { max-height: calc(100dvh - 170px); gap: 5px; padding-inline: 5px; }
-  #homeSourceDialog .home-source-option { min-height: 50px; padding-inline: 4px; }
+  #homeSourceDialog .home-source-options { max-height: calc(100dvh - 170px); gap: 7px; padding-inline: 5px; }
+  #homeSourceDialog .home-source-option { min-height: 44px; padding-inline: 4px; }
 }
 
 /* Source marks remain legible on a true-black surface.  The source websites
