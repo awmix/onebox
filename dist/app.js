@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.165';
+const APP_VERSION = '2.18.166';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -1524,6 +1524,15 @@ function readerScrollProgress(content) {
   if (documentMetrics) return Math.min(1, Math.max(0, documentMetrics.top / documentMetrics.max));
   return Math.min(1, Math.max(0, content.scrollTop / Math.max(1, content.scrollHeight - content.clientHeight)));
 }
+function readerDocumentPageInfo(content) {
+  if (!readerUsesDocumentScroll() || !content) return null;
+  const metrics = readerDocumentScrollMetrics(content);
+  if (!metrics) return null;
+  const viewportHeight = Math.max(1, window.innerHeight || document.documentElement.clientHeight || 1);
+  const contentHeight = Math.max(content.scrollHeight, content.getBoundingClientRect().height);
+  const count = Math.max(1, Math.ceil(contentHeight / viewportHeight));
+  return { current: Math.min(count, Math.floor(metrics.top / viewportHeight) + 1), count };
+}
 function scheduleReaderPositionRestore() {
   if (readerRestoreTimer) clearTimeout(readerRestoreTimer);
   requestAnimationFrame(() => requestAnimationFrame(() => {
@@ -2133,6 +2142,9 @@ function updateReaderReferenceChrome() {
   if (content) {
     if (state.readerReadingMode === 'pages' && content.classList.contains('reader-page-viewport')) {
       currentPage = Math.min(pageCount, state.readerPage + 1);
+    } else if (readerUsesDocumentScroll()) {
+      const documentPage = readerDocumentPageInfo(content);
+      if (documentPage) { currentPage = documentPage.current; pageCount = documentPage.count; }
     } else {
       pageCount = Math.max(1, Math.ceil(content.scrollHeight / Math.max(1, content.clientHeight)));
       currentPage = Math.min(pageCount, Math.floor(content.scrollTop / Math.max(1, content.clientHeight)) + 1);
@@ -3958,10 +3970,17 @@ workspace.addEventListener('pointerdown', (event) => {
     readerSurfaceGesture = { surface, x: event.clientX, y: event.clientY };
   }
 });
+let readerSurfaceTapSuppressClickUntil = 0;
 document.addEventListener('pointerup', (event) => {
   const gesture = readerSurfaceGesture; readerSurfaceGesture = null;
-  if (!gesture || state.readerMode !== 'reading' || state.readerReadingMode !== 'pages') return;
+  if (!gesture || state.readerMode !== 'reading') return;
   const dx = event.clientX - gesture.x; const dy = event.clientY - gesture.y;
+  if (state.readerReadingMode === 'scroll' && isIosSafariBrowser() && state.readerImmersive && Math.abs(dx) <= 12 && Math.abs(dy) <= 12 && !event.target.closest('a,button,input,textarea,select,[data-reader-comment-id],[data-reader-selection-menu],[data-reader-comment-popover]')) {
+    readerSurfaceTapSuppressClickUntil = Date.now() + 500;
+    toggleReaderChrome();
+    return;
+  }
+  if (state.readerReadingMode !== 'pages') return;
   if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) + 15) {
     swipeSuppressClickUntil = Date.now() + 400;
     turnReaderPage(dx < 0 ? 1 : -1);
@@ -4025,6 +4044,7 @@ workspace.addEventListener('click', async (event) => {
     if (event.target.closest('[data-reader-fullscreen]')) { toggleReaderFullscreen(); return; }
     const surface = event.target.closest('[data-reader-surface]');
     if (surface && !event.target.closest('a,button,input,textarea,select')) {
+      if (Date.now() < readerSurfaceTapSuppressClickUntil) return;
       if (Date.now() < swipeSuppressClickUntil) return;
       /* Safari webpage fullscreen has no native reader chrome layer. A tap
          on the reading surface must therefore be the same chrome toggle as

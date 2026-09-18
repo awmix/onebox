@@ -7050,6 +7050,61 @@ html[data-theme="dark"] #githubDialog .github-dialog-head { background: var(--pa
   }
 }
 
+/* 2.18.166: Safari webpage fullscreen keeps the document as the only scroll
+   chain. Keep both reader rails out of that document flow so revealing them
+   does not re-layout the book; only their transforms animate. This also makes
+   the title/progress rail use the same overlay behavior as the PWA reader. */
+@media (max-width: 760px) {
+  html.ios-safari-browser.reader-focus.reader-safari-surface #workspace[data-tool="reader"] .reader-reference-top,
+  html.ios-safari-browser.reader-focus.reader-safari-surface #workspace[data-tool="reader"] .reader-reference-bottom {
+    position: fixed !important;
+    right: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    flex: none !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    margin: 0 !important;
+    overflow: visible !important;
+    opacity: .98 !important;
+    pointer-events: auto !important;
+    transition: transform .16s ease-out !important;
+    will-change: transform;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+
+  html.ios-safari-browser.reader-focus.reader-safari-surface #workspace[data-tool="reader"] .reader-reference-top {
+    top: 0 !important;
+    bottom: auto !important;
+    z-index: 6 !important;
+    padding-top: env(safe-area-inset-top) !important;
+    background: var(--onebox-reader-surface-bg, var(--reader-bg)) !important;
+    transform: translateY(0) !important;
+  }
+
+  html.ios-safari-browser.reader-focus.reader-safari-surface #workspace[data-tool="reader"] .reader-reference-bottom {
+    top: auto !important;
+    bottom: 0 !important;
+    z-index: 7 !important;
+    padding: 7px 10px calc(8px + env(safe-area-inset-bottom)) !important;
+    border-width: 1px 0 0 !important;
+    background: var(--onebox-reader-surface-bg, var(--reader-bg)) !important;
+    transform: translateY(0) !important;
+  }
+
+  html.ios-safari-browser.reader-focus.reader-safari-surface #workspace[data-tool="reader"] .reader-reference-shell.chrome-hidden .reader-reference-top {
+    pointer-events: none !important;
+    transform: translateY(-115%) !important;
+  }
+
+  html.ios-safari-browser.reader-focus.reader-safari-surface #workspace[data-tool="reader"] .reader-reference-shell.chrome-hidden .reader-reference-bottom {
+    pointer-events: none !important;
+    transform: translateY(115%) !important;
+  }
+}
+
 /* 2.18.162: Safari does not consistently sample pseudo-elements for its
    status-bar tint. Use a real, solid DOM edge surface instead, matching the
    exact reader background on html/body and the reader shell. */
