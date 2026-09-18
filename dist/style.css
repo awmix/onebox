@@ -5825,7 +5825,7 @@ html[data-theme-mode="dark-gray"] .key {
   }
 }
 
-/* 2.18.155: iPhone Safari cannot enter native element fullscreen for the
+/* 2.18.156: iPhone Safari cannot enter native element fullscreen for the
    reader. Use the document as the reading scroller in its CSS fallback so
    Safari can collapse its address/action bar while the reader chrome stays
    hidden. This is deliberately limited to Safari webpage mode; standalone
@@ -5876,7 +5876,30 @@ html[data-theme-mode="dark-gray"] .key {
   }
   html.ios-safari-browser.reader-focus #workspace[data-tool="reader"] .reader-reference-viewer.reader-scroll-content {
     overscroll-behavior: auto;
-    padding-bottom: calc(34px + env(safe-area-inset-bottom));
+    /* The reader footer is an overlay in Safari fallback mode. Keep the last
+       lines above it while leaving the document itself scrollable. */
+    padding-bottom: calc(118px + env(safe-area-inset-bottom));
+  }
+  html.ios-safari-browser.reader-focus #workspace[data-tool="reader"] .reader-reference-shell.chrome-hidden .reader-reference-bottom {
+    /* Fullscreen hides OneBox's app chrome, but the reader actions must stay
+       reachable: Safari has no reliable browser-level exit-fullscreen UI for
+       an ordinary webpage. */
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 5;
+    flex: 0 0 auto;
+    height: auto;
+    min-height: 0;
+    max-height: none;
+    margin: 0;
+    padding: 7px 10px calc(8px + env(safe-area-inset-bottom));
+    border-width: 1px 0 0;
+    overflow: visible;
+    opacity: .98;
+    transform: none;
+    pointer-events: auto;
   }
   html.ios-safari-browser.reader-focus #workspace[data-tool="reader"] .reader-reference-viewer.reader-pdf-content {
     min-height: var(--onebox-visual-height, 100dvh) !important;
