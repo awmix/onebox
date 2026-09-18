@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.166';
+const APP_VERSION = '2.18.167';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -3240,6 +3240,30 @@ async function updateServiceWorkerRegistration(registration) {
   }
   throw lastError || Error('Update check failed');
 }
+function compareAppVersions(left, right) {
+  const parse = (value) => String(value || '').split('.').map((part) => Number(part.match(/\d+/)?.[0] || 0));
+  const leftParts = parse(left);
+  const rightParts = parse(right);
+  const length = Math.max(leftParts.length, rightParts.length, 3);
+  for (let index = 0; index < length; index += 1) {
+    const difference = (leftParts[index] || 0) - (rightParts[index] || 0);
+    if (difference !== 0) return difference;
+  }
+  return 0;
+}
+async function fetchLatestAppVersion() {
+  const versionUrl = new URL('app.js', document.baseURI);
+  versionUrl.searchParams.set('update-check', Date.now() + '-' + Math.random().toString(36).slice(2));
+  const response = await Promise.race([
+    fetch(versionUrl.href, { cache: 'no-store', credentials: 'same-origin' }),
+    sleep(8000).then(() => { throw Error('Version check timed out'); }),
+  ]);
+  if (!response.ok) throw Error('Version check failed');
+  const source = await response.text();
+  const match = source.match(/const\s+APP_VERSION\s*=\s*['"]([^'"]+)['"]/);
+  if (!match) throw Error('Version marker missing');
+  return match[1];
+}
 async function checkForUpdate() {
   if (state.updateChecking || state.updateApplying) return;
   const registration = state.swRegistration || await navigator.serviceWorker?.getRegistration();
@@ -3250,15 +3274,25 @@ async function checkForUpdate() {
   if (state.settingsOpen) renderSettings();
   if (state.section === 'mine') render();
   try {
+    const latestVersionPromise = fetchLatestAppVersion().catch(() => null);
     const installingBeforeCheck = registration.installing;
     const workerPromise = observeUpdateWorker(registration);
     await updateServiceWorkerRegistration(registration);
     let worker = registration.waiting;
+    const latestVersion = await latestVersionPromise;
+    const remoteNewer = latestVersion ? compareAppVersions(latestVersion, APP_VERSION) > 0 : false;
     if (!worker) {
       const newWorkerStarted = registration.installing && registration.installing !== installingBeforeCheck;
-      worker = await Promise.race([workerPromise, sleep(newWorkerStarted ? 9000 : 1400).then(() => null)]);
+      const waitMilliseconds = remoteNewer || newWorkerStarted || registration.installing ? 15000 : 2500;
+      worker = await Promise.race([workerPromise, sleep(waitMilliseconds).then(() => null)]);
+    }
+    if (!worker && remoteNewer) {
+      const retryWorkerPromise = observeUpdateWorker(registration);
+      await updateServiceWorkerRegistration(registration);
+      worker = registration.waiting || await Promise.race([retryWorkerPromise, sleep(15000).then(() => null)]);
     }
     if (worker || registration.waiting || registration.installing?.state === 'installed') markUpdateAvailable();
+    else if (remoteNewer) throw Error('The latest app version did not install');
     else { state.updateAvailable = false; state.updateError = false; refreshUpdateIndicator(); if (state.settingsOpen) renderSettings(); if (state.section === 'mine') render(); toast(t('upToDate')); }
   } catch {
     state.updateError = true;
@@ -3293,8 +3327,12 @@ function requestAppReload() {
 }
 async function applyUpdate() {
   if (state.updateApplying) return;
-  const worker = state.swRegistration?.waiting;
-  if (!worker) return checkForUpdate();
+  let worker = state.swRegistration?.waiting;
+  if (!worker) {
+    await checkForUpdate();
+    worker = state.swRegistration?.waiting;
+    if (!worker) return;
+  }
   state.updateApplying = true;
   if (state.settingsOpen) renderSettings();
   if (state.section === 'mine') render();
