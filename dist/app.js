@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.154';
+const APP_VERSION = '2.18.155';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -45,7 +45,7 @@ const TOOL_DEFS = {
 // The fetchers are intentionally source-specific: using one RSS aggregator for
 // every site was the reason several feeds lagged by hours and hit rate limits.
 const FEED_SOURCE_REGISTRY = [
-  { id: 'ithome', name: '之家', badge: 'IT', icon: 'icons/ithome.ico?v=2.18.154', className: 'ithome', mobileHost: 'm.ithome.com', visibleByDefault: true, siteUrl: 'https://www.ithome.com/', fetchers: [{ kind: 'rss', url: 'https://www.ithome.com/rss/' }, { kind: 'rss', url: 'https://www.ithome.com/rss', direct: true }] },
+  { id: 'ithome', name: '之家', badge: 'IT', icon: 'icons/ithome.ico?v=2.18.155', className: 'ithome', mobileHost: 'm.ithome.com', visibleByDefault: true, siteUrl: 'https://www.ithome.com/', fetchers: [{ kind: 'rss', url: 'https://www.ithome.com/rss/' }, { kind: 'rss', url: 'https://www.ithome.com/rss', direct: true }] },
   { id: 'huxiu', name: '虎嗅', badge: '虎', icon: 'https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/be/4c/7f/be4c7f2c-0ebc-7ba8-a60e-c5707c67b0ee/AppIcon-0-0-1x_U007epad-0-1-0-85-220.png/128x128bb.png', className: 'huxiu', mobileHost: 'm.huxiu.com', visibleByDefault: true, siteUrl: 'https://www.huxiu.com/', fetchers: [{ kind: 'rss', url: 'https://www.huxiu.com/rss/0.xml' }, { kind: 'rss', url: 'https://rsshub.rssforever.com/huxiu/article' }, { kind: 'rss', url: 'https://rsshub.app/huxiu/article' }] },
   { id: 'zhihu', name: '知乎', badge: '知', icon: 'https://www.zhihu.com/favicon.ico', className: 'zhihu', mobileHost: 'www.zhihu.com', visibleByDefault: true, siteUrl: 'https://www.zhihu.com/hot', fetchers: [{ kind: 'zhihu-hot', url: 'https://www.zhihu.com/api/v4/search/hot_search' }, { kind: 'zhihu-hot', url: 'https://www.zhihu.com/api/v4/search/hot_search?limit=50' }] },
   { id: 'v2ex', name: 'V站', badge: 'V', icon: 'https://www.v2ex.com/favicon.ico', className: 'v2ex', visibleByDefault: false, siteUrl: 'https://www.v2ex.com/?tab=all', fetchers: [{ kind: 'v2ex-latest', url: 'https://www.v2ex.com/api/topics/latest.json' }, { kind: 'rss', url: 'https://www.v2ex.com/index.xml' }] },
@@ -1496,6 +1496,28 @@ let readerProgressFrame = 0;
 let readerProgressTimer = null;
 let readerRestoreTimer = null;
 let readerTurnTimer = null;
+let readerNativeFullscreen = false;
+function readerUsesDocumentScroll() {
+  return isIosSafariBrowser() && state.readerImmersive && state.readerMode === 'reading' && state.readerReadingMode !== 'pages' && document.documentElement.classList.contains('reader-focus');
+}
+function readerDocumentScrollMetrics(content) {
+  if (!readerUsesDocumentScroll() || !content) return null;
+  const rect = content.getBoundingClientRect();
+  const documentTop = rect.top + (window.scrollY || window.pageYOffset || 0);
+  const contentHeight = Math.max(content.scrollHeight, rect.height);
+  const viewportHeight = Math.max(1, window.innerHeight || document.documentElement.clientHeight || 1);
+  return {
+    top: Math.max(0, (window.scrollY || window.pageYOffset || 0) - documentTop),
+    max: Math.max(1, contentHeight - viewportHeight),
+    documentTop,
+  };
+}
+function readerScrollProgress(content) {
+  if (!content) return 0;
+  const documentMetrics = readerDocumentScrollMetrics(content);
+  if (documentMetrics) return Math.min(1, Math.max(0, documentMetrics.top / documentMetrics.max));
+  return Math.min(1, Math.max(0, content.scrollTop / Math.max(1, content.scrollHeight - content.clientHeight)));
+}
 function scheduleReaderPositionRestore() {
   if (readerRestoreTimer) clearTimeout(readerRestoreTimer);
   requestAnimationFrame(() => requestAnimationFrame(() => {
@@ -1508,7 +1530,7 @@ function scheduleReaderProgress(content) {
   if (state.readerReadingMode === 'pages' && content.classList.contains('reader-page-viewport')) {
     book.progress = Math.min(1, content.scrollLeft / Math.max(1, content.scrollWidth - content.clientWidth));
   } else {
-    book.progress = Math.min(1, content.scrollTop / Math.max(1, content.scrollHeight - content.clientHeight));
+    book.progress = readerScrollProgress(content);
   }
   if (!readerProgressFrame) readerProgressFrame = requestAnimationFrame(() => {
     readerProgressFrame = 0;
@@ -1524,7 +1546,7 @@ function flushReaderProgress() {
   if (state.readerReadingMode === 'pages' && content.classList.contains('reader-page-viewport')) {
     book.progress = Math.min(1, Math.max(0, content.scrollLeft / Math.max(1, content.scrollWidth - content.clientWidth)));
   } else {
-    book.progress = Math.min(1, Math.max(0, content.scrollTop / Math.max(1, content.scrollHeight - content.clientHeight)));
+    book.progress = readerScrollProgress(content);
   }
   saveLibrary();
 }
@@ -1550,21 +1572,37 @@ function restoreReaderPosition() {
     content.scrollLeft = Math.min(Math.max(0, page), count - 1) * content.clientWidth;
     updateReaderPager();
   } else if (book.progress) {
-    const maxScrollTop = Math.max(0, content.scrollHeight - content.clientHeight);
-    content.scrollTop = maxScrollTop * Math.min(1, Math.max(0, Number(book.progress) || 0));
+    const progress = Math.min(1, Math.max(0, Number(book.progress) || 0));
+    const documentMetrics = readerDocumentScrollMetrics(content);
+    if (documentMetrics) {
+      window.scrollTo({ top: documentMetrics.documentTop + documentMetrics.max * progress, behavior: 'auto' });
+    } else {
+      const maxScrollTop = Math.max(0, content.scrollHeight - content.clientHeight);
+      content.scrollTop = maxScrollTop * progress;
+    }
   }
   updateReaderReferenceChrome();
 }
 function readerFullscreenElement() { return document.fullscreenElement || document.webkitFullscreenElement || null; }
-function requestReaderFullscreen() {
-  if (readerFullscreenElement()) return Promise.resolve();
+async function requestReaderFullscreen() {
+  if (readerFullscreenElement()) { readerNativeFullscreen = true; return true; }
   const root = document.documentElement;
   const request = root.requestFullscreen || root.webkitRequestFullscreen;
-  if (!request) return Promise.resolve();
-  try { return Promise.resolve(request.call(root, { navigationUI: 'hide' })).catch(() => {}); } catch { return Promise.resolve(); }
+  if (!request) { readerNativeFullscreen = false; return false; }
+  try {
+    await Promise.resolve(request.call(root, { navigationUI: 'hide' }));
+    readerNativeFullscreen = Boolean(readerFullscreenElement());
+    return readerNativeFullscreen;
+  } catch {
+    // iPhone Safari rejects element fullscreen for ordinary page content. The
+    // CSS reader-focus fallback remains active in that case.
+    readerNativeFullscreen = false;
+    return false;
+  }
 }
 function exitReaderFullscreen() {
   const exit = document.exitFullscreen || document.webkitExitFullscreen;
+  readerNativeFullscreen = false;
   if (!readerFullscreenElement() || !exit) return Promise.resolve();
   try { return Promise.resolve(exit.call(document)).catch(() => {}); } catch { return Promise.resolve(); }
 }
@@ -1592,12 +1630,23 @@ function ensureReaderFullscreenTool() {
   row.insertBefore(button, annotation || null);
 }
 function toggleReaderFullscreen() {
+  const wasDocumentScroll = readerUsesDocumentScroll();
+  const content = $('[data-reader-content]');
+  const previousProgress = wasDocumentScroll ? readerScrollProgress(content) : null;
   state.readerImmersive = !state.readerImmersive;
   state.readerChromeHidden = state.readerImmersive;
   state.readerPreferences.fullscreenOnOpen = state.readerImmersive;
   saveReaderPreferences();
   if (state.readerImmersive) requestReaderFullscreen(); else exitReaderFullscreen();
   render();
+  if (wasDocumentScroll && !state.readerImmersive && previousProgress != null) {
+    requestAnimationFrame(() => {
+      const nextContent = $('[data-reader-content]');
+      if (nextContent) nextContent.scrollTop = previousProgress * Math.max(0, nextContent.scrollHeight - nextContent.clientHeight);
+      window.scrollTo({ top: 0, behavior: 'auto' });
+      updateReaderReferenceChrome();
+    });
+  }
 }
 function renderReaderView(content, hint = '', toc = [], readingMode = 'pages') {
   state.readerContent = content;
@@ -1633,9 +1682,11 @@ async function openReaderBook(id) {
   } catch { toast(t('importFailed'), 'error'); state.readerBookId = null; }
 }
 function closeReader() {
+  const wasDocumentScroll = readerUsesDocumentScroll();
   exitReaderFullscreen();
   if (state.readerUrl) URL.revokeObjectURL(state.readerUrl);
   flushReaderProgress();
+  if (wasDocumentScroll) window.scrollTo({ top: 0, behavior: 'auto' });
   state.readerUrl = ''; state.readerBookId = null; state.readerContent = ''; state.readerHint = ''; state.readerToc = []; state.readerDialog = ''; state.readerChromeHidden = false; state.readerImmersive = false; state.readerMode = 'library'; state.readerReadingMode = 'scroll'; state.readerPage = 0; state.readerSelectedText = ''; state.readerSelection = null;
   render();
 }
@@ -1968,7 +2019,7 @@ function updateReaderReferenceChrome() {
     if (state.readerReadingMode === 'pages' && content.classList.contains('reader-page-viewport')) {
       pageCount = Math.max(1, Math.ceil(content.scrollWidth / Math.max(1, content.clientWidth)));
       progress = state.readerPage / Math.max(1, pageCount - 1);
-    } else progress = content.scrollTop / Math.max(1, content.scrollHeight - content.clientHeight);
+    } else progress = readerScrollProgress(content);
   }
   progress = Math.min(1, Math.max(0, progress));
   if (label) label.textContent = Math.round(progress * 100) + '%';
@@ -4125,6 +4176,9 @@ $('#readerDialog').addEventListener('change', (event) => {
 workspace.addEventListener('scroll', (event) => {
   scheduleReaderProgress(event.target.closest('[data-reader-content]'));
 }, true);
+window.addEventListener('scroll', () => {
+  if (readerUsesDocumentScroll()) scheduleReaderProgress($('[data-reader-content]'));
+}, { passive: true });
 $('#annotationDialog').addEventListener('click', (event) => {
   if (event.target === $('#annotationDialog') || event.target.closest('[data-close-annotation]')) { $('#annotationDialog').hidden = true; state.readerSelection = null; state.readerSelectedText = ''; hideReaderSelectionMenu(); return; }
   if (!event.target.closest('[data-save-annotation]')) return;
@@ -4305,7 +4359,12 @@ window.matchMedia?.('(prefers-color-scheme: dark)').addEventListener?.('change',
 document.addEventListener('visibilitychange', () => { if (!document.hidden) { state.swRegistration?.update().catch(() => {}); if (state.section === 'home') scheduleHomeFeedSurfaceSync(); } });
 window.addEventListener('focus', () => { state.swRegistration?.update().catch(() => {}); if (state.section === 'home') scheduleHomeFeedSurfaceSync(); });
 const handleReaderFullscreenChange = () => {
-  if (!readerFullscreenElement() && state.readerMode === 'reading' && state.readerImmersive) {
+  const active = Boolean(readerFullscreenElement());
+  if (active) {
+    readerNativeFullscreen = true;
+    updateReaderFullscreenControl();
+  } else if (readerNativeFullscreen && state.readerMode === 'reading' && state.readerImmersive) {
+    readerNativeFullscreen = false;
     state.readerImmersive = false; render();
   } else updateReaderFullscreenControl();
 };

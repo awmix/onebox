@@ -5825,6 +5825,65 @@ html[data-theme-mode="dark-gray"] .key {
   }
 }
 
+/* 2.18.155: iPhone Safari cannot enter native element fullscreen for the
+   reader. Use the document as the reading scroller in its CSS fallback so
+   Safari can collapse its address/action bar while the reader chrome stays
+   hidden. This is deliberately limited to Safari webpage mode; standalone
+   PWA and desktop readers keep the fixed viewport implementation above. */
+@media (max-width: 760px) {
+  html.ios-safari-browser.reader-focus,
+  html.ios-safari-browser.reader-focus body {
+    height: auto !important;
+    min-height: 100%;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    overscroll-behavior-y: auto;
+  }
+  html.ios-safari-browser.reader-focus .shell {
+    min-height: 100%;
+  }
+  html.ios-safari-browser.reader-focus main:has(#workspace[data-tool="reader"]),
+  html.ios-safari-browser.reader-focus #pageSwipeStage:has(> #workspace[data-tool="reader"]),
+  html.ios-safari-browser.reader-focus #workspace[data-tool="reader"] {
+    height: auto !important;
+    min-height: 100svh !important;
+    max-height: none !important;
+    overflow: visible !important;
+    padding: 0 !important;
+  }
+  html.ios-safari-browser.reader-focus #workspace[data-tool="reader"] .reader-reference-shell {
+    position: relative !important;
+    inset: auto !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 100svh !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+  html.ios-safari-browser.reader-focus #workspace[data-tool="reader"] .reader-reference-body {
+    flex: 0 0 auto !important;
+    height: auto !important;
+    min-height: var(--onebox-visual-height, 100dvh) !important;
+    overflow: visible !important;
+  }
+  html.ios-safari-browser.reader-focus #workspace[data-tool="reader"] .reader-reference-viewer {
+    position: relative !important;
+    inset: auto !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: var(--onebox-visual-height, 100dvh) !important;
+    overflow: visible !important;
+  }
+  html.ios-safari-browser.reader-focus #workspace[data-tool="reader"] .reader-reference-viewer.reader-scroll-content {
+    overscroll-behavior: auto;
+    padding-bottom: calc(34px + env(safe-area-inset-bottom));
+  }
+  html.ios-safari-browser.reader-focus #workspace[data-tool="reader"] .reader-reference-viewer.reader-pdf-content {
+    min-height: var(--onebox-visual-height, 100dvh) !important;
+    overflow: hidden !important;
+  }
+}
+
 /* Home feed source management: a compact multi-select dropdown keeps new
    sources opt-in without changing the order of the source rail. */
 #settingsDialog .settings-home-feeds-row { align-items: center; }
