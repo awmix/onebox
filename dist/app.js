@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.158';
+const APP_VERSION = '2.18.159';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -45,7 +45,7 @@ const TOOL_DEFS = {
 // The fetchers are intentionally source-specific: using one RSS aggregator for
 // every site was the reason several feeds lagged by hours and hit rate limits.
 const FEED_SOURCE_REGISTRY = [
-  { id: 'ithome', name: '之家', badge: 'IT', icon: 'icons/ithome.ico?v=2.18.158', className: 'ithome', mobileHost: 'm.ithome.com', visibleByDefault: true, siteUrl: 'https://www.ithome.com/', fetchers: [{ kind: 'rss', url: 'https://www.ithome.com/rss/' }, { kind: 'rss', url: 'https://www.ithome.com/rss', direct: true }] },
+  { id: 'ithome', name: '之家', badge: 'IT', icon: 'icons/ithome.ico?v=2.18.159', className: 'ithome', mobileHost: 'm.ithome.com', visibleByDefault: true, siteUrl: 'https://www.ithome.com/', fetchers: [{ kind: 'rss', url: 'https://www.ithome.com/rss/' }, { kind: 'rss', url: 'https://www.ithome.com/rss', direct: true }] },
   { id: 'huxiu', name: '虎嗅', badge: '虎', icon: 'https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/be/4c/7f/be4c7f2c-0ebc-7ba8-a60e-c5707c67b0ee/AppIcon-0-0-1x_U007epad-0-1-0-85-220.png/128x128bb.png', className: 'huxiu', mobileHost: 'm.huxiu.com', visibleByDefault: true, siteUrl: 'https://www.huxiu.com/', fetchers: [{ kind: 'rss', url: 'https://www.huxiu.com/rss/0.xml' }, { kind: 'rss', url: 'https://rsshub.rssforever.com/huxiu/article' }, { kind: 'rss', url: 'https://rsshub.app/huxiu/article' }] },
   { id: 'zhihu', name: '知乎', badge: '知', icon: 'https://www.zhihu.com/favicon.ico', className: 'zhihu', mobileHost: 'www.zhihu.com', visibleByDefault: true, siteUrl: 'https://www.zhihu.com/hot', fetchers: [{ kind: 'zhihu-hot', url: 'https://www.zhihu.com/api/v4/search/hot_search' }, { kind: 'zhihu-hot', url: 'https://www.zhihu.com/api/v4/search/hot_search?limit=50' }] },
   { id: 'v2ex', name: 'V站', badge: 'V', icon: 'https://www.v2ex.com/favicon.ico', className: 'v2ex', visibleByDefault: false, siteUrl: 'https://www.v2ex.com/?tab=all', fetchers: [{ kind: 'v2ex-latest', url: 'https://www.v2ex.com/api/topics/latest.json' }, { kind: 'rss', url: 'https://www.v2ex.com/index.xml' }] },
@@ -387,7 +387,9 @@ function applyTheme() {
   document.documentElement.dataset.themeMode = state.theme;
   document.documentElement.dataset.color = state.color;
   document.documentElement.style.colorScheme = resolved;
-  $$('meta[name="theme-color"]').forEach((meta) => { meta.content = resolved === 'dark' ? '#000000' : '#f3f5fa'; });
+  if (!isIosSafariReaderSurfaceActive()) {
+    $$('meta[name="theme-color"]').forEach((meta) => { meta.content = resolved === 'dark' ? '#000000' : '#f3f5fa'; });
+  }
   const appleStatusBar = $('meta[name="apple-mobile-web-app-status-bar-style"]');
   if (appleStatusBar) appleStatusBar.content = resolved === 'dark' ? 'black-translucent' : 'default';
   const button = $('#themeBtn');
@@ -1710,7 +1712,34 @@ const READER_THEME_VALUES = {
 };
 const READER_FONT_VALUES = { system: 'var(--font-sans)', serif: 'Georgia, "Times New Roman", serif', mono: 'ui-monospace, SFMono-Regular, Menlo, monospace' };
 function saveReaderPreferences() { saveStored(STORAGE.readerPreferences, state.readerPreferences); }
+function syncReaderSafariSurface() {
+  const root = document.documentElement;
+  const body = document.body;
+  const active = isIosSafariReaderSurfaceActive();
+  root.classList.toggle('reader-safari-surface', active);
+  const metas = $$('meta[name="theme-color"]');
+  if (!active) {
+    root.style.removeProperty('--onebox-reader-surface-bg');
+    root.style.removeProperty('background-color');
+    body?.style.removeProperty('background-color');
+    metas.forEach((meta) => {
+      if (!meta.dataset.oneboxReaderThemeColor) return;
+      meta.content = meta.dataset.oneboxReaderThemeColor;
+      delete meta.dataset.oneboxReaderThemeColor;
+    });
+    return;
+  }
+  const palette = READER_THEME_VALUES[state.readerPreferences.theme] || READER_THEME_VALUES.paper;
+  root.style.setProperty('--onebox-reader-surface-bg', palette.bg);
+  root.style.backgroundColor = palette.bg;
+  if (body) body.style.backgroundColor = palette.bg;
+  metas.forEach((meta) => {
+    if (!meta.dataset.oneboxReaderThemeColor) meta.dataset.oneboxReaderThemeColor = meta.content;
+    meta.content = palette.bg;
+  });
+}
 function applyReaderPreferences() {
+  syncReaderSafariSurface();
   const shell = $('.reader-reference-shell, .reader-reading-shell'); if (!shell) return;
   const prefs = state.readerPreferences; const palette = READER_THEME_VALUES[prefs.theme] || READER_THEME_VALUES.paper;
   // Reader dialogs are mounted outside the reading shell. Their contrast must
@@ -2851,6 +2880,9 @@ function isIosSafariBrowser() {
   const userAgent = navigator.userAgent || '';
   return isIosDevice() && !isStandalonePwa() && /Safari\//.test(userAgent) && !/(CriOS|FxiOS|EdgiOS|OPiOS|GSA\/)/.test(userAgent);
 }
+function isIosSafariReaderSurfaceActive() {
+  return isIosSafariBrowser() && state.section === 'tools' && state.tool === 'reader' && state.readerMode === 'reading' && state.readerImmersive;
+}
 function syncOneBoxViewportMetrics() {
   const visualViewport = window.visualViewport;
   const height = Math.max(1, Math.round(visualViewport?.height || window.innerHeight || document.documentElement.clientHeight));
@@ -3244,6 +3276,7 @@ function render() {
   workspace.innerHTML = state.section === 'home' ? renderHome() : state.section === 'messages' ? renderMessages() : state.section === 'mine' ? renderMine() : (renderers[state.tool] || calculator)();
   renderHomeSourceNav();
   document.documentElement.classList.toggle('reader-focus', state.section === 'tools' && state.tool === 'reader' && state.readerMode === 'reading' && state.readerImmersive);
+  syncReaderSafariSurface();
   if (state.section === 'tools' && state.tool === 'reader' && state.readerMode === 'reading') {
     requestAnimationFrame(() => { ensureReaderFullscreenTool(); applyReaderPreferences(); applyReaderMarkups(); updateReaderFullscreenControl(); scheduleReaderPositionRestore(); if (state.readerDialog) { readerDialogMarkup(state.readerDialog); updateReaderReferenceChrome(); } });
   } else if (!state.readerDialog) {

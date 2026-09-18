@@ -6880,3 +6880,19 @@ html[data-theme="dark"] #githubDialog .github-dialog-head { background: var(--pa
     display: grid !important;
   }
 }
+
+/* 2.18.159: Safari samples the page edge background for the status and
+   toolbar regions. Keep that sampled surface aligned with the reader theme;
+   the browser toolbar remains Safari-owned and may collapse on scroll. */
+@media (max-width: 760px) {
+  html.ios-safari-browser.reader-focus.reader-safari-surface,
+  html.ios-safari-browser.reader-focus.reader-safari-surface body {
+    background: var(--onebox-reader-surface-bg, var(--reader-bg, var(--bg))) !important;
+  }
+  html.ios-safari-browser.reader-focus.reader-safari-surface .shell {
+    min-height: calc(100% + 1px);
+  }
+  html.ios-safari-browser.reader-focus.reader-safari-surface #workspace[data-tool="reader"] .reader-reference-shell {
+    min-height: calc(var(--onebox-visual-height, 100svh) + 1px) !important;
+  }
+}
