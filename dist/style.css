@@ -6639,7 +6639,7 @@ html[data-theme="dark"] #githubDialog .github-dialog-head { background: var(--pa
   }
 }
 
-/* 2.18.151: iOS can report a temporarily short visual viewport after an
+/* 2.18.152: iOS can report a temporarily short visual viewport after an
    external-page return. Use the larger stable viewport as a floor so the
    PWA cannot end early and reveal the body background below the feed. */
 @media (max-width: 760px) {
@@ -6712,7 +6712,7 @@ html[data-theme="dark"] #githubDialog .github-dialog-head { background: var(--pa
   }
 }
 
-/* 2.18.151: the outer PWA viewport can be full height while the short-feed
+/* 2.18.152: the outer PWA viewport can be full height while the short-feed
    panel still ends at its last row and exposes the black body underneath.
    Keep the panel surface filled to the stable mobile viewport; long feeds
    continue to grow normally because this is only a minimum height. */
@@ -6721,5 +6721,35 @@ html[data-theme="dark"] #githubDialog .github-dialog-head { background: var(--pa
   html.ios-safari-browser:not(.standalone-pwa):not(.reader-focus) #workspace[data-tool="home"] .feed-panel {
     min-height: calc(var(--onebox-app-viewport-height, var(--onebox-visual-height, 100dvh)) - var(--app-header-height) - 42px);
     background: var(--panel);
+  }
+}
+
+/* 2.18.152: iOS WebKit can leave a bottom strip when a PWA uses a fixed
+   viewport plus a nested main scroller. Let the homepage use the document
+   scroller instead; the reader keeps its dedicated fixed fullscreen shell. */
+@media (max-width: 760px) {
+  html.standalone-pwa:not(.reader-focus):has(#workspace[data-tool="home"]),
+  html.standalone-pwa:not(.reader-focus):has(#workspace[data-tool="home"]) body {
+    min-height: 100%;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    overscroll-behavior-y: auto;
+  }
+  html.standalone-pwa:not(.reader-focus):has(#workspace[data-tool="home"]) .shell {
+    min-height: 100%;
+  }
+  html.standalone-pwa:not(.reader-focus):has(#workspace[data-tool="home"]) main:has(#workspace[data-tool="home"]) {
+    height: auto !important;
+    min-height: calc(100svh - var(--app-header-height)) !important;
+    max-height: none !important;
+    overflow: visible !important;
+    -webkit-overflow-scrolling: auto;
+    padding-bottom: 0 !important;
+  }
+  html.standalone-pwa:not(.reader-focus):has(#workspace[data-tool="home"]) #workspace[data-tool="home"] {
+    min-height: calc(100svh - var(--app-header-height) - 42px) !important;
+  }
+  html.standalone-pwa:not(.reader-focus):has(#workspace[data-tool="home"]) #workspace[data-tool="home"] .feed-panel {
+    min-height: 0 !important;
   }
 }
