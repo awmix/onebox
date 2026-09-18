@@ -5793,43 +5793,11 @@ html[data-theme-mode="dark-gray"] .key {
   pointer-events: none;
 }
 
-/* iPhone Safari keeps the page inside a changing visual viewport while its
-   browser bars expand and collapse.  The PWA and desktop paths intentionally
-   keep their existing 100dvh/safe-area layout; only the non-standalone iOS
-   Safari fallback uses the measured visual viewport. */
-@media (max-width: 760px) {
-  html.ios-safari-browser.reader-focus,
-  html.ios-safari-browser.reader-focus body {
-    min-height: var(--onebox-visual-height, 100dvh);
-  }
-  html.ios-safari-browser.reader-focus main:has(#workspace[data-tool="reader"]),
-  html.ios-safari-browser.reader-focus #pageSwipeStage:has(> #workspace[data-tool="reader"]),
-  html.ios-safari-browser.reader-focus #workspace[data-tool="reader"] {
-    height: var(--onebox-visual-height, 100dvh) !important;
-    min-height: var(--onebox-visual-height, 100dvh) !important;
-    max-height: var(--onebox-visual-height, 100dvh) !important;
-  }
-  html.ios-safari-browser.reader-focus #workspace[data-tool="reader"] .reader-reference-shell {
-    top: var(--onebox-visual-top, 0px) !important;
-    right: 0 !important;
-    bottom: auto !important;
-    left: 0 !important;
-    height: var(--onebox-visual-height, 100dvh) !important;
-    min-height: var(--onebox-visual-height, 100dvh) !important;
-  }
-  html.ios-safari-browser.reader-focus .reader-reference-top {
-    padding-top: 0;
-  }
-  html.ios-safari-browser.reader-focus .reader-reference-bottom {
-    padding-bottom: 10px;
-  }
-}
-
-/* 2.18.157: iPhone Safari cannot enter native element fullscreen for the
+/* 2.18.158: iPhone Safari cannot enter native element fullscreen for the
    reader. Use the document as the reading scroller in its CSS fallback so
    Safari can collapse its address/action bar while the reader chrome stays
-   hidden. This is deliberately limited to Safari webpage mode; standalone
-   PWA and desktop readers keep the fixed viewport implementation above. */
+   hidden. This is deliberately limited to Safari webpage mode; the PWA and
+   desktop readers keep their existing fixed viewport implementation. */
 @media (max-width: 760px) {
   html.ios-safari-browser.reader-focus,
   html.ios-safari-browser.reader-focus body {
@@ -5846,7 +5814,7 @@ html[data-theme-mode="dark-gray"] .key {
   html.ios-safari-browser.reader-focus #pageSwipeStage:has(> #workspace[data-tool="reader"]),
   html.ios-safari-browser.reader-focus #workspace[data-tool="reader"] {
     height: auto !important;
-    min-height: 100svh !important;
+    min-height: var(--onebox-visual-height, 100svh) !important;
     max-height: none !important;
     overflow: visible !important;
     padding: 0 !important;
@@ -5856,9 +5824,15 @@ html[data-theme-mode="dark-gray"] .key {
     inset: auto !important;
     width: 100% !important;
     height: auto !important;
-    min-height: 100svh !important;
+    min-height: var(--onebox-visual-height, 100svh) !important;
     max-height: none !important;
     overflow: visible !important;
+  }
+  html.ios-safari-browser.reader-focus #workspace[data-tool="reader"] .reader-reference-top {
+    padding-top: 0;
+  }
+  html.ios-safari-browser.reader-focus #workspace[data-tool="reader"] .reader-reference-bottom {
+    padding-bottom: 10px;
   }
   html.ios-safari-browser.reader-focus #workspace[data-tool="reader"] .reader-reference-body {
     flex: 0 0 auto !important;
@@ -5871,7 +5845,7 @@ html[data-theme-mode="dark-gray"] .key {
     inset: auto !important;
     width: 100% !important;
     height: auto !important;
-    min-height: var(--onebox-visual-height, 100dvh) !important;
+    min-height: 0 !important;
     overflow: visible !important;
   }
   html.ios-safari-browser.reader-focus #workspace[data-tool="reader"] .reader-reference-viewer.reader-scroll-content {
@@ -5904,6 +5878,41 @@ html[data-theme-mode="dark-gray"] .key {
   html.ios-safari-browser.reader-focus #workspace[data-tool="reader"] .reader-reference-viewer.reader-pdf-content {
     min-height: var(--onebox-visual-height, 100dvh) !important;
     overflow: hidden !important;
+  }
+  html.ios-safari-browser.reader-focus #workspace[data-tool="reader"] .reader-reference-viewer.reader-epub-content .reader-epub-cover-section {
+    display: block !important;
+    box-sizing: border-box;
+    height: auto !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 0 1.4em !important;
+    align-items: initial !important;
+    justify-content: initial !important;
+  }
+  html.ios-safari-browser.reader-focus #workspace[data-tool="reader"] .reader-reference-viewer.reader-epub-content .reader-epub-cover-section > div,
+  html.ios-safari-browser.reader-focus #workspace[data-tool="reader"] .reader-reference-viewer.reader-epub-content .reader-epub-cover-section > figure,
+  html.ios-safari-browser.reader-focus #workspace[data-tool="reader"] .reader-reference-viewer.reader-epub-content .reader-epub-cover-section > p {
+    display: block !important;
+    box-sizing: border-box;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    align-items: initial !important;
+    justify-content: initial !important;
+    text-align: center !important;
+  }
+  html.ios-safari-browser.reader-focus #workspace[data-tool="reader"] .reader-reference-viewer.reader-epub-content .reader-epub-cover-section img,
+  html.ios-safari-browser.reader-focus #workspace[data-tool="reader"] .reader-reference-viewer.reader-epub-content .reader-epub-cover-section svg {
+    display: block !important;
+    width: auto !important;
+    max-width: 100% !important;
+    height: auto !important;
+    max-height: calc(var(--onebox-visual-height, 100dvh) - 118px) !important;
+    margin: 0 auto !important;
+    object-fit: contain;
   }
 }
 
@@ -6836,7 +6845,7 @@ html[data-theme="dark"] #githubDialog .github-dialog-head { background: var(--pa
   }
 }
 
-/* 2.18.157: iPhone Safari's address/action bar can cover the reader footer
+/* 2.18.158: iPhone Safari's address/action bar can cover the reader footer
    while the reader is still windowed. Keep a compact fullscreen entry in the
    reader header for Safari webpage mode; PWA and desktop keep the footer-only
    control so their existing chrome does not gain a duplicate action. */
