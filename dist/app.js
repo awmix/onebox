@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.163';
+const APP_VERSION = '2.18.164';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -45,7 +45,7 @@ const TOOL_DEFS = {
 // The fetchers are intentionally source-specific: using one RSS aggregator for
 // every site was the reason several feeds lagged by hours and hit rate limits.
 const FEED_SOURCE_REGISTRY = [
-  { id: 'ithome', name: '之家', badge: 'IT', icon: 'icons/ithome.ico?v=2.18.163', className: 'ithome', mobileHost: 'm.ithome.com', visibleByDefault: true, siteUrl: 'https://www.ithome.com/', fetchers: [{ kind: 'rss', url: 'https://www.ithome.com/rss/' }, { kind: 'rss', url: 'https://www.ithome.com/rss', direct: true }] },
+  { id: 'ithome', name: '之家', badge: 'IT', icon: 'icons/ithome.ico?v=2.18.164', className: 'ithome', mobileHost: 'm.ithome.com', visibleByDefault: true, siteUrl: 'https://www.ithome.com/', fetchers: [{ kind: 'rss', url: 'https://www.ithome.com/rss/' }, { kind: 'rss', url: 'https://www.ithome.com/rss', direct: true }] },
   { id: 'huxiu', name: '虎嗅', badge: '虎', icon: 'https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/be/4c/7f/be4c7f2c-0ebc-7ba8-a60e-c5707c67b0ee/AppIcon-0-0-1x_U007epad-0-1-0-85-220.png/128x128bb.png', className: 'huxiu', mobileHost: 'm.huxiu.com', visibleByDefault: true, siteUrl: 'https://www.huxiu.com/', fetchers: [{ kind: 'rss', url: 'https://www.huxiu.com/rss/0.xml' }, { kind: 'rss', url: 'https://rsshub.rssforever.com/huxiu/article' }, { kind: 'rss', url: 'https://rsshub.app/huxiu/article' }] },
   { id: 'zhihu', name: '知乎', badge: '知', icon: 'https://www.zhihu.com/favicon.ico', className: 'zhihu', mobileHost: 'www.zhihu.com', visibleByDefault: true, siteUrl: 'https://www.zhihu.com/hot', fetchers: [{ kind: 'zhihu-hot', url: 'https://www.zhihu.com/api/v4/search/hot_search' }, { kind: 'zhihu-hot', url: 'https://www.zhihu.com/api/v4/search/hot_search?limit=50' }] },
   { id: 'v2ex', name: 'V站', badge: 'V', icon: 'https://www.v2ex.com/favicon.ico', className: 'v2ex', visibleByDefault: false, siteUrl: 'https://www.v2ex.com/?tab=all', fetchers: [{ kind: 'v2ex-latest', url: 'https://www.v2ex.com/api/topics/latest.json' }, { kind: 'rss', url: 'https://www.v2ex.com/index.xml' }] },
@@ -1727,8 +1727,13 @@ function syncReaderSafariSurface() {
     metas.forEach((meta) => {
       if (!meta.dataset.oneboxReaderThemeColor) return;
       meta.content = meta.dataset.oneboxReaderThemeColor;
+      const media = meta.dataset.oneboxReaderThemeMedia;
+      if (media) meta.setAttribute('media', media);
+      else meta.removeAttribute('media');
       delete meta.dataset.oneboxReaderThemeColor;
+      delete meta.dataset.oneboxReaderThemeMedia;
     });
+    $('.reader-safari-edge-top')?.style.removeProperty('background');
     return;
   }
   const palette = READER_THEME_VALUES[state.readerPreferences.theme] || READER_THEME_VALUES.paper;
@@ -1739,10 +1744,19 @@ function syncReaderSafariSurface() {
     body.style.setProperty('background', palette.bg, 'important');
     body.style.setProperty('background-color', palette.bg, 'important');
   }
-  metas.forEach((meta) => {
-    if (!meta.dataset.oneboxReaderThemeColor) meta.dataset.oneboxReaderThemeColor = meta.content;
+  metas.forEach((meta, index) => {
+    if (!meta.dataset.oneboxReaderThemeColor) {
+      meta.dataset.oneboxReaderThemeColor = meta.content;
+      meta.dataset.oneboxReaderThemeMedia = meta.getAttribute('media') || '';
+    }
+    // Safari can keep using the dark media-qualified tag after its content
+    // changes. During the reader surface, expose one unconditional tag and
+    // disable the original alternatives until the reader closes.
+    if (index === 0) meta.removeAttribute('media');
+    else meta.setAttribute('media', 'not all');
     meta.content = palette.bg;
   });
+  $('.reader-safari-edge-top')?.style.setProperty('background', palette.bg, 'important');
 }
 function applyReaderPreferences() {
   syncReaderSafariSurface();
@@ -1783,6 +1797,13 @@ function applyReaderPreferences() {
     dialog.style.setProperty('--reader-ui-panel', readerUiPanel);
     dialog.style.setProperty('--reader-ui-line', readerUiLine);
   });
+  // Reapply after the reader variables and edge node are updated. This is
+  // intentionally a second pass for iOS Safari, whose chrome samples the
+  // viewport edge during style recalculation.
+  if (isIosSafariReaderSurfaceActive()) {
+    syncReaderSafariSurface();
+    requestAnimationFrame(() => { if (isIosSafariReaderSurfaceActive()) syncReaderSafariSurface(); });
+  }
 }
 function readerDialogMarkup(kind) {
   const dialog = $('#readerDialog'); if (!dialog) return;
