@@ -6639,7 +6639,7 @@ html[data-theme="dark"] #githubDialog .github-dialog-head { background: var(--pa
   }
 }
 
-/* 2.18.147: iOS can report a temporarily short visual viewport after an
+/* 2.18.148: iOS can report a temporarily short visual viewport after an
    external-page return. Use the larger stable viewport as a floor so the
    PWA cannot end early and reveal the body background below the feed. */
 @media (max-width: 760px) {
@@ -6709,5 +6709,17 @@ html[data-theme="dark"] #githubDialog .github-dialog-head { background: var(--pa
   }
   html.ios-safari-browser:not(.standalone-pwa):not(.reader-focus) .bottom-nav {
     bottom: 0;
+  }
+}
+
+/* 2.18.148: the outer PWA viewport can be full height while the short-feed
+   panel still ends at its last row and exposes the black body underneath.
+   Keep the panel surface filled to the stable mobile viewport; long feeds
+   continue to grow normally because this is only a minimum height. */
+@media (max-width: 760px) {
+  html.standalone-pwa #workspace[data-tool="home"] .feed-panel,
+  html.ios-safari-browser:not(.standalone-pwa):not(.reader-focus) #workspace[data-tool="home"] .feed-panel {
+    min-height: calc(var(--onebox-app-viewport-height, var(--onebox-visual-height, 100dvh)) - var(--app-header-height) - 42px);
+    background: var(--panel);
   }
 }
