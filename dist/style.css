@@ -6094,7 +6094,7 @@ html[data-theme-mode="dark-gray"] .key {
 }
 #homeSourceDialog .home-source-options {
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 11px 10px;
   max-height: min(460px, calc(100dvh - 188px - env(safe-area-inset-top) - env(safe-area-inset-bottom)));
   min-height: 0;
@@ -6115,14 +6115,15 @@ html[data-theme-mode="dark-gray"] .key {
   min-height: 34px;
   padding: 3px 14px 3px 3px;
   text-align: center;
-  border: 1px solid var(--line);
+  border: 1px dashed var(--line);
   border-radius: 10px;
   background: color-mix(in srgb, var(--panel-2) 55%, var(--panel));
   transition: border-color .16s ease, background-color .16s ease;
 }
 #homeSourceDialog .home-source-option.is-selected {
+  border-style: solid;
   border-color: color-mix(in srgb, var(--ink) 62%, var(--line));
-  background: color-mix(in srgb, var(--ink) 7%, var(--panel));
+  background: transparent;
 }
 #homeSourceDialog .home-source-option-mark {
   display: grid;
@@ -6171,8 +6172,8 @@ html[data-theme-mode="dark-gray"] .key {
   display: grid;
   place-items: center;
   position: absolute;
-  top: 3px;
-  right: 3px;
+  top: -7px;
+  right: -7px;
   z-index: 1;
   width: 13px;
   height: 13px;
@@ -6191,19 +6192,22 @@ html[data-theme-mode="dark-gray"] .key {
 }
 #homeSourceDialog .home-source-option-action:hover,
 #homeSourceDialog .home-source-option-action:focus-visible {
-  color: var(--primary);
-  border-color: color-mix(in srgb, var(--primary) 62%, var(--line));
-  background: color-mix(in srgb, var(--primary) 6%, var(--panel));
+  color: var(--success);
+  border-color: color-mix(in srgb, var(--success) 78%, var(--line));
+  background: color-mix(in srgb, var(--success) 15%, var(--panel));
 }
 #homeSourceDialog .home-source-option-action:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--primary) 42%, transparent);
+  outline: 2px solid color-mix(in srgb, var(--success) 42%, transparent);
   outline-offset: 2px;
 }
 #homeSourceDialog .home-source-option.is-selected .home-source-option-action:hover,
 #homeSourceDialog .home-source-option.is-selected .home-source-option-action:focus-visible {
-  border-color: var(--danger);
-  background: color-mix(in srgb, var(--danger) 7%, var(--panel));
+  border-color: color-mix(in srgb, var(--danger) 78%, var(--line));
+  background: color-mix(in srgb, var(--danger) 14%, var(--panel));
   color: var(--danger);
+}
+#homeSourceDialog .home-source-option.is-selected .home-source-option-action:focus-visible {
+  outline-color: color-mix(in srgb, var(--danger) 42%, transparent);
 }
 #homeSourceDialog .home-source-option-action svg {
   width: 8px;
@@ -6238,10 +6242,6 @@ html[data-theme-mode="dark-gray"] .key {
   #homeSourceDialog .home-source-dialog-hint { font-size: 9px; }
   #homeSourceDialog .home-source-options { max-height: calc(100dvh - 154px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); gap: 10px 9px; padding-inline: 3px; }
   #homeSourceDialog .home-source-option { min-height: 32px; padding-inline: 3px 14px; }
-}
-
-@media (max-width: 360px) {
-  #homeSourceDialog .home-source-options { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px 8px; }
 }
 
 /* Source marks remain legible on a true-black surface.  The source websites
