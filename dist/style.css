@@ -5825,7 +5825,7 @@ html[data-theme-mode="dark-gray"] .key {
   }
 }
 
-/* 2.18.156: iPhone Safari cannot enter native element fullscreen for the
+/* 2.18.157: iPhone Safari cannot enter native element fullscreen for the
    reader. Use the document as the reading scroller in its CSS fallback so
    Safari can collapse its address/action bar while the reader chrome stays
    hidden. This is deliberately limited to Safari webpage mode; standalone
@@ -6833,5 +6833,41 @@ html[data-theme="dark"] #githubDialog .github-dialog-head { background: var(--pa
   }
   html.standalone-pwa:not(.reader-focus):has(#workspace[data-tool="home"]) #workspace[data-tool="home"] .feed-panel {
     min-height: 0 !important;
+  }
+}
+
+/* 2.18.157: iPhone Safari's address/action bar can cover the reader footer
+   while the reader is still windowed. Keep a compact fullscreen entry in the
+   reader header for Safari webpage mode; PWA and desktop keep the footer-only
+   control so their existing chrome does not gain a duplicate action. */
+.reader-reference-top {
+  position: relative;
+}
+.reader-reference-top-fullscreen {
+  position: absolute;
+  top: max(8px, calc(env(safe-area-inset-top) + 8px));
+  right: 10px;
+  z-index: 3;
+  display: none !important;
+  box-sizing: border-box;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--reader-line);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--reader-bg) 72%, transparent);
+  color: var(--reader-ink);
+}
+.reader-reference-top-fullscreen .reader-fullscreen-icon {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+}
+@media (max-width: 760px) {
+  html.ios-safari-browser:not(.reader-focus) .reader-reference-shell.reader-windowed .reader-reference-top-fullscreen {
+    display: grid !important;
   }
 }

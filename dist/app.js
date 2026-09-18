@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.156';
+const APP_VERSION = '2.18.157';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -45,7 +45,7 @@ const TOOL_DEFS = {
 // The fetchers are intentionally source-specific: using one RSS aggregator for
 // every site was the reason several feeds lagged by hours and hit rate limits.
 const FEED_SOURCE_REGISTRY = [
-  { id: 'ithome', name: '之家', badge: 'IT', icon: 'icons/ithome.ico?v=2.18.156', className: 'ithome', mobileHost: 'm.ithome.com', visibleByDefault: true, siteUrl: 'https://www.ithome.com/', fetchers: [{ kind: 'rss', url: 'https://www.ithome.com/rss/' }, { kind: 'rss', url: 'https://www.ithome.com/rss', direct: true }] },
+  { id: 'ithome', name: '之家', badge: 'IT', icon: 'icons/ithome.ico?v=2.18.157', className: 'ithome', mobileHost: 'm.ithome.com', visibleByDefault: true, siteUrl: 'https://www.ithome.com/', fetchers: [{ kind: 'rss', url: 'https://www.ithome.com/rss/' }, { kind: 'rss', url: 'https://www.ithome.com/rss', direct: true }] },
   { id: 'huxiu', name: '虎嗅', badge: '虎', icon: 'https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/be/4c/7f/be4c7f2c-0ebc-7ba8-a60e-c5707c67b0ee/AppIcon-0-0-1x_U007epad-0-1-0-85-220.png/128x128bb.png', className: 'huxiu', mobileHost: 'm.huxiu.com', visibleByDefault: true, siteUrl: 'https://www.huxiu.com/', fetchers: [{ kind: 'rss', url: 'https://www.huxiu.com/rss/0.xml' }, { kind: 'rss', url: 'https://rsshub.rssforever.com/huxiu/article' }, { kind: 'rss', url: 'https://rsshub.app/huxiu/article' }] },
   { id: 'zhihu', name: '知乎', badge: '知', icon: 'https://www.zhihu.com/favicon.ico', className: 'zhihu', mobileHost: 'www.zhihu.com', visibleByDefault: true, siteUrl: 'https://www.zhihu.com/hot', fetchers: [{ kind: 'zhihu-hot', url: 'https://www.zhihu.com/api/v4/search/hot_search' }, { kind: 'zhihu-hot', url: 'https://www.zhihu.com/api/v4/search/hot_search?limit=50' }] },
   { id: 'v2ex', name: 'V站', badge: 'V', icon: 'https://www.v2ex.com/favicon.ico', className: 'v2ex', visibleByDefault: false, siteUrl: 'https://www.v2ex.com/?tab=all', fetchers: [{ kind: 'v2ex-latest', url: 'https://www.v2ex.com/api/topics/latest.json' }, { kind: 'rss', url: 'https://www.v2ex.com/index.xml' }] },
@@ -1585,6 +1585,10 @@ function restoreReaderPosition() {
 }
 function readerFullscreenElement() { return document.fullscreenElement || document.webkitFullscreenElement || null; }
 async function requestReaderFullscreen() {
+  // iPhone Safari does not support element fullscreen for ordinary page
+  // content. Skip the rejected/native path entirely so a transient WebKit
+  // fullscreen event cannot undo the CSS immersive reader state.
+  if (isIosSafariBrowser()) { readerNativeFullscreen = false; return false; }
   if (readerFullscreenElement()) { readerNativeFullscreen = true; return true; }
   const root = document.documentElement;
   const request = root.requestFullscreen || root.webkitRequestFullscreen;
@@ -1607,27 +1611,31 @@ function exitReaderFullscreen() {
   try { return Promise.resolve(exit.call(document)).catch(() => {}); } catch { return Promise.resolve(); }
 }
 function updateReaderFullscreenControl() {
-  const button = $('.reader-fullscreen-tool') || $('[data-reader-fullscreen]'); if (!button) return;
+  const buttons = $$('.reader-fullscreen-tool'); if (!buttons.length) return;
   const active = state.readerImmersive || Boolean(readerFullscreenElement());
   const icon = active
     ? '<svg class="reader-fullscreen-icon reader-fullscreen-exit" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4v5H4M15 4v5h5M20 15h-5v5M9 20v-5H4"/></svg>'
     : '<svg class="reader-fullscreen-icon reader-fullscreen-enter" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/></svg>';
-  button.innerHTML = icon + '<span>' + (active ? t('readerExitFullscreen') : t('readerFullscreen')) + '</span>';
-  button.setAttribute('aria-label', active ? t('readerExitFullscreen') : t('readerFullscreen'));
+  buttons.forEach((button) => {
+    button.innerHTML = icon + '<span>' + (active ? t('readerExitFullscreen') : t('readerFullscreen')) + '</span>';
+    button.setAttribute('aria-label', active ? t('readerExitFullscreen') : t('readerFullscreen'));
+  });
 }
 function ensureReaderFullscreenTool() {
   const header = $('.reader-reference-top');
-  header?.querySelector('[data-reader-fullscreen]')?.remove();
-  header?.querySelector('.reader-reference-spacer')?.remove();
+  const topButton = header?.querySelector('[data-reader-fullscreen]');
+  topButton?.classList.add('reader-fullscreen-tool', 'reader-reference-top-fullscreen');
+  topButton?.setAttribute('aria-label', t('readerFullscreen'));
   const row = $('.reader-reference-tool-row');
-  if (!row || row.querySelector('.reader-fullscreen-tool')) return;
-  const button = document.createElement('button');
-  button.className = 'reader-reference-tool reader-fullscreen-tool';
-  button.setAttribute('data-reader-fullscreen', '');
-  button.setAttribute('aria-label', t('readerFullscreen'));
-  button.innerHTML = '<span>' + t('readerFullscreen') + '</span>';
-  const annotation = row.querySelector('.reader-annotate-button');
-  row.insertBefore(button, annotation || null);
+  if (row && !row.querySelector('.reader-fullscreen-tool')) {
+    const button = document.createElement('button');
+    button.className = 'reader-reference-tool reader-fullscreen-tool';
+    button.setAttribute('data-reader-fullscreen', '');
+    button.setAttribute('aria-label', t('readerFullscreen'));
+    button.innerHTML = '<span>' + t('readerFullscreen') + '</span>';
+    const annotation = row.querySelector('.reader-annotate-button');
+    row.insertBefore(button, annotation || null);
+  }
 }
 function toggleReaderFullscreen() {
   const wasDocumentScroll = readerUsesDocumentScroll();
@@ -2116,7 +2124,7 @@ function readerReadingView(book) {
   const selectionActions = '<button type="button" data-reader-selection-action="copy">' + (state.language === 'en' ? 'Copy' : '复制') + '</button><button type="button" data-reader-selection-action="underline">' + (state.language === 'en' ? 'Underline' : '划线') + '</button><button type="button" data-reader-selection-action="highlight">' + (state.language === 'en' ? 'Highlight' : '高亮') + '</button><button type="button" data-reader-selection-action="comment">' + t('readerComments') + '</button><button type="button" data-reader-selection-action="share">' + (state.language === 'en' ? 'Share' : '分享') + '</button>';
   const pageCorners = state.readerReadingMode === 'pages' && !isPdf ? '<button type="button" class="reader-page-turn-corner reader-page-turn-corner-prev" data-reader-page-prev aria-label="' + (state.language === 'en' ? 'Previous page' : '上一页') + '"><span aria-hidden="true"></span></button><button type="button" class="reader-page-turn-corner reader-page-turn-corner-next" data-reader-page-next aria-label="' + (state.language === 'en' ? 'Next page' : '下一页') + '"><span aria-hidden="true"></span></button>' : '';
   return '<div class="reader-reference-shell' + chromeClass + '" data-reader-theme="' + escapeHtml(state.readerPreferences.theme) + '">' +
-    '<header class="reader-reference-top"><div class="reader-reference-title"><strong>' + escapeHtml(book.name) + '</strong><small>' + escapeHtml(hint) + '</small></div><div class="reader-reference-header-progress" data-reader-progress-line role="progressbar" aria-label="' + t('readerProgress') + '" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span class="reader-reference-header-track"><i data-reader-progress-fill></i></span><b class="reader-reference-header-percent" data-reader-progress-label>0%</b></div></header>' +
+    '<header class="reader-reference-top"><button class="reader-ref-icon reader-fullscreen-tool reader-reference-top-fullscreen" data-reader-fullscreen aria-label="' + t('readerFullscreen') + '"></button><div class="reader-reference-title"><strong>' + escapeHtml(book.name) + '</strong><small>' + escapeHtml(hint) + '</small></div><div class="reader-reference-header-progress" data-reader-progress-line role="progressbar" aria-label="' + t('readerProgress') + '" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span class="reader-reference-header-track"><i data-reader-progress-fill></i></span><b class="reader-reference-header-percent" data-reader-progress-label>0%</b></div></header>' +
     '<main class="reader-reference-body"><article class="' + contentClass + ' reader-reference-viewer" data-reader-content data-reader-surface>' + content + '</article><div class="reader-page-turn-overlay" aria-hidden="true"></div>' + pageCorners + '</main>' +
     '<footer class="reader-reference-bottom"><div class="reader-reference-chapter"><span class="reader-reference-chapter-name" data-reader-chapter-name>' + escapeHtml(chapter) + '</span><span class="reader-reference-page-meta" data-reader-page-info>—</span></div>' +
     '<div class="reader-reference-tool-row"><button class="reader-reference-tool reader-shelf-tool" data-close-reader aria-label="' + t('bookshelf') + '">' + icon('<path d="m15 5-7 7 7 7"/>') + '<span>' + t('bookshelf') + '</span></button>' + tool('reader-toc', '<path d="M5 5h14M5 12h14M5 19h9"/>', t('readerContents')) + '<button class="reader-reference-tool reader-settings-tool" data-reader-settings>' + icon('<path d="M4 7h8M16 7h4M4 12h3M11 12h9M4 17h8M16 17h4"/><circle cx="14" cy="7" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="14" cy="17" r="2"/>') + '<span>' + t('settings') + '</span></button>' + '<button class="reader-reference-tool reader-comments-tool" data-reader-comments aria-label="' + t('readerComments') + '">' + icon(commentsIcon) + '<span>' + t('readerComments') + '</span></button>' + '<button class="reader-reference-tool reader-fullscreen-tool" data-reader-fullscreen aria-label="' + t('readerFullscreen') + '"></button></div></footer><div class="reader-selection-menu" data-reader-selection-menu hidden role="menu">' + selectionActions + '</div><div class="reader-comment-popover" data-reader-comment-popover hidden></div></div>';
@@ -4132,6 +4140,18 @@ function applyReaderDialogChoice(choice) {
   }
   return true;
 }
+
+// Fullscreen is also handled during capture. Safari can retarget a click from
+// the fixed reader footer while its browser chrome is moving; handling the
+// control before the workspace delegation keeps both reader fullscreen entry
+// points reliable.
+document.addEventListener('click', (event) => {
+  const fullscreen = event.target.closest?.('[data-reader-fullscreen]');
+  if (!fullscreen) return;
+  event.preventDefault();
+  event.stopPropagation();
+  toggleReaderFullscreen();
+}, true);
 
 // Keep settings choices reliable on installed PWAs as well as desktop. Some
 // WebKit builds retarget a click from a freshly-rendered modal button to the
