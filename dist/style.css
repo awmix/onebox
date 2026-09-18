@@ -6896,3 +6896,114 @@ html[data-theme="dark"] #githubDialog .github-dialog-head { background: var(--pa
     min-height: calc(var(--onebox-visual-height, 100svh) + 1px) !important;
   }
 }
+
+/* 2.18.160: iPhone Safari needs one native document scroll chain for its
+   address/action bar to collapse. The earlier fallback still left the
+   fullscreen reader as a flex/fixed shell with a fixed footer, so Safari saw
+   a viewport-sized app instead of a growing document. Keep this correction
+   limited to webpage Safari continuous reading; PWA, paged reading and
+   desktop keep their existing viewport implementations. */
+@media (max-width: 760px) {
+  html.ios-safari-browser.reader-focus.reader-safari-surface,
+  html.ios-safari-browser.reader-focus.reader-safari-surface body {
+    height: auto !important;
+    min-height: 100% !important;
+    max-height: none !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    overscroll-behavior-y: auto !important;
+    touch-action: pan-y !important;
+    scroll-behavior: auto !important;
+  }
+
+  html.ios-safari-browser.reader-focus.reader-safari-surface .shell,
+  html.ios-safari-browser.reader-focus.reader-safari-surface main,
+  html.ios-safari-browser.reader-focus.reader-safari-surface #pageSwipeStage,
+  html.ios-safari-browser.reader-focus.reader-safari-surface #workspace[data-tool="reader"] {
+    position: static !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    transform: none !important;
+    contain: none !important;
+  }
+
+  html.ios-safari-browser.reader-focus.reader-safari-surface #workspace[data-tool="reader"] .reader-reference-shell {
+    position: relative !important;
+    inset: auto !important;
+    display: flex !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 100svh !important;
+    max-height: none !important;
+    overflow: visible !important;
+    transform: none !important;
+    background: var(--onebox-reader-surface-bg, var(--reader-bg)) !important;
+  }
+
+  html.ios-safari-browser.reader-focus.reader-safari-surface #workspace[data-tool="reader"] .reader-reference-body {
+    flex: 0 0 auto !important;
+    height: auto !important;
+    min-height: 100svh !important;
+    max-height: none !important;
+    overflow: visible !important;
+    background: var(--onebox-reader-surface-bg, var(--reader-bg)) !important;
+  }
+
+  html.ios-safari-browser.reader-focus.reader-safari-surface #workspace[data-tool="reader"] .reader-reference-viewer.reader-scroll-content {
+    position: relative !important;
+    inset: auto !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow: visible !important;
+    padding-bottom: calc(112px + env(safe-area-inset-bottom)) !important;
+    overscroll-behavior: auto !important;
+    touch-action: pan-y !important;
+  }
+
+  /* Keep the reader actions reachable without creating a second scrolling
+     surface. Sticky participates in document layout; fixed does not. */
+  html.ios-safari-browser.reader-focus.reader-safari-surface #workspace[data-tool="reader"] .reader-reference-shell.chrome-hidden .reader-reference-bottom {
+    position: sticky !important;
+    right: auto !important;
+    bottom: 0 !important;
+    left: auto !important;
+    z-index: 5 !important;
+    flex: 0 0 auto !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    margin: 0 !important;
+    padding: 7px 10px calc(8px + env(safe-area-inset-bottom)) !important;
+    border-width: 1px 0 0 !important;
+    overflow: visible !important;
+    opacity: .98 !important;
+    transform: none !important;
+    pointer-events: auto !important;
+    background: var(--onebox-reader-surface-bg, var(--reader-bg)) !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+
+  /* A stable page-sized surface prevents the visual viewport's toolbar
+     animation from resizing the reader itself while Safari collapses it. */
+  html.ios-safari-browser.reader-focus.reader-safari-surface #workspace[data-tool="reader"] .reader-reference-shell::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background: var(--onebox-reader-surface-bg, var(--reader-bg));
+  }
+  html.ios-safari-browser.reader-focus.reader-safari-surface #workspace[data-tool="reader"] .reader-reference-shell > * {
+    position: relative;
+    z-index: 1;
+  }
+}
