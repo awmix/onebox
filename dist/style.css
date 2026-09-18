@@ -6639,6 +6639,27 @@ html[data-theme="dark"] #githubDialog .github-dialog-head { background: var(--pa
   }
 }
 
+/* 2.18.147: iOS can report a temporarily short visual viewport after an
+   external-page return. Use the larger stable viewport as a floor so the
+   PWA cannot end early and reveal the body background below the feed. */
+@media (max-width: 760px) {
+  html.standalone-pwa {
+    --onebox-app-viewport-height: max(var(--onebox-visual-height, 100dvh), 100lvh);
+  }
+  html.standalone-pwa main:has(#workspace[data-tool="home"]) {
+    height: var(--onebox-app-viewport-height) !important;
+    min-height: var(--onebox-app-viewport-height) !important;
+    max-height: var(--onebox-app-viewport-height) !important;
+  }
+  html.standalone-pwa #workspace[data-tool="home"],
+  html.standalone-pwa #workspace[data-tool="home"] .feed-home {
+    min-height: calc(var(--onebox-app-viewport-height) - var(--app-header-height) - 1px);
+  }
+  html.standalone-pwa #workspace[data-tool="home"] {
+    background: var(--panel);
+  }
+}
+
 /* 2.18.145: fill the PWA home workspace after returning from an external
    article. The source rail is fixed outside #workspace, so its old 42px
    subtraction exposed a blank tail when the feed content was short. Keep
@@ -6646,11 +6667,11 @@ html[data-theme="dark"] #githubDialog .github-dialog-head { background: var(--pa
 @media (max-width: 760px) {
   html.standalone-pwa #workspace[data-tool="home"],
   html.ios-safari-browser:not(.standalone-pwa):not(.reader-focus) #workspace[data-tool="home"] {
-    min-height: calc(var(--onebox-visual-height, 100dvh) - var(--app-header-height) - 1px);
+    min-height: calc(var(--onebox-app-viewport-height, var(--onebox-visual-height, 100dvh)) - var(--app-header-height) - 1px);
   }
   html.standalone-pwa #workspace[data-tool="home"] .feed-home,
   html.ios-safari-browser:not(.standalone-pwa):not(.reader-focus) #workspace[data-tool="home"] .feed-home {
-    min-height: calc(var(--onebox-visual-height, 100dvh) - var(--app-header-height) - 1px);
+    min-height: calc(var(--onebox-app-viewport-height, var(--onebox-visual-height, 100dvh)) - var(--app-header-height) - 1px);
   }
 }
 
