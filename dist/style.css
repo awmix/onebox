@@ -6626,6 +6626,21 @@ html[data-theme="dark"] #githubDialog .github-dialog-head { background: var(--pa
   .reader-page-turn-overlay::before { animation: none !important; opacity: 0 !important; }
 }
 
+/* 2.18.144: fill the PWA home workspace after returning from an external
+   article. The source rail is fixed outside #workspace, so its old 42px
+   subtraction exposed a blank tail when the feed content was short. Keep
+   the return recovery observing late feed renders and size changes. */
+@media (max-width: 760px) {
+  html.standalone-pwa #workspace[data-tool="home"],
+  html.ios-safari-browser:not(.standalone-pwa):not(.reader-focus) #workspace[data-tool="home"] {
+    min-height: calc(var(--onebox-visual-height, 100dvh) - var(--app-header-height) - 1px);
+  }
+  html.standalone-pwa #workspace[data-tool="home"] .feed-home,
+  html.ios-safari-browser:not(.standalone-pwa):not(.reader-focus) #workspace[data-tool="home"] .feed-home {
+    min-height: calc(var(--onebox-visual-height, 100dvh) - var(--app-header-height) - 1px);
+  }
+}
+
 /* 2.18.143: iPhone Safari webpage mode must scroll the document itself so
    Safari can collapse its address/action bar while the page grows behind it.
    The installed PWA keeps the existing fixed app viewport and safe-area
