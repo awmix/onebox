@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.170';
+const APP_VERSION = '2.18.174';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -1191,10 +1191,10 @@ function navigationItemMarkup(item, index = 0, folderId = '') {
   const deleteButton = '<button class="navigation-delete-action" type="button" data-navigation-delete="' + escapeHtml(item.id) + '" aria-label="' + escapeHtml(t('navigationRemove') + ' ' + item.name) + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 12h12"/></svg></button>';
   if (item.type === 'folder') {
     const preview = item.children.slice(0, 4).map((site) => navigationIconMarkup(site, 'navigation-folder-site-icon')).join('') || '<span class="navigation-folder-empty-icon">＋</span>';
-    return '<article class="navigation-card navigation-folder-card" data-navigation-item data-navigation-type="folder" data-navigation-id="' + escapeHtml(item.id) + '"' + indexAttribute + ' draggable="true">' + deleteButton + '<button class="navigation-card-main" type="button" data-navigation-open-folder="' + escapeHtml(item.id) + '" aria-label="' + escapeHtml(item.name) + '"><span class="navigation-folder-preview">' + preview + '</span><strong>' + escapeHtml(item.name) + '</strong><small>' + escapeHtml(t('navigationSiteCount').replace('{count}', String(item.children.length))) + '</small></button></article>';
+    return '<article class="navigation-card navigation-folder-card" data-navigation-item data-navigation-type="folder" data-navigation-id="' + escapeHtml(item.id) + '"' + indexAttribute + '>' + deleteButton + '<button class="navigation-card-main" type="button" data-navigation-open-folder="' + escapeHtml(item.id) + '" aria-label="' + escapeHtml(item.name) + '"><span class="navigation-folder-preview">' + preview + '</span><strong>' + escapeHtml(item.name) + '</strong><small>' + escapeHtml(t('navigationSiteCount').replace('{count}', String(item.children.length))) + '</small></button></article>';
   }
   const target = state.openMode === 'new-tab' ? ' target="_blank" rel="noreferrer"' : '';
-  return '<article class="navigation-card navigation-site-card" data-navigation-item data-navigation-type="site" data-navigation-id="' + escapeHtml(item.id) + '"' + folderAttribute + indexAttribute + ' draggable="true">' + deleteButton + '<a class="navigation-card-main" href="' + escapeHtml(item.url) + '"' + target + ' aria-label="' + escapeHtml(t('navigationOpen') + ' ' + item.name) + '">' + navigationIconMarkup(item) + '<strong>' + escapeHtml(item.name) + '</strong><small>' + escapeHtml(navigationNameFromUrl(item.url)) + '</small></a></article>';
+  return '<article class="navigation-card navigation-site-card" data-navigation-item data-navigation-type="site" data-navigation-id="' + escapeHtml(item.id) + '"' + folderAttribute + indexAttribute + '>' + deleteButton + '<a class="navigation-card-main" draggable="false" href="' + escapeHtml(item.url) + '"' + target + ' aria-label="' + escapeHtml(t('navigationOpen') + ' ' + item.name) + '">' + navigationIconMarkup(item) + '<strong>' + escapeHtml(item.name) + '</strong><small>' + escapeHtml(navigationNameFromUrl(item.url)) + '</small></a></article>';
 }
 function navigationFindFolder(id) { return state.navigation.items.find((item) => item.type === 'folder' && item.id === id) || null; }
 function navigationFindRootItem(id) { return state.navigation.items.find((item) => item.id === id) || null; }
@@ -1236,7 +1236,7 @@ function renderNavigationDialog() {
 function openNavigationAddDialog(folderId = '') { state.navigationDialog = { kind: 'add', folderId }; renderNavigationDialog(); }
 function openNavigationFolderDialog(folderId) { state.navigationDialog = { kind: 'folder', folderId }; renderNavigationDialog(); }
 function openNavigationCreateFolderDialog(firstId, secondId) { state.navigationFolderDraft = { firstId, secondId }; state.navigationDialog = { kind: 'create-folder' }; renderNavigationDialog(); }
-function closeNavigationDialog() { state.navigationDialog = null; state.navigationFolderDraft = null; const dialog = $('#navigationDialog'); if (dialog) dialog.hidden = true; }
+function closeNavigationDialog() { state.navigationDialog = null; state.navigationFolderDraft = null; navigationSuppressClickUntil = 0; const dialog = $('#navigationDialog'); if (dialog) dialog.hidden = true; }
 function addNavigationSite(urlValue, nameValue, folderId = '') {
   const url = navigationSafeUrl(urlValue);
   if (!url) return toast(t('navigationInvalidUrl'), 'error');
