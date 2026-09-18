@@ -6626,7 +6626,7 @@ html[data-theme="dark"] #githubDialog .github-dialog-head { background: var(--pa
   .reader-page-turn-overlay::before { animation: none !important; opacity: 0 !important; }
 }
 
-/* 2.18.144: fill the PWA home workspace after returning from an external
+/* 2.18.145: fill the PWA home workspace after returning from an external
    article. The source rail is fixed outside #workspace, so its old 42px
    subtraction exposed a blank tail when the feed content was short. Keep
    the return recovery observing late feed renders and size changes. */

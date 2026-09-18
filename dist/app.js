@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.144';
+const APP_VERSION = '2.18.145';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -45,7 +45,7 @@ const TOOL_DEFS = {
 // The fetchers are intentionally source-specific: using one RSS aggregator for
 // every site was the reason several feeds lagged by hours and hit rate limits.
 const FEED_SOURCE_REGISTRY = [
-  { id: 'ithome', name: '之家', badge: 'IT', icon: 'icons/ithome.ico?v=2.18.144', className: 'ithome', mobileHost: 'm.ithome.com', visibleByDefault: true, siteUrl: 'https://www.ithome.com/', fetchers: [{ kind: 'rss', url: 'https://www.ithome.com/rss/' }, { kind: 'rss', url: 'https://www.ithome.com/rss', direct: true }] },
+  { id: 'ithome', name: '之家', badge: 'IT', icon: 'icons/ithome.ico?v=2.18.145', className: 'ithome', mobileHost: 'm.ithome.com', visibleByDefault: true, siteUrl: 'https://www.ithome.com/', fetchers: [{ kind: 'rss', url: 'https://www.ithome.com/rss/' }, { kind: 'rss', url: 'https://www.ithome.com/rss', direct: true }] },
   { id: 'huxiu', name: '虎嗅', badge: '虎', icon: 'https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/be/4c/7f/be4c7f2c-0ebc-7ba8-a60e-c5707c67b0ee/AppIcon-0-0-1x_U007epad-0-1-0-85-220.png/128x128bb.png', className: 'huxiu', mobileHost: 'm.huxiu.com', visibleByDefault: true, siteUrl: 'https://www.huxiu.com/', fetchers: [{ kind: 'rss', url: 'https://www.huxiu.com/rss/0.xml' }, { kind: 'rss', url: 'https://rsshub.rssforever.com/huxiu/article' }, { kind: 'rss', url: 'https://rsshub.app/huxiu/article' }] },
   { id: 'zhihu', name: '知乎', badge: '知', icon: 'https://www.zhihu.com/favicon.ico', className: 'zhihu', mobileHost: 'www.zhihu.com', visibleByDefault: true, siteUrl: 'https://www.zhihu.com/hot', fetchers: [{ kind: 'zhihu-hot', url: 'https://www.zhihu.com/api/v4/search/hot_search' }, { kind: 'zhihu-hot', url: 'https://www.zhihu.com/api/v4/search/hot_search?limit=50' }] },
   { id: 'v2ex', name: 'V站', badge: 'V', icon: 'https://www.v2ex.com/favicon.ico', className: 'v2ex', visibleByDefault: false, siteUrl: 'https://www.v2ex.com/?tab=all', fetchers: [{ kind: 'v2ex-latest', url: 'https://www.v2ex.com/api/topics/latest.json' }, { kind: 'rss', url: 'https://www.v2ex.com/index.xml' }] },
@@ -958,8 +958,10 @@ function restoreNavigationPosition() {
   try { saved = JSON.parse(sessionStorage.getItem(NAVIGATION_SESSION_KEY) || 'null'); sessionStorage.removeItem(NAVIGATION_SESSION_KEY); } catch { saved = null; }
   if (!saved || saved.hash !== location.hash || Date.now() - Number(saved.savedAt || 0) > 30 * 60 * 1000) return;
   if (state.section === 'home' && homeTabIds().includes(saved.homeFeedActive)) {
-    state.homeFeed.active = saved.homeFeedActive;
-    render();
+    if (state.homeFeed.active !== saved.homeFeedActive) {
+      state.homeFeed.active = saved.homeFeedActive;
+      render();
+    }
   }
   const restore = () => {
     clearPageSwipeTrack();
@@ -996,57 +998,26 @@ function recoverHomeLayoutAfterReturn() {
   clearFeedNavigationPending();
   if (state.section !== 'home') return;
   const currentTop = appScrollTop();
-  // A feed request can be interrupted while the document is kept in the
-  // browser's back-forward cache. Release that stale loading state before
-  // rebuilding the page, otherwise the return view can look frozen forever.
-  if (state.homeFeed.loading) {
-    state.homeFeedRequest += 1;
-    state.homeFeed.loading = false;
-  }
-  render();
-  stabilizeHomeReturnLayout(currentTop);
-}
-let homeReturnRecovery = null;
-function stabilizeHomeReturnLayout(requestedTop) {
-  homeReturnRecovery?.stop();
-  const main = $('main');
-  if (!main) return;
-  let stopped = false;
-  let frameId = 0;
-  const startedAt = performance.now();
-  let mutationObserver = null;
-  let resizeObserver = null;
-  const stop = () => {
-    if (stopped) return;
-    stopped = true;
-    if (frameId) cancelAnimationFrame(frameId);
-    mutationObserver?.disconnect();
-    resizeObserver?.disconnect();
-    if (homeReturnRecovery?.stop === stop) homeReturnRecovery = null;
-  };
-  const apply = () => {
-    if (stopped) return;
-    if (state.section !== 'home') { stop(); return; }
+  // A bfcache return should keep the already-rendered feed stable. Rebuild
+  // only when the document lost its home view or there are no cached items;
+  // otherwise the extra loading render is visible as a flash/jump.
+  const hasCachedItems = homeFeedSources().some((source) => state.homeFeed.sources[source.id]?.items?.length);
+  if (!workspace.querySelector('.home-page') || !hasCachedItems) render();
+  else if (!state.homeFeed.loading) loadHomeFeeds();
+  const restore = () => {
     syncOneBoxViewportMetrics();
     const scrollElement = appScrollElement();
     if (scrollElement) {
       const maxTop = Math.max(0, scrollElement.scrollHeight - scrollElement.clientHeight);
-      scrollAppTo(Math.min(Math.max(0, requestedTop), maxTop));
+      const targetTop = Math.min(Math.max(0, currentTop), maxTop);
+      if (Math.abs(scrollElement.scrollTop - targetTop) > 1) scrollAppTo(targetTop);
     }
-    main.classList.remove('bottom-nav-blurred');
+    $('main')?.classList.remove('bottom-nav-blurred');
     $('#bottomNav')?.classList.remove('is-blurred');
   };
-  mutationObserver = typeof MutationObserver === 'function' ? new MutationObserver(apply) : null;
-  mutationObserver?.observe(main, { childList: true, subtree: true });
-  resizeObserver = typeof ResizeObserver === 'function' ? new ResizeObserver(apply) : null;
-  resizeObserver?.observe(main);
-  homeReturnRecovery = { stop };
-  const tick = () => {
-    apply();
-    if (!stopped && performance.now() - startedAt < 2200) frameId = requestAnimationFrame(tick);
-    else stop();
-  };
-  tick();
+  requestAnimationFrame(restore);
+  window.setTimeout(restore, 180);
+  window.setTimeout(restore, 420);
 }
 function openFeedLink(link) {
   const target = mobileFeedLink(feedItemByLink(link));
@@ -1135,7 +1106,10 @@ function renderHome() {
   const hasItems = visibleItems.length > 0;
   const errors = Object.keys(state.homeFeed.errors || {}).length;
   const feedBody = state.homeFeed.loading && !hasItems && !isFootprint ? '<div class="feed-loading"><span></span><span></span><span></span></div>' : hasItems ? '<div class="feed-list">' + visibleItems.map(renderFeedItem).join('') + '</div>' : '<p class="empty feed-empty">' + (isFootprint ? (state.language === 'en' ? 'No articles read yet.' : '还没有阅读过首页消息。') : t('feedEmpty')) + '</p>';
-  const refreshState = state.homeFeed.loading ? '<div class="feed-refresh-state" role="status"><span></span>' + (state.language === 'en' ? 'Refreshing' : '正在刷新') + '</div>' : '';
+  // Keep cached rows in place while a background refresh is running. Showing
+  // a new row above them makes the whole feed jump when returning from an
+  // external article; only an empty feed needs the blocking loading state.
+  const refreshState = state.homeFeed.loading && !hasItems ? '<div class="feed-refresh-state" role="status"><span></span>' + (state.language === 'en' ? 'Refreshing' : '正在刷新') + '</div>' : '';
   return '<div class="home-page feed-home"><section class="feed-panel">' + refreshState + (errors ? '<p class="feed-warning">' + t('feedPartial') + '</p>' : '') + feedBody + '<p class="feed-hint">' + t('feedProxyHint') + (state.homeFeed.updatedAt ? ' · ' + t('feedUpdated') + ' ' + escapeHtml(feedDate(state.homeFeed.updatedAt)) : '') + '</p></section></div>';
 }
 function notificationRowMarkup(item) {
@@ -4234,7 +4208,10 @@ document.addEventListener('click', (event) => {
 });
 document.addEventListener('pointerdown', unlockAlertAudio, { once: true, passive: true });
 window.addEventListener('pagehide', () => {
-  saveNavigationPosition();
+  // openFeedLink() already captured the real scrollTop before navigation.
+  // Safari may reset the document to 0 while dispatching pagehide; do not
+  // overwrite the saved position with that transient value.
+  if (!feedNavigationPending) saveNavigationPosition();
   // Do not let a request that was in flight before the page was hidden keep
   // the cached homepage in an endless loading state when iOS restores it.
   state.homeFeedRequest += 1;
