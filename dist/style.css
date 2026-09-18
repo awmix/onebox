@@ -7062,8 +7062,8 @@ html[data-theme="dark"] #githubDialog .github-dialog-head { background: var(--pa
     z-index: 8 !important;
     display: block !important;
     width: 100% !important;
-    height: max(6px, env(safe-area-inset-top)) !important;
-    min-height: 6px !important;
+    height: max(11px, env(safe-area-inset-top)) !important;
+    min-height: 11px !important;
     margin: 0 !important;
     padding: 0 !important;
     border: 0 !important;

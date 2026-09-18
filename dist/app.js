@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.164';
+const APP_VERSION = '2.18.165';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -1712,6 +1712,24 @@ const READER_THEME_VALUES = {
 };
 const READER_FONT_VALUES = { system: 'var(--font-sans)', serif: 'Georgia, "Times New Roman", serif', mono: 'ui-monospace, SFMono-Regular, Menlo, monospace' };
 function saveReaderPreferences() { saveStored(STORAGE.readerPreferences, state.readerPreferences); }
+let readerSafariTintPulse = 0;
+function pulseReaderSafariTint(color) {
+  if (!isIosSafariReaderSurfaceActive()) return;
+  const meta = $('meta[name="theme-color"]');
+  if (!meta) return;
+  const pulse = ++readerSafariTintPulse;
+  meta.setAttribute('content', color);
+  requestAnimationFrame(() => {
+    if (pulse !== readerSafariTintPulse || !isIosSafariReaderSurfaceActive()) return;
+    // Safari 26 may keep the previous sampled tint after a live CSS update.
+    // A one-frame alpha variant wakes its tint observer; the clean color is
+    // restored on the following frame without changing the visible page.
+    meta.setAttribute('content', color + 'fe');
+    requestAnimationFrame(() => {
+      if (pulse === readerSafariTintPulse && isIosSafariReaderSurfaceActive()) meta.setAttribute('content', color);
+    });
+  });
+}
 function syncReaderSafariSurface() {
   const root = document.documentElement;
   const body = document.body;
@@ -1719,6 +1737,7 @@ function syncReaderSafariSurface() {
   root.classList.toggle('reader-safari-surface', active);
   const metas = $$('meta[name="theme-color"]');
   if (!active) {
+    readerSafariTintPulse += 1;
     root.style.removeProperty('--onebox-reader-surface-bg');
     root.style.removeProperty('background');
     root.style.removeProperty('background-color');
@@ -1734,6 +1753,7 @@ function syncReaderSafariSurface() {
       delete meta.dataset.oneboxReaderThemeMedia;
     });
     $('.reader-safari-edge-top')?.style.removeProperty('background');
+    $('.reader-safari-edge-top')?.style.removeProperty('background-color');
     return;
   }
   const palette = READER_THEME_VALUES[state.readerPreferences.theme] || READER_THEME_VALUES.paper;
@@ -1756,7 +1776,9 @@ function syncReaderSafariSurface() {
     else meta.setAttribute('media', 'not all');
     meta.content = palette.bg;
   });
-  $('.reader-safari-edge-top')?.style.setProperty('background', palette.bg, 'important');
+  const edge = $('.reader-safari-edge-top');
+  edge?.style.setProperty('background', palette.bg, 'important');
+  edge?.style.setProperty('background-color', palette.bg, 'important');
 }
 function applyReaderPreferences() {
   syncReaderSafariSurface();
@@ -1802,6 +1824,7 @@ function applyReaderPreferences() {
   // viewport edge during style recalculation.
   if (isIosSafariReaderSurfaceActive()) {
     syncReaderSafariSurface();
+    pulseReaderSafariTint(palette.bg);
     requestAnimationFrame(() => { if (isIosSafariReaderSurfaceActive()) syncReaderSafariSurface(); });
   }
 }
