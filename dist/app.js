@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.169';
+const APP_VERSION = '2.18.170';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -32,6 +32,7 @@ const STORAGE = {
   footprint: 'onebox.footprint',
   openMode: 'onebox.open-mode',
   github: 'onebox.github',
+  navigation: 'onebox.navigation',
 };
 const TOOL_DEFS = {
   calculator: { icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="3"/><path d="M8 7h8M8 11h.01M12 11h.01M16 11h.01M8 15h.01M12 15h.01M16 15h.01M8 18h8"/></svg>', key: 'calculator' },
@@ -45,7 +46,7 @@ const TOOL_DEFS = {
 // The fetchers are intentionally source-specific: using one RSS aggregator for
 // every site was the reason several feeds lagged by hours and hit rate limits.
 const FEED_SOURCE_REGISTRY = [
-  { id: 'ithome', name: '之家', badge: 'IT', icon: 'icons/ithome.svg?v=2.18.169', className: 'ithome', mobileHost: 'm.ithome.com', visibleByDefault: true, siteUrl: 'https://www.ithome.com/', fetchers: [{ kind: 'rss', url: 'https://www.ithome.com/rss/' }, { kind: 'rss', url: 'https://www.ithome.com/rss', direct: true }] },
+  { id: 'ithome', name: '之家', badge: 'IT', icon: 'icons/ithome.svg?v=2.18.170', className: 'ithome', mobileHost: 'm.ithome.com', visibleByDefault: true, siteUrl: 'https://www.ithome.com/', fetchers: [{ kind: 'rss', url: 'https://www.ithome.com/rss/' }, { kind: 'rss', url: 'https://www.ithome.com/rss', direct: true }] },
   { id: 'huxiu', name: '虎嗅', badge: '虎', icon: 'https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/be/4c/7f/be4c7f2c-0ebc-7ba8-a60e-c5707c67b0ee/AppIcon-0-0-1x_U007epad-0-1-0-85-220.png/128x128bb.png', className: 'huxiu', mobileHost: 'm.huxiu.com', visibleByDefault: true, siteUrl: 'https://www.huxiu.com/', fetchers: [{ kind: 'rss', url: 'https://www.huxiu.com/rss/0.xml' }, { kind: 'rss', url: 'https://rsshub.rssforever.com/huxiu/article' }, { kind: 'rss', url: 'https://rsshub.app/huxiu/article' }] },
   { id: 'zhihu', name: '知乎', badge: '知', icon: 'https://www.zhihu.com/favicon.ico', className: 'zhihu', mobileHost: 'www.zhihu.com', visibleByDefault: true, siteUrl: 'https://www.zhihu.com/hot', fetchers: [{ kind: 'zhihu-hot', url: 'https://www.zhihu.com/api/v4/search/hot_search' }, { kind: 'zhihu-hot', url: 'https://www.zhihu.com/api/v4/search/hot_search?limit=50' }] },
   { id: 'v2ex', name: 'V站', badge: 'V', icon: 'https://www.v2ex.com/favicon.ico', className: 'v2ex', visibleByDefault: false, siteUrl: 'https://www.v2ex.com/?tab=all', fetchers: [{ kind: 'v2ex-latest', url: 'https://www.v2ex.com/api/topics/latest.json' }, { kind: 'rss', url: 'https://www.v2ex.com/index.xml' }] },
@@ -192,7 +193,8 @@ const DICT = {
     sortWeather: '', hourly: '24 小时', daily: '前 3 天 · 今天 · 未来 15 天', advice: '天气建议',
     commute: '出行', sport: '运动', clothing: '穿衣', sunscreen: '防晒', hiking: '爬山',
     addCard: '添加', noResults: '没有找到匹配地点，请换个关键词。',
-    home: '首页', tools: '工具', messages: '消息', mine: '我的', quickTools: '常用工具', openSettings: '打开设置', noMessages: '还没有消息。', homeTabs: '首页', homeTabsSelected: '已选择 {count} 项', homeSourceManage: '首页来源', homeSourceManageHint: '选择要显示在首页导航中的来源', homeSourceAdd: '添加', homeSourceRemove: '移除', homeSourceEmpty: '暂时没有其他来源',
+    home: '首页', tools: '工具', navigation: '导航', messages: '消息', mine: '我的', quickTools: '常用工具', openSettings: '打开设置', noMessages: '还没有消息。', homeTabs: '首页', homeTabsSelected: '已选择 {count} 项', homeSourceManage: '首页来源', homeSourceManageHint: '选择要显示在首页导航中的来源', homeSourceAdd: '添加', homeSourceRemove: '移除', homeSourceEmpty: '暂时没有其他来源',
+    navigationTitle: '网站导航', navigationHint: '把常用网站放在一起，长按可以删除或拖动排序。', navigationAdd: '添加网站', navigationEmpty: '还没有网站，先添加一个常用网址吧。', navigationUrl: '网站地址', navigationUrlPlaceholder: 'https://example.com', navigationName: '网站名称', navigationNamePlaceholder: '不填写则使用网站名称', navigationIcon: '网站图标', navigationIconHint: '根据网址自动获取图标', navigationSave: '保存网站', navigationAddToFolder: '添加到文件夹', navigationFolder: '文件夹', navigationFolderName: '文件夹名称', navigationFolderPlaceholder: '例如：工作、阅读', navigationCreateFolder: '新建文件夹', navigationSaveFolder: '保存文件夹', navigationFolderAdd: '添加网站', navigationFolderDelete: '删除文件夹', navigationFolderDeleteConfirm: '删除文件夹后，里面的网站也会一起移除，确定继续吗？', navigationFolderEmpty: '文件夹还是空的，添加几个网站吧。', navigationRemove: '删除', navigationOpen: '打开网站', navigationAlreadyExists: '这个网站已经添加过了', navigationInvalidUrl: '请输入有效的 http 或 https 地址', navigationDropHint: '松开后聚合为文件夹', navigationFolderCreated: '文件夹已创建', navigationAdded: '网站已添加', navigationDeleted: '网站已删除', navigationMoved: '网站已移入文件夹', navigationOrderSaved: '导航顺序已保存', navigationSiteCount: '{count} 个网站',
     allFeeds: '全部', feedRefresh: '刷新', feedLoading: '正在加载信息流…', feedEmpty: '暂时没有可显示的内容。', feedUpdated: '更新于', feedOpen: '打开原文', feedPartial: '部分订阅源暂时不可用', feedProxyHint: '内容来自公开 RSS 订阅，首页只保留最近内容。', feedTabPrevious: '查看前面的首页 Tab', feedTabNext: '查看后面的首页 Tab',
     converterType: '换算类型', from: '从', to: '到', result: '结果', swap: '交换单位', copyResult: '复制结果',
     copied: '已复制', translationInput: '输入待翻译内容', translateNow: '开始翻译', saveTranslation: '保存到本机',
@@ -234,7 +236,8 @@ const DICT = {
     sortWeather: '', hourly: '24 hours', daily: '3 days before · today · next 15 days', advice: 'Advice',
     commute: 'Travel', sport: 'Sport', clothing: 'Clothing', sunscreen: 'Sun care', hiking: 'Hiking',
     addCard: 'Add', noResults: 'No matching place. Try another query.',
-    home: 'Home', tools: 'Tools', messages: 'Messages', mine: 'Me', quickTools: 'Quick tools', openSettings: 'Open settings', noMessages: 'No messages yet.', homeTabs: 'Home', homeTabsSelected: '{count} selected',
+    home: 'Home', tools: 'Tools', navigation: 'Navigation', messages: 'Messages', mine: 'Me', quickTools: 'Quick tools', openSettings: 'Open settings', noMessages: 'No messages yet.', homeTabs: 'Home', homeTabsSelected: '{count} selected',
+    navigationTitle: 'Web navigation', navigationHint: 'Keep your favorite sites together. Long-press to delete or reorder.', navigationAdd: 'Add website', navigationEmpty: 'No websites yet. Add a favorite site to get started.', navigationUrl: 'Website URL', navigationUrlPlaceholder: 'https://example.com', navigationName: 'Website name', navigationNamePlaceholder: 'Optional; defaults to the site name', navigationIcon: 'Website icon', navigationIconHint: 'Fetched automatically from the URL', navigationSave: 'Save website', navigationAddToFolder: 'Add to folder', navigationFolder: 'Folder', navigationFolderName: 'Folder name', navigationFolderPlaceholder: 'For example: Work, Reading', navigationCreateFolder: 'New folder', navigationSaveFolder: 'Save folder', navigationFolderAdd: 'Add website', navigationFolderDelete: 'Delete folder', navigationFolderDeleteConfirm: 'Deleting the folder will also remove its websites. Continue?', navigationFolderEmpty: 'This folder is empty. Add some websites.', navigationRemove: 'Delete', navigationOpen: 'Open website', navigationAlreadyExists: 'This website has already been added', navigationInvalidUrl: 'Enter a valid http or https URL', navigationDropHint: 'Release to create a folder', navigationFolderCreated: 'Folder created', navigationAdded: 'Website added', navigationDeleted: 'Website deleted', navigationMoved: 'Website moved into folder', navigationOrderSaved: 'Navigation order saved', navigationSiteCount: '{count} sites',
     allFeeds: 'All', feedRefresh: 'Refresh', feedLoading: 'Loading feeds…', feedEmpty: 'No items to show yet.', feedUpdated: 'Updated', feedOpen: 'Open original', feedPartial: 'Some feeds are temporarily unavailable', feedProxyHint: 'Public RSS subscriptions; only recent items are kept on this device.', feedTabPrevious: 'Show previous home tabs', feedTabNext: 'Show more home tabs',
     converterType: 'Conversion', from: 'From', to: 'To', result: 'Result', swap: 'Swap units', copyResult: 'Copy result',
     copied: 'Copied', translationInput: 'Text to translate', translateNow: 'Translate', saveTranslation: 'Save locally',
@@ -274,6 +277,7 @@ const storedHomeFeeds = parseStored(STORAGE.homeFeeds, {}) || {};
 const storedHomeFeedRead = parseStored(STORAGE.homeFeedRead, {}) || {};
 const storedHomeFeedOrder = parseStored(STORAGE.homeFeedOrder, DEFAULT_HOME_FEED_ORDER);
 const storedHomeFeedVisibility = parseStored(STORAGE.homeFeedVisibility, null);
+const storedNavigation = parseStored(STORAGE.navigation, null);
 const storedNotificationPreference = parseStored(STORAGE.notificationPreference, 'allow');
 const storedTopDisplay = parseStored(STORAGE.topDisplay, {}) || {};
 const storedFootprint = parseStored(STORAGE.footprint, false) === true;
@@ -296,6 +300,42 @@ const normalizeHomeFeedVisibility = (value) => {
   if (isLegacyDefault) return [...DEFAULT_HOME_FEED_VISIBLE];
   return normalized;
 };
+function navigationSafeUrl(value) {
+  try {
+    const url = new URL(String(value || '').trim());
+    return ['http:', 'https:'].includes(url.protocol) ? url.href : '';
+  } catch { return ''; }
+}
+function navigationNameFromUrl(value) {
+  try { return new URL(value).hostname.replace(/^www\./i, ''); } catch { return ''; }
+}
+function navigationIconUrl(value) {
+  const url = navigationSafeUrl(value);
+  if (!url) return '';
+  try { return 'https://icons.duckduckgo.com/ip3/' + new URL(url).hostname + '.ico'; } catch { return ''; }
+}
+function normalizeNavigation(value) {
+  const rawItems = Array.isArray(value?.items) ? value.items : Array.isArray(value) ? value : [];
+  const usedIds = new Set();
+  const uniqueId = (candidate, prefix) => {
+    let id = String(candidate || '').trim() || prefix + '-' + uid();
+    while (usedIds.has(id)) id = prefix + '-' + uid();
+    usedIds.add(id); return id;
+  };
+  const normalizeSite = (item) => {
+    const url = navigationSafeUrl(item?.url);
+    if (!url) return null;
+    return { id: uniqueId(item?.id, 'site'), type: 'site', name: String(item?.name || navigationNameFromUrl(url)).trim() || navigationNameFromUrl(url), url, icon: navigationSafeUrl(item?.icon) || navigationIconUrl(url), createdAt: Number(item?.createdAt) || Date.now() };
+  };
+  const items = rawItems.map((item) => {
+    if (item?.type === 'folder') {
+      const children = (Array.isArray(item.children) ? item.children : []).map(normalizeSite).filter(Boolean);
+      return { id: uniqueId(item.id, 'folder'), type: 'folder', name: String(item.name || t?.('navigationFolder') || '文件夹').trim() || '文件夹', children, createdAt: Number(item.createdAt) || Date.now() };
+    }
+    return normalizeSite(item);
+  }).filter(Boolean);
+  return { version: 1, items };
+}
 function homeTabIsVisible(id) {
   return id === 'footprint' ? state?.footprint === true : state?.homeFeed?.visible?.includes(id) === true;
 }
@@ -320,7 +360,7 @@ const initialWeatherCards = (Array.isArray(rawWeatherCards) && rawWeatherCards.l
 const initialHash = location.hash.slice(1);
 const initialToolHash = initialHash === 'convert' ? 'translate' : initialHash;
 const initialTool = Object.keys(TOOL_DEFS).includes(initialToolHash) ? initialToolHash : 'calculator';
-const initialSection = ['home', 'messages', 'mine'].includes(initialHash) ? initialHash : Object.keys(TOOL_DEFS).includes(initialToolHash) ? 'tools' : 'home';
+const initialSection = ['home', 'navigation', 'messages', 'mine'].includes(initialHash) ? initialHash : Object.keys(TOOL_DEFS).includes(initialToolHash) ? 'tools' : 'home';
 const normalizeReaderLibrary = (value) => {
   const books = Array.isArray(value) ? value.filter((book) => book && book.id && book.name) : [];
   const ordered = [...books].sort((a, b) => {
@@ -355,6 +395,7 @@ const state = {
   readerBookId: null, readerUrl: '', readerContent: '', readerHint: '', readerToc: [], readerDialog: '', readerChromeHidden: false, readerImmersive: false, readerMode: 'library', readerReadingMode: 'scroll', readerPage: 0, readerSelectedText: '', readerSelection: null, readerSelectionInput: 'mouse', readerLayout: storedReaderLayout === 'list' ? 'list' : 'grid', annotationBookId: null,
   readerPreferences: { theme: ['paper', 'sepia', 'green', 'dark'].includes(storedReaderPreferences.theme) ? storedReaderPreferences.theme : 'paper', fontSize: Number.isFinite(Number(storedReaderPreferences.fontSize)) ? Math.min(26, Math.max(15, Number(storedReaderPreferences.fontSize))) : 18, fontFamily: ['system', 'serif', 'mono'].includes(storedReaderPreferences.fontFamily) ? storedReaderPreferences.fontFamily : 'system', lineHeight: Number.isFinite(Number(storedReaderPreferences.lineHeight)) ? Math.min(2.2, Math.max(1.35, Number(storedReaderPreferences.lineHeight))) : 1.8, paragraphSpacing: Number.isFinite(Number(storedReaderPreferences.paragraphSpacing)) ? Math.min(28, Math.max(6, Number(storedReaderPreferences.paragraphSpacing))) : 14, letterSpacing: Number.isFinite(Number(storedReaderPreferences.letterSpacing)) ? Math.min(2, Math.max(0, Number(storedReaderPreferences.letterSpacing))) : 0, pageAnimation: ['slide', 'cover', 'none'].includes(storedReaderPreferences.pageAnimation) ? storedReaderPreferences.pageAnimation : 'slide', fullscreenOnOpen: storedReaderPreferences.fullscreenOnOpen === true },
   homeFeed: { active: DEFAULT_HOME_FEED_VISIBLE[0] || DEFAULT_HOME_FEED_ORDER[0], order: normalizeHomeFeedOrder(storedHomeFeedOrder), visible: normalizeHomeFeedVisibility(storedHomeFeedVisibility), hasNew: false, loading: false, errors: {}, stale: {}, updatedAt: Number(storedHomeFeeds.updatedAt || 0), cacheVersion: storedHomeFeeds.cacheVersion || '', sources: storedHomeFeeds.sources && typeof storedHomeFeeds.sources === 'object' ? storedHomeFeeds.sources : {} },
+  navigation: normalizeNavigation(storedNavigation), navigationDialog: null, navigationFolderDraft: null,
   homeFeedRead: storedHomeFeedRead && typeof storedHomeFeedRead === 'object' ? storedHomeFeedRead : {},
   homeFeedRequest: 0,
   notifications: parseStored(STORAGE.notifications, []), notificationOpen: false, settingsOpen: false, githubDialogOpen: false, recentReadingOpen: false,
@@ -456,6 +497,7 @@ function heading(title, subtitle, actions = '') {
 const SECTION_DEFS = {
   home: { key: 'home', icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1V10Z"/></svg>', activeIcon: '<svg class="filled-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.2 12 3l9 7.2V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1V10.2Z"/></svg>' },
   tools: { key: 'tools', icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/></svg>', activeIcon: '<svg class="filled-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/></svg>' },
+  navigation: { key: 'navigation', icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h14v16H5z"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>', activeIcon: '<svg class="filled-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3.5h14A1.5 1.5 0 0 1 20.5 5v14A1.5 1.5 0 0 1 19 20.5H5A1.5 1.5 0 0 1 3.5 19V5A1.5 1.5 0 0 1 5 3.5Zm3 3v2h8v-2H8Zm0 4v2h8v-2H8Zm0 4v2h5v-2H8Z"/></svg>' },
   messages: { key: 'messages', icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg>', activeIcon: '<svg class="filled-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M18.3 9.4c0-3.7-2.4-6.2-6.3-6.2s-6.3 2.5-6.3 6.2c0 7-2.7 7.3-2.7 9.3 0 .6.4 1 1 1h16c.6 0 1-.4 1-1 0-2-2.7-2.3-2.7-9.3ZM9.6 21h4.8"/></svg>' },
   mine: { key: 'mine', icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5 20a7 7 0 0 1 14 0"/></svg>', activeIcon: '<svg class="filled-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.6a4.2 4.2 0 1 1 0 8.4 4.2 4.2 0 0 1 0-8.4ZM4.1 20.4c.7-4.3 3.3-6.6 7.9-6.6s7.2 2.3 7.9 6.6H4.1Z"/></svg>' },
 };
@@ -1138,6 +1180,105 @@ function renderHome() {
   // external article; only an empty feed needs the blocking loading state.
   const refreshState = state.homeFeed.loading && !hasItems ? '<div class="feed-refresh-state" role="status"><span></span>' + (state.language === 'en' ? 'Refreshing' : '正在刷新') + '</div>' : '';
   return '<div class="home-page feed-home"><section class="feed-panel">' + refreshState + (errors ? '<p class="feed-warning">' + t('feedPartial') + '</p>' : '') + feedBody + '<p class="feed-hint">' + t('feedProxyHint') + (state.homeFeed.updatedAt ? ' · ' + t('feedUpdated') + ' ' + escapeHtml(feedDate(state.homeFeed.updatedAt)) : '') + '</p></section></div>';
+}
+function navigationIconMarkup(site, extraClass = '') {
+  const fallback = escapeHtml(String(site?.name || '?').trim().slice(0, 1).toUpperCase() || '?');
+  return '<span class="navigation-site-icon ' + extraClass + '"><img src="' + escapeHtml(site?.icon || navigationIconUrl(site?.url)) + '" alt="" loading="lazy" onerror="this.hidden=true;this.nextElementSibling.hidden=false"><span class="navigation-icon-fallback" hidden>' + fallback + '</span></span>';
+}
+function navigationItemMarkup(item, index = 0, folderId = '') {
+  const folderAttribute = folderId ? ' data-navigation-folder-id="' + escapeHtml(folderId) + '"' : '';
+  const indexAttribute = ' data-navigation-index="' + index + '"';
+  const deleteButton = '<button class="navigation-delete-action" type="button" data-navigation-delete="' + escapeHtml(item.id) + '" aria-label="' + escapeHtml(t('navigationRemove') + ' ' + item.name) + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 12h12"/></svg></button>';
+  if (item.type === 'folder') {
+    const preview = item.children.slice(0, 4).map((site) => navigationIconMarkup(site, 'navigation-folder-site-icon')).join('') || '<span class="navigation-folder-empty-icon">＋</span>';
+    return '<article class="navigation-card navigation-folder-card" data-navigation-item data-navigation-type="folder" data-navigation-id="' + escapeHtml(item.id) + '"' + indexAttribute + ' draggable="true">' + deleteButton + '<button class="navigation-card-main" type="button" data-navigation-open-folder="' + escapeHtml(item.id) + '" aria-label="' + escapeHtml(item.name) + '"><span class="navigation-folder-preview">' + preview + '</span><strong>' + escapeHtml(item.name) + '</strong><small>' + escapeHtml(t('navigationSiteCount').replace('{count}', String(item.children.length))) + '</small></button></article>';
+  }
+  const target = state.openMode === 'new-tab' ? ' target="_blank" rel="noreferrer"' : '';
+  return '<article class="navigation-card navigation-site-card" data-navigation-item data-navigation-type="site" data-navigation-id="' + escapeHtml(item.id) + '"' + folderAttribute + indexAttribute + ' draggable="true">' + deleteButton + '<a class="navigation-card-main" href="' + escapeHtml(item.url) + '"' + target + ' aria-label="' + escapeHtml(t('navigationOpen') + ' ' + item.name) + '">' + navigationIconMarkup(item) + '<strong>' + escapeHtml(item.name) + '</strong><small>' + escapeHtml(navigationNameFromUrl(item.url)) + '</small></a></article>';
+}
+function navigationFindFolder(id) { return state.navigation.items.find((item) => item.type === 'folder' && item.id === id) || null; }
+function navigationFindRootItem(id) { return state.navigation.items.find((item) => item.id === id) || null; }
+function navigationEverySite() {
+  return state.navigation.items.flatMap((item) => item.type === 'folder' ? item.children : [item]).filter((item) => item.type === 'site');
+}
+function saveNavigation() { saveStored(STORAGE.navigation, state.navigation); }
+function renderNavigation() {
+  const items = state.navigation.items || [];
+  const body = items.length ? items.map((item, index) => navigationItemMarkup(item, index)).join('') : '<p class="navigation-empty">' + escapeHtml(t('navigationEmpty')) + '</p>';
+  return '<div class="section-page navigation-page"><div class="navigation-page-head"><div><p class="section-kicker">ONEBOX</p><h1>' + escapeHtml(t('navigationTitle')) + '</h1><p>' + escapeHtml(t('navigationHint')) + '</p></div><button class="primary navigation-add-button" type="button" data-open-navigation-add><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>' + escapeHtml(t('navigationAdd')) + '</span></button></div><div class="navigation-grid">' + body + '<button class="navigation-card navigation-add-card" type="button" data-open-navigation-add aria-label="' + escapeHtml(t('navigationAdd')) + '"><span class="navigation-add-glyph">＋</span><strong>' + escapeHtml(t('navigationAdd')) + '</strong></button></div></div>';
+}
+function renderNavigationAddDialog(folderId = '') {
+  const dialog = $('#navigationDialog'); if (!dialog) return;
+  const folder = folderId ? navigationFindFolder(folderId) : null;
+  const title = folder ? t('navigationAddToFolder') : t('navigationAdd');
+  dialog.innerHTML = '<div class="dialog-card navigation-dialog-card" role="dialog" aria-modal="true"><div class="dialog-head"><div><h2>' + escapeHtml(title) + '</h2>' + (folder ? '<p class="navigation-dialog-subtitle">' + escapeHtml(folder.name) + '</p>' : '') + '</div><button class="icon-btn small" type="button" data-close-navigation-dialog aria-label="' + t('close') + '">×</button></div><form id="navigationSiteForm" class="navigation-form" data-navigation-folder-id="' + escapeHtml(folderId || '') + '"><div class="field"><label for="navigationUrl">' + escapeHtml(t('navigationUrl')) + '</label><input id="navigationUrl" name="url" type="url" required inputmode="url" autocomplete="url" placeholder="' + escapeHtml(t('navigationUrlPlaceholder')) + '" autofocus></div><div class="field"><label for="navigationName">' + escapeHtml(t('navigationName')) + '</label><input id="navigationName" name="name" maxlength="40" placeholder="' + escapeHtml(t('navigationNamePlaceholder')) + '"></div><div class="navigation-icon-preview" data-navigation-icon-preview><span class="navigation-preview-placeholder">' + escapeHtml(t('navigationIconHint')) + '</span></div><button class="primary full-width" type="submit">' + escapeHtml(t('navigationSave')) + '</button></form></div>';
+  dialog.hidden = false;
+}
+function renderNavigationFolderDialog(folderId = '') {
+  const dialog = $('#navigationDialog'); const folder = navigationFindFolder(folderId); if (!dialog || !folder) return;
+  const children = folder.children.length ? folder.children.map((site, index) => navigationItemMarkup(site, index, folder.id)).join('') : '<p class="empty compact">' + escapeHtml(t('navigationFolderEmpty')) + '</p>';
+  dialog.innerHTML = '<div class="dialog-card navigation-dialog-card navigation-folder-dialog-card" role="dialog" aria-modal="true"><div class="dialog-head"><div><h2>' + escapeHtml(folder.name) + '</h2><p class="navigation-dialog-subtitle">' + escapeHtml(t('navigationFolder')) + '</p></div><button class="icon-btn small" type="button" data-close-navigation-dialog aria-label="' + t('close') + '">×</button></div><form id="navigationFolderForm" class="navigation-folder-form"><div class="field"><label for="navigationFolderName">' + escapeHtml(t('navigationFolderName')) + '</label><input id="navigationFolderName" name="name" maxlength="30" value="' + escapeHtml(folder.name) + '" required></div><div class="navigation-folder-sites">' + children + '</div><div class="navigation-folder-actions"><button class="secondary" type="button" data-navigation-add-in-folder>' + escapeHtml(t('navigationFolderAdd')) + '</button><button class="secondary navigation-danger-button" type="button" data-navigation-delete-folder>' + escapeHtml(t('navigationFolderDelete')) + '</button><button class="primary" type="submit">' + escapeHtml(t('navigationSaveFolder')) + '</button></div></form></div>';
+  dialog.hidden = false;
+}
+function renderNavigationCreateFolderDialog() {
+  const dialog = $('#navigationDialog'); const draft = state.navigationFolderDraft; if (!dialog || !draft) return;
+  const first = navigationFindRootItem(draft.firstId); const second = navigationFindRootItem(draft.secondId); if (!first || !second || first.type !== 'site' || second.type !== 'site') return closeNavigationDialog();
+  dialog.innerHTML = '<div class="dialog-card navigation-dialog-card" role="dialog" aria-modal="true"><div class="dialog-head"><div><h2>' + escapeHtml(t('navigationCreateFolder')) + '</h2><p class="navigation-dialog-subtitle">' + escapeHtml(t('navigationDropHint')) + '</p></div><button class="icon-btn small" type="button" data-close-navigation-dialog aria-label="' + t('close') + '">×</button></div><form id="navigationCreateFolderForm" class="navigation-folder-form"><div class="field"><label for="navigationFolderName">' + escapeHtml(t('navigationFolderName')) + '</label><input id="navigationFolderName" name="name" maxlength="30" required placeholder="' + escapeHtml(t('navigationFolderPlaceholder')) + '" autofocus></div><div class="navigation-folder-draft"><span>' + navigationIconMarkup(first) + '<strong>' + escapeHtml(first.name) + '</strong></span><span>' + navigationIconMarkup(second) + '<strong>' + escapeHtml(second.name) + '</strong></span></div><button class="primary full-width" type="submit">' + escapeHtml(t('navigationCreateFolder')) + '</button></form></div>';
+  dialog.hidden = false;
+}
+function renderNavigationDialog() {
+  const dialog = $('#navigationDialog'); if (!dialog) return;
+  if (!state.navigationDialog) { dialog.hidden = true; return; }
+  if (state.navigationDialog.kind === 'folder') renderNavigationFolderDialog(state.navigationDialog.folderId);
+  else if (state.navigationDialog.kind === 'create-folder') renderNavigationCreateFolderDialog();
+  else renderNavigationAddDialog(state.navigationDialog.folderId || '');
+}
+function openNavigationAddDialog(folderId = '') { state.navigationDialog = { kind: 'add', folderId }; renderNavigationDialog(); }
+function openNavigationFolderDialog(folderId) { state.navigationDialog = { kind: 'folder', folderId }; renderNavigationDialog(); }
+function openNavigationCreateFolderDialog(firstId, secondId) { state.navigationFolderDraft = { firstId, secondId }; state.navigationDialog = { kind: 'create-folder' }; renderNavigationDialog(); }
+function closeNavigationDialog() { state.navigationDialog = null; state.navigationFolderDraft = null; const dialog = $('#navigationDialog'); if (dialog) dialog.hidden = true; }
+function addNavigationSite(urlValue, nameValue, folderId = '') {
+  const url = navigationSafeUrl(urlValue);
+  if (!url) return toast(t('navigationInvalidUrl'), 'error');
+  if (navigationEverySite().some((site) => site.url === url)) return toast(t('navigationAlreadyExists'), 'error');
+  const site = { id: 'site-' + uid(), type: 'site', name: String(nameValue || '').trim() || navigationNameFromUrl(url), url, icon: navigationIconUrl(url), createdAt: Date.now() };
+  if (folderId) {
+    const folder = navigationFindFolder(folderId); if (!folder) return toast(t('navigationInvalidUrl'), 'error');
+    folder.children.push(site);
+  } else state.navigation.items.push(site);
+  saveNavigation(); closeNavigationDialog(); render(); toast(t('navigationAdded'));
+}
+function deleteNavigationSite(siteId, folderId = '') {
+  if (folderId) {
+    const folder = navigationFindFolder(folderId); if (folder) folder.children = folder.children.filter((site) => site.id !== siteId);
+  } else state.navigation.items = state.navigation.items.filter((item) => item.id !== siteId);
+  saveNavigation(); closeNavigationDialog(); render(); toast(t('navigationDeleted'));
+}
+function deleteNavigationFolder(folderId) {
+  const folder = navigationFindFolder(folderId); if (!folder) return;
+  if (!window.confirm(t('navigationFolderDeleteConfirm'))) return;
+  state.navigation.items = state.navigation.items.filter((item) => item.id !== folderId);
+  saveNavigation(); closeNavigationDialog(); render(); toast(t('navigationDeleted'));
+}
+function moveNavigationSiteToFolder(siteId, folderId) {
+  const siteIndex = state.navigation.items.findIndex((item) => item.id === siteId && item.type === 'site');
+  const folder = navigationFindFolder(folderId); if (siteIndex < 0 || !folder) return;
+  const [site] = state.navigation.items.splice(siteIndex, 1); folder.children.push(site);
+  saveNavigation(); render(); toast(t('navigationMoved'));
+}
+function swapNavigationRootItems(firstId, secondId) {
+  const first = state.navigation.items.findIndex((item) => item.id === firstId); const second = state.navigation.items.findIndex((item) => item.id === secondId);
+  if (first < 0 || second < 0 || first === second) return;
+  [state.navigation.items[first], state.navigation.items[second]] = [state.navigation.items[second], state.navigation.items[first]];
+  saveNavigation(); render(); toast(t('navigationOrderSaved'));
+}
+function createNavigationFolder(nameValue, firstId, secondId) {
+  const firstIndex = state.navigation.items.findIndex((item) => item.id === firstId && item.type === 'site'); const secondIndex = state.navigation.items.findIndex((item) => item.id === secondId && item.type === 'site');
+  if (firstIndex < 0 || secondIndex < 0 || firstIndex === secondIndex) return closeNavigationDialog();
+  const first = state.navigation.items[firstIndex]; const second = state.navigation.items[secondIndex]; const insertAt = Math.min(firstIndex, secondIndex);
+  state.navigation.items = state.navigation.items.filter((item) => item.id !== firstId && item.id !== secondId);
+  state.navigation.items.splice(insertAt, 0, { id: 'folder-' + uid(), type: 'folder', name: String(nameValue || '').trim() || t('navigationFolder'), children: [first, second], createdAt: Date.now() });
+  saveNavigation(); closeNavigationDialog(); render(); toast(t('navigationFolderCreated'));
 }
 function notificationRowMarkup(item) {
   return '<div class="swipe-row notification-swipe-row" data-swipe-row><div class="notification-item swipe-content ' + (item.read ? '' : 'unread') + '"><div><strong>' + escapeHtml(item.text) + '</strong><small>' + new Intl.DateTimeFormat(state.language === 'en' ? 'en-US' : 'zh-CN', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(item.at)) + '</small></div></div><button class="swipe-delete" data-delete-notification="' + escapeHtml(item.id) + '" aria-label="' + t('close') + '">' + (state.language === 'en' ? 'Delete' : '删除') + '</button></div>';
@@ -3025,7 +3166,7 @@ function syncPayload() {
     app: 'OneBox', version: APP_VERSION, savedAt: new Date().toISOString(), theme: state.theme, color: state.color, languageMode: state.languageMode, language: state.language,
     toolOrder: state.toolOrder, calculator: parseStored(STORAGE.calculator, {}), events: state.events,
     weatherCards: state.weatherCards, translationHistory: state.translationHistory, notifications: state.notifications, library: state.library,
-    layoutMode: state.layoutMode, topDisplay: state.topDisplay, footprint: state.footprint, homeFeedOrder: state.homeFeed.order, homeFeedVisibility: state.homeFeed.visible, openMode: state.openMode,
+    layoutMode: state.layoutMode, topDisplay: state.topDisplay, footprint: state.footprint, homeFeedOrder: state.homeFeed.order, homeFeedVisibility: state.homeFeed.visible, navigation: state.navigation, openMode: state.openMode,
   };
 }
 function githubBrowserError(error) {
@@ -3135,6 +3276,7 @@ async function githubDownload() {
     if (remote.topDisplay && typeof remote.topDisplay === 'object') { state.topDisplay = { theme: remote.topDisplay.theme !== false, language: remote.topDisplay.language !== false, messages: remote.topDisplay.messages !== false }; saveTopDisplay(); }
     if (Array.isArray(remote.homeFeedOrder)) { state.homeFeed.order = normalizeHomeFeedOrder(remote.homeFeedOrder); saveHomeFeedOrder(); }
     if (Array.isArray(remote.homeFeedVisibility)) { state.homeFeed.visible = normalizeHomeFeedVisibility(remote.homeFeedVisibility); saveHomeFeedVisibility(); }
+    if (remote.navigation && Array.isArray(remote.navigation.items)) { state.navigation = normalizeNavigation(remote.navigation); saveNavigation(); }
     if (typeof remote.footprint === 'boolean') { state.footprint = remote.footprint; saveFootprintPreference(); }
     state.github.gistId = id; saveGithub(); applyLanguage(); renderNav(); render(); renderGithubDialog();
     toast(state.language === 'en' ? 'Settings restored from GitHub' : '已从 GitHub 恢复设置');
@@ -3385,7 +3527,7 @@ function render() {
   nav.hidden = state.section !== 'tools';
   const renderers = { calculator, calendar, weather, convert, translate: translateConvertView, reader };
   workspace.dataset.tool = state.section === 'tools' ? state.tool : state.section;
-  workspace.innerHTML = state.section === 'home' ? renderHome() : state.section === 'messages' ? renderMessages() : state.section === 'mine' ? renderMine() : (renderers[state.tool] || calculator)();
+  workspace.innerHTML = state.section === 'home' ? renderHome() : state.section === 'navigation' ? renderNavigation() : state.section === 'messages' ? renderMessages() : state.section === 'mine' ? renderMine() : (renderers[state.tool] || calculator)();
   renderHomeSourceNav();
   document.documentElement.classList.toggle('reader-focus', state.section === 'tools' && state.tool === 'reader' && state.readerMode === 'reading' && state.readerImmersive);
   syncReaderSafariSurface();
@@ -3398,6 +3540,7 @@ function render() {
   renderBottomNav();
   updateNotificationBadge();
   if (state.recentReadingOpen) renderRecentReading();
+  if (state.navigationDialog) renderNavigationDialog();
   if (state.section === 'home') scheduleHomeFeedSurfaceSync();
 }
 function swapWeatherCards(from, to) {
@@ -3423,6 +3566,66 @@ let pageSwipeNavState = null;
 let readerSurfaceGesture = null;
 let readerBookDrag = null;
 let readerBookSuppressClickUntil = 0;
+let navigationPressTimer = null;
+let navigationDrag = null;
+let navigationSuppressClickUntil = 0;
+function clearNavigationDragClasses() {
+  $$('.navigation-card.navigation-dragging, .navigation-card.navigation-long-pressed').forEach((card) => card.classList.remove('navigation-dragging', 'navigation-long-pressed'));
+  $$('.navigation-card.navigation-drop-target').forEach((card) => card.classList.remove('navigation-drop-target'));
+}
+function startNavigationLongPress(target, event) {
+  clearTimeout(navigationPressTimer);
+  navigationDrag = { target, pointerId: event.pointerId, startX: event.clientX, startY: event.clientY, longPressed: false, active: false, over: null };
+  navigationPressTimer = setTimeout(() => {
+    if (!navigationDrag || navigationDrag.target !== target) return;
+    navigationDrag.longPressed = true;
+    target.classList.add('navigation-long-pressed');
+  }, 520);
+}
+function endNavigationLongPress() { clearTimeout(navigationPressTimer); navigationPressTimer = null; }
+function updateNavigationDrag(event) {
+  const drag = navigationDrag;
+  if (!drag || (drag.pointerId != null && event.pointerId !== drag.pointerId)) return;
+  const dx = event.clientX - drag.startX; const dy = event.clientY - drag.startY;
+  if (!drag.longPressed) {
+    if (Math.hypot(dx, dy) > 10) { endNavigationLongPress(); navigationDrag = null; }
+    return;
+  }
+  if (!drag.active) {
+    if (Math.hypot(dx, dy) < 8) return;
+    drag.active = true;
+    try { drag.target.setPointerCapture?.(drag.pointerId); } catch {}
+    drag.target.classList.add('navigation-dragging'); drag.target.classList.remove('navigation-long-pressed');
+  }
+  const hit = document.elementFromPoint?.(event.clientX, event.clientY) || event.target;
+  const over = hit?.closest?.('[data-navigation-item]');
+  if (drag.over && drag.over !== over) drag.over.classList.remove('navigation-drop-target');
+  drag.over = over && over !== drag.target ? over : null;
+  if (drag.over) drag.over.classList.add('navigation-drop-target');
+  if (event.cancelable) event.preventDefault();
+}
+function finishNavigationDrag(event = null) {
+  const drag = navigationDrag;
+  if (!drag || (event?.pointerId != null && drag.pointerId != null && event.pointerId !== drag.pointerId)) return false;
+  navigationDrag = null; endNavigationLongPress();
+  const targetId = drag.target.dataset.navigationId;
+  const wasActive = drag.active;
+  const wasLongPressed = drag.longPressed;
+  const over = drag.over;
+  if (over) over.classList.remove('navigation-drop-target');
+  drag.target.classList.remove('navigation-dragging', 'navigation-long-pressed');
+  try { if (drag.target.hasPointerCapture?.(drag.pointerId)) drag.target.releasePointerCapture(drag.pointerId); } catch {}
+  if (wasLongPressed) navigationSuppressClickUntil = Date.now() + 550;
+  if (!wasActive) return wasLongPressed;
+  if (!over) return true;
+  const overId = over.dataset.navigationId;
+  const source = navigationFindRootItem(targetId); const destination = navigationFindRootItem(overId);
+  if (!source || !destination || source.id === destination.id) return true;
+  if (source.type === 'site' && destination.type === 'site') return openNavigationCreateFolderDialog(source.id, destination.id) || true;
+  if (source.type === 'site' && destination.type === 'folder') { moveNavigationSiteToFolder(source.id, destination.id); return true; }
+  swapNavigationRootItems(source.id, destination.id);
+  return true;
+}
 function startLongPress(target, type, index, pointerEvent = null) {
   clearTimeout(reorderTimer);
   if (readerBookDrag?.active) finishReaderBookDrag(pointerEvent);
@@ -3747,7 +3950,7 @@ function pageSwipeIndex(items) {
 function pageSwipeTarget(event) {
   const main = event.target.closest('main');
   if (!main || event.pointerType === 'mouse' || pageSwipeAnimationToken) return null;
-  if (event.target.closest('[data-reader-surface], .reader-reference-shell, [data-reader-book-card], [data-swipe-row], input, textarea, select, [contenteditable="true"], .weather-card-list, .weather-days, .hourly-strip, .advice-strip, .translation-history-list')) return null;
+  if (event.target.closest('[data-reader-surface], .reader-reference-shell, [data-reader-book-card], [data-swipe-row], .navigation-page, input, textarea, select, [contenteditable="true"], .weather-card-list, .weather-days, .hourly-strip, .advice-strip, .translation-history-list')) return null;
   const items = pageSwipeItems();
   const index = pageSwipeIndex(items);
   if (index < 0 || items.length < 2) return null;
@@ -3970,6 +4173,11 @@ homeSourceNav.addEventListener('drop', (event) => { event.preventDefault(); cons
 workspace.addEventListener('pointerdown', (event) => { const card = event.target.closest('[data-weather-card]'); if (card) startLongPress(card, 'weather', Number(card.dataset.weatherIndex), event); });
 workspace.addEventListener('pointerdown', (event) => { const source = event.target.closest('[data-feed-source]'); if (source?.dataset.feedSourceIndex != null) startLongPress(source, 'feed', Number(source.dataset.feedSourceIndex), event); });
 workspace.addEventListener('pointerdown', (event) => {
+  if (state.section !== 'navigation') return;
+  const card = event.target.closest('[data-navigation-item]');
+  if (card && !event.target.closest('[data-navigation-delete]')) startNavigationLongPress(card, event);
+});
+workspace.addEventListener('pointerdown', (event) => {
   const book = event.target.closest('[data-reader-book-card]');
   if (book && event.target.closest('[data-delete-book]')) return;
   if (book) {
@@ -3982,7 +4190,9 @@ workspace.addEventListener('pointerup', endLongPress);
 workspace.addEventListener('pointercancel', endLongPress);
 document.addEventListener('pointermove', updateReorderDrag, { passive: false });
 document.addEventListener('pointermove', updateReaderBookDrag, { passive: false });
+document.addEventListener('pointermove', updateNavigationDrag, { passive: false });
 document.addEventListener('pointerup', (event) => { if (finishReorderDrag(event) || finishReaderBookDrag(event)) endLongPress(); }, { passive: false });
+document.addEventListener('pointerup', (event) => { finishNavigationDrag(event); }, { passive: false });
 document.addEventListener('pointerdown', (event) => {
   if (state.tool !== 'reader' || state.readerMode !== 'library') return;
   if (event.target.closest('[data-reader-book-card], [data-reader-layout-toggle], [data-open-reader-file]')) return;
@@ -3992,7 +4202,7 @@ document.querySelector('main')?.addEventListener('pointerdown', beginPageSwipe);
 document.addEventListener('pointermove', updatePageSwipe, { passive: false });
 document.addEventListener('pointerup', finishPageSwipe, { passive: true });
 document.addEventListener('pointercancel', () => {
-  tabSwipeGesture = null; pageSwipeGesture = null; endLongPress(); cancelReorderDrag(); swipeGesture = null; resetPageSwipeTransform();
+  tabSwipeGesture = null; pageSwipeGesture = null; endLongPress(); cancelReorderDrag(); navigationDrag = null; endNavigationLongPress(); clearNavigationDragClasses(); swipeGesture = null; resetPageSwipeTransform();
   if (readerBookDrag) {
     releaseReaderBookPointer(readerBookDrag);
     readerBookDrag.over?.classList.remove('reorder-over');
@@ -4042,6 +4252,7 @@ workspace.addEventListener('contextmenu', (event) => {
 });
 workspace.addEventListener('click', async (event) => {
   if (Date.now() < reorderSuppressClickUntil || Date.now() < pageSwipeSuppressClickUntil) { event.preventDefault(); return; }
+  if (Date.now() < navigationSuppressClickUntil && event.target.closest('[data-navigation-item]') && !event.target.closest('[data-navigation-delete]')) { event.preventDefault(); return; }
   if (Date.now() < readerBookSuppressClickUntil && event.target.closest('[data-reader-book-card]')) { event.preventDefault(); return; }
   if (Date.now() < swipeSuppressClickUntil && event.target.closest('[data-swipe-row]') && !event.target.closest('.swipe-delete')) return;
   if (state.tool === 'reader' && state.readerMode === 'library' && !event.target.closest('[data-reader-book-card]')) clearReaderDeleteMode();
@@ -4049,6 +4260,14 @@ workspace.addEventListener('click', async (event) => {
   if (section) return selectSection(section.dataset.section);
   const homeTool = event.target.closest('[data-home-tool]');
   if (homeTool) return selectTool(homeTool.dataset.homeTool);
+  if (event.target.closest('[data-open-navigation-add]')) return openNavigationAddDialog();
+  const navigationDelete = event.target.closest('[data-navigation-delete]');
+  if (navigationDelete) {
+    event.preventDefault(); event.stopPropagation();
+    return deleteNavigationSite(navigationDelete.dataset.navigationDelete, navigationDelete.closest('[data-navigation-folder-id]')?.dataset.navigationFolderId || '');
+  }
+  const navigationFolder = event.target.closest('[data-navigation-open-folder]');
+  if (navigationFolder) return openNavigationFolderDialog(navigationFolder.dataset.navigationOpenFolder);
   if (event.target.closest('[data-reader-layout-toggle]')) {
     state.readerLayout = state.readerLayout === 'list' ? 'grid' : 'list';
     saveReaderLayout(); return render();
@@ -4457,6 +4676,27 @@ $('#homeSourceDialog').addEventListener('click', (event) => {
   const toggle = event.target.closest('[data-home-source-toggle]');
   if (toggle) return setHomeTabVisibility(toggle.dataset.homeSourceToggle, !homeTabIsVisible(toggle.dataset.homeSourceToggle));
 });
+$('#navigationDialog').addEventListener('click', (event) => {
+  if (event.target === $('#navigationDialog') || event.target.closest('[data-close-navigation-dialog]')) return closeNavigationDialog();
+  if (event.target.closest('[data-navigation-add-in-folder]')) return openNavigationAddDialog(state.navigationDialog?.folderId || '');
+  const remove = event.target.closest('[data-navigation-delete]');
+  if (remove) return deleteNavigationSite(remove.dataset.navigationDelete, remove.closest('[data-navigation-folder-id]')?.dataset.navigationFolderId || '');
+  if (event.target.closest('[data-navigation-delete-folder]')) return deleteNavigationFolder(state.navigationDialog?.folderId || '');
+});
+$('#navigationDialog').addEventListener('input', (event) => {
+  if (event.target.id !== 'navigationUrl') return;
+  const preview = $('[data-navigation-icon-preview]', $('#navigationDialog')); if (!preview) return;
+  const url = navigationSafeUrl(event.target.value); preview.innerHTML = url ? navigationIconMarkup({ name: navigationNameFromUrl(url), url, icon: navigationIconUrl(url) }, 'navigation-preview-icon') + '<span>' + escapeHtml(t('navigationIconHint')) + '</span>' : '<span class="navigation-preview-placeholder">' + escapeHtml(t('navigationIconHint')) + '</span>';
+});
+$('#navigationDialog').addEventListener('submit', (event) => {
+  event.preventDefault();
+  if (event.target.id === 'navigationSiteForm') return addNavigationSite($('#navigationUrl', event.target)?.value, $('#navigationName', event.target)?.value, event.target.dataset.navigationFolderId || '');
+  if (event.target.id === 'navigationFolderForm') {
+    const folder = navigationFindFolder(state.navigationDialog?.folderId || ''); if (!folder) return closeNavigationDialog();
+    folder.name = $('#navigationFolderName', event.target)?.value.trim() || folder.name; saveNavigation(); closeNavigationDialog(); render(); return;
+  }
+  if (event.target.id === 'navigationCreateFolderForm') return createNavigationFolder($('#navigationFolderName', event.target)?.value, state.navigationFolderDraft?.firstId, state.navigationFolderDraft?.secondId);
+});
 $('#settingsDialog').addEventListener('change', (event) => {
   if (event.target.id === 'settingsLayout') { state.layoutMode = event.target.value === 'simple' ? 'simple' : 'classic'; saveLayoutPreference(); render(); renderSettings(); }
   if (event.target.id === 'settingsTheme') { state.theme = event.target.value; saveThemeLanguage(); applyTheme(); render(); }
@@ -4535,7 +4775,7 @@ window.addEventListener('online', () => { $('#connectionStatus').textContent = t
 window.addEventListener('offline', () => { $('#connectionStatus').textContent = t('offline'); toast(state.language === 'en' ? 'Offline mode' : '已切换到离线模式'); });
 window.addEventListener('hashchange', () => {
   const route = location.hash.slice(1);
-  if (['home', 'messages', 'mine'].includes(route)) selectSection(route);
+  if (['home', 'navigation', 'messages', 'mine'].includes(route)) selectSection(route);
   else selectTool(route);
 });
 window.matchMedia?.('(prefers-color-scheme: dark)').addEventListener?.('change', () => { if (state.theme === 'system') applyTheme(); });
