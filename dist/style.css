@@ -6058,9 +6058,9 @@ html[data-theme-mode="dark-gray"] .key {
 #homeSourceDialog[hidden] { display: none; }
 #homeSourceDialog .home-source-dialog-card {
   width: min(440px, 100%);
-  max-height: min(660px, calc(100dvh - 112px - env(safe-area-inset-top)));
+  max-height: min(620px, calc(100dvh - 72px - env(safe-area-inset-top) - env(safe-area-inset-bottom)));
   margin: 0 auto;
-  padding: 18px;
+  padding: 14px;
   display: flex;
   flex-direction: column;
   min-height: 0;
@@ -6070,8 +6070,8 @@ html[data-theme-mode="dark-gray"] .key {
 }
 #homeSourceDialog .dialog-head {
   align-items: center;
-  margin: -18px -18px 14px;
-  padding: 14px 18px 12px;
+  margin: -14px -14px 12px;
+  padding: 13px 14px 11px;
   border-bottom: 1px solid var(--line);
   background: var(--panel);
 }
@@ -6081,7 +6081,7 @@ html[data-theme-mode="dark-gray"] .key {
   align-items: baseline;
   gap: 10px;
 }
-#homeSourceDialog .dialog-head h2 { margin: 0; font-size: 20px; }
+#homeSourceDialog .dialog-head h2 { margin: 0; font-size: 19px; }
 #homeSourceDialog .home-source-dialog-hint {
   min-width: 0;
   margin: 0;
@@ -6094,13 +6094,13 @@ html[data-theme-mode="dark-gray"] .key {
 }
 #homeSourceDialog .home-source-options {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 6px 5px;
-  max-height: min(510px, calc(100dvh - 220px));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 11px 10px;
+  max-height: min(460px, calc(100dvh - 188px - env(safe-area-inset-top) - env(safe-area-inset-bottom)));
   min-height: 0;
   flex: 1 1 auto;
   overflow: auto;
-  padding: 5px 2px 3px;
+  padding: 8px 3px 6px;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
 }
@@ -6110,13 +6110,13 @@ html[data-theme-mode="dark-gray"] .key {
   flex-direction: row;
   align-items: center;
   justify-content: center;
-  gap: 4px;
+  gap: 3px;
   min-width: 0;
-  min-height: 40px;
-  padding: 3px 5px;
+  min-height: 34px;
+  padding: 3px 14px 3px 3px;
   text-align: center;
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: 10px;
   background: color-mix(in srgb, var(--panel-2) 55%, var(--panel));
   transition: border-color .16s ease, background-color .16s ease;
 }
@@ -6127,13 +6127,13 @@ html[data-theme-mode="dark-gray"] .key {
 #homeSourceDialog .home-source-option-mark {
   display: grid;
   place-items: center;
-  flex: 0 0 15px;
-  width: 15px;
-  height: 15px;
-}
-#homeSourceDialog .home-source-option-mark .feed-source-mark {
+  flex: 0 0 14px;
   width: 14px;
   height: 14px;
+}
+#homeSourceDialog .home-source-option-mark .feed-source-mark {
+  width: 13px;
+  height: 13px;
   border-radius: 4px;
   overflow: hidden;
 }
@@ -6162,7 +6162,7 @@ html[data-theme-mode="dark-gray"] .key {
   max-width: 100%;
   overflow: hidden;
   color: var(--ink);
-  font-size: 9px;
+  font-size: 8px;
   font-weight: 700;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -6171,11 +6171,11 @@ html[data-theme-mode="dark-gray"] .key {
   display: grid;
   place-items: center;
   position: absolute;
-  top: -4px;
-  right: -4px;
+  top: 3px;
+  right: 3px;
   z-index: 1;
-  width: 14px;
-  height: 14px;
+  width: 13px;
+  height: 13px;
   padding: 0;
   border: 1px solid color-mix(in srgb, var(--success) 62%, var(--line));
   border-radius: 50%;
@@ -6224,20 +6224,24 @@ html[data-theme-mode="dark-gray"] .key {
   }
   #homeSourceDialog .home-source-dialog-card {
     width: 100%;
-    max-height: calc(100dvh - 28px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+    max-height: calc(100dvh - 20px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
     margin: 0;
-    padding: 16px;
+    padding: 14px;
     border-radius: 22px;
   }
   #homeSourceDialog .dialog-head {
-    margin: -16px -16px 12px;
-    padding: 13px 16px 11px;
+    margin: -14px -14px 10px;
+    padding: 12px 14px 10px;
   }
   #homeSourceDialog .dialog-head > div { gap: 7px; }
-  #homeSourceDialog .dialog-head h2 { font-size: 18px; }
-  #homeSourceDialog .home-source-dialog-hint { font-size: 10px; }
-  #homeSourceDialog .home-source-options { max-height: calc(100dvh - 170px); gap: 6px 5px; padding-inline: 2px; }
-  #homeSourceDialog .home-source-option { min-height: 38px; padding-inline: 3px; }
+  #homeSourceDialog .dialog-head h2 { font-size: 17px; }
+  #homeSourceDialog .home-source-dialog-hint { font-size: 9px; }
+  #homeSourceDialog .home-source-options { max-height: calc(100dvh - 154px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); gap: 10px 9px; padding-inline: 3px; }
+  #homeSourceDialog .home-source-option { min-height: 32px; padding-inline: 3px 14px; }
+}
+
+@media (max-width: 360px) {
+  #homeSourceDialog .home-source-options { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px 8px; }
 }
 
 /* Source marks remain legible on a true-black surface.  The source websites
