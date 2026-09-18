@@ -6626,6 +6626,19 @@ html[data-theme="dark"] #githubDialog .github-dialog-head { background: var(--pa
   .reader-page-turn-overlay::before { animation: none !important; opacity: 0 !important; }
 }
 
+/* 2.18.146: measure the PWA viewport again after returning from an external
+   page. iOS can restore a stale dynamic viewport height, leaving the app
+   itself shorter than the screen and exposing a black tail below the feed. */
+@media (max-width: 760px) {
+  html.standalone-pwa main:has(#workspace[data-tool="home"]) {
+    height: var(--onebox-visual-height, 100dvh) !important;
+    max-height: var(--onebox-visual-height, 100dvh) !important;
+  }
+  html.standalone-pwa #workspace[data-tool="home"] {
+    background: var(--panel);
+  }
+}
+
 /* 2.18.145: fill the PWA home workspace after returning from an external
    article. The source rail is fixed outside #workspace, so its old 42px
    subtraction exposed a blank tail when the feed content was short. Keep
