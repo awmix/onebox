@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.184';
+const APP_VERSION = '2.18.185';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -196,7 +196,7 @@ const DICT = {
     commute: '出行', sport: '运动', clothing: '穿衣', sunscreen: '防晒', hiking: '爬山',
     addCard: '添加', noResults: '没有找到匹配地点，请换个关键词。',
     home: '首页', tools: '工具', navigation: '导航', messages: '消息', mine: '我的', quickTools: '常用工具', openSettings: '打开设置', noMessages: '还没有消息。', homeTabs: '首页', homeTabsSelected: '已选择 {count} 项', homeSourceManage: '首页来源', homeSourceManageHint: '选择要显示在首页导航中的来源', homeSourceAdd: '添加', homeSourceRemove: '移除', homeSourceEmpty: '暂时没有其他来源',
-    navigationTitle: '网站导航', navigationHint: '点击卡片显示操作，长按可以拖动排序或聚合文件夹。', navigationAdd: '添加网站', navigationEmpty: '还没有网站，先添加一个常用网址吧。', navigationUrl: '网站地址', navigationUrlPlaceholder: '粘贴或输入网址', navigationName: '网站名称', navigationNamePlaceholder: '可选，默认使用网站名称', navigationIcon: '网站图标', navigationIconHint: '输入网址后自动获取', navigationSave: '保存网站', navigationEdit: '编辑网站', navigationEditSave: '保存修改', navigationActionEdit: '编辑', navigationActionDelete: '删除', navigationActionCancel: '取消', navigationFolderEdit: '编辑文件夹', navigationAddToFolder: '添加到文件夹', navigationFolder: '文件夹', navigationFolderName: '文件夹名称', navigationFolderPlaceholder: '例如：工作、阅读', navigationCreateFolder: '新建文件夹', navigationSaveFolder: '保存文件夹', navigationFolderAdd: '添加网站', navigationFolderDelete: '删除文件夹', navigationFolderDeleteConfirm: '删除文件夹后，里面的网站也会一起移除，确定继续吗？', navigationFolderEmpty: '文件夹还是空的，添加几个网站吧。', navigationRemove: '删除', navigationOpen: '打开网站', navigationSettings: '导航设置', navigationOpenModeHint: '网站打开方式', navigationOpenModeCurrent: '当前页', navigationOpenModeNewTab: '新标签页', navigationAlreadyExists: '这个网站已经添加过了', navigationInvalidUrl: '请输入有效的 http 或 https 地址', navigationDropHint: '松开后聚合为文件夹', navigationFolderCreated: '文件夹已创建', navigationAdded: '网站已添加', navigationDeleted: '网站已删除', navigationMoved: '网站已移入文件夹', navigationOrderSaved: '导航顺序已保存', navigationSiteCount: '{count} 个网站',
+    navigationTitle: '网站导航', navigationHint: '点击卡片显示操作，长按可以拖动排序或聚合文件夹。', navigationAdd: '添加网站', navigationEmpty: '还没有网站，先添加一个常用网址吧。', navigationUrl: '网站地址', navigationUrlPlaceholder: '粘贴或输入网址', navigationName: '网站名称', navigationNamePlaceholder: '可选，默认使用网站名称', navigationIcon: '网站图标', navigationIconHint: '输入网址后自动获取', navigationSave: '保存网站', navigationEdit: '编辑网站', navigationEditSave: '保存修改', navigationActionEdit: '编辑', navigationActionDelete: '删除', navigationActionCancel: '取消', navigationFolderEdit: '编辑文件夹', navigationAddToFolder: '添加到文件夹', navigationFolder: '文件夹', navigationFolderName: '文件夹名称', navigationFolderPlaceholder: '例如：工作、阅读', navigationCreateFolder: '新建文件夹', navigationSaveFolder: '保存文件夹', navigationFolderAdd: '添加网站', navigationFolderDelete: '删除文件夹', navigationFolderDeleteConfirm: '删除文件夹后，里面的网站会保留在导航中，确定解散文件夹吗？', navigationFolderDissolved: '文件夹已解散', navigationFolderEmpty: '文件夹还是空的，添加几个网站吧。', navigationRemove: '删除', navigationOpen: '打开网站', navigationSettings: '导航设置', navigationOpenModeHint: '网站打开方式', navigationOpenModeCurrent: '当前页', navigationOpenModeNewTab: '新标签页', navigationAlreadyExists: '这个网站已经添加过了', navigationInvalidUrl: '请输入有效的 http 或 https 地址', navigationDropHint: '松开后聚合为文件夹', navigationFolderCreated: '文件夹已创建', navigationAdded: '网站已添加', navigationDeleted: '网站已删除', navigationMoved: '网站已移入文件夹', navigationOrderSaved: '导航顺序已保存', navigationSiteCount: '{count} 个网站',
     allFeeds: '全部', feedRefresh: '刷新', feedLoading: '正在加载信息流…', feedEmpty: '暂时没有可显示的内容。', feedUpdated: '更新于', feedOpen: '打开原文', feedPartial: '部分订阅源暂时不可用', feedProxyHint: '内容来自公开 RSS 订阅，首页只保留最近内容。', feedTabPrevious: '查看前面的首页 Tab', feedTabNext: '查看后面的首页 Tab',
     converterType: '换算类型', from: '从', to: '到', result: '结果', swap: '交换单位', copyResult: '复制结果',
     copied: '已复制', translationInput: '输入待翻译内容', translateNow: '开始翻译', saveTranslation: '保存到本机',
@@ -239,7 +239,7 @@ const DICT = {
     commute: 'Travel', sport: 'Sport', clothing: 'Clothing', sunscreen: 'Sun care', hiking: 'Hiking',
     addCard: 'Add', noResults: 'No matching place. Try another query.',
     home: 'Home', tools: 'Tools', navigation: 'Navigation', messages: 'Messages', mine: 'Me', quickTools: 'Quick tools', openSettings: 'Open settings', noMessages: 'No messages yet.', homeTabs: 'Home', homeTabsSelected: '{count} selected',
-    navigationTitle: 'Web navigation', navigationHint: 'Tap a card for actions; long-press to reorder or create a folder.', navigationAdd: 'Add website', navigationEmpty: 'No websites yet. Add a favorite site to get started.', navigationUrl: 'Website URL', navigationUrlPlaceholder: 'https://example.com', navigationName: 'Website name', navigationNamePlaceholder: 'Optional; defaults to the site name', navigationIcon: 'Website icon', navigationIconHint: 'Fetched automatically from the URL', navigationSave: 'Save website', navigationAddToFolder: 'Add to folder', navigationEdit: 'Edit website', navigationEditSave: 'Save changes', navigationActionEdit: 'Edit', navigationActionDelete: 'Delete', navigationActionCancel: 'Cancel', navigationFolderEdit: 'Edit folder', navigationFolder: 'Folder', navigationFolderName: 'Folder name', navigationFolderPlaceholder: 'For example: Work, Reading', navigationCreateFolder: 'New folder', navigationSaveFolder: 'Save folder', navigationFolderAdd: 'Add website', navigationFolderDelete: 'Delete folder', navigationFolderDeleteConfirm: 'Deleting the folder will also remove its websites. Continue?', navigationFolderEmpty: 'This folder is empty. Add some websites.', navigationRemove: 'Delete', navigationOpen: 'Open website', navigationSettings: 'Navigation settings', navigationOpenModeHint: 'Open websites in', navigationOpenModeCurrent: 'Current page', navigationOpenModeNewTab: 'New tab', navigationAlreadyExists: 'This website has already been added', navigationInvalidUrl: 'Enter a valid http or https URL', navigationDropHint: 'Release to create a folder', navigationFolderCreated: 'Folder created', navigationAdded: 'Website added', navigationDeleted: 'Website deleted', navigationMoved: 'Website moved into folder', navigationOrderSaved: 'Navigation order saved', navigationSiteCount: '{count} sites',
+    navigationTitle: 'Web navigation', navigationHint: 'Tap a card for actions; long-press to reorder or create a folder.', navigationAdd: 'Add website', navigationEmpty: 'No websites yet. Add a favorite site to get started.', navigationUrl: 'Website URL', navigationUrlPlaceholder: 'https://example.com', navigationName: 'Website name', navigationNamePlaceholder: 'Optional; defaults to the site name', navigationIcon: 'Website icon', navigationIconHint: 'Fetched automatically from the URL', navigationSave: 'Save website', navigationAddToFolder: 'Add to folder', navigationEdit: 'Edit website', navigationEditSave: 'Save changes', navigationActionEdit: 'Edit', navigationActionDelete: 'Delete', navigationActionCancel: 'Cancel', navigationFolderEdit: 'Edit folder', navigationFolder: 'Folder', navigationFolderName: 'Folder name', navigationFolderPlaceholder: 'For example: Work, Reading', navigationCreateFolder: 'New folder', navigationSaveFolder: 'Save folder', navigationFolderAdd: 'Add website', navigationFolderDelete: 'Delete folder', navigationFolderDeleteConfirm: 'Deleting the folder will keep its websites in navigation. Dissolve the folder?', navigationFolderDissolved: 'Folder dissolved', navigationFolderEmpty: 'This folder is empty. Add some websites.', navigationRemove: 'Delete', navigationOpen: 'Open website', navigationSettings: 'Navigation settings', navigationOpenModeHint: 'Open websites in', navigationOpenModeCurrent: 'Current page', navigationOpenModeNewTab: 'New tab', navigationAlreadyExists: 'This website has already been added', navigationInvalidUrl: 'Enter a valid http or https URL', navigationDropHint: 'Release to create a folder', navigationFolderCreated: 'Folder created', navigationAdded: 'Website added', navigationDeleted: 'Website deleted', navigationMoved: 'Website moved into folder', navigationOrderSaved: 'Navigation order saved', navigationSiteCount: '{count} sites',
     allFeeds: 'All', feedRefresh: 'Refresh', feedLoading: 'Loading feeds…', feedEmpty: 'No items to show yet.', feedUpdated: 'Updated', feedOpen: 'Open original', feedPartial: 'Some feeds are temporarily unavailable', feedProxyHint: 'Public RSS subscriptions; only recent items are kept on this device.', feedTabPrevious: 'Show previous home tabs', feedTabNext: 'Show more home tabs',
     converterType: 'Conversion', from: 'From', to: 'To', result: 'Result', swap: 'Swap units', copyResult: 'Copy result',
     copied: 'Copied', translationInput: 'Text to translate', translateNow: 'Translate', saveTranslation: 'Save locally',
@@ -1337,7 +1337,7 @@ function renderNavigationFolderDialog(folderId = '') {
 function renderNavigationCreateFolderDialog() {
   const dialog = $('#navigationDialog'); const draft = state.navigationFolderDraft; if (!dialog || !draft) return;
   const first = navigationFindRootItem(draft.firstId); const second = navigationFindRootItem(draft.secondId); if (!first || !second || first.type !== 'site' || second.type !== 'site') return closeNavigationDialog();
-  dialog.innerHTML = '<div class="dialog-card navigation-dialog-card" role="dialog" aria-modal="true"><div class="dialog-head"><div><h2>' + escapeHtml(t('navigationCreateFolder')) + '</h2><p class="navigation-dialog-subtitle">' + escapeHtml(t('navigationDropHint')) + '</p></div><button class="icon-btn small" type="button" data-close-navigation-dialog aria-label="' + t('close') + '">×</button></div><form id="navigationCreateFolderForm" class="navigation-folder-form"><div class="field"><label for="navigationFolderName">' + escapeHtml(t('navigationFolderName')) + '</label><input id="navigationFolderName" name="name" maxlength="30" required placeholder="' + escapeHtml(t('navigationFolderPlaceholder')) + '" autofocus></div><div class="navigation-folder-draft"><span>' + navigationIconMarkup(first) + '<strong>' + escapeHtml(first.name) + '</strong></span><span>' + navigationIconMarkup(second) + '<strong>' + escapeHtml(second.name) + '</strong></span></div><button class="primary full-width" type="submit">' + escapeHtml(t('navigationCreateFolder')) + '</button></form></div>';
+  dialog.innerHTML = '<div class="dialog-card navigation-dialog-card" role="dialog" aria-modal="true"><div class="dialog-head"><div><h2 class="navigation-create-folder-title"><span>' + escapeHtml(t('navigationCreateFolder')) + '</span><small>' + escapeHtml(t('navigationDropHint')) + '</small></h2></div><button class="icon-btn small" type="button" data-close-navigation-dialog aria-label="' + t('close') + '">×</button></div><form id="navigationCreateFolderForm" class="navigation-folder-form"><div class="field"><label for="navigationFolderName">' + escapeHtml(t('navigationFolderName')) + '</label><input id="navigationFolderName" name="name" maxlength="30" placeholder="' + escapeHtml(t('navigationFolderPlaceholder')) + '" autofocus></div><div class="navigation-folder-draft"><span>' + navigationIconMarkup(first) + '<strong>' + escapeHtml(first.name) + '</strong></span><span>' + navigationIconMarkup(second) + '<strong>' + escapeHtml(second.name) + '</strong></span></div><button class="primary full-width" type="submit">' + escapeHtml(t('navigationCreateFolder')) + '</button></form></div>';
   dialog.hidden = false;
 }
 function renderNavigationDialog() {
@@ -1404,10 +1404,10 @@ function deleteNavigationSite(siteId, folderId = '') {
   saveNavigation(); closeNavigationDialog(); render(); toast(t('navigationDeleted'));
 }
 function deleteNavigationFolder(folderId) {
-  const folder = navigationFindFolder(folderId); if (!folder) return;
+  const folderIndex = state.navigation.items.findIndex((item) => item.id === folderId && item.type === 'folder'); const folder = folderIndex >= 0 ? state.navigation.items[folderIndex] : null; if (!folder) return;
   if (!window.confirm(t('navigationFolderDeleteConfirm'))) return;
-  state.navigation.items = state.navigation.items.filter((item) => item.id !== folderId);
-  saveNavigation(); closeNavigationDialog(); render(); toast(t('navigationDeleted'));
+  state.navigation.items.splice(folderIndex, 1, ...folder.children);
+  saveNavigation(); closeNavigationDialog(); render(); toast(t('navigationFolderDissolved'));
 }
 function moveNavigationSiteToFolder(siteId, folderId) {
   const siteIndex = state.navigation.items.findIndex((item) => item.id === siteId && item.type === 'site');
@@ -3735,6 +3735,8 @@ let readerBookDrag = null;
 let readerBookSuppressClickUntil = 0;
 let navigationPressTimer = null;
 let navigationDrag = null;
+let navigationDialogPressTimer = null;
+let navigationDialogPress = null;
 let navigationSuppressClickUntil = 0;
 let navigationLastTap = null;
 function clearNavigationCombineTimer(drag = navigationDrag) {
@@ -3759,6 +3761,32 @@ function startNavigationLongPress(target, event) {
   }, 520);
 }
 function endNavigationLongPress() { clearTimeout(navigationPressTimer); navigationPressTimer = null; }
+function startNavigationDialogLongPress(target, event) {
+  clearTimeout(navigationDialogPressTimer);
+  navigationDialogPress = { target, pointerId: event.pointerId, startX: event.clientX, startY: event.clientY, longPressed: false };
+  navigationDialogPressTimer = setTimeout(() => {
+    if (!navigationDialogPress || navigationDialogPress.target !== target) return;
+    navigationDialogPress.longPressed = true;
+  }, 520);
+}
+function updateNavigationDialogLongPress(event) {
+  const press = navigationDialogPress;
+  if (!press || (press.pointerId != null && event.pointerId !== press.pointerId)) return;
+  if (Math.hypot(event.clientX - press.startX, event.clientY - press.startY) > 10 && !press.longPressed) {
+    clearTimeout(navigationDialogPressTimer); navigationDialogPressTimer = null; navigationDialogPress = null;
+  }
+}
+function finishNavigationDialogLongPress(event = null) {
+  const press = navigationDialogPress;
+  if (!press || (event?.pointerId != null && press.pointerId != null && event.pointerId !== press.pointerId)) return false;
+  clearTimeout(navigationDialogPressTimer); navigationDialogPressTimer = null; navigationDialogPress = null;
+  if (!press.longPressed) return false;
+  navigationSuppressClickUntil = Date.now() + 550;
+  const card = press.target;
+  openNavigationActionsDialog(card.dataset.navigationId, card.dataset.navigationFolderId || '');
+  return true;
+}
+function cancelNavigationDialogLongPress() { clearTimeout(navigationDialogPressTimer); navigationDialogPressTimer = null; navigationDialogPress = null; }
 function animateNavigationReorder(container, mutate) {
   const before = new Map([...container.querySelectorAll('[data-navigation-item]')].map((card) => [card.dataset.navigationId, card.getBoundingClientRect()]));
   mutate();
@@ -4444,6 +4472,10 @@ workspace.addEventListener('pointerdown', (event) => {
   const card = event.target.closest('[data-navigation-item]');
   if (card && !event.target.closest('[data-navigation-open-action], [data-navigation-delete], [data-navigation-edit]')) startNavigationLongPress(card, event);
 });
+$('#navigationDialog').addEventListener('pointerdown', (event) => {
+  const card = event.target.closest('.navigation-folder-sites [data-navigation-item]');
+  if (card && !event.target.closest('[data-navigation-open-action], [data-navigation-delete], [data-navigation-edit]')) startNavigationDialogLongPress(card, event);
+});
 workspace.addEventListener('pointerdown', (event) => {
   const book = event.target.closest('[data-reader-book-card]');
   if (book && event.target.closest('[data-delete-book]')) return;
@@ -4458,8 +4490,10 @@ workspace.addEventListener('pointercancel', endLongPress);
 document.addEventListener('pointermove', updateReorderDrag, { passive: false });
 document.addEventListener('pointermove', updateReaderBookDrag, { passive: false });
 document.addEventListener('pointermove', updateNavigationDrag, { passive: false });
+document.addEventListener('pointermove', updateNavigationDialogLongPress, { passive: true });
 document.addEventListener('pointerup', (event) => { if (finishReorderDrag(event) || finishReaderBookDrag(event)) endLongPress(); }, { passive: false });
 document.addEventListener('pointerup', (event) => { finishNavigationDrag(event); }, { passive: false });
+document.addEventListener('pointerup', (event) => { finishNavigationDialogLongPress(event); }, { passive: false });
 document.addEventListener('pointerdown', (event) => {
   if (state.tool !== 'reader' || state.readerMode !== 'library') return;
   if (event.target.closest('[data-reader-book-card], [data-reader-layout-toggle], [data-open-reader-file]')) return;
@@ -4471,7 +4505,7 @@ document.addEventListener('pointerup', finishPageSwipe, { passive: true });
 document.addEventListener('pointercancel', () => {
   tabSwipeGesture = null; pageSwipeGesture = null; endLongPress(); cancelReorderDrag();
   if (navigationDrag) { restoreNavigationDrag(navigationDrag); navigationDrag = null; }
-  endNavigationLongPress(); clearNavigationDragClasses(); swipeGesture = null; resetPageSwipeTransform();
+  endNavigationLongPress(); cancelNavigationDialogLongPress(); clearNavigationDragClasses(); swipeGesture = null; resetPageSwipeTransform();
   if (readerBookDrag) {
     releaseReaderBookPointer(readerBookDrag);
     readerBookDrag.over?.classList.remove('reorder-over');
@@ -4999,8 +5033,14 @@ $('#homeSourceDialog').addEventListener('click', (event) => {
   const toggle = event.target.closest('[data-home-source-toggle]');
   if (toggle) return setHomeTabVisibility(toggle.dataset.homeSourceToggle, !homeTabIsVisible(toggle.dataset.homeSourceToggle));
 });
+$('#navigationDialog').addEventListener('contextmenu', (event) => {
+  if (!event.target.closest('.navigation-folder-sites [data-navigation-item]')) return;
+  event.preventDefault();
+  event.stopPropagation();
+});
 $('#navigationDialog').addEventListener('click', (event) => {
   if (event.target === $('#navigationDialog') || event.target.closest('[data-close-navigation-dialog]')) return closeNavigationDialog();
+  if (Date.now() < navigationSuppressClickUntil && event.target.closest('.navigation-folder-sites [data-navigation-item]')) { event.preventDefault(); return; }
   const action = event.target.closest('[data-navigation-action]');
   if (action) {
     const { siteId, folderId = '' } = state.navigationDialog || {};
@@ -5009,6 +5049,15 @@ $('#navigationDialog').addEventListener('click', (event) => {
     if (action.dataset.navigationAction === 'delete') return folderId ? deleteNavigationSite(siteId, folderId) : (navigationFindRootItem(siteId)?.type === 'folder' ? deleteNavigationFolder(siteId) : deleteNavigationSite(siteId));
   }
   if (event.target.closest('[data-navigation-add-in-folder]')) return openNavigationAddDialog(state.navigationDialog?.folderId || '');
+  const navigationOpenAction = event.target.closest('[data-navigation-open-action]');
+  if (navigationOpenAction) {
+    event.preventDefault(); event.stopPropagation();
+    const card = navigationOpenAction.closest('[data-navigation-item]');
+    const link = card?.querySelector('[data-navigation-open-site]');
+    if (link) return openNavigationSite(link);
+  }
+  const navigationSiteLink = event.target.closest('[data-navigation-open-site]');
+  if (navigationSiteLink) { event.preventDefault(); event.stopPropagation(); return openNavigationSite(navigationSiteLink); }
   const edit = event.target.closest('[data-navigation-edit]');
   if (edit) return openNavigationEditDialog(edit.dataset.navigationEdit, edit.closest('[data-navigation-folder-id]')?.dataset.navigationFolderId || state.navigationDialog?.folderId || '');
   const remove = event.target.closest('[data-navigation-delete]');

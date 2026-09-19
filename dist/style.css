@@ -7706,3 +7706,56 @@ main:has(#toolNav[hidden]):has(#workspace[data-tool="navigation"]) { padding-top
 #workspace[data-tool="navigation"] .navigation-grid > .navigation-card .navigation-card-actions {
   display: none !important;
 }
+
+/* 2.18.185: folder previews use compact site thumbnails and folder contents
+   use the same tap/long-press action model as the root navigation. */
+#workspace[data-tool="navigation"] .navigation-folder-preview {
+  grid-template-columns: repeat(2, 19px);
+  grid-auto-rows: 19px;
+  gap: 3px;
+  padding: 4px;
+}
+#workspace[data-tool="navigation"] .navigation-folder-preview .navigation-folder-site-icon {
+  width: 19px;
+  height: 19px;
+  border-radius: 6px;
+  font-size: 9px;
+}
+#navigationDialog .navigation-folder-sites .navigation-card,
+#navigationDialog .navigation-folder-sites .navigation-card-main {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+#navigationDialog .navigation-folder-sites .navigation-card-actions {
+  display: none !important;
+}
+#navigationDialog .navigation-create-folder-title {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  min-width: 0;
+}
+#navigationDialog .navigation-create-folder-title small {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+@media (max-width: 600px) {
+  #workspace[data-tool="navigation"] .navigation-folder-preview {
+    grid-template-columns: repeat(2, 17px);
+    grid-auto-rows: 17px;
+    gap: 3px;
+  }
+  #workspace[data-tool="navigation"] .navigation-folder-preview .navigation-folder-site-icon {
+    width: 17px;
+    height: 17px;
+    border-radius: 5px;
+    font-size: 8px;
+  }
+  #navigationDialog .navigation-create-folder-title { gap: 7px; }
+  #navigationDialog .navigation-create-folder-title small { font-size: 11px; }
+}
