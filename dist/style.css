@@ -7273,3 +7273,122 @@ main:has(#toolNav[hidden]):has(#workspace[data-tool="navigation"]) { padding-top
   #workspace[data-tool="navigation"] .navigation-site-icon, #workspace[data-tool="navigation"] .navigation-folder-preview, #workspace[data-tool="navigation"] .navigation-add-glyph { width: 58px; height: 58px; border-radius: 17px; }
   #navigationDialog .navigation-actions-dialog { align-self: flex-end; margin: auto 0 max(10px, env(safe-area-inset-bottom)); border-radius: 24px; }
 }
+
+/* 2.18.177: the tool rail shares the homepage source rail's overflow affordance.
+   Keep the outer sticky rail stable and let only the inner tab list scroll. */
+#toolNav {
+  display: block;
+  overflow: visible;
+}
+#toolNav .tool-tab-panel {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+}
+#toolNav .tool-tabs {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  gap: 2px;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0 4px;
+  scrollbar-width: none;
+  touch-action: pan-x;
+  overscroll-behavior-x: contain;
+}
+#toolNav .tool-tabs::-webkit-scrollbar { display: none; }
+#toolNav .tool-tabs .tab { flex: 0 0 auto; }
+#toolNav .tool-tab-panel .feed-source-scroll-button {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: linear-gradient(90deg, var(--panel) 12%, color-mix(in srgb, var(--panel) 78%, transparent) 54%, transparent 100%);
+  color: var(--muted);
+  cursor: pointer;
+}
+#toolNav .tool-tab-panel .feed-source-scroll-button[data-tool-scroll="previous"] { left: 0; }
+#toolNav .tool-tab-panel .feed-source-scroll-button[data-tool-scroll="next"] {
+  right: 0;
+  background: linear-gradient(270deg, var(--panel) 12%, color-mix(in srgb, var(--panel) 78%, transparent) 54%, transparent 100%);
+}
+#toolNav .tool-tab-panel .feed-source-scroll-button[hidden] { display: none; }
+#toolNav .tool-tab-panel .feed-source-scroll-button:hover { color: var(--ink); }
+#toolNav .tool-tab-panel .feed-source-scroll-button:focus-visible { outline: 2px solid color-mix(in srgb, var(--ink) 45%, transparent); outline-offset: -4px; border-radius: 8px; }
+#toolNav .tool-tab-panel .feed-source-scroll-button svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+#toolNav .tool-tabs.page-swipe-nav-dragging .tab.active::after { opacity: 0 !important; }
+
+/* Restore the direct card controls: long-press remains for dragging and
+   combining, while edit/delete stay immediately available at the top-right. */
+#workspace[data-tool="navigation"] .navigation-card-actions,
+#workspace[data-tool="navigation"] .navigation-card:hover .navigation-card-actions,
+#workspace[data-tool="navigation"] .navigation-card:focus-within .navigation-card-actions {
+  top: 0;
+  right: 0;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+#workspace[data-tool="navigation"] .navigation-card-actions button { width: 22px; height: 22px; }
+
+/* 2.18.177: compact four-column navigation cards. The add tile keeps only
+   its inner affordance; the large outer dashed container is removed. */
+#workspace[data-tool="navigation"] .navigation-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  max-width: 760px;
+  margin-inline: auto;
+  gap: 26px 22px;
+}
+#workspace[data-tool="navigation"] .navigation-card,
+#workspace[data-tool="navigation"] .navigation-card-main,
+#workspace[data-tool="navigation"] .navigation-add-card,
+#workspace[data-tool="navigation"] .navigation-empty-add-card { min-height: 116px; }
+#workspace[data-tool="navigation"] .navigation-card { border-radius: 16px; }
+#workspace[data-tool="navigation"] .navigation-card-main { padding: 6px 4px 8px; gap: 7px; }
+#workspace[data-tool="navigation"] .navigation-card-main strong,
+#workspace[data-tool="navigation"] .navigation-add-card strong,
+#workspace[data-tool="navigation"] .navigation-empty-add-card strong { font-size: 13px; }
+#workspace[data-tool="navigation"] .navigation-site-icon,
+#workspace[data-tool="navigation"] .navigation-folder-preview,
+#workspace[data-tool="navigation"] .navigation-add-glyph { width: 56px; height: 56px; border-radius: 14px; }
+#workspace[data-tool="navigation"] .navigation-add-card,
+#workspace[data-tool="navigation"] .navigation-empty-add-card {
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+#workspace[data-tool="navigation"] .navigation-add-glyph { border-radius: 14px; }
+
+@media (max-width: 600px) {
+  #toolNav .tool-tabs { padding-inline: 3px; }
+  #workspace[data-tool="navigation"] .navigation-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    max-width: none;
+    gap: 18px 9px;
+  }
+  #workspace[data-tool="navigation"] .navigation-card,
+  #workspace[data-tool="navigation"] .navigation-card-main,
+  #workspace[data-tool="navigation"] .navigation-add-card,
+  #workspace[data-tool="navigation"] .navigation-empty-add-card { min-height: 104px; }
+  #workspace[data-tool="navigation"] .navigation-card-main { padding-inline: 2px; gap: 5px; }
+  #workspace[data-tool="navigation"] .navigation-site-icon,
+  #workspace[data-tool="navigation"] .navigation-folder-preview,
+  #workspace[data-tool="navigation"] .navigation-add-glyph { width: 50px; height: 50px; border-radius: 13px; }
+  #workspace[data-tool="navigation"] .navigation-card-main strong,
+  #workspace[data-tool="navigation"] .navigation-add-card strong,
+  #workspace[data-tool="navigation"] .navigation-empty-add-card strong { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; }
+  #workspace[data-tool="navigation"] .navigation-card-actions { top: -2px; right: -2px; gap: 2px; }
+  #workspace[data-tool="navigation"] .navigation-card-actions button { width: 20px; height: 20px; }
+}

@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.176';
+const APP_VERSION = '2.18.177';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -521,12 +521,56 @@ function renderNav() {
   const normalizedOrder = normalizeToolOrder(state.toolOrder, includeNavigation);
   if (normalizedOrder.join('|') !== state.toolOrder.join('|')) { state.toolOrder = normalizedOrder; saveToolOrder(); }
   const toolIds = includeNavigation ? normalizedOrder : normalizedOrder.filter((id) => id !== 'navigation');
-  nav.innerHTML = toolIds.map((id, index) => {
+  const previousTabs = nav.querySelector('.tool-tabs');
+  const previousScrollLeft = previousTabs?.scrollLeft || 0;
+  const tabsMarkup = toolIds.map((id, index) => {
     const item = TOOL_DEFS[id];
     const active = id === 'navigation' ? state.section === 'tools' && state.tool === 'navigation' : state.section === 'tools' && state.tool === id;
     return '<button class="tab ' + (active ? 'active' : '') + '" draggable="true" data-tool="' + id + '" data-tool-index="' + index + '" aria-current="' + (active ? 'page' : 'false') + '"><span aria-hidden="true">' + item.icon + '</span>' + toolName(id) + '</button>';
   }).join('');
+  nav.innerHTML = '<div class="tool-tab-panel"><button class="feed-source-scroll-button" data-tool-scroll="previous" type="button" hidden aria-label="' + escapeHtml(t('feedTabPrevious')) + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5.25 8.25 12 15 18.75"/></svg></button><div class="tool-tabs" data-tab-rail="tools" role="tablist" aria-label="' + escapeHtml(t('tools')) + '">' + tabsMarkup + '</div><button class="feed-source-scroll-button" data-tool-scroll="next" type="button" hidden aria-label="' + escapeHtml(t('feedTabNext')) + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5.25 15.75 12 9 18.75"/></svg></button></div>';
+  const nextTabs = nav.querySelector('.tool-tabs');
+  if (nextTabs) {
+    nextTabs.scrollLeft = Math.min(previousScrollLeft, Math.max(0, nextTabs.scrollWidth - nextTabs.clientWidth));
+    nextTabs.addEventListener('scroll', updateToolTabOverflowControls, { passive: true });
+    requestAnimationFrame(updateToolTabOverflowControls);
+  }
   nav.title = t('reorderHint');
+}
+function focusActiveToolTab(smooth = false) {
+  const tabs = nav.querySelector('.tool-tabs');
+  const active = tabs?.querySelector('.tab.active');
+  if (!tabs || !active || tabs.scrollWidth <= tabs.clientWidth + 1) return;
+  const maxScroll = Math.max(0, tabs.scrollWidth - tabs.clientWidth);
+  const padding = 8;
+  const visibleLeft = tabs.scrollLeft + padding;
+  const visibleRight = tabs.scrollLeft + tabs.clientWidth - padding;
+  let target = tabs.scrollLeft;
+  if (active.offsetLeft < visibleLeft) target = active.offsetLeft - padding;
+  else if (active.offsetLeft + active.offsetWidth > visibleRight) target = active.offsetLeft + active.offsetWidth - tabs.clientWidth + padding;
+  target = Math.min(maxScroll, Math.max(0, target));
+  tabs.scrollTo({ left: target, behavior: smooth ? 'smooth' : 'auto' });
+}
+function updateToolTabOverflowControls() {
+  const panel = nav.querySelector('.tool-tab-panel');
+  const tabs = nav.querySelector('.tool-tabs');
+  const previous = nav.querySelector('[data-tool-scroll="previous"]');
+  const next = nav.querySelector('[data-tool-scroll="next"]');
+  if (!panel || !tabs || !previous || !next) return;
+  const maxScroll = Math.max(0, tabs.scrollWidth - tabs.clientWidth);
+  const hasOverflow = maxScroll > 1;
+  const hasPrevious = tabs.scrollLeft > 1;
+  const hasNext = tabs.scrollLeft < maxScroll - 1;
+  panel.classList.toggle('has-tool-overflow', hasOverflow);
+  panel.classList.toggle('has-tool-overflow-left', hasPrevious);
+  panel.classList.toggle('has-tool-overflow-right', hasNext);
+  previous.hidden = !hasPrevious;
+  next.hidden = !hasNext;
+}
+function scrollToolTabs(direction) {
+  const tabs = nav.querySelector('.tool-tabs');
+  if (!tabs) return;
+  tabs.scrollBy({ left: direction * Math.max(120, Math.round(tabs.clientWidth * .72)), behavior: 'smooth' });
 }
 function mainSectionEntries() {
   return Object.values(SECTION_DEFS).filter((item) => item.key !== 'navigation' || state.navigationLocation === 'main');
@@ -566,17 +610,20 @@ function renderBottomNav() {
 function selectTool(id) {
   if (id === 'convert') id = 'translate';
   if (!TOOL_DEFS[id]) id = 'calculator';
+  const revealActiveTab = () => requestAnimationFrame(() => { focusActiveToolTab(true); updateToolTabOverflowControls(); });
   if (id === 'navigation') {
     state.section = 'tools';
     state.tool = 'navigation';
     if (location.hash.slice(1) !== 'navigation') history.replaceState(null, '', '#navigation');
     renderNav(); renderBottomNav(); render();
+    revealActiveTab();
     return;
   }
   state.section = 'tools';
   state.tool = id;
   if (location.hash.slice(1) !== id) history.replaceState(null, '', '#' + id);
   renderNav(); renderBottomNav(); render();
+  revealActiveTab();
 }
 function selectSection(section) {
   if (!SECTION_DEFS[section]) section = 'tools';
@@ -3637,6 +3684,7 @@ function render() {
   }
   if (state.section === 'tools' && state.tool === 'calendar') ensureHolidayYear(state.month.getFullYear());
   renderBottomNav();
+  requestAnimationFrame(updateToolTabOverflowControls);
   updateNotificationBadge();
   if (state.recentReadingOpen) renderRecentReading();
   if (state.navigationDialog) renderNavigationDialog();
@@ -3795,7 +3843,7 @@ function finishNavigationDrag(event = null) {
   const combineTarget = drag.combineTarget;
   const folderTarget = drag.folderTarget;
   if (wasLongPressed) navigationSuppressClickUntil = Date.now() + 550;
-  if (!wasActive) { restoreNavigationDrag(drag); if (wasLongPressed) openNavigationActionsDialog(targetId, drag.target.dataset.navigationFolderId || ''); return wasLongPressed; }
+  if (!wasActive) { restoreNavigationDrag(drag); return wasLongPressed; }
   if (over && over.dataset.navigationType === 'site' && !combineTarget && !folderTarget) positionNavigationPlaceholder(drag, over, event?.clientX ?? drag.startX, event?.clientY ?? drag.startY);
   const overId = over?.dataset.navigationId;
   const source = navigationFindRootItem(targetId); const destination = navigationFindRootItem(overId);
@@ -4008,7 +4056,7 @@ function handleReorderClick(target, type, index) {
   return true;
 }
 function pageSwipeNavSelector(container) {
-  return container?.id === 'toolNav' ? '[data-tool]' : '[data-feed-source]';
+  return container?.dataset.tabRail === 'tools' ? '[data-tool]' : '[data-feed-source]';
 }
 function clearPageSwipeNav() {
   if (!pageSwipeNavState) return;
@@ -4103,7 +4151,8 @@ function finishTabSwipe() {
     clearPageSwipeNav();
     return;
   }
-  const selector = gesture.container.id === 'toolNav' ? '[data-tool]' : '[data-feed-source]';
+  const isToolRail = gesture.container.dataset.tabRail === 'tools';
+  const selector = isToolRail ? '[data-tool]' : '[data-feed-source]';
   const tabs = [...gesture.container.querySelectorAll(selector)];
   const currentIndex = tabs.findIndex((tab) => tab.classList.contains('active'));
   const nextIndex = currentIndex + (gesture.dx < 0 ? 1 : -1);
@@ -4116,7 +4165,7 @@ function finishTabSwipe() {
   tabSwipeSuppressClickUntil = Date.now() + 420;
   settlePageSwipeNav(true);
   clearPageSwipeNav();
-  if (gesture.container.id === 'toolNav') selectTool(nextTab.dataset.tool);
+  if (isToolRail) selectTool(nextTab.dataset.tool);
   else selectHomeFeedSource(nextTab.dataset.feedSource);
   requestAnimationFrame(() => gesture.container.querySelector('.active')?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' }));
 }
@@ -4313,14 +4362,21 @@ document.addEventListener('pointerup', () => {
   } else if (gesture.dx > 24) gesture.row.classList.remove('swiped');
 }, { passive: true });
 
-nav.addEventListener('pointerdown', (event) => { const tab = event.target.closest('[data-tool]'); if (tab) { startLongPress(tab, 'tool', Number(tab.dataset.toolIndex), event); beginTabSwipe(nav, event); } });
+nav.addEventListener('pointerdown', (event) => { const tab = event.target.closest('[data-tool]'); if (tab) { startLongPress(tab, 'tool', Number(tab.dataset.toolIndex), event); beginTabSwipe(nav.querySelector('.tool-tabs') || nav, event); } });
 nav.addEventListener('pointerup', endLongPress);
 nav.addEventListener('pointercancel', endLongPress);
 nav.addEventListener('click', (event) => {
+  const scrollButton = event.target.closest('[data-tool-scroll]');
+  if (scrollButton) {
+    event.preventDefault();
+    scrollToolTabs(scrollButton.dataset.toolScroll === 'previous' ? -1 : 1);
+    return;
+  }
   const tab = event.target.closest('[data-tool]'); if (!tab) return;
   if (Date.now() < reorderSuppressClickUntil || Date.now() < tabSwipeSuppressClickUntil || Date.now() < pageSwipeSuppressClickUntil) { event.preventDefault(); return; }
   if (handleReorderClick(tab, 'tool', Number(tab.dataset.toolIndex))) { event.preventDefault(); return; }
   selectTool(tab.dataset.tool);
+  requestAnimationFrame(() => focusActiveToolTab(true));
   if (tab.dataset.tool === 'weather') refreshWeatherCard(state.weatherCards.find((card) => card.id === state.activeWeatherId));
 });
 nav.addEventListener('dragstart', (event) => { const tab = event.target.closest('[data-tool]'); if (tab) event.dataTransfer.setData('text/plain', tab.dataset.toolIndex); });
