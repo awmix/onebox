@@ -1,5 +1,8 @@
 name: Deploy OneBox to GitHub Pages
 
+# Keep the Pages deployment workflow touchable for a safe retry after a
+# transient deploy-pages environment failure.
+
 on:
   push:
     branches: [main]
