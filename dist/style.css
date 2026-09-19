@@ -7855,9 +7855,9 @@ main:has(#toolNav[hidden]):has(#workspace[data-tool="navigation"]) { padding-top
   #navigationDialog .navigation-folder-dialog-toolbar { margin: -2px -2px 6px; }
 }
 
-/* 2.18.188: keep the navigation guidance beside the settings control without
-   bringing back the large page title. The same compact toolbar is used in
-   both the main-navigation and tools-tab placements. */
+/* 2.18.189: keep the navigation guidance on one line to the left of the
+   settings control. The same compact toolbar is used in both the
+   main-navigation and tools-tab placements. */
 #workspace[data-tool="navigation"] .navigation-page-toolbar {
   align-items: center;
 }
@@ -7867,23 +7867,14 @@ main:has(#toolNav[hidden]):has(#workspace[data-tool="navigation"]) { padding-top
   gap: 10px;
 }
 #workspace[data-tool="navigation"] .navigation-toolbar-caption {
-  display: grid;
+  display: block;
+  max-width: min(260px, calc(100vw - 90px));
   min-width: 0;
-  gap: 2px;
-  text-align: right;
-}
-#workspace[data-tool="navigation"] .navigation-toolbar-caption strong {
-  color: var(--ink);
-  font-size: 12px;
-  font-weight: 800;
-  line-height: 1.1;
-}
-#workspace[data-tool="navigation"] .navigation-toolbar-caption small {
-  max-width: 220px;
   overflow: hidden;
   color: var(--muted);
-  font-size: 10px;
-  line-height: 1.2;
+  font-size: 11px;
+  line-height: 1;
+  text-align: right;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -7940,11 +7931,5 @@ main:has(#toolNav[hidden]):has(#workspace[data-tool="navigation"]) { padding-top
 }
 @media (max-width: 600px) {
   #workspace[data-tool="navigation"] .navigation-page-tools { gap: 8px; }
-  #workspace[data-tool="navigation"] .navigation-toolbar-caption small { max-width: 170px; }
-}
-
-#workspace[data-tool="navigation"] .navigation-grid > .navigation-card.navigation-actions-visible .navigation-card-actions {
-  display: inline-flex !important;
-  opacity: 1 !important;
-  pointer-events: auto !important;
+  #workspace[data-tool="navigation"] .navigation-toolbar-caption { max-width: min(220px, calc(100vw - 82px)); }
 }

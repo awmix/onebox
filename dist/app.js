@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.188';
+const APP_VERSION = '2.18.189';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -316,12 +316,16 @@ function navigationSafeUrl(value) {
 function navigationNameFromUrl(value) {
   try { return new URL(value).hostname.replace(/^www\./i, ''); } catch { return ''; }
 }
+function navigationUsesDesktopBrandIcon(value) {
+  try { return /(^|\.)bilibili\.com$/i.test(new URL(value).hostname); } catch { return false; }
+}
 function navigationIconSources(value) {
   const url = navigationSafeUrl(value);
   if (!url) return [];
   try {
     const parsed = new URL(url);
     const hostname = parsed.hostname;
+    if (navigationUsesDesktopBrandIcon(url)) return ['https://static.hdslb.com/images/favicon.ico', 'https://www.bilibili.com/favicon.ico'];
     return [...new Set([
       parsed.origin + '/apple-touch-icon.png',
       parsed.origin + '/apple-touch-icon-precomposed.png',
@@ -1285,7 +1289,8 @@ function navigationIconMarkup(site, extraClass = '') {
   const sources = [...new Set([preferredIcon, ...navigationIconSources(site?.url)].filter(Boolean))];
   const icon = sources.shift() || '';
   const fallbackAttribute = sources.length ? ' data-fallback-sources="' + escapeHtml(sources.join('|')) + '"' : '';
-  return '<span class="navigation-site-icon ' + extraClass + '"><img src="' + escapeHtml(icon) + '" alt="" loading="lazy" referrerpolicy="no-referrer"' + fallbackAttribute + ' onload="handleNavigationIconLoad(this)" onerror="handleNavigationIconError(this)"><span class="navigation-icon-fallback" hidden aria-hidden="true"><i class="navigation-fallback-orb navigation-fallback-orb-a"></i><i class="navigation-fallback-orb navigation-fallback-orb-b"></i><strong>' + fallback + '</strong></span></span>';
+  const desktopIconAttribute = navigationUsesDesktopBrandIcon(site?.url) ? ' data-prefer-desktop-icon="true"' : '';
+  return '<span class="navigation-site-icon ' + extraClass + '"><img src="' + escapeHtml(icon) + '" alt="" loading="lazy" referrerpolicy="no-referrer"' + desktopIconAttribute + fallbackAttribute + ' onload="handleNavigationIconLoad(this)" onerror="handleNavigationIconError(this)"><span class="navigation-icon-fallback" hidden aria-hidden="true"><i class="navigation-fallback-orb navigation-fallback-orb-a"></i><i class="navigation-fallback-orb navigation-fallback-orb-b"></i><strong>' + fallback + '</strong></span></span>';
 }
 function advanceNavigationIcon(image, allowLowResolution = false) {
   if (!image?.dataset?.fallbackSources) return false;
@@ -1298,6 +1303,7 @@ function advanceNavigationIcon(image, allowLowResolution = false) {
   return true;
 }
 function handleNavigationIconLoad(image) {
+  if (image?.dataset?.preferDesktopIcon === 'true') return;
   advanceNavigationIcon(image, true);
 }
 function handleNavigationIconError(image) {
@@ -1339,7 +1345,6 @@ function clearNavigationActionCards(except = null) {
   $$('#workspace[data-tool="navigation"] .navigation-card.navigation-actions-visible').forEach((card) => {
     if (card !== except) card.classList.remove('navigation-actions-visible');
   });
-  navigationLastTap = null;
 }
 function navigationSettingsMarkup() {
   if (!state.navigationSettingsOpen) return '';
@@ -1352,7 +1357,7 @@ function renderNavigation() {
   const emptyBody = '<button class="navigation-card navigation-empty-add-card" type="button" data-open-navigation-add aria-label="' + escapeHtml(t('navigationAdd')) + '"><span class="navigation-add-glyph">＋</span><strong>' + escapeHtml(t('navigationAdd')) + '</strong><small>' + escapeHtml(t('navigationEmpty')) + '</small></button>';
   const body = items.length ? items.map((item, index) => navigationItemMarkup(item, index)).join('') + '<button class="navigation-card navigation-add-card" type="button" data-open-navigation-add aria-label="' + escapeHtml(t('navigationAdd')) + '"><span class="navigation-add-glyph">＋</span><strong>' + escapeHtml(t('navigationAdd')) + '</strong></button>' : emptyBody;
   const settingsButtonMarkup = '<button class="icon-btn header-icon navigation-settings-button" type="button" data-open-navigation-settings aria-expanded="' + String(state.navigationSettingsOpen) + '" aria-label="' + escapeHtml(t('navigationSettings')) + '"><svg class="header-line-icon settings-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 12h2M10 12h10M4 17h10M18 17h2"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="12" r="2"/><circle cx="16" cy="17" r="2"/></svg></button>';
-  const toolbarCaption = '<div class="navigation-toolbar-caption"><strong>' + escapeHtml(t('navigationSettings')) + '</strong><small>' + escapeHtml(t('navigationToolbarHint')) + '</small></div>';
+  const toolbarCaption = '<span class="navigation-toolbar-caption">' + escapeHtml(t('navigationToolbarHint')) + '</span>';
   return '<div class="section-page navigation-page"><div class="navigation-page-toolbar"><div class="navigation-page-tools">' + toolbarCaption + settingsButtonMarkup + navigationSettingsMarkup() + '</div></div><div class="navigation-grid">' + body + '</div></div>';
 }
 function renderNavigationAddDialog(folderId = '', site = null) {
@@ -3779,7 +3784,6 @@ let navigationDrag = null;
 let navigationDialogPressTimer = null;
 let navigationDialogPress = null;
 let navigationSuppressClickUntil = 0;
-let navigationLastTap = null;
 function clearNavigationCombineTimer(drag = navigationDrag) {
   if (!drag) return;
   clearTimeout(drag.combineTimer);
@@ -4606,7 +4610,6 @@ workspace.addEventListener('click', async (event) => {
   if (Date.now() < reorderSuppressClickUntil || Date.now() < pageSwipeSuppressClickUntil) { event.preventDefault(); return; }
   const navigationPage = state.section === 'navigation' || (state.section === 'tools' && state.tool === 'navigation');
   if (navigationPage && !event.target.closest('[data-navigation-item]')) clearNavigationActionCards();
-  if (!event.target.closest('[data-navigation-open-site], [data-navigation-open-folder]')) navigationLastTap = null;
   if (Date.now() < navigationSuppressClickUntil && event.target.closest('[data-navigation-item]') && !event.target.closest('[data-navigation-delete], [data-navigation-edit]')) { event.preventDefault(); return; }
   if (Date.now() < readerBookSuppressClickUntil && event.target.closest('[data-reader-book-card]')) { event.preventDefault(); return; }
   if (Date.now() < swipeSuppressClickUntil && event.target.closest('[data-swipe-row]') && !event.target.closest('.swipe-delete')) return;
@@ -4642,17 +4645,8 @@ workspace.addEventListener('click', async (event) => {
   if (navigationPrimary) {
     event.preventDefault(); event.stopPropagation();
     const card = navigationPrimary.closest('[data-navigation-item]');
-    const now = Date.now();
-    const isSecondTap = navigationLastTap?.card === card && now - navigationLastTap.at < 420;
-    if (isSecondTap) {
-      navigationLastTap = null;
-      if (navigationPrimary.matches('[data-navigation-open-folder]')) return openNavigationFolderDialog(card.dataset.navigationId);
-      return openNavigationSite(card.querySelector('[data-navigation-open-site]') || navigationPrimary);
-    }
-    clearNavigationActionCards(card);
-    card?.classList.add('navigation-actions-visible');
-    navigationLastTap = { card, at: now };
-    return;
+    if (navigationPrimary.matches('[data-navigation-open-folder]')) return openNavigationFolderDialog(card.dataset.navigationId);
+    return openNavigationSite(card.querySelector('[data-navigation-open-site]') || navigationPrimary);
   }
   const navigationEdit = event.target.closest('[data-navigation-edit]');
   if (navigationEdit) {
