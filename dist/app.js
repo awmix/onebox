@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.186';
+const APP_VERSION = '2.18.187';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -314,15 +314,25 @@ function navigationSafeUrl(value) {
 function navigationNameFromUrl(value) {
   try { return new URL(value).hostname.replace(/^www\./i, ''); } catch { return ''; }
 }
-function navigationIconUrl(value) {
+function navigationIconSources(value) {
   const url = navigationSafeUrl(value);
-  if (!url) return '';
-  try { return 'https://www.google.com/s2/favicons?domain=' + encodeURIComponent(new URL(url).hostname) + '&sz=128'; } catch { return ''; }
+  if (!url) return [];
+  try {
+    const parsed = new URL(url);
+    const hostname = parsed.hostname;
+    return [...new Set([
+      parsed.origin + '/favicon.ico',
+      'https://icons.duckduckgo.com/ip3/' + hostname + '.ico',
+      'https://www.google.com/s2/favicons?domain=' + encodeURIComponent(hostname) + '&sz=128'
+    ])];
+  } catch { return []; }
 }
-function navigationIconFallbackUrl(value) {
-  const url = navigationSafeUrl(value);
-  if (!url) return '';
-  try { return 'https://icons.duckduckgo.com/ip3/' + new URL(url).hostname + '.ico'; } catch { return ''; }
+function navigationIconUrl(value) { return navigationIconSources(value)[0] || ''; }
+function isNavigationIconServiceUrl(value) {
+  try {
+    const url = new URL(String(value || ''));
+    return (url.hostname === 'www.google.com' && url.pathname === '/s2/favicons') || (url.hostname === 'icons.duckduckgo.com' && url.pathname.startsWith('/ip3/'));
+  } catch { return false; }
 }
 function normalizeNavigation(value) {
   const rawItems = Array.isArray(value?.items) ? value.items : Array.isArray(value) ? value : [];
@@ -336,7 +346,7 @@ function normalizeNavigation(value) {
     const url = navigationSafeUrl(item?.url);
     if (!url) return null;
     const storedIcon = navigationSafeUrl(item?.icon);
-    const icon = storedIcon && !storedIcon.includes('icons.duckduckgo.com') ? storedIcon : navigationIconUrl(url);
+    const icon = storedIcon && !isNavigationIconServiceUrl(storedIcon) ? storedIcon : navigationIconUrl(url);
     return { id: uniqueId(item?.id, 'site'), type: 'site', name: String(item?.name || navigationNameFromUrl(url)).trim() || navigationNameFromUrl(url), url, icon, createdAt: Number(item?.createdAt) || Date.now() };
   };
   const items = rawItems.map((item) => {
@@ -1261,10 +1271,12 @@ function renderHome() {
 }
 function navigationIconMarkup(site, extraClass = '') {
   const fallback = escapeHtml(String(site?.name || '?').trim().slice(0, 1).toUpperCase() || '?');
-  const icon = site?.icon || navigationIconUrl(site?.url);
-  const backup = navigationIconFallbackUrl(site?.url);
-  const fallbackAttribute = backup && backup !== icon ? ' data-fallback-src="' + escapeHtml(backup) + '"' : '';
-  return '<span class="navigation-site-icon ' + extraClass + '"><img src="' + escapeHtml(icon) + '" alt="" loading="lazy"' + fallbackAttribute + ' onerror="if(this.dataset.fallbackSrc){this.src=this.dataset.fallbackSrc;this.dataset.fallbackSrc=\'\';}else{this.hidden=true;this.nextElementSibling.hidden=false;}"><span class="navigation-icon-fallback" hidden>' + fallback + '</span></span>';
+  const preferredIcon = site?.icon && !isNavigationIconServiceUrl(site.icon) ? site.icon : '';
+  const sources = [...new Set([preferredIcon, ...navigationIconSources(site?.url)].filter(Boolean))];
+  const icon = sources.shift() || '';
+  const fallbackAttribute = sources.length ? ' data-fallback-sources="' + escapeHtml(sources.join('|')) + '"' : '';
+  const errorHandler = "if(this.dataset.fallbackSources){const sources=this.dataset.fallbackSources.split('|');const next=sources.shift();this.dataset.fallbackSources=sources.join('|');if(next){this.src=next;return;}}this.hidden=true;this.nextElementSibling.hidden=false;";
+  return '<span class="navigation-site-icon ' + extraClass + '"><img src="' + escapeHtml(icon) + '" alt="" loading="lazy" referrerpolicy="no-referrer"' + fallbackAttribute + ' onerror="' + errorHandler + '"><span class="navigation-icon-fallback" hidden>' + fallback + '</span></span>';
 }
 function navigationItemMarkup(item, index = 0, folderId = '') {
   const folderAttribute = folderId ? ' data-navigation-folder-id="' + escapeHtml(folderId) + '"' : '';
