@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.177';
+const APP_VERSION = '2.18.178';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -1277,7 +1277,7 @@ function navigationItemMarkup(item, index = 0, folderId = '') {
     return '<article class="navigation-card navigation-folder-card" data-navigation-item data-navigation-type="folder" data-navigation-id="' + escapeHtml(item.id) + '"' + indexAttribute + '>' + actionButtons + '<button class="navigation-card-main" type="button" data-navigation-open-folder="' + escapeHtml(item.id) + '" aria-label="' + escapeHtml(item.name) + '"><span class="navigation-folder-preview">' + preview + '</span><strong>' + escapeHtml(item.name) + '</strong><small>' + escapeHtml(t('navigationSiteCount').replace('{count}', String(item.children.length))) + '</small></button></article>';
   }
   const target = state.openMode === 'new-tab' ? ' target="_blank" rel="noreferrer"' : '';
-  return '<article class="navigation-card navigation-site-card" data-navigation-item data-navigation-type="site" data-navigation-id="' + escapeHtml(item.id) + '"' + folderAttribute + indexAttribute + '>' + actionButtons + '<a class="navigation-card-main" draggable="false" href="' + escapeHtml(item.url) + '"' + target + ' aria-label="' + escapeHtml(t('navigationOpen') + ' ' + item.name) + '">' + navigationIconMarkup(item) + '<strong>' + escapeHtml(item.name) + '</strong></a></article>';
+  return '<article class="navigation-card navigation-site-card" data-navigation-item data-navigation-type="site" data-navigation-id="' + escapeHtml(item.id) + '"' + folderAttribute + indexAttribute + '>' + actionButtons + '<a class="navigation-card-main" data-navigation-open-site draggable="false" href="' + escapeHtml(item.url) + '"' + target + ' aria-label="' + escapeHtml(t('navigationOpen') + ' ' + item.name) + '">' + navigationIconMarkup(item) + '<strong>' + escapeHtml(item.name) + '</strong></a></article>';
 }
 function navigationFindFolder(id) { return state.navigation.items.find((item) => item.type === 'folder' && item.id === id) || null; }
 function navigationFindRootItem(id) { return state.navigation.items.find((item) => item.id === id) || null; }
@@ -1289,6 +1289,12 @@ function navigationEverySite() {
   return state.navigation.items.flatMap((item) => item.type === 'folder' ? item.children : [item]).filter((item) => item.type === 'site');
 }
 function saveNavigation() { saveStored(STORAGE.navigation, state.navigation); }
+function openNavigationSite(link) {
+  const url = safeExternalUrl(link?.getAttribute('href'));
+  if (!url) return;
+  if (link.target === '_blank') window.open(url, '_blank', 'noopener,noreferrer');
+  else window.location.assign(url);
+}
 function renderNavigation() {
   const items = state.navigation.items || [];
   const emptyBody = '<button class="navigation-card navigation-empty-add-card" type="button" data-open-navigation-add aria-label="' + escapeHtml(t('navigationAdd')) + '"><span class="navigation-add-glyph">＋</span><strong>' + escapeHtml(t('navigationAdd')) + '</strong><small>' + escapeHtml(t('navigationEmpty')) + '</small></button>';
@@ -3716,6 +3722,7 @@ let readerBookSuppressClickUntil = 0;
 let navigationPressTimer = null;
 let navigationDrag = null;
 let navigationSuppressClickUntil = 0;
+let navigationLastTap = null;
 function clearNavigationCombineTimer(drag = navigationDrag) {
   if (!drag) return;
   clearTimeout(drag.combineTimer);
@@ -4494,6 +4501,7 @@ workspace.addEventListener('contextmenu', (event) => {
 });
 workspace.addEventListener('click', async (event) => {
   if (Date.now() < reorderSuppressClickUntil || Date.now() < pageSwipeSuppressClickUntil) { event.preventDefault(); return; }
+  if (!event.target.closest('[data-navigation-open-site], [data-navigation-open-folder]')) navigationLastTap = null;
   if (Date.now() < navigationSuppressClickUntil && event.target.closest('[data-navigation-item]') && !event.target.closest('[data-navigation-delete], [data-navigation-edit]')) { event.preventDefault(); return; }
   if (Date.now() < readerBookSuppressClickUntil && event.target.closest('[data-reader-book-card]')) { event.preventDefault(); return; }
   if (Date.now() < swipeSuppressClickUntil && event.target.closest('[data-swipe-row]') && !event.target.closest('.swipe-delete')) return;
@@ -4513,8 +4521,30 @@ workspace.addEventListener('click', async (event) => {
     event.preventDefault(); event.stopPropagation();
     return deleteNavigationSite(navigationDelete.dataset.navigationDelete, navigationDelete.closest('[data-navigation-folder-id]')?.dataset.navigationFolderId || '');
   }
+  const navigationSiteLink = event.target.closest('[data-navigation-open-site]');
+  if (navigationSiteLink) {
+    event.preventDefault(); event.stopPropagation();
+    const card = navigationSiteLink.closest('[data-navigation-item]');
+    const now = Date.now();
+    const isDoubleTap = event.detail >= 2 || (navigationLastTap?.link === navigationSiteLink && now - navigationLastTap.at < 360);
+    if (isDoubleTap) { navigationLastTap = null; return openNavigationSite(navigationSiteLink); }
+    navigationLastTap = { link: navigationSiteLink, at: now };
+    $$('.navigation-card.navigation-actions-visible').forEach((item) => { if (item !== card) item.classList.remove('navigation-actions-visible'); });
+    card?.classList.toggle('navigation-actions-visible');
+    return;
+  }
   const navigationFolder = event.target.closest('[data-navigation-open-folder]');
-  if (navigationFolder) return openNavigationFolderDialog(navigationFolder.dataset.navigationOpenFolder);
+  if (navigationFolder) {
+    event.preventDefault(); event.stopPropagation();
+    const card = navigationFolder.closest('[data-navigation-item]');
+    const now = Date.now();
+    const isDoubleTap = event.detail >= 2 || (navigationLastTap?.link === navigationFolder && now - navigationLastTap.at < 360);
+    if (isDoubleTap) { navigationLastTap = null; return openNavigationFolderDialog(navigationFolder.dataset.navigationOpenFolder); }
+    navigationLastTap = { link: navigationFolder, at: now };
+    $$('.navigation-card.navigation-actions-visible').forEach((item) => { if (item !== card) item.classList.remove('navigation-actions-visible'); });
+    card?.classList.toggle('navigation-actions-visible');
+    return;
+  }
   if (event.target.closest('[data-reader-layout-toggle]')) {
     state.readerLayout = state.readerLayout === 'list' ? 'grid' : 'list';
     saveReaderLayout(); return render();

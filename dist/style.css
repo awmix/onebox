@@ -7392,3 +7392,66 @@ main:has(#toolNav[hidden]):has(#workspace[data-tool="navigation"]) { padding-top
   #workspace[data-tool="navigation"] .navigation-card-actions { top: -2px; right: -2px; gap: 2px; }
   #workspace[data-tool="navigation"] .navigation-card-actions button { width: 20px; height: 20px; }
 }
+
+/* 2.18.178: a single tap selects a site and reveals its compact actions;
+   opening the URL requires a double tap. Keep the action bar attached to the
+   card instead of floating two unrelated circles above it. */
+#workspace[data-tool="navigation"] .navigation-card-actions {
+  top: 4px;
+  right: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+  padding: 3px;
+  border: 1px solid color-mix(in srgb, var(--line) 88%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--panel) 86%, transparent);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--ink) 12%, transparent);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transform: translateY(-3px) scale(.94);
+  transform-origin: top right;
+  transition: opacity .16s ease, transform .16s ease;
+}
+#workspace[data-tool="navigation"] .navigation-card.navigation-actions-visible .navigation-card-actions,
+#workspace[data-tool="navigation"] .navigation-card.navigation-long-pressed .navigation-card-actions,
+#workspace[data-tool="navigation"] .navigation-card:focus-within .navigation-card-actions {
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  transform: none;
+}
+#workspace[data-tool="navigation"] .navigation-card:hover .navigation-card-actions {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+#workspace[data-tool="navigation"] .navigation-card.navigation-actions-visible:hover .navigation-card-actions,
+#workspace[data-tool="navigation"] .navigation-card.navigation-long-pressed:hover .navigation-card-actions,
+#workspace[data-tool="navigation"] .navigation-card:focus-within:hover .navigation-card-actions {
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+#workspace[data-tool="navigation"] .navigation-card-actions button {
+  width: 22px;
+  height: 22px;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+#workspace[data-tool="navigation"] .navigation-card-actions button:hover,
+#workspace[data-tool="navigation"] .navigation-card-actions button:focus-visible {
+  background: var(--soft);
+}
+#workspace[data-tool="navigation"] .navigation-card-actions .navigation-delete-action:hover,
+#workspace[data-tool="navigation"] .navigation-card-actions .navigation-delete-action:focus-visible {
+  background: color-mix(in srgb, var(--danger) 12%, transparent);
+}
+@media (max-width: 600px) {
+  #workspace[data-tool="navigation"] .navigation-card-actions {
+    top: 3px;
+    right: 3px;
+    padding: 2px;
+  }
+  #workspace[data-tool="navigation"] .navigation-card-actions button { width: 20px; height: 20px; }
+}
