@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.175';
+const APP_VERSION = '2.18.176';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -196,7 +196,7 @@ const DICT = {
     commute: '出行', sport: '运动', clothing: '穿衣', sunscreen: '防晒', hiking: '爬山',
     addCard: '添加', noResults: '没有找到匹配地点，请换个关键词。',
     home: '首页', tools: '工具', navigation: '导航', messages: '消息', mine: '我的', quickTools: '常用工具', openSettings: '打开设置', noMessages: '还没有消息。', homeTabs: '首页', homeTabsSelected: '已选择 {count} 项', homeSourceManage: '首页来源', homeSourceManageHint: '选择要显示在首页导航中的来源', homeSourceAdd: '添加', homeSourceRemove: '移除', homeSourceEmpty: '暂时没有其他来源',
-    navigationTitle: '网站导航', navigationHint: '把常用网站放在一起，长按可以删除或拖动排序。', navigationAdd: '添加网站', navigationEmpty: '还没有网站，先添加一个常用网址吧。', navigationUrl: '网站地址', navigationUrlPlaceholder: '粘贴或输入网址', navigationName: '网站名称', navigationNamePlaceholder: '可选，默认使用网站名称', navigationIcon: '网站图标', navigationIconHint: '输入网址后自动获取', navigationSave: '保存网站', navigationEdit: '编辑网站', navigationEditSave: '保存修改', navigationAddToFolder: '添加到文件夹', navigationFolder: '文件夹', navigationFolderName: '文件夹名称', navigationFolderPlaceholder: '例如：工作、阅读', navigationCreateFolder: '新建文件夹', navigationSaveFolder: '保存文件夹', navigationFolderAdd: '添加网站', navigationFolderDelete: '删除文件夹', navigationFolderDeleteConfirm: '删除文件夹后，里面的网站也会一起移除，确定继续吗？', navigationFolderEmpty: '文件夹还是空的，添加几个网站吧。', navigationRemove: '删除', navigationOpen: '打开网站', navigationAlreadyExists: '这个网站已经添加过了', navigationInvalidUrl: '请输入有效的 http 或 https 地址', navigationDropHint: '松开后聚合为文件夹', navigationFolderCreated: '文件夹已创建', navigationAdded: '网站已添加', navigationDeleted: '网站已删除', navigationMoved: '网站已移入文件夹', navigationOrderSaved: '导航顺序已保存', navigationSiteCount: '{count} 个网站',
+    navigationTitle: '网站导航', navigationHint: '把常用网站放在一起，长按可以删除或拖动排序。', navigationAdd: '添加网站', navigationEmpty: '还没有网站，先添加一个常用网址吧。', navigationUrl: '网站地址', navigationUrlPlaceholder: '粘贴或输入网址', navigationName: '网站名称', navigationNamePlaceholder: '可选，默认使用网站名称', navigationIcon: '网站图标', navigationIconHint: '输入网址后自动获取', navigationSave: '保存网站', navigationEdit: '编辑网站', navigationEditSave: '保存修改', navigationActionEdit: '编辑', navigationActionDelete: '删除', navigationActionCancel: '取消', navigationFolderEdit: '编辑文件夹', navigationAddToFolder: '添加到文件夹', navigationFolder: '文件夹', navigationFolderName: '文件夹名称', navigationFolderPlaceholder: '例如：工作、阅读', navigationCreateFolder: '新建文件夹', navigationSaveFolder: '保存文件夹', navigationFolderAdd: '添加网站', navigationFolderDelete: '删除文件夹', navigationFolderDeleteConfirm: '删除文件夹后，里面的网站也会一起移除，确定继续吗？', navigationFolderEmpty: '文件夹还是空的，添加几个网站吧。', navigationRemove: '删除', navigationOpen: '打开网站', navigationAlreadyExists: '这个网站已经添加过了', navigationInvalidUrl: '请输入有效的 http 或 https 地址', navigationDropHint: '松开后聚合为文件夹', navigationFolderCreated: '文件夹已创建', navigationAdded: '网站已添加', navigationDeleted: '网站已删除', navigationMoved: '网站已移入文件夹', navigationOrderSaved: '导航顺序已保存', navigationSiteCount: '{count} 个网站',
     allFeeds: '全部', feedRefresh: '刷新', feedLoading: '正在加载信息流…', feedEmpty: '暂时没有可显示的内容。', feedUpdated: '更新于', feedOpen: '打开原文', feedPartial: '部分订阅源暂时不可用', feedProxyHint: '内容来自公开 RSS 订阅，首页只保留最近内容。', feedTabPrevious: '查看前面的首页 Tab', feedTabNext: '查看后面的首页 Tab',
     converterType: '换算类型', from: '从', to: '到', result: '结果', swap: '交换单位', copyResult: '复制结果',
     copied: '已复制', translationInput: '输入待翻译内容', translateNow: '开始翻译', saveTranslation: '保存到本机',
@@ -239,8 +239,8 @@ const DICT = {
     commute: 'Travel', sport: 'Sport', clothing: 'Clothing', sunscreen: 'Sun care', hiking: 'Hiking',
     addCard: 'Add', noResults: 'No matching place. Try another query.',
     home: 'Home', tools: 'Tools', navigation: 'Navigation', messages: 'Messages', mine: 'Me', quickTools: 'Quick tools', openSettings: 'Open settings', noMessages: 'No messages yet.', homeTabs: 'Home', homeTabsSelected: '{count} selected',
-    navigationTitle: 'Web navigation', navigationHint: 'Keep your favorite sites together. Long-press to delete or reorder.', navigationAdd: 'Add website', navigationEmpty: 'No websites yet. Add a favorite site to get started.', navigationUrl: 'Website URL', navigationUrlPlaceholder: 'https://example.com', navigationName: 'Website name', navigationNamePlaceholder: 'Optional; defaults to the site name', navigationIcon: 'Website icon', navigationIconHint: 'Fetched automatically from the URL', navigationSave: 'Save website', navigationAddToFolder: 'Add to folder', navigationFolder: 'Folder', navigationFolderName: 'Folder name', navigationFolderPlaceholder: 'For example: Work, Reading', navigationCreateFolder: 'New folder', navigationSaveFolder: 'Save folder', navigationFolderAdd: 'Add website', navigationFolderDelete: 'Delete folder', navigationFolderDeleteConfirm: 'Deleting the folder will also remove its websites. Continue?', navigationFolderEmpty: 'This folder is empty. Add some websites.', navigationRemove: 'Delete', navigationOpen: 'Open website', navigationAlreadyExists: 'This website has already been added', navigationInvalidUrl: 'Enter a valid http or https URL', navigationDropHint: 'Release to create a folder', navigationFolderCreated: 'Folder created', navigationAdded: 'Website added', navigationDeleted: 'Website deleted', navigationMoved: 'Website moved into folder', navigationOrderSaved: 'Navigation order saved', navigationSiteCount: '{count} sites',
-    allFeeds: 'All', feedRefresh: 'Refresh', feedLoading: 'Loading feeds…', feedEmpty: 'No items to show yet.', feedUpdated: 'Updated', feedOpen: 'Open original', feedPartial: 'Some feeds are temporarily unavailable', feedProxyHint: 'Public RSS subscriptions; only recent items are kept on this device.', feedTabPrevious: 'Show previous home tabs', feedTabNext: 'Show more home tabs', navigationEdit: 'Edit website', navigationEditSave: 'Save changes',
+    navigationTitle: 'Web navigation', navigationHint: 'Keep your favorite sites together. Long-press to delete or reorder.', navigationAdd: 'Add website', navigationEmpty: 'No websites yet. Add a favorite site to get started.', navigationUrl: 'Website URL', navigationUrlPlaceholder: 'https://example.com', navigationName: 'Website name', navigationNamePlaceholder: 'Optional; defaults to the site name', navigationIcon: 'Website icon', navigationIconHint: 'Fetched automatically from the URL', navigationSave: 'Save website', navigationAddToFolder: 'Add to folder', navigationEdit: 'Edit website', navigationEditSave: 'Save changes', navigationActionEdit: 'Edit', navigationActionDelete: 'Delete', navigationActionCancel: 'Cancel', navigationFolderEdit: 'Edit folder', navigationFolder: 'Folder', navigationFolderName: 'Folder name', navigationFolderPlaceholder: 'For example: Work, Reading', navigationCreateFolder: 'New folder', navigationSaveFolder: 'Save folder', navigationFolderAdd: 'Add website', navigationFolderDelete: 'Delete folder', navigationFolderDeleteConfirm: 'Deleting the folder will also remove its websites. Continue?', navigationFolderEmpty: 'This folder is empty. Add some websites.', navigationRemove: 'Delete', navigationOpen: 'Open website', navigationAlreadyExists: 'This website has already been added', navigationInvalidUrl: 'Enter a valid http or https URL', navigationDropHint: 'Release to create a folder', navigationFolderCreated: 'Folder created', navigationAdded: 'Website added', navigationDeleted: 'Website deleted', navigationMoved: 'Website moved into folder', navigationOrderSaved: 'Navigation order saved', navigationSiteCount: '{count} sites',
+    allFeeds: 'All', feedRefresh: 'Refresh', feedLoading: 'Loading feeds…', feedEmpty: 'No items to show yet.', feedUpdated: 'Updated', feedOpen: 'Open original', feedPartial: 'Some feeds are temporarily unavailable', feedProxyHint: 'Public RSS subscriptions; only recent items are kept on this device.', feedTabPrevious: 'Show previous home tabs', feedTabNext: 'Show more home tabs',
     converterType: 'Conversion', from: 'From', to: 'To', result: 'Result', swap: 'Swap units', copyResult: 'Copy result',
     copied: 'Copied', translationInput: 'Text to translate', translateNow: 'Translate', saveTranslation: 'Save locally',
     source: 'Source', target: 'Target', translationResult: 'Translation', translationHistory: 'Recent translations',
@@ -517,7 +517,10 @@ SECTION_DEFS.navigation.icon = '<svg viewBox="0 0 24 24" aria-hidden="true"><cir
 SECTION_DEFS.navigation.activeIcon = '<svg class="filled-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 12 2.5Zm4.55 6.32-2.19 5.47-5.36 2.2a.9.9 0 0 1-1.18-1.17l2.15-5.34 5.41-2.27a.9.9 0 0 1 1.17 1.11Z"/></svg>';
 const sectionIcon = (item, active) => active ? item.activeIcon : item.icon;
 function renderNav() {
-  const toolIds = state.navigationLocation === 'tools' ? state.toolOrder : state.toolOrder.filter((id) => id !== 'navigation');
+  const includeNavigation = state.navigationLocation === 'tools';
+  const normalizedOrder = normalizeToolOrder(state.toolOrder, includeNavigation);
+  if (normalizedOrder.join('|') !== state.toolOrder.join('|')) { state.toolOrder = normalizedOrder; saveToolOrder(); }
+  const toolIds = includeNavigation ? normalizedOrder : normalizedOrder.filter((id) => id !== 'navigation');
   nav.innerHTML = toolIds.map((id, index) => {
     const item = TOOL_DEFS[id];
     const active = id === 'navigation' ? state.section === 'tools' && state.tool === 'navigation' : state.section === 'tools' && state.tool === id;
@@ -1227,7 +1230,7 @@ function navigationItemMarkup(item, index = 0, folderId = '') {
     return '<article class="navigation-card navigation-folder-card" data-navigation-item data-navigation-type="folder" data-navigation-id="' + escapeHtml(item.id) + '"' + indexAttribute + '>' + actionButtons + '<button class="navigation-card-main" type="button" data-navigation-open-folder="' + escapeHtml(item.id) + '" aria-label="' + escapeHtml(item.name) + '"><span class="navigation-folder-preview">' + preview + '</span><strong>' + escapeHtml(item.name) + '</strong><small>' + escapeHtml(t('navigationSiteCount').replace('{count}', String(item.children.length))) + '</small></button></article>';
   }
   const target = state.openMode === 'new-tab' ? ' target="_blank" rel="noreferrer"' : '';
-  return '<article class="navigation-card navigation-site-card" data-navigation-item data-navigation-type="site" data-navigation-id="' + escapeHtml(item.id) + '"' + folderAttribute + indexAttribute + '>' + actionButtons + '<a class="navigation-card-main" draggable="false" href="' + escapeHtml(item.url) + '"' + target + ' aria-label="' + escapeHtml(t('navigationOpen') + ' ' + item.name) + '">' + navigationIconMarkup(item) + '<strong>' + escapeHtml(item.name) + '</strong><small>' + escapeHtml(navigationNameFromUrl(item.url)) + '</small></a></article>';
+  return '<article class="navigation-card navigation-site-card" data-navigation-item data-navigation-type="site" data-navigation-id="' + escapeHtml(item.id) + '"' + folderAttribute + indexAttribute + '>' + actionButtons + '<a class="navigation-card-main" draggable="false" href="' + escapeHtml(item.url) + '"' + target + ' aria-label="' + escapeHtml(t('navigationOpen') + ' ' + item.name) + '">' + navigationIconMarkup(item) + '<strong>' + escapeHtml(item.name) + '</strong></a></article>';
 }
 function navigationFindFolder(id) { return state.navigation.items.find((item) => item.type === 'folder' && item.id === id) || null; }
 function navigationFindRootItem(id) { return state.navigation.items.find((item) => item.id === id) || null; }
@@ -1275,6 +1278,7 @@ function renderNavigationDialog() {
   if (!state.navigationDialog) { dialog.hidden = true; return; }
   if (state.navigationDialog.kind === 'folder') renderNavigationFolderDialog(state.navigationDialog.folderId);
   else if (state.navigationDialog.kind === 'create-folder') renderNavigationCreateFolderDialog();
+  else if (state.navigationDialog.kind === 'actions') renderNavigationActionsDialog(state.navigationDialog.siteId, state.navigationDialog.folderId || '');
   else if (state.navigationDialog.kind === 'edit') renderNavigationAddDialog(state.navigationDialog.folderId || '', navigationFindSite(state.navigationDialog.siteId, state.navigationDialog.folderId || ''));
   else renderNavigationAddDialog(state.navigationDialog.folderId || '');
 }
@@ -1287,6 +1291,23 @@ function openNavigationEditDialog(siteId, folderId = '') {
 }
 function openNavigationFolderDialog(folderId) { state.navigationDialog = { kind: 'folder', folderId }; renderNavigationDialog(); }
 function openNavigationCreateFolderDialog(firstId, secondId) { state.navigationFolderDraft = { firstId, secondId }; state.navigationDialog = { kind: 'create-folder' }; renderNavigationDialog(); }
+function renderNavigationActionsDialog(siteId, folderId = '') {
+  const dialog = $('#navigationDialog');
+  const item = folderId ? navigationFindSite(siteId, folderId) : navigationFindRootItem(siteId);
+  if (!dialog || !item) return closeNavigationDialog();
+  const isFolder = item.type === 'folder';
+  const icon = isFolder ? '<span class="navigation-action-folder-icon"><span></span><span></span><span></span><span></span></span>' : navigationIconMarkup(item, 'navigation-action-icon');
+  const title = isFolder ? item.name : item.name;
+  const subtitle = isFolder ? t('navigationFolder') : navigationNameFromUrl(item.url);
+  const editLabel = isFolder ? t('navigationFolderEdit') : t('navigationActionEdit');
+  const deleteLabel = isFolder ? t('navigationFolderDelete') : t('navigationActionDelete');
+  dialog.innerHTML = '<div class="dialog-card navigation-actions-dialog" role="dialog" aria-modal="true"><div class="navigation-action-summary">' + icon + '<div><strong>' + escapeHtml(title) + '</strong><small>' + escapeHtml(subtitle) + '</small></div></div><div class="navigation-action-list"><button type="button" data-navigation-action="edit"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 16.5-.7 3.2 3.2-.7L18.8 7.7a2.2 2.2 0 0 0-3.1-3.1L5 16.5Z"/><path d="m14.5 6.5 3 3"/></svg><span>' + escapeHtml(editLabel) + '</span></button><button type="button" class="danger" data-navigation-action="delete"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M9 7V4h6v3m-8 0 1 13h8l1-13M10 11v5M14 11v5"/></svg><span>' + escapeHtml(deleteLabel) + '</span></button><button type="button" class="cancel" data-navigation-action="cancel">' + escapeHtml(t('navigationActionCancel')) + '</button></div></div>';
+  dialog.hidden = false;
+}
+function openNavigationActionsDialog(siteId, folderId = '') {
+  state.navigationDialog = { kind: 'actions', siteId, folderId };
+  renderNavigationDialog();
+}
 function closeNavigationDialog() { state.navigationDialog = null; state.navigationFolderDraft = null; navigationSuppressClickUntil = 0; const dialog = $('#navigationDialog'); if (dialog) dialog.hidden = true; }
 function addNavigationSite(urlValue, nameValue, folderId = '') {
   const url = navigationSafeUrl(urlValue);
@@ -3647,13 +3668,21 @@ let readerBookSuppressClickUntil = 0;
 let navigationPressTimer = null;
 let navigationDrag = null;
 let navigationSuppressClickUntil = 0;
+function clearNavigationCombineTimer(drag = navigationDrag) {
+  if (!drag) return;
+  clearTimeout(drag.combineTimer);
+  drag.combineTimer = null;
+  if (drag.combineOver) drag.combineOver.classList.remove('navigation-combine-ready');
+  drag.combineOver = null;
+  drag.combineTarget = null;
+}
 function clearNavigationDragClasses() {
   $$('.navigation-card.navigation-dragging, .navigation-card.navigation-long-pressed').forEach((card) => card.classList.remove('navigation-dragging', 'navigation-long-pressed'));
-  $$('.navigation-card.navigation-drop-target').forEach((card) => card.classList.remove('navigation-drop-target'));
+  $$('.navigation-card.navigation-drop-target, .navigation-card.navigation-combine-ready').forEach((card) => card.classList.remove('navigation-drop-target', 'navigation-combine-ready'));
 }
 function startNavigationLongPress(target, event) {
   clearTimeout(navigationPressTimer);
-  navigationDrag = { target, pointerId: event.pointerId, startX: event.clientX, startY: event.clientY, longPressed: false, active: false, over: null };
+  navigationDrag = { target, pointerId: event.pointerId, startX: event.clientX, startY: event.clientY, longPressed: false, active: false, over: null, folderTarget: null, combineOver: null, combineTarget: null, combineTimer: null, placeholder: null, ghost: null, parent: null, reordered: false };
   navigationPressTimer = setTimeout(() => {
     if (!navigationDrag || navigationDrag.target !== target) return;
     navigationDrag.longPressed = true;
@@ -3661,6 +3690,64 @@ function startNavigationLongPress(target, event) {
   }, 520);
 }
 function endNavigationLongPress() { clearTimeout(navigationPressTimer); navigationPressTimer = null; }
+function animateNavigationReorder(container, mutate) {
+  const before = new Map([...container.querySelectorAll('[data-navigation-item]')].map((card) => [card.dataset.navigationId, card.getBoundingClientRect()]));
+  mutate();
+  const moved = [...container.querySelectorAll('[data-navigation-item]')];
+  moved.forEach((card) => {
+    const oldRect = before.get(card.dataset.navigationId); if (!oldRect) return;
+    const rect = card.getBoundingClientRect(); const dx = oldRect.left - rect.left; const dy = oldRect.top - rect.top;
+    if (Math.abs(dx) < 1 && Math.abs(dy) < 1) return;
+    card.style.transition = 'none'; card.style.transform = 'translate(' + dx + 'px, ' + dy + 'px)';
+    requestAnimationFrame(() => { card.style.transition = 'transform 190ms cubic-bezier(.2,.75,.25,1)'; card.style.transform = ''; window.setTimeout(() => { card.style.transition = ''; }, 210); });
+  });
+}
+function createNavigationDragOverlay(drag, event) {
+  const target = drag.target; const rect = target.getBoundingClientRect(); const parent = target.parentElement;
+  if (!parent) return;
+  drag.parent = parent;
+  const placeholder = document.createElement('article');
+  placeholder.className = 'navigation-card navigation-drag-placeholder';
+  placeholder.style.width = rect.width + 'px'; placeholder.style.height = rect.height + 'px';
+  placeholder.setAttribute('aria-hidden', 'true');
+  target.replaceWith(placeholder); drag.placeholder = placeholder;
+  const ghost = target.cloneNode(true);
+  ghost.className = 'navigation-card navigation-drag-ghost';
+  ghost.style.width = rect.width + 'px'; ghost.style.height = rect.height + 'px';
+  ghost.style.left = event.clientX + 'px'; ghost.style.top = event.clientY + 'px';
+  document.body.appendChild(ghost); drag.ghost = ghost;
+  try { workspace.setPointerCapture?.(drag.pointerId); drag.captureTarget = workspace; } catch {}
+}
+function restoreNavigationDrag(drag) {
+  clearNavigationCombineTimer(drag);
+  if (drag.over) drag.over.classList.remove('navigation-drop-target', 'navigation-combine-ready');
+  if (drag.placeholder?.isConnected) drag.placeholder.replaceWith(drag.target);
+  drag.ghost?.remove();
+  try { if (drag.captureTarget?.hasPointerCapture?.(drag.pointerId)) drag.captureTarget.releasePointerCapture(drag.pointerId); } catch {}
+  drag.target.classList.remove('navigation-dragging', 'navigation-long-pressed');
+  drag.placeholder = null; drag.ghost = null;
+}
+function positionNavigationPlaceholder(drag, over, clientX, clientY) {
+  const placeholder = drag.placeholder; const parent = over?.parentElement;
+  if (!placeholder || !over || !parent || over === placeholder || over.dataset.navigationFolderId) return false;
+  const rect = over.getBoundingClientRect();
+  const horizontal = Math.abs(clientX - (rect.left + rect.width / 2)) >= Math.abs(clientY - (rect.top + rect.height / 2));
+  const centered = Math.abs(clientX - (rect.left + rect.width / 2)) < rect.width * .22 && Math.abs(clientY - (rect.top + rect.height / 2)) < rect.height * .22;
+  const after = centered && drag.target.dataset.navigationType !== 'site' ? true : horizontal ? clientX > rect.left + rect.width / 2 : clientY > rect.top + rect.height / 2;
+  const next = after ? over.nextElementSibling : over;
+  if (next === placeholder) return false;
+  animateNavigationReorder(parent, () => parent.insertBefore(placeholder, next));
+  drag.reordered = true;
+  return true;
+}
+function persistNavigationDomOrder(drag) {
+  const parent = drag.parent; if (!parent) return;
+  const ids = [...parent.querySelectorAll('[data-navigation-item]')].map((card) => card.dataset.navigationId);
+  const byId = new Map(state.navigation.items.map((item) => [item.id, item]));
+  if (ids.length !== state.navigation.items.length) return;
+  state.navigation.items = ids.map((id) => byId.get(id)).filter(Boolean);
+  saveNavigation(); render(); toast(t('navigationOrderSaved'));
+}
 function updateNavigationDrag(event) {
   const drag = navigationDrag;
   if (!drag || (drag.pointerId != null && event.pointerId !== drag.pointerId)) return;
@@ -3672,14 +3759,29 @@ function updateNavigationDrag(event) {
   if (!drag.active) {
     if (Math.hypot(dx, dy) < 8) return;
     drag.active = true;
-    try { drag.target.setPointerCapture?.(drag.pointerId); } catch {}
     drag.target.classList.add('navigation-dragging'); drag.target.classList.remove('navigation-long-pressed');
+    createNavigationDragOverlay(drag, event);
   }
+  if (drag.ghost) { drag.ghost.style.left = event.clientX + 'px'; drag.ghost.style.top = event.clientY + 'px'; }
   const hit = document.elementFromPoint?.(event.clientX, event.clientY) || event.target;
   const over = hit?.closest?.('[data-navigation-item]');
-  if (drag.over && drag.over !== over) drag.over.classList.remove('navigation-drop-target');
+  if (drag.over && drag.over !== over) drag.over.classList.remove('navigation-drop-target', 'navigation-combine-ready');
   drag.over = over && over !== drag.target ? over : null;
-  if (drag.over) drag.over.classList.add('navigation-drop-target');
+  if (!drag.over) { clearNavigationCombineTimer(drag); drag.folderTarget = null; }
+  else if (drag.over.dataset.navigationFolderId || drag.over.dataset.navigationType === 'folder') {
+    clearNavigationCombineTimer(drag); drag.folderTarget = drag.over; drag.over.classList.add('navigation-drop-target');
+  } else {
+    drag.folderTarget = null;
+    const rect = drag.over.getBoundingClientRect();
+    const centered = Math.abs(event.clientX - (rect.left + rect.width / 2)) < rect.width * .22 && Math.abs(event.clientY - (rect.top + rect.height / 2)) < rect.height * .22;
+    if (centered && drag.target.dataset.navigationType === 'site' && drag.over.dataset.navigationType === 'site') {
+      if (drag.combineOver !== drag.over) {
+        clearNavigationCombineTimer(drag); drag.combineOver = drag.over; drag.combineTarget = drag.over; drag.over.classList.add('navigation-drop-target', 'navigation-combine-ready');
+      }
+    } else {
+      clearNavigationCombineTimer(drag); drag.over.classList.add('navigation-drop-target'); positionNavigationPlaceholder(drag, drag.over, event.clientX, event.clientY);
+    }
+  }
   if (event.cancelable) event.preventDefault();
 }
 function finishNavigationDrag(event = null) {
@@ -3690,18 +3792,23 @@ function finishNavigationDrag(event = null) {
   const wasActive = drag.active;
   const wasLongPressed = drag.longPressed;
   const over = drag.over;
-  if (over) over.classList.remove('navigation-drop-target');
-  drag.target.classList.remove('navigation-dragging', 'navigation-long-pressed');
-  try { if (drag.target.hasPointerCapture?.(drag.pointerId)) drag.target.releasePointerCapture(drag.pointerId); } catch {}
+  const combineTarget = drag.combineTarget;
+  const folderTarget = drag.folderTarget;
   if (wasLongPressed) navigationSuppressClickUntil = Date.now() + 550;
-  if (!wasActive) return wasLongPressed;
-  if (!over) return true;
-  const overId = over.dataset.navigationId;
+  if (!wasActive) { restoreNavigationDrag(drag); if (wasLongPressed) openNavigationActionsDialog(targetId, drag.target.dataset.navigationFolderId || ''); return wasLongPressed; }
+  if (over && over.dataset.navigationType === 'site' && !combineTarget && !folderTarget) positionNavigationPlaceholder(drag, over, event?.clientX ?? drag.startX, event?.clientY ?? drag.startY);
+  const overId = over?.dataset.navigationId;
   const source = navigationFindRootItem(targetId); const destination = navigationFindRootItem(overId);
-  if (!source || !destination || source.id === destination.id) return true;
-  if (source.type === 'site' && destination.type === 'site') return openNavigationCreateFolderDialog(source.id, destination.id) || true;
-  if (source.type === 'site' && destination.type === 'folder') { moveNavigationSiteToFolder(source.id, destination.id); return true; }
-  swapNavigationRootItems(source.id, destination.id);
+  if (combineTarget && source?.type === 'site' && destination?.type === 'site') {
+    restoreNavigationDrag(drag); render(); openNavigationCreateFolderDialog(source.id, destination.id); return true;
+  }
+  if (folderTarget && source?.type === 'site' && folderTarget.dataset.navigationType === 'folder') {
+    const folderId = folderTarget.dataset.navigationId; restoreNavigationDrag(drag); moveNavigationSiteToFolder(source.id, folderId); return true;
+  }
+  if (source && destination && source.id !== destination.id && !drag.reordered && source.type !== 'site' && destination.type !== 'site') {
+    restoreNavigationDrag(drag); swapNavigationRootItems(source.id, destination.id); return true;
+  }
+  restoreNavigationDrag(drag); if (drag.reordered) persistNavigationDomOrder(drag);
   return true;
 }
 function startLongPress(target, type, index, pointerEvent = null) {
@@ -3785,7 +3892,7 @@ function finishReorderDrag(event = null) {
   const container = reorderDragContainer(drag.type);
   const items = container ? [...container.querySelectorAll(reorderDragSelector(drag.type))] : [];
   if (drag.type === 'tool') {
-    state.toolOrder = normalizeToolOrder(items.map((item) => item.dataset.tool));
+    state.toolOrder = normalizeToolOrder(items.map((item) => item.dataset.tool), state.navigationLocation === 'tools');
     saveToolOrder(); renderNav();
   } else if (drag.type === 'feed') {
     const visibleIds = items.map((item) => item.dataset.feedSource).filter(Boolean);
@@ -4251,7 +4358,8 @@ homeSourceNav.addEventListener('drop', (event) => { event.preventDefault(); cons
 workspace.addEventListener('pointerdown', (event) => { const card = event.target.closest('[data-weather-card]'); if (card) startLongPress(card, 'weather', Number(card.dataset.weatherIndex), event); });
 workspace.addEventListener('pointerdown', (event) => { const source = event.target.closest('[data-feed-source]'); if (source?.dataset.feedSourceIndex != null) startLongPress(source, 'feed', Number(source.dataset.feedSourceIndex), event); });
 workspace.addEventListener('pointerdown', (event) => {
-  if (state.section !== 'navigation') return;
+  const navigationVisible = state.section === 'navigation' || (state.section === 'tools' && state.tool === 'navigation');
+  if (!navigationVisible) return;
   const card = event.target.closest('[data-navigation-item]');
   if (card && !event.target.closest('[data-navigation-delete], [data-navigation-edit]')) startNavigationLongPress(card, event);
 });
@@ -4761,6 +4869,13 @@ $('#homeSourceDialog').addEventListener('click', (event) => {
 });
 $('#navigationDialog').addEventListener('click', (event) => {
   if (event.target === $('#navigationDialog') || event.target.closest('[data-close-navigation-dialog]')) return closeNavigationDialog();
+  const action = event.target.closest('[data-navigation-action]');
+  if (action) {
+    const { siteId, folderId = '' } = state.navigationDialog || {};
+    if (action.dataset.navigationAction === 'cancel') return closeNavigationDialog();
+    if (action.dataset.navigationAction === 'edit') return folderId ? openNavigationEditDialog(siteId, folderId) : (navigationFindRootItem(siteId)?.type === 'folder' ? openNavigationFolderDialog(siteId) : openNavigationEditDialog(siteId));
+    if (action.dataset.navigationAction === 'delete') return folderId ? deleteNavigationSite(siteId, folderId) : (navigationFindRootItem(siteId)?.type === 'folder' ? deleteNavigationFolder(siteId) : deleteNavigationSite(siteId));
+  }
   if (event.target.closest('[data-navigation-add-in-folder]')) return openNavigationAddDialog(state.navigationDialog?.folderId || '');
   const edit = event.target.closest('[data-navigation-edit]');
   if (edit) return openNavigationEditDialog(edit.dataset.navigationEdit, edit.closest('[data-navigation-folder-id]')?.dataset.navigationFolderId || state.navigationDialog?.folderId || '');
