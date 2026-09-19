@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.183';
+const APP_VERSION = '2.18.184';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -4469,7 +4469,9 @@ document.querySelector('main')?.addEventListener('pointerdown', beginPageSwipe);
 document.addEventListener('pointermove', updatePageSwipe, { passive: false });
 document.addEventListener('pointerup', finishPageSwipe, { passive: true });
 document.addEventListener('pointercancel', () => {
-  tabSwipeGesture = null; pageSwipeGesture = null; endLongPress(); cancelReorderDrag(); navigationDrag = null; endNavigationLongPress(); clearNavigationDragClasses(); swipeGesture = null; resetPageSwipeTransform();
+  tabSwipeGesture = null; pageSwipeGesture = null; endLongPress(); cancelReorderDrag();
+  if (navigationDrag) { restoreNavigationDrag(navigationDrag); navigationDrag = null; }
+  endNavigationLongPress(); clearNavigationDragClasses(); swipeGesture = null; resetPageSwipeTransform();
   if (readerBookDrag) {
     releaseReaderBookPointer(readerBookDrag);
     readerBookDrag.over?.classList.remove('reorder-over');
