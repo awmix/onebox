@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.187';
+const APP_VERSION = '2.18.188';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -196,7 +196,7 @@ const DICT = {
     commute: '出行', sport: '运动', clothing: '穿衣', sunscreen: '防晒', hiking: '爬山',
     addCard: '添加', noResults: '没有找到匹配地点，请换个关键词。',
     home: '首页', tools: '工具', navigation: '导航', messages: '消息', mine: '我的', quickTools: '常用工具', openSettings: '打开设置', noMessages: '还没有消息。', homeTabs: '首页', homeTabsSelected: '已选择 {count} 项', homeSourceManage: '首页来源', homeSourceManageHint: '选择要显示在首页导航中的来源', homeSourceAdd: '添加', homeSourceRemove: '移除', homeSourceEmpty: '暂时没有其他来源',
-    navigationTitle: '网站导航', navigationHint: '点击卡片显示操作，长按可以拖动排序或聚合文件夹。', navigationAdd: '添加网站', navigationEmpty: '还没有网站，先添加一个常用网址吧。', navigationUrl: '网站地址', navigationUrlPlaceholder: '粘贴或输入网址', navigationName: '网站名称', navigationNamePlaceholder: '可选，默认使用网站名称', navigationIcon: '网站图标', navigationIconHint: '输入网址后自动获取', navigationSave: '保存网站', navigationEdit: '编辑网站', navigationEditSave: '保存修改', navigationActionEdit: '编辑', navigationActionDelete: '删除', navigationActionCancel: '取消', navigationFolderEdit: '编辑文件夹', navigationAddToFolder: '添加到文件夹', navigationFolder: '文件夹', navigationFolderName: '文件夹名称', navigationFolderPlaceholder: '例如：工作、阅读', navigationCreateFolder: '新建文件夹', navigationSaveFolder: '保存文件夹', navigationFolderAdd: '添加网站', navigationFolderDelete: '解散文件夹', navigationFolderDeleteConfirm: '解散文件夹后，里面的网站会保留在导航中，确定解散文件夹吗？', navigationFolderDissolved: '文件夹已解散', navigationFolderEmpty: '文件夹还是空的，添加几个网站吧。', navigationRemove: '删除', navigationOpen: '打开网站', navigationSettings: '导航设置', navigationOpenModeHint: '网站打开方式', navigationOpenModeCurrent: '当前页', navigationOpenModeNewTab: '新标签页', navigationAlreadyExists: '这个网站已经添加过了', navigationInvalidUrl: '请输入有效的 http 或 https 地址', navigationDropHint: '松开后聚合为文件夹', navigationFolderCreated: '文件夹已创建', navigationAdded: '网站已添加', navigationDeleted: '网站已删除', navigationMoved: '网站已移入文件夹', navigationOrderSaved: '导航顺序已保存', navigationSiteCount: '{count} 个网站',
+    navigationTitle: '网站导航', navigationHint: '点击卡片显示操作，长按可以拖动排序或聚合文件夹。', navigationToolbarHint: '长按编辑 · 拖动聚合', navigationAdd: '添加网站', navigationEmpty: '还没有网站，先添加一个常用网址吧。', navigationUrl: '网站地址', navigationUrlPlaceholder: '粘贴或输入网址', navigationName: '网站名称', navigationNamePlaceholder: '可选，默认使用网站名称', navigationIcon: '网站图标', navigationIconHint: '输入网址后自动获取', navigationSave: '保存网站', navigationEdit: '编辑网站', navigationEditSave: '保存修改', navigationActionEdit: '编辑', navigationActionDelete: '删除', navigationActionCancel: '取消', navigationFolderEdit: '编辑文件夹', navigationAddToFolder: '添加到文件夹', navigationFolder: '文件夹', navigationFolderName: '文件夹名称', navigationFolderPlaceholder: '例如：工作、阅读', navigationCreateFolder: '新建文件夹', navigationSaveFolder: '保存文件夹', navigationFolderAdd: '添加网站', navigationFolderDelete: '解散文件夹', navigationFolderDeleteConfirm: '解散文件夹后，里面的网站会保留在导航中，确定解散文件夹吗？', navigationFolderDissolved: '文件夹已解散', navigationFolderEmpty: '文件夹还是空的，添加几个网站吧。', navigationRemove: '删除', navigationOpen: '打开网站', navigationSettings: '导航设置', navigationOpenModeHint: '网站打开方式', navigationOpenModeCurrent: '当前页', navigationOpenModeNewTab: '新标签页', navigationAlreadyExists: '这个网站已经添加过了', navigationInvalidUrl: '请输入有效的 http 或 https 地址', navigationDropHint: '松开后聚合为文件夹', navigationFolderCreated: '文件夹已创建', navigationAdded: '网站已添加', navigationDeleted: '网站已删除', navigationMoved: '网站已移入文件夹', navigationOrderSaved: '导航顺序已保存', navigationSiteCount: '{count} 个网站',
     allFeeds: '全部', feedRefresh: '刷新', feedLoading: '正在加载信息流…', feedEmpty: '暂时没有可显示的内容。', feedUpdated: '更新于', feedOpen: '打开原文', feedPartial: '部分订阅源暂时不可用', feedProxyHint: '内容来自公开 RSS 订阅，首页只保留最近内容。', feedTabPrevious: '查看前面的首页 Tab', feedTabNext: '查看后面的首页 Tab',
     converterType: '换算类型', from: '从', to: '到', result: '结果', swap: '交换单位', copyResult: '复制结果',
     copied: '已复制', translationInput: '输入待翻译内容', translateNow: '开始翻译', saveTranslation: '保存到本机',
@@ -239,7 +239,7 @@ const DICT = {
     commute: 'Travel', sport: 'Sport', clothing: 'Clothing', sunscreen: 'Sun care', hiking: 'Hiking',
     addCard: 'Add', noResults: 'No matching place. Try another query.',
     home: 'Home', tools: 'Tools', navigation: 'Navigation', messages: 'Messages', mine: 'Me', quickTools: 'Quick tools', openSettings: 'Open settings', noMessages: 'No messages yet.', homeTabs: 'Home', homeTabsSelected: '{count} selected',
-    navigationTitle: 'Web navigation', navigationHint: 'Tap a card for actions; long-press to reorder or create a folder.', navigationAdd: 'Add website', navigationEmpty: 'No websites yet. Add a favorite site to get started.', navigationUrl: 'Website URL', navigationUrlPlaceholder: 'https://example.com', navigationName: 'Website name', navigationNamePlaceholder: 'Optional; defaults to the site name', navigationIcon: 'Website icon', navigationIconHint: 'Fetched automatically from the URL', navigationSave: 'Save website', navigationAddToFolder: 'Add to folder', navigationEdit: 'Edit website', navigationEditSave: 'Save changes', navigationActionEdit: 'Edit', navigationActionDelete: 'Delete', navigationActionCancel: 'Cancel', navigationFolderEdit: 'Edit folder', navigationFolder: 'Folder', navigationFolderName: 'Folder name', navigationFolderPlaceholder: 'For example: Work, Reading', navigationCreateFolder: 'New folder', navigationSaveFolder: 'Save folder', navigationFolderAdd: 'Add website', navigationFolderDelete: 'Dissolve folder', navigationFolderDeleteConfirm: 'Dissolving the folder will keep its websites in navigation. Continue?', navigationFolderDissolved: 'Folder dissolved', navigationFolderEmpty: 'This folder is empty. Add some websites.', navigationRemove: 'Delete', navigationOpen: 'Open website', navigationSettings: 'Navigation settings', navigationOpenModeHint: 'Open websites in', navigationOpenModeCurrent: 'Current page', navigationOpenModeNewTab: 'New tab', navigationAlreadyExists: 'This website has already been added', navigationInvalidUrl: 'Enter a valid http or https URL', navigationDropHint: 'Release to create a folder', navigationFolderCreated: 'Folder created', navigationAdded: 'Website added', navigationDeleted: 'Website deleted', navigationMoved: 'Website moved into folder', navigationOrderSaved: 'Navigation order saved', navigationSiteCount: '{count} sites',
+    navigationTitle: 'Web navigation', navigationHint: 'Tap a card for actions; long-press to reorder or create a folder.', navigationToolbarHint: 'Long-press to edit · drag to group', navigationAdd: 'Add website', navigationEmpty: 'No websites yet. Add a favorite site to get started.', navigationUrl: 'Website URL', navigationUrlPlaceholder: 'https://example.com', navigationName: 'Website name', navigationNamePlaceholder: 'Optional; defaults to the site name', navigationIcon: 'Website icon', navigationIconHint: 'Fetched automatically from the URL', navigationSave: 'Save website', navigationAddToFolder: 'Add to folder', navigationEdit: 'Edit website', navigationEditSave: 'Save changes', navigationActionEdit: 'Edit', navigationActionDelete: 'Delete', navigationActionCancel: 'Cancel', navigationFolderEdit: 'Edit folder', navigationFolder: 'Folder', navigationFolderName: 'Folder name', navigationFolderPlaceholder: 'For example: Work, Reading', navigationCreateFolder: 'New folder', navigationSaveFolder: 'Save folder', navigationFolderAdd: 'Add website', navigationFolderDelete: 'Dissolve folder', navigationFolderDeleteConfirm: 'Dissolving the folder will keep its websites in navigation. Continue?', navigationFolderDissolved: 'Folder dissolved', navigationFolderEmpty: 'This folder is empty. Add some websites.', navigationRemove: 'Delete', navigationOpen: 'Open website', navigationSettings: 'Navigation settings', navigationOpenModeHint: 'Open websites in', navigationOpenModeCurrent: 'Current page', navigationOpenModeNewTab: 'New tab', navigationAlreadyExists: 'This website has already been added', navigationInvalidUrl: 'Enter a valid http or https URL', navigationDropHint: 'Release to create a folder', navigationFolderCreated: 'Folder created', navigationAdded: 'Website added', navigationDeleted: 'Website deleted', navigationMoved: 'Website moved into folder', navigationOrderSaved: 'Navigation order saved', navigationSiteCount: '{count} sites',
     allFeeds: 'All', feedRefresh: 'Refresh', feedLoading: 'Loading feeds…', feedEmpty: 'No items to show yet.', feedUpdated: 'Updated', feedOpen: 'Open original', feedPartial: 'Some feeds are temporarily unavailable', feedProxyHint: 'Public RSS subscriptions; only recent items are kept on this device.', feedTabPrevious: 'Show previous home tabs', feedTabNext: 'Show more home tabs',
     converterType: 'Conversion', from: 'From', to: 'To', result: 'Result', swap: 'Swap units', copyResult: 'Copy result',
     copied: 'Copied', translationInput: 'Text to translate', translateNow: 'Translate', saveTranslation: 'Save locally',
@@ -288,10 +288,12 @@ const storedFootprint = parseStored(STORAGE.footprint, false) === true;
 const storedOpenMode = localStorage.getItem(STORAGE.openMode) || 'current';
 const rawWeatherCards = parseStored(STORAGE.weatherCards, []);
 const legacyWeather = parseStored(STORAGE.legacyWeather, null);
-const normalizeToolOrder = (value, includeNavigation = false) => {
+const normalizeToolOrder = (value, includeNavigation = false, navigationFirst = false) => {
   const allowed = includeNavigation ? Object.keys(TOOL_DEFS) : DEFAULT_TOOL_ORDER;
   const order = Array.isArray(value) ? value.map((id) => id === 'convert' ? 'translate' : id).filter((id) => allowed.includes(id)) : [];
-  return [...new Set(order.concat(allowed))].slice(0, allowed.length);
+  const normalized = [...new Set(order.concat(allowed))];
+  if (includeNavigation && navigationFirst) return ['navigation', ...normalized.filter((id) => id !== 'navigation')].slice(0, allowed.length);
+  return (includeNavigation ? normalized : normalized.filter((id) => id !== 'navigation')).slice(0, allowed.length);
 };
 const LEGACY_DEFAULT_HOME_FEED_VISIBLE = ['ithome', 'huxiu', 'zhihu', 'v2ex', 'weibo', 'bilibili'];
 const normalizeHomeFeedOrder = (value) => {
@@ -321,7 +323,15 @@ function navigationIconSources(value) {
     const parsed = new URL(url);
     const hostname = parsed.hostname;
     return [...new Set([
+      parsed.origin + '/apple-touch-icon.png',
+      parsed.origin + '/apple-touch-icon-precomposed.png',
+      parsed.origin + '/favicon-192x192.png',
+      parsed.origin + '/favicon-192.png',
+      parsed.origin + '/favicon-180x180.png',
+      parsed.origin + '/favicon-96x96.png',
+      parsed.origin + '/favicon.png',
       parsed.origin + '/favicon.ico',
+      'https://icon.horse/icon/' + hostname,
       'https://icons.duckduckgo.com/ip3/' + hostname + '.ico',
       'https://www.google.com/s2/favicons?domain=' + encodeURIComponent(hostname) + '&sz=128'
     ])];
@@ -331,7 +341,7 @@ function navigationIconUrl(value) { return navigationIconSources(value)[0] || ''
 function isNavigationIconServiceUrl(value) {
   try {
     const url = new URL(String(value || ''));
-    return (url.hostname === 'www.google.com' && url.pathname === '/s2/favicons') || (url.hostname === 'icons.duckduckgo.com' && url.pathname.startsWith('/ip3/'));
+    return (url.hostname === 'www.google.com' && url.pathname === '/s2/favicons') || (url.hostname === 'icons.duckduckgo.com' && url.pathname.startsWith('/ip3/')) || (url.hostname === 'icon.horse' && url.pathname.startsWith('/icon/'));
   } catch { return false; }
 }
 function normalizeNavigation(value) {
@@ -345,8 +355,7 @@ function normalizeNavigation(value) {
   const normalizeSite = (item) => {
     const url = navigationSafeUrl(item?.url);
     if (!url) return null;
-    const storedIcon = navigationSafeUrl(item?.icon);
-    const icon = storedIcon && !isNavigationIconServiceUrl(storedIcon) ? storedIcon : navigationIconUrl(url);
+    const icon = navigationIconUrl(url);
     return { id: uniqueId(item?.id, 'site'), type: 'site', name: String(item?.name || navigationNameFromUrl(url)).trim() || navigationNameFromUrl(url), url, icon, createdAt: Number(item?.createdAt) || Date.now() };
   };
   const items = rawItems.map((item) => {
@@ -402,7 +411,7 @@ const state = {
   languageMode: ['zh', 'en', 'system'].includes(storedLanguage) ? storedLanguage : 'system',
   language: resolveLanguageMode(storedLanguage),
   layoutMode: storedLayout === 'classic' ? 'classic' : 'simple',
-  toolOrder: normalizeToolOrder(parseStored(STORAGE.toolOrder, DEFAULT_TOOL_ORDER), storedNavigationLocation === 'tools'),
+  toolOrder: normalizeToolOrder(parseStored(STORAGE.toolOrder, DEFAULT_TOOL_ORDER), storedNavigationLocation === 'tools', storedNavigationLocation === 'tools'),
   calcExpr: storedCalculator.expr || '', calcHistory: Array.isArray(storedCalculator.history) ? storedCalculator.history : [],
   calcJustEvaluated: false, calcInverse: false, calcHistoryOpen: storedCalculator.historyOpen === true, calcAngle: 'deg',
   month: new Date(today.getFullYear(), today.getMonth(), 1), selectedDate: dateKey(today),
@@ -1270,13 +1279,31 @@ function renderHome() {
   return '<div class="home-page feed-home"><section class="feed-panel">' + refreshState + (errors ? '<p class="feed-warning">' + t('feedPartial') + '</p>' : '') + feedBody + '<p class="feed-hint">' + t('feedProxyHint') + (state.homeFeed.updatedAt ? ' · ' + t('feedUpdated') + ' ' + escapeHtml(feedDate(state.homeFeed.updatedAt)) : '') + '</p></section></div>';
 }
 function navigationIconMarkup(site, extraClass = '') {
-  const fallback = escapeHtml(String(site?.name || '?').trim().slice(0, 1).toUpperCase() || '?');
+  const fallbackText = String(site?.name || navigationNameFromUrl(site?.url) || '?').trim();
+  const fallback = escapeHtml([...fallbackText].filter((char) => /\S/.test(char)).slice(0, 2).join('').toUpperCase() || '?');
   const preferredIcon = site?.icon && !isNavigationIconServiceUrl(site.icon) ? site.icon : '';
   const sources = [...new Set([preferredIcon, ...navigationIconSources(site?.url)].filter(Boolean))];
   const icon = sources.shift() || '';
   const fallbackAttribute = sources.length ? ' data-fallback-sources="' + escapeHtml(sources.join('|')) + '"' : '';
-  const errorHandler = "if(this.dataset.fallbackSources){const sources=this.dataset.fallbackSources.split('|');const next=sources.shift();this.dataset.fallbackSources=sources.join('|');if(next){this.src=next;return;}}this.hidden=true;this.nextElementSibling.hidden=false;";
-  return '<span class="navigation-site-icon ' + extraClass + '"><img src="' + escapeHtml(icon) + '" alt="" loading="lazy" referrerpolicy="no-referrer"' + fallbackAttribute + ' onerror="' + errorHandler + '"><span class="navigation-icon-fallback" hidden>' + fallback + '</span></span>';
+  return '<span class="navigation-site-icon ' + extraClass + '"><img src="' + escapeHtml(icon) + '" alt="" loading="lazy" referrerpolicy="no-referrer"' + fallbackAttribute + ' onload="handleNavigationIconLoad(this)" onerror="handleNavigationIconError(this)"><span class="navigation-icon-fallback" hidden aria-hidden="true"><i class="navigation-fallback-orb navigation-fallback-orb-a"></i><i class="navigation-fallback-orb navigation-fallback-orb-b"></i><strong>' + fallback + '</strong></span></span>';
+}
+function advanceNavigationIcon(image, allowLowResolution = false) {
+  if (!image?.dataset?.fallbackSources) return false;
+  if (allowLowResolution && Number(image.naturalWidth || 0) >= 48) return false;
+  const sources = image.dataset.fallbackSources.split('|').filter(Boolean);
+  const next = sources.shift();
+  image.dataset.fallbackSources = sources.join('|');
+  if (!next) return false;
+  image.src = next;
+  return true;
+}
+function handleNavigationIconLoad(image) {
+  advanceNavigationIcon(image, true);
+}
+function handleNavigationIconError(image) {
+  if (advanceNavigationIcon(image)) return;
+  image.hidden = true;
+  image.nextElementSibling?.removeAttribute('hidden');
 }
 function navigationItemMarkup(item, index = 0, folderId = '') {
   const folderAttribute = folderId ? ' data-navigation-folder-id="' + escapeHtml(folderId) + '"' : '';
@@ -1325,7 +1352,8 @@ function renderNavigation() {
   const emptyBody = '<button class="navigation-card navigation-empty-add-card" type="button" data-open-navigation-add aria-label="' + escapeHtml(t('navigationAdd')) + '"><span class="navigation-add-glyph">＋</span><strong>' + escapeHtml(t('navigationAdd')) + '</strong><small>' + escapeHtml(t('navigationEmpty')) + '</small></button>';
   const body = items.length ? items.map((item, index) => navigationItemMarkup(item, index)).join('') + '<button class="navigation-card navigation-add-card" type="button" data-open-navigation-add aria-label="' + escapeHtml(t('navigationAdd')) + '"><span class="navigation-add-glyph">＋</span><strong>' + escapeHtml(t('navigationAdd')) + '</strong></button>' : emptyBody;
   const settingsButtonMarkup = '<button class="icon-btn header-icon navigation-settings-button" type="button" data-open-navigation-settings aria-expanded="' + String(state.navigationSettingsOpen) + '" aria-label="' + escapeHtml(t('navigationSettings')) + '"><svg class="header-line-icon settings-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 12h2M10 12h10M4 17h10M18 17h2"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="12" r="2"/><circle cx="16" cy="17" r="2"/></svg></button>';
-  return '<div class="section-page navigation-page"><div class="navigation-page-toolbar"><div class="navigation-page-tools">' + settingsButtonMarkup + navigationSettingsMarkup() + '</div></div><div class="navigation-grid">' + body + '</div></div>';
+  const toolbarCaption = '<div class="navigation-toolbar-caption"><strong>' + escapeHtml(t('navigationSettings')) + '</strong><small>' + escapeHtml(t('navigationToolbarHint')) + '</small></div>';
+  return '<div class="section-page navigation-page"><div class="navigation-page-toolbar"><div class="navigation-page-tools">' + toolbarCaption + settingsButtonMarkup + navigationSettingsMarkup() + '</div></div><div class="navigation-grid">' + body + '</div></div>';
 }
 function renderNavigationAddDialog(folderId = '', site = null) {
   const dialog = $('#navigationDialog'); if (!dialog) return;
@@ -3428,7 +3456,7 @@ async function githubDownload() {
     if (['mono', 'purple', 'blue', 'green', 'yellow'].includes(remote.color)) { state.color = remote.color; saveColorPreference(); }
     if (remote.languageMode || remote.language) state.languageMode = ['zh', 'en', 'system'].includes(remote.languageMode || remote.language) ? (remote.languageMode || remote.language) : 'system';
     const remoteNavigationLocation = remote.navigationLocation === 'tools' ? 'tools' : remote.navigationLocation === 'main' ? 'main' : null;
-    if (Array.isArray(remote.toolOrder)) state.toolOrder = normalizeToolOrder(remote.toolOrder, remoteNavigationLocation === 'tools');
+    if (Array.isArray(remote.toolOrder)) state.toolOrder = normalizeToolOrder(remote.toolOrder, remoteNavigationLocation === 'tools', remoteNavigationLocation === 'tools');
     if (remote.calculator) saveStored(STORAGE.calculator, remote.calculator);
     if (remote.events) { state.events = remote.events; saveEvents(); }
     if (Array.isArray(remote.weatherCards)) { state.weatherCards = remote.weatherCards; state.activeWeatherId = state.weatherCards[0]?.id || null; saveWeatherCards(); }
@@ -3442,7 +3470,7 @@ async function githubDownload() {
     if (remote.navigation && Array.isArray(remote.navigation.items)) { state.navigation = normalizeNavigation(remote.navigation); saveNavigation(); }
     if (remoteNavigationLocation) {
       state.navigationLocation = remoteNavigationLocation;
-      state.toolOrder = normalizeToolOrder(state.toolOrder, state.navigationLocation === 'tools');
+      state.toolOrder = normalizeToolOrder(state.toolOrder, state.navigationLocation === 'tools', state.navigationLocation === 'tools');
       localStorage.setItem(STORAGE.navigationLocation, state.navigationLocation);
       saveToolOrder();
       if (state.navigationLocation === 'tools' && state.section === 'navigation') state.section = 'tools', state.tool = 'navigation';
@@ -4610,6 +4638,22 @@ workspace.addEventListener('click', async (event) => {
     if (link) return openNavigationSite(link);
     return;
   }
+  const navigationPrimary = event.target.closest('[data-navigation-open-site], [data-navigation-open-folder]');
+  if (navigationPrimary) {
+    event.preventDefault(); event.stopPropagation();
+    const card = navigationPrimary.closest('[data-navigation-item]');
+    const now = Date.now();
+    const isSecondTap = navigationLastTap?.card === card && now - navigationLastTap.at < 420;
+    if (isSecondTap) {
+      navigationLastTap = null;
+      if (navigationPrimary.matches('[data-navigation-open-folder]')) return openNavigationFolderDialog(card.dataset.navigationId);
+      return openNavigationSite(card.querySelector('[data-navigation-open-site]') || navigationPrimary);
+    }
+    clearNavigationActionCards(card);
+    card?.classList.add('navigation-actions-visible');
+    navigationLastTap = { card, at: now };
+    return;
+  }
   const navigationEdit = event.target.closest('[data-navigation-edit]');
   if (navigationEdit) {
     event.preventDefault(); event.stopPropagation();
@@ -5100,7 +5144,7 @@ $('#settingsDialog').addEventListener('change', (event) => {
   if (event.target.id === 'settingsNavigationLocation') {
     state.navigationLocation = event.target.value === 'tools' ? 'tools' : 'main';
     localStorage.setItem(STORAGE.navigationLocation, state.navigationLocation);
-    state.toolOrder = normalizeToolOrder(state.toolOrder, state.navigationLocation === 'tools');
+    state.toolOrder = normalizeToolOrder(state.toolOrder, state.navigationLocation === 'tools', state.navigationLocation === 'tools');
     saveToolOrder();
     if (state.navigationLocation === 'tools' && state.section === 'navigation') state.section = 'tools', state.tool = 'navigation';
     if (state.navigationLocation === 'main' && state.section === 'tools' && state.tool === 'navigation') state.section = 'navigation';
