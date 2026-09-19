@@ -7398,17 +7398,17 @@ main:has(#toolNav[hidden]):has(#workspace[data-tool="navigation"]) { padding-top
    card instead of floating two unrelated circles above it. */
 #workspace[data-tool="navigation"] .navigation-card-actions {
   top: 4px;
-  right: 4px;
+  right: 2px;
   display: inline-flex;
   align-items: center;
-  gap: 1px;
-  padding: 3px;
-  border: 1px solid color-mix(in srgb, var(--line) 88%, transparent);
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--panel) 86%, transparent);
-  box-shadow: 0 4px 12px color-mix(in srgb, var(--ink) 12%, transparent);
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
+  gap: 7px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
   opacity: 0 !important;
   pointer-events: none !important;
   transform: translateY(-3px) scale(.94);
@@ -7433,11 +7433,24 @@ main:has(#toolNav[hidden]):has(#workspace[data-tool="navigation"]) { padding-top
   pointer-events: auto !important;
 }
 #workspace[data-tool="navigation"] .navigation-card-actions button {
-  width: 22px;
-  height: 22px;
-  border: 0;
-  background: transparent;
-  box-shadow: none;
+  width: 28px;
+  height: 28px;
+  border: 1px solid color-mix(in srgb, var(--line) 84%, transparent);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--panel) 92%, transparent);
+  box-shadow: 0 4px 10px color-mix(in srgb, var(--ink) 13%, transparent);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+#workspace[data-tool="navigation"] .navigation-card-actions .navigation-edit-action {
+  color: var(--primary);
+  border-color: color-mix(in srgb, var(--primary) 25%, var(--line));
+  background: color-mix(in srgb, var(--primary) 8%, var(--panel));
+}
+#workspace[data-tool="navigation"] .navigation-card-actions .navigation-delete-action {
+  color: var(--danger);
+  border-color: color-mix(in srgb, var(--danger) 30%, var(--line));
+  background: color-mix(in srgb, var(--danger) 9%, var(--panel));
 }
 #workspace[data-tool="navigation"] .navigation-card-actions button:hover,
 #workspace[data-tool="navigation"] .navigation-card-actions button:focus-visible {
@@ -7450,8 +7463,8 @@ main:has(#toolNav[hidden]):has(#workspace[data-tool="navigation"]) { padding-top
 @media (max-width: 600px) {
   #workspace[data-tool="navigation"] .navigation-card-actions {
     top: 3px;
-    right: 3px;
-    padding: 2px;
+    right: 1px;
+    gap: 6px;
   }
-  #workspace[data-tool="navigation"] .navigation-card-actions button { width: 20px; height: 20px; }
+  #workspace[data-tool="navigation"] .navigation-card-actions button { width: 28px; height: 28px; border-radius: 10px; }
 }

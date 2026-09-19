@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.178';
+const APP_VERSION = '2.18.179';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -1294,6 +1294,12 @@ function openNavigationSite(link) {
   if (!url) return;
   if (link.target === '_blank') window.open(url, '_blank', 'noopener,noreferrer');
   else window.location.assign(url);
+}
+function clearNavigationActionCards(except = null) {
+  $$('#workspace[data-tool="navigation"] .navigation-card.navigation-actions-visible').forEach((card) => {
+    if (card !== except) card.classList.remove('navigation-actions-visible');
+  });
+  navigationLastTap = null;
 }
 function renderNavigation() {
   const items = state.navigation.items || [];
@@ -4501,6 +4507,8 @@ workspace.addEventListener('contextmenu', (event) => {
 });
 workspace.addEventListener('click', async (event) => {
   if (Date.now() < reorderSuppressClickUntil || Date.now() < pageSwipeSuppressClickUntil) { event.preventDefault(); return; }
+  const navigationPage = state.section === 'navigation' || (state.section === 'tools' && state.tool === 'navigation');
+  if (navigationPage && !event.target.closest('[data-navigation-item]')) clearNavigationActionCards();
   if (!event.target.closest('[data-navigation-open-site], [data-navigation-open-folder]')) navigationLastTap = null;
   if (Date.now() < navigationSuppressClickUntil && event.target.closest('[data-navigation-item]') && !event.target.closest('[data-navigation-delete], [data-navigation-edit]')) { event.preventDefault(); return; }
   if (Date.now() < readerBookSuppressClickUntil && event.target.closest('[data-reader-book-card]')) { event.preventDefault(); return; }
@@ -4528,8 +4536,8 @@ workspace.addEventListener('click', async (event) => {
     const now = Date.now();
     const isDoubleTap = event.detail >= 2 || (navigationLastTap?.link === navigationSiteLink && now - navigationLastTap.at < 360);
     if (isDoubleTap) { navigationLastTap = null; return openNavigationSite(navigationSiteLink); }
+    clearNavigationActionCards(card);
     navigationLastTap = { link: navigationSiteLink, at: now };
-    $$('.navigation-card.navigation-actions-visible').forEach((item) => { if (item !== card) item.classList.remove('navigation-actions-visible'); });
     card?.classList.toggle('navigation-actions-visible');
     return;
   }
@@ -4540,8 +4548,8 @@ workspace.addEventListener('click', async (event) => {
     const now = Date.now();
     const isDoubleTap = event.detail >= 2 || (navigationLastTap?.link === navigationFolder && now - navigationLastTap.at < 360);
     if (isDoubleTap) { navigationLastTap = null; return openNavigationFolderDialog(navigationFolder.dataset.navigationOpenFolder); }
+    clearNavigationActionCards(card);
     navigationLastTap = { link: navigationFolder, at: now };
-    $$('.navigation-card.navigation-actions-visible').forEach((item) => { if (item !== card) item.classList.remove('navigation-actions-visible'); });
     card?.classList.toggle('navigation-actions-visible');
     return;
   }
@@ -4724,6 +4732,11 @@ workspace.addEventListener('click', async (event) => {
   const deleteTranslation = event.target.closest('[data-delete-translation]');
   if (deleteTranslation) { state.translationHistory = state.translationHistory.filter((item) => item.id !== deleteTranslation.dataset.deleteTranslation); saveTranslationHistory(); return render(); }
   if (event.target.closest('[data-clear-translation-history]')) { state.translationHistory = []; saveTranslationHistory(); return render(); }
+});
+document.addEventListener('click', (event) => {
+  const navigationPage = state.section === 'navigation' || (state.section === 'tools' && state.tool === 'navigation');
+  if (!navigationPage || event.target.closest('#workspace[data-tool="navigation"] [data-navigation-item], #workspace[data-tool="navigation"] [data-open-navigation-add], #navigationDialog')) return;
+  clearNavigationActionCards();
 });
 workspace.addEventListener('dblclick', (event) => {
   const day = event.target.closest('[data-date]');
