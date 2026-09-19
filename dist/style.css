@@ -7694,3 +7694,15 @@ main:has(#toolNav[hidden]):has(#workspace[data-tool="navigation"]) { padding-top
   #workspace[data-tool="navigation"] .navigation-page-toolbar { min-height: 36px; margin-bottom: 10px; }
   #workspace[data-tool="navigation"] .navigation-settings-button { width: 36px; min-width: 36px; height: 36px; padding: 8px; }
 }
+
+/* 2.18.183: navigation long-press is owned by OneBox. Suppress the browser
+   callout and keep edit/delete inside the app action dialog. */
+#workspace[data-tool="navigation"] .navigation-card,
+#workspace[data-tool="navigation"] .navigation-card-main {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+#workspace[data-tool="navigation"] .navigation-grid > .navigation-card .navigation-card-actions {
+  display: none !important;
+}

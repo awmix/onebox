@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.182';
+const APP_VERSION = '2.18.183';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -3866,7 +3866,7 @@ function finishNavigationDrag(event = null) {
   if (wasLongPressed) navigationSuppressClickUntil = Date.now() + 550;
   if (!wasActive) {
     restoreNavigationDrag(drag);
-    if (wasLongPressed) drag.target.classList.add('navigation-actions-visible');
+    if (wasLongPressed) openNavigationActionsDialog(targetId, drag.target.dataset.navigationFolderId || '');
     return wasLongPressed;
   }
   if (over && over.dataset.navigationType === 'site' && !combineTarget && !folderTarget) positionNavigationPlaceholder(drag, over, event?.clientX ?? drag.startX, event?.clientY ?? drag.startY);
@@ -4508,6 +4508,14 @@ workspace.addEventListener('dragstart', (event) => { const source = event.target
 workspace.addEventListener('dragover', (event) => { if (event.target.closest('[data-feed-source]')) event.preventDefault(); });
 workspace.addEventListener('drop', (event) => { event.preventDefault(); const source = event.target.closest('[data-feed-source]'); if (source) swapHomeFeedSources(Number(event.dataTransfer.getData('text/plain')), Number(source.dataset.feedSourceIndex)); });
 workspace.addEventListener('contextmenu', (event) => {
+  const navigationItem = event.target.closest('[data-navigation-item]');
+  if (navigationItem && (state.section === 'navigation' || (state.section === 'tools' && state.tool === 'navigation'))) {
+    // Navigation cards own the long-press gesture. Prevent Safari/Chrome from
+    // replacing the app action sheet with their native callout menu.
+    event.preventDefault();
+    event.stopPropagation();
+    return;
+  }
   if (state.readerMode !== 'reading' || !event.target.closest('[data-reader-content]')) return;
   // On iOS/PWA the contextmenu event can arrive before selectionchange. Stop
   // the system callout in both orders, while leaving the native Range intact
