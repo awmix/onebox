@@ -196,7 +196,7 @@ const DICT = {
     commute: '出行', sport: '运动', clothing: '穿衣', sunscreen: '防晒', hiking: '爬山',
     addCard: '添加', noResults: '没有找到匹配地点，请换个关键词。',
     home: '首页', tools: '工具', navigation: '导航', messages: '消息', mine: '我的', quickTools: '常用工具', openSettings: '打开设置', noMessages: '还没有消息。', homeTabs: '首页', homeTabsSelected: '已选择 {count} 项', homeSourceManage: '首页来源', homeSourceManageHint: '选择要显示在首页导航中的来源', homeSourceAdd: '添加', homeSourceRemove: '移除', homeSourceEmpty: '暂时没有其他来源',
-    navigationTitle: '网站导航', navigationHint: '把常用网站放在一起，长按可以删除或拖动排序。', navigationAdd: '添加网站', navigationEmpty: '还没有网站，先添加一个常用网址吧。', navigationUrl: '网站地址', navigationUrlPlaceholder: '粘贴或输入网址', navigationName: '网站名称', navigationNamePlaceholder: '可选，默认使用网站名称', navigationIcon: '网站图标', navigationIconHint: '输入网址后自动获取', navigationSave: '保存网站', navigationEdit: '编辑网站', navigationEditSave: '保存修改', navigationActionEdit: '编辑', navigationActionDelete: '删除', navigationActionCancel: '取消', navigationFolderEdit: '编辑文件夹', navigationAddToFolder: '添加到文件夹', navigationFolder: '文件夹', navigationFolderName: '文件夹名称', navigationFolderPlaceholder: '例如：工作、阅读', navigationCreateFolder: '新建文件夹', navigationSaveFolder: '保存文件夹', navigationFolderAdd: '添加网站', navigationFolderDelete: '删除文件夹', navigationFolderDeleteConfirm: '删除文件夹后，里面的网站也会一起移除，确定继续吗？', navigationFolderEmpty: '文件夹还是空的，添加几个网站吧。', navigationRemove: '删除', navigationOpen: '打开网站', navigationAlreadyExists: '这个网站已经添加过了', navigationInvalidUrl: '请输入有效的 http 或 https 地址', navigationDropHint: '松开后聚合为文件夹', navigationFolderCreated: '文件夹已创建', navigationAdded: '网站已添加', navigationDeleted: '网站已删除', navigationMoved: '网站已移入文件夹', navigationOrderSaved: '导航顺序已保存', navigationSiteCount: '{count} 个网站',
+    navigationTitle: '网站导航', navigationHint: '点击卡片显示操作，长按可以拖动排序或聚合文件夹。', navigationAdd: '添加网站', navigationEmpty: '还没有网站，先添加一个常用网址吧。', navigationUrl: '网站地址', navigationUrlPlaceholder: '粘贴或输入网址', navigationName: '网站名称', navigationNamePlaceholder: '可选，默认使用网站名称', navigationIcon: '网站图标', navigationIconHint: '输入网址后自动获取', navigationSave: '保存网站', navigationEdit: '编辑网站', navigationEditSave: '保存修改', navigationActionEdit: '编辑', navigationActionDelete: '删除', navigationActionCancel: '取消', navigationFolderEdit: '编辑文件夹', navigationAddToFolder: '添加到文件夹', navigationFolder: '文件夹', navigationFolderName: '文件夹名称', navigationFolderPlaceholder: '例如：工作、阅读', navigationCreateFolder: '新建文件夹', navigationSaveFolder: '保存文件夹', navigationFolderAdd: '添加网站', navigationFolderDelete: '删除文件夹', navigationFolderDeleteConfirm: '删除文件夹后，里面的网站也会一起移除，确定继续吗？', navigationFolderEmpty: '文件夹还是空的，添加几个网站吧。', navigationRemove: '删除', navigationOpen: '打开网站', navigationSettings: '导航设置', navigationOpenModeHint: '网站打开方式', navigationOpenModeCurrent: '当前页', navigationOpenModeNewTab: '新标签页', navigationAlreadyExists: '这个网站已经添加过了', navigationInvalidUrl: '请输入有效的 http 或 https 地址', navigationDropHint: '松开后聚合为文件夹', navigationFolderCreated: '文件夹已创建', navigationAdded: '网站已添加', navigationDeleted: '网站已删除', navigationMoved: '网站已移入文件夹', navigationOrderSaved: '导航顺序已保存', navigationSiteCount: '{count} 个网站',
     allFeeds: '全部', feedRefresh: '刷新', feedLoading: '正在加载信息流…', feedEmpty: '暂时没有可显示的内容。', feedUpdated: '更新于', feedOpen: '打开原文', feedPartial: '部分订阅源暂时不可用', feedProxyHint: '内容来自公开 RSS 订阅，首页只保留最近内容。', feedTabPrevious: '查看前面的首页 Tab', feedTabNext: '查看后面的首页 Tab',
     converterType: '换算类型', from: '从', to: '到', result: '结果', swap: '交换单位', copyResult: '复制结果',
     copied: '已复制', translationInput: '输入待翻译内容', translateNow: '开始翻译', saveTranslation: '保存到本机',
@@ -239,7 +239,7 @@ const DICT = {
     commute: 'Travel', sport: 'Sport', clothing: 'Clothing', sunscreen: 'Sun care', hiking: 'Hiking',
     addCard: 'Add', noResults: 'No matching place. Try another query.',
     home: 'Home', tools: 'Tools', navigation: 'Navigation', messages: 'Messages', mine: 'Me', quickTools: 'Quick tools', openSettings: 'Open settings', noMessages: 'No messages yet.', homeTabs: 'Home', homeTabsSelected: '{count} selected',
-    navigationTitle: 'Web navigation', navigationHint: 'Keep your favorite sites together. Long-press to delete or reorder.', navigationAdd: 'Add website', navigationEmpty: 'No websites yet. Add a favorite site to get started.', navigationUrl: 'Website URL', navigationUrlPlaceholder: 'https://example.com', navigationName: 'Website name', navigationNamePlaceholder: 'Optional; defaults to the site name', navigationIcon: 'Website icon', navigationIconHint: 'Fetched automatically from the URL', navigationSave: 'Save website', navigationAddToFolder: 'Add to folder', navigationEdit: 'Edit website', navigationEditSave: 'Save changes', navigationActionEdit: 'Edit', navigationActionDelete: 'Delete', navigationActionCancel: 'Cancel', navigationFolderEdit: 'Edit folder', navigationFolder: 'Folder', navigationFolderName: 'Folder name', navigationFolderPlaceholder: 'For example: Work, Reading', navigationCreateFolder: 'New folder', navigationSaveFolder: 'Save folder', navigationFolderAdd: 'Add website', navigationFolderDelete: 'Delete folder', navigationFolderDeleteConfirm: 'Deleting the folder will also remove its websites. Continue?', navigationFolderEmpty: 'This folder is empty. Add some websites.', navigationRemove: 'Delete', navigationOpen: 'Open website', navigationAlreadyExists: 'This website has already been added', navigationInvalidUrl: 'Enter a valid http or https URL', navigationDropHint: 'Release to create a folder', navigationFolderCreated: 'Folder created', navigationAdded: 'Website added', navigationDeleted: 'Website deleted', navigationMoved: 'Website moved into folder', navigationOrderSaved: 'Navigation order saved', navigationSiteCount: '{count} sites',
+    navigationTitle: 'Web navigation', navigationHint: 'Tap a card for actions; long-press to reorder or create a folder.', navigationAdd: 'Add website', navigationEmpty: 'No websites yet. Add a favorite site to get started.', navigationUrl: 'Website URL', navigationUrlPlaceholder: 'https://example.com', navigationName: 'Website name', navigationNamePlaceholder: 'Optional; defaults to the site name', navigationIcon: 'Website icon', navigationIconHint: 'Fetched automatically from the URL', navigationSave: 'Save website', navigationAddToFolder: 'Add to folder', navigationEdit: 'Edit website', navigationEditSave: 'Save changes', navigationActionEdit: 'Edit', navigationActionDelete: 'Delete', navigationActionCancel: 'Cancel', navigationFolderEdit: 'Edit folder', navigationFolder: 'Folder', navigationFolderName: 'Folder name', navigationFolderPlaceholder: 'For example: Work, Reading', navigationCreateFolder: 'New folder', navigationSaveFolder: 'Save folder', navigationFolderAdd: 'Add website', navigationFolderDelete: 'Delete folder', navigationFolderDeleteConfirm: 'Deleting the folder will also remove its websites. Continue?', navigationFolderEmpty: 'This folder is empty. Add some websites.', navigationRemove: 'Delete', navigationOpen: 'Open website', navigationSettings: 'Navigation settings', navigationOpenModeHint: 'Open websites in', navigationOpenModeCurrent: 'Current page', navigationOpenModeNewTab: 'New tab', navigationAlreadyExists: 'This website has already been added', navigationInvalidUrl: 'Enter a valid http or https URL', navigationDropHint: 'Release to create a folder', navigationFolderCreated: 'Folder created', navigationAdded: 'Website added', navigationDeleted: 'Website deleted', navigationMoved: 'Website moved into folder', navigationOrderSaved: 'Navigation order saved', navigationSiteCount: '{count} sites',
     allFeeds: 'All', feedRefresh: 'Refresh', feedLoading: 'Loading feeds…', feedEmpty: 'No items to show yet.', feedUpdated: 'Updated', feedOpen: 'Open original', feedPartial: 'Some feeds are temporarily unavailable', feedProxyHint: 'Public RSS subscriptions; only recent items are kept on this device.', feedTabPrevious: 'Show previous home tabs', feedTabNext: 'Show more home tabs',
     converterType: 'Conversion', from: 'From', to: 'To', result: 'Result', swap: 'Swap units', copyResult: 'Copy result',
     copied: 'Copied', translationInput: 'Text to translate', translateNow: 'Translate', saveTranslation: 'Save locally',
@@ -407,7 +407,7 @@ const state = {
   readerBookId: null, readerUrl: '', readerContent: '', readerHint: '', readerToc: [], readerDialog: '', readerChromeHidden: false, readerImmersive: false, readerMode: 'library', readerReadingMode: 'scroll', readerPage: 0, readerSelectedText: '', readerSelection: null, readerSelectionInput: 'mouse', readerLayout: storedReaderLayout === 'list' ? 'list' : 'grid', annotationBookId: null,
   readerPreferences: { theme: ['paper', 'sepia', 'green', 'dark'].includes(storedReaderPreferences.theme) ? storedReaderPreferences.theme : 'paper', fontSize: Number.isFinite(Number(storedReaderPreferences.fontSize)) ? Math.min(26, Math.max(15, Number(storedReaderPreferences.fontSize))) : 18, fontFamily: ['system', 'serif', 'mono'].includes(storedReaderPreferences.fontFamily) ? storedReaderPreferences.fontFamily : 'system', lineHeight: Number.isFinite(Number(storedReaderPreferences.lineHeight)) ? Math.min(2.2, Math.max(1.35, Number(storedReaderPreferences.lineHeight))) : 1.8, paragraphSpacing: Number.isFinite(Number(storedReaderPreferences.paragraphSpacing)) ? Math.min(28, Math.max(6, Number(storedReaderPreferences.paragraphSpacing))) : 14, letterSpacing: Number.isFinite(Number(storedReaderPreferences.letterSpacing)) ? Math.min(2, Math.max(0, Number(storedReaderPreferences.letterSpacing))) : 0, pageAnimation: ['slide', 'cover', 'none'].includes(storedReaderPreferences.pageAnimation) ? storedReaderPreferences.pageAnimation : 'slide', fullscreenOnOpen: storedReaderPreferences.fullscreenOnOpen === true },
   homeFeed: { active: DEFAULT_HOME_FEED_VISIBLE[0] || DEFAULT_HOME_FEED_ORDER[0], order: normalizeHomeFeedOrder(storedHomeFeedOrder), visible: normalizeHomeFeedVisibility(storedHomeFeedVisibility), hasNew: false, loading: false, errors: {}, stale: {}, updatedAt: Number(storedHomeFeeds.updatedAt || 0), cacheVersion: storedHomeFeeds.cacheVersion || '', sources: storedHomeFeeds.sources && typeof storedHomeFeeds.sources === 'object' ? storedHomeFeeds.sources : {} },
-  navigation: normalizeNavigation(storedNavigation), navigationLocation: storedNavigationLocation, navigationDialog: null, navigationFolderDraft: null,
+  navigation: normalizeNavigation(storedNavigation), navigationLocation: storedNavigationLocation, navigationDialog: null, navigationFolderDraft: null, navigationSettingsOpen: false,
   homeFeedRead: storedHomeFeedRead && typeof storedHomeFeedRead === 'object' ? storedHomeFeedRead : {},
   homeFeedRequest: 0,
   notifications: parseStored(STORAGE.notifications, []), notificationOpen: false, settingsOpen: false, githubDialogOpen: false, recentReadingOpen: false,
@@ -1271,7 +1271,8 @@ function navigationItemMarkup(item, index = 0, folderId = '') {
   const indexAttribute = ' data-navigation-index="' + index + '"';
   const deleteButton = '<button class="navigation-delete-action" type="button" data-navigation-delete="' + escapeHtml(item.id) + '" aria-label="' + escapeHtml(t('navigationRemove') + ' ' + item.name) + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 12h12"/></svg></button>';
   const editButton = item.type === 'site' ? '<button class="navigation-edit-action" type="button" data-navigation-edit="' + escapeHtml(item.id) + '" aria-label="' + escapeHtml(t('navigationEdit') + ' ' + item.name) + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 16.5-.7 3.2 3.2-.7L18.8 7.7a2.2 2.2 0 0 0-3.1-3.1L5 16.5Z"/><path d="m14.5 6.5 3 3"/></svg></button>' : '';
-  const actionButtons = '<span class="navigation-card-actions">' + editButton + deleteButton + '</span>';
+  const openButton = '<button class="navigation-open-action" type="button" data-navigation-open-action aria-label="' + escapeHtml(t('navigationOpen') + ' ' + item.name) + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg></button>';
+  const actionButtons = '<span class="navigation-card-actions" role="group" aria-label="' + escapeHtml(t('navigationTitle')) + '"><span class="navigation-primary-actions">' + openButton + '</span><span class="navigation-secondary-actions">' + editButton + deleteButton + '</span></span>';
   if (item.type === 'folder') {
     const preview = item.children.slice(0, 4).map((site) => navigationIconMarkup(site, 'navigation-folder-site-icon')).join('') || '<span class="navigation-folder-empty-icon">＋</span>';
     return '<article class="navigation-card navigation-folder-card" data-navigation-item data-navigation-type="folder" data-navigation-id="' + escapeHtml(item.id) + '"' + indexAttribute + '>' + actionButtons + '<button class="navigation-card-main" type="button" data-navigation-open-folder="' + escapeHtml(item.id) + '" aria-label="' + escapeHtml(item.name) + '"><span class="navigation-folder-preview">' + preview + '</span><strong>' + escapeHtml(item.name) + '</strong><small>' + escapeHtml(t('navigationSiteCount').replace('{count}', String(item.children.length))) + '</small></button></article>';
@@ -1301,11 +1302,18 @@ function clearNavigationActionCards(except = null) {
   });
   navigationLastTap = null;
 }
+function navigationSettingsMarkup() {
+  if (!state.navigationSettingsOpen) return '';
+  const current = state.openMode === 'new-tab' ? 'new-tab' : 'current';
+  const option = (value, label, icon) => '<button type="button" class="navigation-settings-option ' + (current === value ? 'is-selected' : '') + '" data-navigation-open-mode="' + value + '" aria-pressed="' + String(current === value) + '"><span class="navigation-settings-option-icon">' + icon + '</span><span>' + escapeHtml(label) + '</span><span class="navigation-settings-check" aria-hidden="true">' + (current === value ? '✓' : '') + '</span></button>';
+  return '<div class="navigation-settings-popover" role="dialog" aria-label="' + escapeHtml(t('navigationSettings')) + '"><div class="navigation-settings-label">' + escapeHtml(t('navigationOpenModeHint')) + '</div><div class="navigation-settings-options">' + option('current', t('navigationOpenModeCurrent'), '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>') + option('new-tab', t('navigationOpenModeNewTab'), '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4h13v13M20 4 10 14"/><path d="M17 20H4V7"/></svg>') + '</div></div>';
+}
 function renderNavigation() {
   const items = state.navigation.items || [];
   const emptyBody = '<button class="navigation-card navigation-empty-add-card" type="button" data-open-navigation-add aria-label="' + escapeHtml(t('navigationAdd')) + '"><span class="navigation-add-glyph">＋</span><strong>' + escapeHtml(t('navigationAdd')) + '</strong><small>' + escapeHtml(t('navigationEmpty')) + '</small></button>';
   const body = items.length ? items.map((item, index) => navigationItemMarkup(item, index)).join('') + '<button class="navigation-card navigation-add-card" type="button" data-open-navigation-add aria-label="' + escapeHtml(t('navigationAdd')) + '"><span class="navigation-add-glyph">＋</span><strong>' + escapeHtml(t('navigationAdd')) + '</strong></button>' : emptyBody;
-  return '<div class="section-page navigation-page"><div class="navigation-grid">' + body + '</div></div>';
+  const settingsButton = '<button class="navigation-settings-button" type="button" data-open-navigation-settings aria-expanded="' + String(state.navigationSettingsOpen) + '" aria-label="' + escapeHtml(t('navigationSettings')) + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Z"/><path d="m19.2 13.4 1.2 1-.1 1.8-1.6 1-1.5-.5-1.1.7-.2 1.6-1.6.8-1.5-1-1.3.4-1 1.3-1.8-.3-.7-1.7.8-1.1-.4-1.3-1.5-.7-.2-1.8 1.5-.8.3-1.4-.9-1.3.6-1.7 1.8-.2.8 1.1 1.4-.1.9-1.2-.3-1.6 1.5-1 1.6.8.2 1.5 1.2.8 1.4-.5 1.5 1 .1 1.8-1.2 1Z"/></svg></button>';
+  return '<div class="section-page navigation-page"><div class="navigation-page-head"><div><p class="section-kicker">ONEBOX</p><h1>' + escapeHtml(t('navigationTitle')) + '</h1><p>' + escapeHtml(t('navigationHint')) + '</p></div><div class="navigation-page-tools">' + settingsButton + navigationSettingsMarkup() + '</div></div><div class="navigation-grid">' + body + '</div></div>';
 }
 function renderNavigationAddDialog(folderId = '', site = null) {
   const dialog = $('#navigationDialog'); if (!dialog) return;
@@ -4518,7 +4526,29 @@ workspace.addEventListener('click', async (event) => {
   if (section) return selectSection(section.dataset.section);
   const homeTool = event.target.closest('[data-home-tool]');
   if (homeTool) return selectTool(homeTool.dataset.homeTool);
+  if (event.target.closest('[data-open-navigation-settings]')) {
+    state.navigationSettingsOpen = !state.navigationSettingsOpen;
+    clearNavigationActionCards();
+    return render();
+  }
+  const navigationOpenMode = event.target.closest('[data-navigation-open-mode]');
+  if (navigationOpenMode) {
+    state.openMode = navigationOpenMode.dataset.navigationOpenMode === 'new-tab' ? 'new-tab' : 'current';
+    saveStored(STORAGE.openMode, state.openMode);
+    state.navigationSettingsOpen = false;
+    return render();
+  }
   if (event.target.closest('[data-open-navigation-add]')) return openNavigationAddDialog();
+  const navigationOpenAction = event.target.closest('[data-navigation-open-action]');
+  if (navigationOpenAction) {
+    event.preventDefault(); event.stopPropagation();
+    const card = navigationOpenAction.closest('[data-navigation-item]');
+    state.navigationSettingsOpen = false;
+    if (card?.dataset.navigationType === 'folder') return openNavigationFolderDialog(card.dataset.navigationId);
+    const link = card?.querySelector('[data-navigation-open-site]');
+    if (link) return openNavigationSite(link);
+    return;
+  }
   const navigationEdit = event.target.closest('[data-navigation-edit]');
   if (navigationEdit) {
     event.preventDefault(); event.stopPropagation();
@@ -4735,7 +4765,8 @@ workspace.addEventListener('click', async (event) => {
 });
 document.addEventListener('click', (event) => {
   const navigationPage = state.section === 'navigation' || (state.section === 'tools' && state.tool === 'navigation');
-  if (!navigationPage || event.target.closest('#workspace[data-tool="navigation"] [data-navigation-item], #workspace[data-tool="navigation"] [data-open-navigation-add], #navigationDialog')) return;
+  if (!navigationPage || event.target.closest('#workspace[data-tool="navigation"] [data-navigation-item], #workspace[data-tool="navigation"] [data-open-navigation-add], [data-open-navigation-settings], .navigation-settings-popover, #navigationDialog')) return;
+  if (state.navigationSettingsOpen) { state.navigationSettingsOpen = false; render(); }
   clearNavigationActionCards();
 });
 workspace.addEventListener('dblclick', (event) => {
