@@ -7654,3 +7654,43 @@ main:has(#toolNav[hidden]):has(#workspace[data-tool="navigation"]) { padding-top
   #workspace[data-tool="navigation"] .navigation-card-actions button { width: 25px; height: 25px; border-radius: 9px; }
   #workspace[data-tool="navigation"] .navigation-card-actions svg { width: 12px; height: 12px; }
 }
+
+/* 2.18.181: the navigation surface follows the reference launcher pattern:
+   cards are the primary open action, while edit/delete appear only after a
+   long press. Keep only the compact settings control in the page chrome. */
+#workspace[data-tool="navigation"] .navigation-page {
+  padding-top: 6px;
+}
+#workspace[data-tool="navigation"] .navigation-page-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  min-height: 42px;
+  margin: 0 0 12px;
+}
+#workspace[data-tool="navigation"] .navigation-page-tools {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+}
+#workspace[data-tool="navigation"] .navigation-settings-button {
+  width: 42px;
+  min-width: 42px;
+  height: 42px;
+  padding: 10px;
+  color: var(--primary);
+}
+#workspace[data-tool="navigation"] .navigation-settings-button .header-line-icon {
+  width: 17px;
+  height: 17px;
+  color: currentColor;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+@media (max-width: 600px) {
+  #workspace[data-tool="navigation"] .navigation-page { padding-top: 2px; }
+  #workspace[data-tool="navigation"] .navigation-page-toolbar { min-height: 36px; margin-bottom: 10px; }
+  #workspace[data-tool="navigation"] .navigation-settings-button { width: 36px; min-width: 36px; height: 36px; padding: 8px; }
+}

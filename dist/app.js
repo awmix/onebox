@@ -1312,8 +1312,8 @@ function renderNavigation() {
   const items = state.navigation.items || [];
   const emptyBody = '<button class="navigation-card navigation-empty-add-card" type="button" data-open-navigation-add aria-label="' + escapeHtml(t('navigationAdd')) + '"><span class="navigation-add-glyph">＋</span><strong>' + escapeHtml(t('navigationAdd')) + '</strong><small>' + escapeHtml(t('navigationEmpty')) + '</small></button>';
   const body = items.length ? items.map((item, index) => navigationItemMarkup(item, index)).join('') + '<button class="navigation-card navigation-add-card" type="button" data-open-navigation-add aria-label="' + escapeHtml(t('navigationAdd')) + '"><span class="navigation-add-glyph">＋</span><strong>' + escapeHtml(t('navigationAdd')) + '</strong></button>' : emptyBody;
-  const settingsButton = '<button class="navigation-settings-button" type="button" data-open-navigation-settings aria-expanded="' + String(state.navigationSettingsOpen) + '" aria-label="' + escapeHtml(t('navigationSettings')) + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Z"/><path d="m19.2 13.4 1.2 1-.1 1.8-1.6 1-1.5-.5-1.1.7-.2 1.6-1.6.8-1.5-1-1.3.4-1 1.3-1.8-.3-.7-1.7.8-1.1-.4-1.3-1.5-.7-.2-1.8 1.5-.8.3-1.4-.9-1.3.6-1.7 1.8-.2.8 1.1 1.4-.1.9-1.2-.3-1.6 1.5-1 1.6.8.2 1.5 1.2.8 1.4-.5 1.5 1 .1 1.8-1.2 1Z"/></svg></button>';
-  return '<div class="section-page navigation-page"><div class="navigation-page-head"><div><p class="section-kicker">ONEBOX</p><h1>' + escapeHtml(t('navigationTitle')) + '</h1><p>' + escapeHtml(t('navigationHint')) + '</p></div><div class="navigation-page-tools">' + settingsButton + navigationSettingsMarkup() + '</div></div><div class="navigation-grid">' + body + '</div></div>';
+  const settingsButtonMarkup = '<button class="icon-btn header-icon navigation-settings-button" type="button" data-open-navigation-settings aria-expanded="' + String(state.navigationSettingsOpen) + '" aria-label="' + escapeHtml(t('navigationSettings')) + '"><svg class="header-line-icon settings-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 12h2M10 12h10M4 17h10M18 17h2"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="12" r="2"/><circle cx="16" cy="17" r="2"/></svg></button>';
+  return '<div class="section-page navigation-page"><div class="navigation-page-toolbar"><div class="navigation-page-tools">' + settingsButtonMarkup + navigationSettingsMarkup() + '</div></div><div class="navigation-grid">' + body + '</div></div>';
 }
 function renderNavigationAddDialog(folderId = '', site = null) {
   const dialog = $('#navigationDialog'); if (!dialog) return;
@@ -3864,7 +3864,11 @@ function finishNavigationDrag(event = null) {
   const combineTarget = drag.combineTarget;
   const folderTarget = drag.folderTarget;
   if (wasLongPressed) navigationSuppressClickUntil = Date.now() + 550;
-  if (!wasActive) { restoreNavigationDrag(drag); return wasLongPressed; }
+  if (!wasActive) {
+    restoreNavigationDrag(drag);
+    if (wasLongPressed) drag.target.classList.add('navigation-actions-visible');
+    return wasLongPressed;
+  }
   if (over && over.dataset.navigationType === 'site' && !combineTarget && !folderTarget) positionNavigationPlaceholder(drag, over, event?.clientX ?? drag.startX, event?.clientY ?? drag.startY);
   const overId = over?.dataset.navigationId;
   const source = navigationFindRootItem(targetId); const destination = navigationFindRootItem(overId);
@@ -4438,7 +4442,7 @@ workspace.addEventListener('pointerdown', (event) => {
   const navigationVisible = state.section === 'navigation' || (state.section === 'tools' && state.tool === 'navigation');
   if (!navigationVisible) return;
   const card = event.target.closest('[data-navigation-item]');
-  if (card && !event.target.closest('[data-navigation-delete], [data-navigation-edit]')) startNavigationLongPress(card, event);
+  if (card && !event.target.closest('[data-navigation-open-action], [data-navigation-delete], [data-navigation-edit]')) startNavigationLongPress(card, event);
 });
 workspace.addEventListener('pointerdown', (event) => {
   const book = event.target.closest('[data-reader-book-card]');
@@ -4562,26 +4566,14 @@ workspace.addEventListener('click', async (event) => {
   const navigationSiteLink = event.target.closest('[data-navigation-open-site]');
   if (navigationSiteLink) {
     event.preventDefault(); event.stopPropagation();
-    const card = navigationSiteLink.closest('[data-navigation-item]');
-    const now = Date.now();
-    const isDoubleTap = event.detail >= 2 || (navigationLastTap?.link === navigationSiteLink && now - navigationLastTap.at < 360);
-    if (isDoubleTap) { navigationLastTap = null; return openNavigationSite(navigationSiteLink); }
-    clearNavigationActionCards(card);
-    navigationLastTap = { link: navigationSiteLink, at: now };
-    card?.classList.toggle('navigation-actions-visible');
-    return;
+    state.navigationSettingsOpen = false;
+    return openNavigationSite(navigationSiteLink);
   }
   const navigationFolder = event.target.closest('[data-navigation-open-folder]');
   if (navigationFolder) {
     event.preventDefault(); event.stopPropagation();
-    const card = navigationFolder.closest('[data-navigation-item]');
-    const now = Date.now();
-    const isDoubleTap = event.detail >= 2 || (navigationLastTap?.link === navigationFolder && now - navigationLastTap.at < 360);
-    if (isDoubleTap) { navigationLastTap = null; return openNavigationFolderDialog(navigationFolder.dataset.navigationOpenFolder); }
-    clearNavigationActionCards(card);
-    navigationLastTap = { link: navigationFolder, at: now };
-    card?.classList.toggle('navigation-actions-visible');
-    return;
+    state.navigationSettingsOpen = false;
+    return openNavigationFolderDialog(navigationFolder.dataset.navigationOpenFolder);
   }
   if (event.target.closest('[data-reader-layout-toggle]')) {
     state.readerLayout = state.readerLayout === 'list' ? 'grid' : 'list';
