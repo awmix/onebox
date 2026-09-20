@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.208';
+const APP_VERSION = '2.18.209';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -5088,7 +5088,10 @@ document.querySelector('main')?.addEventListener('pointerdown', beginPageSwipe);
 document.addEventListener('pointermove', updatePageSwipe, { passive: false });
 document.addEventListener('pointerup', finishPageSwipe, { passive: true });
 document.addEventListener('pointercancel', () => {
-  tabSwipeGesture = null; pageSwipeGesture = null; readerSurfaceGesture = null; endLongPress(); cancelReorderDrag();
+  tabSwipeGesture = null; pageSwipeGesture = null;
+  if (readerSurfaceGesture?.dragging) settleReaderPageDrag(readerSurfaceGesture, 0, true);
+  readerSurfaceGesture = null;
+  endLongPress(); cancelReorderDrag();
   if (navigationDrag) { restoreNavigationDrag(navigationDrag); navigationDrag = null; }
   endNavigationLongPress(); cancelNavigationDialogLongPress(); clearNavigationDragClasses(); swipeGesture = null; resetPageSwipeTransform();
   if (readerBookDrag) {
@@ -5137,12 +5140,84 @@ function suppressReaderPageNativePan(event) {
     event.preventDefault();
   }
 }
+function readerPageDragOffset(gesture, dx) {
+  const viewport = gesture.viewport || gesture.surface?.closest('.reader-page-viewport');
+  const flow = gesture.flow || viewport?.querySelector('.reader-page-flow');
+  if (!viewport || !flow) return null;
+  const width = gesture.width || Math.max(1, viewport.clientWidth);
+  const count = gesture.count || readerPageCount(viewport);
+  const current = gesture.page;
+  const limit = width * .96;
+  let movement = Math.max(-limit, Math.min(limit, dx));
+  if ((current <= 0 && movement > 0) || (current >= count - 1 && movement < 0)) movement *= .22;
+  return { viewport, flow, width, count, offset: -current * width + movement };
+}
+function updateReaderPageDrag(event) {
+  const gesture = readerSurfaceGesture;
+  if (!gesture || gesture.pointerType !== 'touch' || state.readerMode !== 'reading' || state.readerReadingMode !== 'pages') return;
+  if (gesture.pointerId != null && event.pointerId != null && event.pointerId !== gesture.pointerId) return;
+  const point = event.touches?.[0] || event;
+  const dx = point.clientX - gesture.x; const dy = point.clientY - gesture.y;
+  if (readerHasLiveSelection()) {
+    if (!gesture.cancelled) {
+      if (gesture.dragging) setReaderPagePosition(gesture.page, 'smooth');
+      gesture.cancelled = true;
+    }
+    return;
+  }
+  if (!gesture.dragging) {
+    if (Date.now() - gesture.startedAt > 320) return;
+    if (Math.abs(dy) > Math.abs(dx) + 10 && Math.abs(dy) > 8) { gesture.cancelled = true; return; }
+    if (Math.abs(dx) < 10 || Math.abs(dx) <= Math.abs(dy) + 8) return;
+    const viewport = gesture.surface?.closest('.reader-page-viewport');
+    const flow = viewport?.querySelector('.reader-page-flow');
+    if (!viewport || !flow) return;
+    ensureReaderPageColumns(viewport, flow);
+    gesture.page = state.readerPage;
+    gesture.viewport = viewport;
+    gesture.flow = flow;
+    gesture.width = Math.max(1, viewport.clientWidth);
+    gesture.count = readerPageCount(viewport);
+    gesture.dragging = true;
+    gesture.dragStartedAt = Date.now();
+  }
+  const drag = readerPageDragOffset(gesture, dx);
+  if (!drag) return;
+  drag.flow.style.transition = 'none';
+  drag.flow.style.webkitTransition = 'none';
+  const transform = 'translate3d(' + drag.offset + 'px, 0, 0)';
+  drag.flow.style.transform = transform;
+  drag.flow.style.webkitTransform = transform;
+  if (event.cancelable) event.preventDefault();
+}
+function settleReaderPageDrag(gesture, dx, cancelled = false) {
+  if (!gesture?.dragging) return false;
+  const drag = readerPageDragOffset(gesture, dx);
+  if (!drag) return false;
+  const elapsed = Math.max(1, Date.now() - (gesture.dragStartedAt || gesture.startedAt));
+  const velocity = Math.abs(dx) / elapsed;
+  const threshold = Math.max(56, Math.min(112, drag.width * .18));
+  const direction = dx < 0 ? 1 : -1;
+  const targetPage = gesture.page + direction;
+  const commit = !cancelled && (Math.abs(dx) >= threshold || (velocity >= .55 && Math.abs(dx) >= 18)) && targetPage >= 0 && targetPage < drag.count;
+  swipeSuppressClickUntil = Date.now() + 520;
+  const prefersReducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  const behavior = state.readerPreferences.pageAnimation !== 'none' && !prefersReducedMotion ? 'smooth' : 'instant';
+  setReaderPagePosition(commit ? targetPage : gesture.page, behavior);
+  return true;
+}
 workspace.addEventListener('pointermove', suppressReaderPageNativePan, { passive: false });
 workspace.addEventListener('touchmove', suppressReaderPageNativePan, { passive: false });
+document.addEventListener('pointermove', updateReaderPageDrag, { passive: false });
+document.addEventListener('touchmove', updateReaderPageDrag, { passive: false });
 function finishReaderSurfaceGesture(clientX, clientY, target) {
   const gesture = readerSurfaceGesture; readerSurfaceGesture = null;
   if (!gesture || state.readerMode !== 'reading') return;
   const dx = clientX - gesture.x; const dy = clientY - gesture.y;
+  if (gesture.dragging) {
+    settleReaderPageDrag(gesture, dx, readerHasLiveSelection());
+    return;
+  }
   const targetElement = target instanceof Element ? target : null;
   const onInteractiveControl = targetElement?.closest('a,button,input,textarea,select,[data-reader-comment-id],[data-reader-selection-menu],[data-reader-comment-popover]');
   // A native text selection can move more than a tap while its handles are
