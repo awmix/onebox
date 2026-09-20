@@ -8395,3 +8395,95 @@ html.ios-safari-browser.reader-focus.reader-safari-surface .reader-reference-she
   0%, 100% { opacity: 1; filter: brightness(1); }
   45% { opacity: .88; filter: brightness(.96); }
 }
+/* OneBox page mascot: the sprite sheets follow page-mascot's 3×3 direction /
+   reaction model, while the shell stays native to this dependency-free PWA. */
+#oneboxMascotRoot {
+  position: fixed;
+  z-index: 1200;
+  top: 42vh;
+  right: max(14px, env(safe-area-inset-right));
+  width: 82px;
+  height: 82px;
+  pointer-events: auto;
+  user-select: none;
+  touch-action: none;
+  transition: transform .34s cubic-bezier(.22,.76,.24,1), opacity .22s ease;
+}
+#oneboxMascotRoot.is-dragging { transition: none; }
+#oneboxMascotRoot[data-edge="right"].is-docked { transform: translateX(calc(100% - 18px)); }
+#oneboxMascotRoot[data-edge="left"].is-docked { transform: translateX(calc(-100% + 18px)); }
+.onebox-mascot-button {
+  position: relative;
+  display: block;
+  width: 82px;
+  height: 82px;
+  padding: 0;
+  border: 0;
+  border-radius: 26px;
+  background: color-mix(in srgb, var(--panel) 72%, transparent);
+  box-shadow: 0 14px 30px color-mix(in srgb, var(--ink) 18%, transparent), inset 0 0 0 1px color-mix(in srgb, var(--line) 74%, transparent);
+  appearance: none;
+  cursor: grab;
+  overflow: visible;
+  -webkit-tap-highlight-color: transparent;
+}
+.onebox-mascot-button:active { cursor: grabbing; }
+.onebox-mascot-button:focus-visible { outline: 2px solid var(--primary); outline-offset: 4px; }
+.onebox-mascot-visual { position: relative; display: block; width: 100%; height: 100%; transform-origin: 50% 78%; }
+.onebox-mascot-layer,
+.onebox-mascot-fallback,
+.onebox-mascot-top-icon { position: absolute; inset: 0; display: block; }
+.onebox-mascot-layer { background-repeat: no-repeat; background-size: 300% 300%; pointer-events: none; }
+.onebox-mascot-direction { background-position: 50% 50%; }
+.onebox-mascot-reaction { opacity: 0; background-position: 0% 0%; transition: opacity .08s ease; }
+#oneboxMascotRoot[data-reaction] .onebox-mascot-reaction { opacity: 1; }
+.onebox-mascot-fallback { display: grid; place-items: center; font-size: 46px; line-height: 1; filter: drop-shadow(0 7px 8px color-mix(in srgb, var(--ink) 20%, transparent)); }
+.onebox-mascot-root.assets-loaded .onebox-mascot-fallback { display: none; }
+#oneboxMascotRoot.assets-fallback .onebox-mascot-layer { opacity: 0; }
+#oneboxMascotRoot.assets-fallback .onebox-mascot-fallback { display: grid; }
+.onebox-mascot-top-icon { display: none; place-items: center; border-radius: 22px; background: color-mix(in srgb, var(--primary) 16%, var(--panel)); color: var(--primary); font-size: 42px; font-weight: 700; line-height: 1; }
+#oneboxMascotRoot.is-top-action .onebox-mascot-layer,
+#oneboxMascotRoot.is-top-action .onebox-mascot-fallback { opacity: 0; }
+#oneboxMascotRoot.is-top-action .onebox-mascot-top-icon { display: grid; }
+.onebox-mascot-panel {
+  position: absolute;
+  right: -6px;
+  bottom: calc(100% + 12px);
+  box-sizing: border-box;
+  width: min(318px, calc(100vw - 28px));
+  max-height: min(440px, calc(100vh - 34px));
+  overflow: auto;
+  padding: 14px;
+  border: 1px solid color-mix(in srgb, var(--line) 88%, transparent);
+  border-radius: 22px;
+  background: color-mix(in srgb, var(--panel) 94%, transparent);
+  color: var(--ink);
+  box-shadow: 0 24px 60px color-mix(in srgb, var(--ink) 26%, transparent), 0 0 0 1px color-mix(in srgb, var(--line) 28%, transparent);
+  -webkit-backdrop-filter: blur(22px);
+  backdrop-filter: blur(22px);
+}
+#oneboxMascotRoot[data-panel-side="left"] .onebox-mascot-panel { right: auto; left: -6px; }
+.onebox-mascot-panel-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding-bottom: 11px; border-bottom: 1px solid var(--line); }
+.onebox-mascot-panel-head strong, .onebox-mascot-panel-head small { display: block; }
+.onebox-mascot-panel-head strong { font-size: 17px; }
+.onebox-mascot-panel-head small { margin-top: 3px; color: var(--muted); font-size: 11px; }
+.onebox-mascot-section { padding: 12px 0 2px; }
+.onebox-mascot-section + .onebox-mascot-section { border-top: 1px solid color-mix(in srgb, var(--line) 72%, transparent); }
+.onebox-mascot-section h3 { margin: 0 0 8px; font-size: 12px; font-weight: 800; }
+.onebox-mascot-empty { margin: 0; color: var(--muted); font-size: 12px; }
+.onebox-mascot-list { display: grid; gap: 7px; margin: 0; padding: 0; list-style: none; }
+.onebox-mascot-list li { display: grid; grid-template-columns: 48px minmax(0, 1fr); gap: 8px; align-items: center; font-size: 13px; }
+.onebox-mascot-list time { color: var(--muted); font-variant-numeric: tabular-nums; }
+.onebox-mascot-list span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.onebox-mascot-list .onebox-mascot-more { display: block; padding-left: 56px; color: var(--muted); font-size: 11px; }
+.onebox-mascot-weather-main { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 3px 10px; align-items: baseline; }
+.onebox-mascot-weather-main strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; }
+.onebox-mascot-weather-main span { font-size: 22px; font-weight: 800; }
+.onebox-mascot-weather-main small { color: var(--muted); font-size: 11px; }
+.onebox-mascot-weather-meta { display: flex; flex-wrap: wrap; gap: 6px 10px; margin-top: 9px; color: var(--muted); font-size: 11px; }
+@media (max-width: 600px) {
+  #oneboxMascotRoot { width: 70px; height: 70px; top: 39vh; }
+  .onebox-mascot-button { width: 70px; height: 70px; border-radius: 22px; }
+  .onebox-mascot-panel { bottom: calc(100% + 9px); width: min(300px, calc(100vw - 20px)); padding: 12px; }
+  .onebox-mascot-top-icon { font-size: 36px; }
+}

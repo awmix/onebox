@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.210';
+const APP_VERSION = '2.18.211';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -34,6 +34,7 @@ const STORAGE = {
   github: 'onebox.github',
   navigation: 'onebox.navigation',
   navigationLocation: 'onebox.navigation-location',
+  mascotPosition: 'onebox.mascot-position',
 };
 const TOOL_DEFS = {
   calculator: { icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="3"/><path d="M8 7h8M8 11h.01M12 11h.01M16 11h.01M8 15h.01M12 15h.01M16 15h.01M8 18h8"/></svg>', key: 'calculator' },
@@ -1126,6 +1127,245 @@ function scrollAppTo(top, behavior = 'auto') {
     return;
   }
   scrollElement.scrollTo({ top: targetTop, behavior });
+}
+
+// Page mascot ---------------------------------------------------------------
+// page-mascot uses two aligned 3×3 sheets: one for the direction the
+// character looks and one for the short reaction after a click. Keep that
+// rendering model, but mount it as a dependency-free OneBox surface so it
+// survives route renders and works in the static PWA.
+const MASCOT_ASSETS = {
+  directions: 'https://cdn.jsdelivr.net/gh/nilbuild/page-mascot@main/public/mascots/fox-directions.webp',
+  reactions: 'https://cdn.jsdelivr.net/gh/nilbuild/page-mascot@main/public/mascots/fox-reactions.webp',
+};
+const MASCOT_DIRECTIONS = ['up-left', 'up', 'up-right', 'left', 'center', 'right', 'down-left', 'down', 'down-right'];
+const MASCOT_REACTIONS = ['blink', 'heart', 'sparkle', 'surprised', 'wink', 'bashful', 'sleepy', 'dizzy', 'delighted'];
+const MASCOT_CLOCKWISE = ['right', 'down-right', 'down', 'down-left', 'left', 'up-left', 'up', 'up-right'];
+const MASCOT_SECTOR = (Math.PI * 2) / MASCOT_CLOCKWISE.length;
+const MASCOT_HYSTERESIS = 0.12;
+const MASCOT_DEAD_ZONE = 46;
+const MASCOT_DOCK_DELAY = 6500;
+const mascotRuntime = { root: null, button: null, panel: null, directionLayer: null, reactionLayer: null, drag: null, dockTimer: 0, reactionTimer: 0, singleClickTimer: 0, tapAt: 0, boopAt: 0, boops: 0, suppressClickUntil: 0, sector: -1, position: null };
+function mascotCellStyle(index) {
+  return { backgroundPosition: (index % 3) * 50 + '% ' + Math.floor(index / 3) * 50 + '%' };
+}
+function mascotWrapAngle(angle) { return Math.atan2(Math.sin(angle), Math.cos(angle)); }
+function mascotPositionValue() {
+  const value = parseStored(STORAGE.mascotPosition, null);
+  if (!value || !Number.isFinite(Number(value.left)) || !Number.isFinite(Number(value.top))) return null;
+  return { left: Number(value.left), top: Number(value.top) };
+}
+function mascotClampPosition(left, top) {
+  const root = mascotRuntime.root;
+  const width = root?.offsetWidth || 82;
+  const height = root?.offsetHeight || 82;
+  return {
+    left: Math.max(8, Math.min(Math.max(8, window.innerWidth - width - 8), Number(left) || 0)),
+    top: Math.max(8, Math.min(Math.max(8, window.innerHeight - height - 8), Number(top) || 0)),
+  };
+}
+function mascotSetPosition(left, top, persist = true) {
+  const root = mascotRuntime.root;
+  if (!root) return;
+  const position = mascotClampPosition(left, top);
+  mascotRuntime.position = position;
+  root.style.left = position.left + 'px';
+  root.style.top = position.top + 'px';
+  root.style.right = 'auto';
+  root.dataset.edge = position.left + (root.offsetWidth || 82) / 2 < window.innerWidth / 2 ? 'left' : 'right';
+  if (persist) saveStored(STORAGE.mascotPosition, position);
+}
+function mascotSyncPanelSide() {
+  const root = mascotRuntime.root;
+  if (!root) return;
+  const rect = root.getBoundingClientRect();
+  root.dataset.panelSide = rect.left + rect.width / 2 < window.innerWidth / 2 ? 'left' : 'right';
+}
+function mascotClearDockTimer() {
+  clearTimeout(mascotRuntime.dockTimer);
+  mascotRuntime.dockTimer = 0;
+}
+function mascotScheduleDock() {
+  mascotClearDockTimer();
+  if (!mascotRuntime.root || !mascotRuntime.panel?.hidden || mascotRuntime.drag) return;
+  mascotRuntime.dockTimer = window.setTimeout(() => {
+    if (!mascotRuntime.drag && mascotRuntime.panel?.hidden) mascotRuntime.root.classList.add('is-docked');
+  }, MASCOT_DOCK_DELAY);
+}
+function mascotReveal() {
+  mascotRuntime.root?.classList.remove('is-docked');
+  mascotClearDockTimer();
+  mascotSyncPanelSide();
+}
+function mascotSetReaction(reaction = null) {
+  const root = mascotRuntime.root;
+  if (!root) return;
+  clearTimeout(mascotRuntime.reactionTimer);
+  root.dataset.reaction = reaction || '';
+  if (reaction) mascotRuntime.reactionTimer = window.setTimeout(() => { root.dataset.reaction = ''; }, reaction === 'dizzy' ? 1100 : 560);
+}
+function mascotPlayReaction() {
+  const now = Date.now();
+  const count = now - (mascotRuntime.boopAt || 0) < 1600 ? Number(mascotRuntime.boops || 0) + 1 : 1;
+  mascotRuntime.boops = count >= 4 ? 0 : count;
+  mascotRuntime.boopAt = now;
+  mascotSetReaction(count >= 4 ? 'dizzy' : count === 2 ? 'heart' : count === 3 ? 'sparkle' : 'blink');
+}
+function mascotAgendaMarkup() {
+  const events = eventsForDate(dateKey(new Date())).sort((a, b) => (a.time || '99:99').localeCompare(b.time || '99:99'));
+  if (!events.length) return '<p class="onebox-mascot-empty">' + escapeHtml(state.language === 'en' ? 'No agenda for today' : '今天没有日程') + '</p>';
+  return '<ul class="onebox-mascot-list">' + events.slice(0, 4).map((event) => '<li><time>' + escapeHtml(event.time || (state.language === 'en' ? 'All day' : '全天')) + '</time><span>' + escapeHtml(event.title) + '</span></li>').join('') + (events.length > 4 ? '<li class="onebox-mascot-more">+' + (events.length - 4) + '</li>' : '') + '</ul>';
+}
+function mascotWeatherMarkup() {
+  const weather = state.weatherCards.find((item) => item.id === state.activeWeatherId) || state.weatherCards[0];
+  if (!weather) return '<p class="onebox-mascot-empty">' + escapeHtml(state.language === 'en' ? 'Add a weather place first' : '还没有天气卡片') + '</p>';
+  if (weather.loading && !weather.current) return '<p class="onebox-mascot-empty">' + escapeHtml(t('weatherLoading')) + '</p>';
+  const current = weather.current || {};
+  const condition = weatherCode(current.weather_code);
+  const temp = Number.isFinite(Number(current.temperature_2m)) ? Math.round(Number(current.temperature_2m)) + '°' : '—';
+  return '<div class="onebox-mascot-weather-main"><strong>' + escapeHtml(weather.name || (state.language === 'en' ? 'Weather' : '天气')) + '</strong><span>' + condition[0] + ' ' + escapeHtml(temp) + '</span><small>' + escapeHtml(condition[1]) + '</small></div><div class="onebox-mascot-weather-meta"><span>' + escapeHtml(weatherWindLabel(current.wind_speed_10m)) + '</span><span>' + escapeHtml((state.language === 'en' ? 'Humidity ' : '湿度 ') + (current.relative_humidity_2m ?? '—') + '%') + '</span><span>' + escapeHtml((state.language === 'en' ? 'Elevation ' : '海拔 ') + weatherElevationLabel(weather.elevation)) + '</span></div>';
+}
+function mascotBriefingMarkup() {
+  const todayLabel = new Intl.DateTimeFormat(state.language === 'en' ? 'en-US' : 'zh-CN', { month: 'short', day: 'numeric', weekday: 'short' }).format(new Date());
+  return '<div class="onebox-mascot-panel-head"><div><strong>' + escapeHtml(state.language === 'en' ? 'Today' : '今日速览') + '</strong><small>' + escapeHtml(todayLabel) + '</small></div><button type="button" class="icon-btn small" data-close-mascot aria-label="' + escapeHtml(t('close')) + '">×</button></div><section class="onebox-mascot-section"><h3>📅 ' + escapeHtml(state.language === 'en' ? 'Agenda' : '日程') + '</h3>' + mascotAgendaMarkup() + '</section><section class="onebox-mascot-section"><h3>☁️ ' + escapeHtml(state.language === 'en' ? 'Weather' : '天气') + '</h3>' + mascotWeatherMarkup() + '</section>';
+}
+function closeMascotBriefing() {
+  if (!mascotRuntime.panel) return;
+  mascotRuntime.panel.hidden = true;
+  mascotRuntime.root?.classList.remove('has-briefing');
+  mascotScheduleDock();
+}
+function openMascotBriefing() {
+  if (!mascotRuntime.panel) return;
+  mascotReveal();
+  mascotRuntime.panel.innerHTML = mascotBriefingMarkup();
+  mascotRuntime.panel.hidden = false;
+  mascotRuntime.root.classList.add('has-briefing');
+  mascotPlayReaction();
+}
+function mascotRefreshPage() {
+  mascotClearDockTimer();
+  mascotSetReaction('delighted');
+  window.setTimeout(() => window.location.reload(), 150);
+}
+function mascotTopActionActive() {
+  return state.section === 'home' && appScrollTop() > 84;
+}
+function syncMascotContext() {
+  const root = mascotRuntime.root;
+  const button = mascotRuntime.button;
+  if (!root || !button) return;
+  const topAction = mascotTopActionActive();
+  root.classList.toggle('is-top-action', topAction);
+  button.setAttribute('aria-label', topAction ? (state.language === 'en' ? 'Back to top' : '回到顶部') : (state.language === 'en' ? 'Open today overview' : '查看今日速览'));
+  mascotSyncPanelSide();
+}
+function updateMascotScrollState() {
+  const topAction = mascotTopActionActive();
+  if (topAction && mascotRuntime.panel && !mascotRuntime.panel.hidden) {
+    mascotRuntime.panel.hidden = true;
+    mascotRuntime.root?.classList.remove('has-briefing');
+    mascotClearDockTimer();
+  }
+  syncMascotContext();
+  if (!topAction) mascotScheduleDock();
+}
+function mascotAim(pointer) {
+  const root = mascotRuntime.root;
+  if (!root || root.classList.contains('is-docked') || root.classList.contains('is-dragging')) return;
+  const box = root.getBoundingClientRect();
+  const dx = pointer.x - (box.left + box.width / 2);
+  const dy = pointer.y - (box.top + box.height / 2);
+  if (Math.hypot(dx, dy) < MASCOT_DEAD_ZONE) {
+    mascotRuntime.sector = -1;
+    mascotRuntime.directionLayer.style.backgroundPosition = '50% 50%';
+    return;
+  }
+  const angle = Math.atan2(dy, dx);
+  if (mascotRuntime.sector !== -1 && Math.abs(mascotWrapAngle(angle - mascotRuntime.sector * MASCOT_SECTOR)) < MASCOT_SECTOR / 2 + MASCOT_HYSTERESIS) return;
+  mascotRuntime.sector = (Math.round(angle / MASCOT_SECTOR) + MASCOT_CLOCKWISE.length) % MASCOT_CLOCKWISE.length;
+  const direction = MASCOT_CLOCKWISE[mascotRuntime.sector];
+  mascotRuntime.directionLayer.style.backgroundPosition = mascotCellStyle(MASCOT_DIRECTIONS.indexOf(direction)).backgroundPosition;
+}
+function mascotFinishDrag(event) {
+  const drag = mascotRuntime.drag;
+  if (!drag || (event.pointerId != null && event.pointerId !== drag.pointerId)) return;
+  const cancelled = event.type === 'pointercancel';
+  mascotRuntime.drag = null;
+  mascotRuntime.root.classList.remove('is-dragging');
+  try { if (mascotRuntime.button.hasPointerCapture?.(drag.pointerId)) mascotRuntime.button.releasePointerCapture(drag.pointerId); } catch {}
+  if (drag.moved) {
+    mascotRuntime.suppressClickUntil = Date.now() + 500;
+    const position = mascotRuntime.position || { left: drag.left, top: drag.top };
+    mascotSetPosition(position.left, position.top);
+    mascotSyncPanelSide();
+    mascotScheduleDock();
+    return;
+  }
+  if (!cancelled) {
+    mascotRuntime.suppressClickUntil = Date.now() + 350;
+    mascotHandleTap();
+  }
+}
+function mascotUpdateDrag(event) {
+  const drag = mascotRuntime.drag;
+  if (!drag || (event.pointerId != null && event.pointerId !== drag.pointerId)) return;
+  const dx = event.clientX - drag.startX; const dy = event.clientY - drag.startY;
+  if (!drag.moved && Math.hypot(dx, dy) < 6) return;
+  drag.moved = true;
+  if (event.cancelable) event.preventDefault();
+  mascotSetPosition(drag.left + dx, drag.top + dy, false);
+}
+function mascotHandleTap() {
+  if (Date.now() < mascotRuntime.suppressClickUntil) return;
+  const now = Date.now();
+  clearTimeout(mascotRuntime.singleClickTimer);
+  if (now - mascotRuntime.tapAt < 340) {
+    mascotRuntime.tapAt = 0;
+    closeMascotBriefing();
+    mascotRefreshPage();
+    return;
+  }
+  mascotRuntime.tapAt = now;
+  mascotRuntime.singleClickTimer = window.setTimeout(() => {
+    if (mascotTopActionActive()) { scrollAppTo(0, 'smooth'); return; }
+    openMascotBriefing();
+  }, 250);
+}
+function mountMascot() {
+  if (mascotRuntime.root) return;
+  const root = document.createElement('aside');
+  root.id = 'oneboxMascotRoot'; root.className = 'onebox-mascot-root'; root.dataset.edge = 'right'; root.dataset.panelSide = 'right';
+  root.innerHTML = '<div class="onebox-mascot-panel" hidden></div><button type="button" class="onebox-mascot-button" aria-label="查看今日速览"><span class="onebox-mascot-visual" aria-hidden="true"><span class="onebox-mascot-layer onebox-mascot-direction"></span><span class="onebox-mascot-layer onebox-mascot-reaction"></span><span class="onebox-mascot-fallback">🦊</span><span class="onebox-mascot-top-icon">↑</span></span></button>';
+  document.body.appendChild(root);
+  mascotRuntime.root = root; mascotRuntime.button = $('.onebox-mascot-button', root); mascotRuntime.panel = $('.onebox-mascot-panel', root); mascotRuntime.directionLayer = $('.onebox-mascot-direction', root); mascotRuntime.reactionLayer = $('.onebox-mascot-reaction', root);
+  mascotRuntime.directionLayer.style.backgroundImage = 'url("' + MASCOT_ASSETS.directions + '")';
+  mascotRuntime.reactionLayer.style.backgroundImage = 'url("' + MASCOT_ASSETS.reactions + '")';
+  const saved = mascotPositionValue();
+  if (saved) mascotSetPosition(saved.left, saved.top, false);
+  else mascotSyncPanelSide();
+  let loaded = 0;
+  const markAssetLoaded = () => { loaded += 1; if (loaded === 2) root.classList.add('assets-loaded'); };
+  const markAssetFailed = () => root.classList.add('assets-fallback');
+  [MASCOT_ASSETS.directions, MASCOT_ASSETS.reactions].forEach((src) => { const image = new Image(); image.onerror = markAssetFailed; image.onload = markAssetLoaded; image.src = src; });
+  root.addEventListener('pointerdown', (event) => {
+    if (!event.target.closest?.('.onebox-mascot-button')) return;
+    if (event.button != null && event.button !== 0) return;
+    mascotReveal(); closeMascotBriefing();
+    const rect = root.getBoundingClientRect();
+    mascotRuntime.drag = { pointerId: event.pointerId, startX: event.clientX, startY: event.clientY, left: rect.left, top: rect.top, moved: false };
+    try { mascotRuntime.button.setPointerCapture?.(event.pointerId); } catch {}
+  });
+  mascotRuntime.button.addEventListener('pointermove', mascotUpdateDrag, { passive: false });
+  mascotRuntime.button.addEventListener('pointerup', mascotFinishDrag, { passive: false });
+  mascotRuntime.button.addEventListener('pointercancel', mascotFinishDrag, { passive: false });
+  mascotRuntime.button.addEventListener('click', () => { if (Date.now() >= mascotRuntime.suppressClickUntil) mascotHandleTap(); });
+  mascotRuntime.button.addEventListener('keydown', (event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); mascotHandleTap(); } });
+  mascotRuntime.panel.addEventListener('click', (event) => { if (event.target.closest('[data-close-mascot]')) closeMascotBriefing(); });
+  document.addEventListener('pointerdown', (event) => { if (mascotRuntime.panel && mascotRuntime.root && !mascotRuntime.root.contains(event.target)) closeMascotBriefing(); }, true);
+  if (window.matchMedia?.('(hover: hover) and (pointer: fine)').matches) window.addEventListener('pointermove', (event) => mascotAim({ x: event.clientX, y: event.clientY }), { passive: true });
+  window.addEventListener('resize', () => { if (mascotRuntime.position) mascotSetPosition(mascotRuntime.position.left, mascotRuntime.position.top, false); mascotSyncPanelSide(); }, { passive: true });
+  mascotScheduleDock(); syncMascotContext();
 }
 let pendingNavigationRestore = null;
 let navigationRestoreTimers = [];
@@ -4290,6 +4530,7 @@ function render() {
   renderBottomNav();
   requestAnimationFrame(() => { updateToolTabOverflowControls(); focusActiveToolTab(false); });
   updateNotificationBadge();
+  syncMascotContext();
   if (state.recentReadingOpen) renderRecentReading();
   if (state.navigationDialog) renderNavigationDialog();
   if (state.section === 'home') scheduleHomeFeedSurfaceSync();
@@ -5820,9 +6061,10 @@ function handleAppScroll(current) {
   $('main')?.classList.toggle('bottom-nav-blurred', bottomNav.classList.contains('is-blurred'));
   lastMainScrollTop = current;
 }
-$('main').addEventListener('scroll', (event) => handleAppScroll(event.currentTarget.scrollTop), { passive: true });
+$('main').addEventListener('scroll', (event) => { handleAppScroll(event.currentTarget.scrollTop); updateMascotScrollState(); }, { passive: true });
 window.addEventListener('scroll', () => {
   if (isIosSafariBrowser()) handleAppScroll(appScrollTop());
+  updateMascotScrollState();
 }, { passive: true });
 
 document.addEventListener('keydown', (event) => {
@@ -6032,6 +6274,7 @@ function scheduleHomeFeedPolling() {
 }
 function bootApp() {
   try { history.scrollRestoration = 'manual'; } catch { /* unsupported */ }
+  mountMascot();
   setInterval(checkNotifications, 30000);
   applyLanguage(); renderNav(); render(); checkNotifications(); scheduleHomeFeedPolling(); loadHomeFeeds();
   setupServiceWorker();
