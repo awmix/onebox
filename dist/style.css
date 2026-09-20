@@ -1167,7 +1167,7 @@ main { padding-bottom: calc(94px + env(safe-area-inset-bottom)); }
 .reader-reference-viewer { position: absolute; inset: 0; z-index: 1; width: 100%; height: 100%; box-sizing: border-box; border: 0 !important; border-radius: 0 !important; background: var(--reader-bg) !important; color: var(--reader-ink); font-family: var(--reader-font); font-size: var(--reader-size); line-height: var(--reader-line-height); letter-spacing: var(--reader-letter-spacing); box-shadow: none !important; }
 .reader-reference-viewer.reader-scroll-content { overflow: auto; padding: 34px clamp(24px, 7vw, 72px) 54px; overscroll-behavior: contain; }
 .reader-reference-viewer.reader-page-viewport { overflow-x: hidden; overflow-y: hidden; padding: 0; scroll-behavior: smooth; }
-.reader-reference-viewer .reader-page-flow { width: auto; height: 100%; padding: 34px clamp(24px, 7vw, 72px) 54px; box-sizing: border-box; background: var(--reader-bg); color: var(--reader-ink); column-width: calc(100% - 0px); column-gap: 0; column-fill: auto; }
+.reader-reference-viewer .reader-page-flow { width: auto; height: 100%; padding: 34px clamp(24px, 7vw, 72px) 54px; box-sizing: border-box; background: var(--reader-bg); color: var(--reader-ink); column-width: 100%; -webkit-column-width: 100%; column-count: auto; -webkit-column-count: auto; column-gap: 0; -webkit-column-gap: 0; column-fill: auto; -webkit-column-fill: auto; }
 .reader-reference-viewer .reader-pdf { width: 100%; height: 100%; min-height: 0; border: 0; border-radius: 0; background: var(--reader-bg); }
 .reader-reference-viewer .reader-content p { margin-bottom: var(--reader-paragraph-spacing); }
 .reader-reference-viewer .reader-content, .reader-reference-viewer p, .reader-reference-viewer li { color: var(--reader-ink); }
@@ -2514,7 +2514,7 @@ html.reader-focus main:has(#workspace[data-tool="reader"]) { padding-top: calc(v
 .reader-reading-shell .reader-content { width: 100%; box-sizing: border-box; min-height: 0; flex: 1 1 auto; background: var(--panel); border: 1px solid var(--line); border-radius: 24px; box-shadow: var(--shadow); }
 .reader-scroll-content { overflow: auto; padding: 28px clamp(20px, 6vw, 76px); }
 .reader-page-viewport { overflow-x: hidden; overflow-y: hidden; padding: 0; scroll-behavior: smooth; }
-.reader-page-flow { height: 100%; padding: 28px clamp(20px, 6vw, 76px); box-sizing: border-box; column-width: calc(100% - 0px); column-gap: 0; column-fill: auto; }
+.reader-page-flow { height: 100%; padding: 28px clamp(20px, 6vw, 76px); box-sizing: border-box; column-width: 100%; -webkit-column-width: 100%; column-count: auto; -webkit-column-count: auto; column-gap: 0; -webkit-column-gap: 0; column-fill: auto; -webkit-column-fill: auto; }
 .reader-page-flow > * { break-inside: auto; }
 .reader-page-viewport.reader-turn-forward { animation: reader-page-turn-forward .28s ease; }
 .reader-page-viewport.reader-turn-back { animation: reader-page-turn-back .28s ease; }
@@ -8080,7 +8080,7 @@ main:has(#toolNav[hidden]):has(#workspace[data-tool="navigation"]) { padding-top
   #workspace[data-tool="weather"] .weather-card-meta { font-size: 9.5px; }
 }
 
-/* 2.18.193: make the four reading surfaces materially different and keep
+/* 2.18.194: make the four reading surfaces materially different and keep
    paged content from being clipped when a paragraph or EPUB block is taller
    than one viewport column. */
 .reader-reference-shell[data-reader-theme="paper"],
@@ -8148,6 +8148,8 @@ main:has(#toolNav[hidden]):has(#workspace[data-tool="navigation"]) { padding-top
 .reader-reference-viewer.reader-page-viewport {
   overflow-x: auto !important;
   overflow-y: hidden !important;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
   scrollbar-width: none;
   -ms-overflow-style: none;
 }

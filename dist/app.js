@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.193';
+const APP_VERSION = '2.18.194';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -1937,6 +1937,9 @@ function readerAnnotationMarkup(book) {
 let readerProgressFrame = 0;
 let readerProgressTimer = null;
 let readerRestoreTimer = null;
+let readerPageLayoutFrame = 0;
+let readerPageResizeObserver = null;
+let readerPageResizeTarget = null;
 let readerTurnTimer = null;
 let readerNativeFullscreen = false;
 function readerUsesDocumentScroll() {
@@ -2001,10 +2004,59 @@ function flushReaderProgress() {
   }
   saveLibrary();
 }
+function applyReaderPageLayout(preserveProgress = true) {
+  const viewport = $('.reader-page-viewport');
+  const flow = $('.reader-page-flow');
+  if (!viewport || !flow || !viewport.clientWidth || !viewport.clientHeight) return;
+  const previousMax = Math.max(0, viewport.scrollWidth - viewport.clientWidth);
+  const progress = preserveProgress && previousMax > 0
+    ? Math.min(1, Math.max(0, viewport.scrollLeft / previousMax))
+    : 0;
+  const width = Math.max(1, Math.round(viewport.clientWidth));
+  const height = Math.max(1, Math.round(viewport.clientHeight));
+  flow.style.columnWidth = width + 'px';
+  flow.style.webkitColumnWidth = width + 'px';
+  flow.style.columnFill = 'auto';
+  flow.style.webkitColumnFill = 'auto';
+  flow.style.height = height + 'px';
+  requestAnimationFrame(() => {
+    if (!viewport.isConnected || !flow.isConnected) return;
+    const maxScroll = Math.max(0, viewport.scrollWidth - viewport.clientWidth);
+    const previousBehavior = viewport.style.scrollBehavior;
+    viewport.style.scrollBehavior = 'auto';
+    viewport.scrollLeft = progress * maxScroll;
+    viewport.style.scrollBehavior = previousBehavior;
+    updateReaderPager();
+  });
+}
+function scheduleReaderPageLayout() {
+  if (readerPageLayoutFrame) return;
+  readerPageLayoutFrame = requestAnimationFrame(() => {
+    readerPageLayoutFrame = 0;
+    if (state.readerReadingMode === 'pages') applyReaderPageLayout(true);
+  });
+}
+function syncReaderPageResizeObserver() {
+  const viewport = state.readerReadingMode === 'pages' ? $('.reader-page-viewport') : null;
+  if (readerPageResizeTarget === viewport) return;
+  readerPageResizeObserver?.disconnect();
+  readerPageResizeObserver = null;
+  readerPageResizeTarget = viewport;
+  if (!viewport || !window.ResizeObserver) return;
+  readerPageResizeObserver = new ResizeObserver(scheduleReaderPageLayout);
+  readerPageResizeObserver.observe(viewport);
+}
 function updateReaderPager() {
   const viewport = $('.reader-page-viewport'); if (!viewport) return;
   const flow = $('.reader-page-flow');
-  if (flow) { flow.style.columnWidth = viewport.clientWidth + 'px'; flow.style.height = viewport.clientHeight + 'px'; }
+  if (flow) {
+    const width = Math.max(1, Math.round(viewport.clientWidth));
+    flow.style.columnWidth = width + 'px';
+    flow.style.webkitColumnWidth = width + 'px';
+    flow.style.columnFill = 'auto';
+    flow.style.webkitColumnFill = 'auto';
+    flow.style.height = Math.max(1, Math.round(viewport.clientHeight)) + 'px';
+  }
   const count = Math.max(1, Math.ceil(viewport.scrollWidth / Math.max(1, viewport.clientWidth)));
   state.readerPage = Math.min(Math.max(0, Math.round(viewport.scrollLeft / Math.max(1, viewport.clientWidth))), count - 1);
   const current = $('[data-reader-page-current]'); const total = $('[data-reader-page-count]');
@@ -3493,6 +3545,9 @@ syncOneBoxViewportMetrics();
 window.addEventListener('resize', syncOneBoxViewportMetrics, { passive: true });
 window.visualViewport?.addEventListener('resize', syncOneBoxViewportMetrics, { passive: true });
 window.visualViewport?.addEventListener('scroll', syncOneBoxViewportMetrics, { passive: true });
+window.addEventListener('resize', scheduleReaderPageLayout, { passive: true });
+window.visualViewport?.addEventListener('resize', scheduleReaderPageLayout, { passive: true });
+window.addEventListener('orientationchange', scheduleReaderPageLayout, { passive: true });
 window.addEventListener('resize', syncHomeFeedSurface, { passive: true });
 window.visualViewport?.addEventListener('resize', syncHomeFeedSurface, { passive: true });
 async function requestNotifications() {
@@ -3904,7 +3959,7 @@ function render() {
   document.documentElement.classList.toggle('reader-focus', state.section === 'tools' && state.tool === 'reader' && state.readerMode === 'reading' && state.readerImmersive);
   syncReaderSafariSurface();
   if (state.section === 'tools' && state.tool === 'reader' && state.readerMode === 'reading') {
-    requestAnimationFrame(() => { ensureReaderFullscreenTool(); applyReaderPreferences(); applyReaderMarkups(); updateReaderFullscreenControl(); scheduleReaderPositionRestore(); if (state.readerDialog) { readerDialogMarkup(state.readerDialog); updateReaderReferenceChrome(); } });
+    requestAnimationFrame(() => { ensureReaderFullscreenTool(); applyReaderPreferences(); applyReaderMarkups(); updateReaderFullscreenControl(); syncReaderPageResizeObserver(); scheduleReaderPageLayout(); scheduleReaderPositionRestore(); if (state.readerDialog) { readerDialogMarkup(state.readerDialog); updateReaderReferenceChrome(); } });
   } else if (!state.readerDialog) {
     const readerDialog = $('#readerDialog'); if (readerDialog) readerDialog.hidden = true;
   }
