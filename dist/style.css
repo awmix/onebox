@@ -8148,7 +8148,7 @@ main:has(#toolNav[hidden]):has(#workspace[data-tool="navigation"]) { padding-top
 .reader-reference-viewer.reader-page-viewport {
   overflow: hidden !important;
   overflow-y: hidden !important;
-  touch-action: pan-y;
+  touch-action: pan-x;
   overscroll-behavior: contain;
   scrollbar-width: none;
   -ms-overflow-style: none;
@@ -8231,13 +8231,27 @@ main:has(#toolNav[hidden]):has(#workspace[data-tool="navigation"]) { padding-top
     min-height: 0 !important;
     max-height: none !important;
     overflow: hidden !important;
-    touch-action: pan-y pinch-zoom !important;
+    touch-action: pan-x !important;
   }
 
   html.ios-safari-browser.reader-focus.reader-safari-page-surface #workspace[data-tool="reader"] .reader-page-flow {
     height: 100% !important;
     min-height: 0 !important;
   }
+}
+
+/* 2.18.197: keep Safari's long-press selection pipeline available. The
+   application action bar only cancels a context menu after a real Range
+   exists; cancelling the empty event prevents iOS from creating that Range.
+   Paged reading accepts horizontal gestures but never native vertical panning
+   from a tap or a small finger drift. */
+.reader-reference-viewer,
+.reader-reference-viewer * {
+  -webkit-touch-callout: default;
+}
+.reader-reference-viewer.reader-page-viewport,
+.reader-reference-viewer.reader-page-viewport .reader-page-flow {
+  touch-action: pan-x;
 }
 @keyframes reader-page-surface-dim {
   0%, 100% { opacity: 1; filter: brightness(1); }

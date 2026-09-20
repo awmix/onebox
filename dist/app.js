@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.196';
+const APP_VERSION = '2.18.197';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -2128,10 +2128,19 @@ function readerPageCount(viewport) {
   const geometry = readerPageGeometry(viewport, flow);
   return readerMeasuredLastContentPage(viewport, flow, geometry);
 }
+function ensureReaderPageColumns(viewport, flow) {
+  if (!viewport || !flow) return;
+  const geometry = readerPageGeometry(viewport, flow);
+  const height = Math.max(1, Math.round(viewport.clientHeight)) + 'px';
+  if (flow.style.columnWidth !== geometry.columnWidth + 'px' || flow.style.columnGap !== geometry.columnGap + 'px' || flow.style.height !== height) {
+    applyReaderPageColumns(viewport, flow);
+  }
+}
 function setReaderPagePosition(page, behavior = 'smooth') {
   const viewport = $('.reader-page-viewport');
   const flow = $('.reader-page-flow');
   if (!viewport || !flow || !viewport.clientWidth) return 0;
+  ensureReaderPageColumns(viewport, flow);
   const count = readerPageCount(viewport);
   const nextPage = Math.min(Math.max(0, Math.round(Number(page) || 0)), count - 1);
   state.readerPage = nextPage;
@@ -2159,9 +2168,7 @@ function setReaderPagePosition(page, behavior = 'smooth') {
 function updateReaderPager() {
   const viewport = $('.reader-page-viewport'); if (!viewport) return;
   const flow = $('.reader-page-flow');
-  if (flow) {
-    applyReaderPageColumns(viewport, flow);
-  }
+  if (flow) ensureReaderPageColumns(viewport, flow);
   const count = readerPageCount(viewport);
   state.readerPage = Math.min(Math.max(0, Math.round(Number(state.readerPage) || 0)), count - 1);
   viewport.dataset.readerLayoutPages = String(count);
@@ -2522,10 +2529,26 @@ function setReaderReadingMode(mode) {
   scheduleReaderPositionRestore();
 }
 function hideReaderSelectionMenu() {
+  if (readerSelectionHideTimer) {
+    clearTimeout(readerSelectionHideTimer);
+    readerSelectionHideTimer = 0;
+  }
   const menu = $('[data-reader-selection-menu]');
   if (menu) menu.hidden = true;
   const dock = $('[data-reader-selection-dock]');
   if (dock) dock.hidden = true;
+}
+function scheduleReaderSelectionMenuHide(delay = 180) {
+  if (readerSelectionHideTimer) clearTimeout(readerSelectionHideTimer);
+  readerSelectionHideTimer = setTimeout(() => {
+    readerSelectionHideTimer = 0;
+    if (window.getSelection?.()?.rangeCount && !window.getSelection().isCollapsed) return;
+    if (Date.now() < readerSelectionSuppressUntil) {
+      scheduleReaderSelectionMenuHide(Math.max(80, readerSelectionSuppressUntil - Date.now()));
+      return;
+    }
+    hideReaderSelectionMenu();
+  }, delay);
 }
 function suppressReaderPageGesture(duration = 900) {
   readerSelectionSuppressUntil = Math.max(readerSelectionSuppressUntil, Date.now() + duration);
@@ -2539,15 +2562,49 @@ function clearReaderSelectionState() {
   state.readerSelectedText = '';
   window.getSelection?.()?.removeAllRanges();
 }
-function preserveReaderPageAfterRender(page) {
-  if (state.readerReadingMode !== 'pages') return;
-  state.readerPage = Math.max(0, Number(page) || 0);
+function captureReaderPosition(content = $('[data-reader-content]')) {
+  if (!content) return null;
+  return {
+    mode: state.readerReadingMode,
+    page: state.readerPage,
+    progress: readerScrollProgress(content),
+    anchor: state.readerSelection ? { ...state.readerSelection } : null,
+  };
+}
+function preserveReaderPositionAfterRender(position) {
+  if (!position) return;
   requestAnimationFrame(() => requestAnimationFrame(() => {
-    if (state.readerMode !== 'reading' || state.readerReadingMode !== 'pages') return;
-    state.readerPage = Math.max(0, Number(page) || 0);
-    updateReaderPager();
-    setReaderPagePosition(state.readerPage, 'instant');
+    if (state.readerMode !== 'reading') return;
+    const content = $('[data-reader-content]');
+    if (!content) return;
+    if (position.mode === 'pages' && state.readerReadingMode === 'pages' && content.classList.contains('reader-page-viewport')) {
+      state.readerPage = Math.max(0, Number(position.page) || 0);
+      updateReaderPager();
+      setReaderPagePosition(state.readerPage, 'instant');
+      return;
+    }
+    if (state.readerReadingMode === 'pages' && content.classList.contains('reader-page-viewport')) return;
+    const range = position.anchor?.quote ? readerFindQuoteRange(content, position.anchor.quote) : null;
+    const rangeRect = range?.getBoundingClientRect?.();
+    const viewportHeight = Math.max(1, window.innerHeight || document.documentElement.clientHeight || content.clientHeight || 1);
+    if (rangeRect && rangeRect.height) {
+      if (readerUsesDocumentScroll()) {
+        window.scrollTo({ top: Math.max(0, window.scrollY + rangeRect.top - viewportHeight * 0.3), behavior: 'auto' });
+      } else {
+        const contentRect = content.getBoundingClientRect();
+        content.scrollTop = Math.max(0, content.scrollTop + rangeRect.top - contentRect.top - content.clientHeight * 0.3);
+      }
+    } else {
+      const progress = Math.min(1, Math.max(0, Number(position.progress) || 0));
+      const documentMetrics = readerDocumentScrollMetrics(content);
+      if (documentMetrics) window.scrollTo({ top: documentMetrics.documentTop + documentMetrics.max * progress, behavior: 'auto' });
+      else content.scrollTop = progress * Math.max(0, content.scrollHeight - content.clientHeight);
+    }
+    updateReaderReferenceChrome();
   }));
+}
+function preserveReaderPageAfterRender(page) {
+  preserveReaderPositionAfterRender({ mode: 'pages', page: Number(page) || 0 });
 }
 function readerTextOffset(root, container, offset) {
   if (!root || !container) return -1;
@@ -2594,6 +2651,10 @@ function readerShowSelectionMenu(range) {
   const root = $('[data-reader-content]'); if (!root || !range || !root.contains(range.commonAncestorContainer)) return;
   const anchor = readerSelectionAnchor(root, range);
   if (!anchor || !anchor.quote) return hideReaderSelectionMenu();
+  if (readerSelectionHideTimer) {
+    clearTimeout(readerSelectionHideTimer);
+    readerSelectionHideTimer = 0;
+  }
   state.readerSelectedText = anchor.quote;
   state.readerSelection = anchor;
   suppressReaderPageGesture(1200);
@@ -2672,7 +2733,7 @@ async function copyReaderText(text) {
 }
 async function applyReaderSelectionAction(action) {
   const book = readerBookById(state.readerBookId); const selection = state.readerSelection;
-  const currentPage = state.readerPage;
+  const position = captureReaderPosition();
   suppressReaderPageGesture(1200);
   hideReaderSelectionMenu();
   if (!book || !selection?.quote) return;
@@ -2692,7 +2753,7 @@ async function applyReaderSelectionAction(action) {
   book.markups.push({ id: uid(), type: action, start: selection.start, end: selection.end, quote: selection.quote, createdAt: Date.now() });
   clearReaderSelectionState();
   saveLibrary(); render();
-  preserveReaderPageAfterRender(currentPage);
+  preserveReaderPositionAfterRender(position);
 }
 function jumpToReaderToc(item) {
   closeReaderDialog();
@@ -4130,6 +4191,7 @@ let pageSwipeTrackState = null;
 let pageSwipeNavState = null;
 let readerSurfaceGesture = null;
 let readerSelectionSuppressUntil = 0;
+let readerSelectionHideTimer = 0;
 let readerBookDrag = null;
 let readerBookSuppressClickUntil = 0;
 let navigationPressTimer = null;
@@ -4927,6 +4989,23 @@ workspace.addEventListener('touchstart', (event) => {
   if (surface && touch) readerSurfaceGesture = { surface, x: touch.clientX, y: touch.clientY, pointerId: null, pointerType: 'touch', startedAt: Date.now() };
 }, { passive: true });
 let readerSurfaceTapSuppressClickUntil = 0;
+function suppressReaderPageNativePan(event) {
+  const gesture = readerSurfaceGesture;
+  if (!gesture || state.readerMode !== 'reading' || state.readerReadingMode !== 'pages') return;
+  const pointerType = event.pointerType || gesture.pointerType;
+  if (pointerType !== 'touch') return;
+  const point = event.touches?.[0] || event;
+  const dx = point.clientX - gesture.x;
+  const dy = point.clientY - gesture.y;
+  // Let a held text selection take over after the long-press threshold, but
+  // swallow the short accidental drift that Safari interprets as vertical
+  // page scrolling when the user only meant to tap or swipe a page.
+  if (Date.now() - gesture.startedAt < 320 && Math.max(Math.abs(dx), Math.abs(dy)) > 7 && event.cancelable) {
+    event.preventDefault();
+  }
+}
+workspace.addEventListener('pointermove', suppressReaderPageNativePan, { passive: false });
+workspace.addEventListener('touchmove', suppressReaderPageNativePan, { passive: false });
 function finishReaderSurfaceGesture(clientX, clientY, target) {
   const gesture = readerSurfaceGesture; readerSurfaceGesture = null;
   if (!gesture || state.readerMode !== 'reading') return;
@@ -4986,13 +5065,16 @@ workspace.addEventListener('contextmenu', (event) => {
     return;
   }
   if (state.readerMode !== 'reading' || !event.target.closest('[data-reader-content]')) return;
-  // On iOS/PWA the contextmenu event can arrive before selectionchange. Stop
-  // the system callout in both orders, while leaving the native Range intact
-  // so the visible selection handles/highlight remain available.
+  const selection = window.getSelection();
+  const content = event.target.closest('[data-reader-content]');
+  const hasSelection = Boolean(selection?.rangeCount && !selection.isCollapsed && content && content.contains(selection.getRangeAt(0).commonAncestorContainer));
+  // Do not cancel an empty contextmenu on Safari. iOS uses this event as part
+  // of the long-press-to-select sequence; cancelling it before a Range exists
+  // removes the native selection handles and leaves no action bar to use.
+  if (!hasSelection) return;
   event.preventDefault();
   event.stopPropagation();
-  const selection = window.getSelection();
-  if (selection?.rangeCount && !selection.isCollapsed) readerShowSelectionMenu(selection.getRangeAt(0));
+  readerShowSelectionMenu(selection.getRangeAt(0));
 });
 workspace.addEventListener('click', async (event) => {
   if (Date.now() < reorderSuppressClickUntil || Date.now() < pageSwipeSuppressClickUntil) { event.preventDefault(); return; }
@@ -5406,17 +5488,24 @@ $('#annotationDialog').addEventListener('click', (event) => {
   if (!event.target.closest('[data-save-annotation]')) return;
   const book = readerBookById(state.readerBookId); const note = $('#annotationText')?.value.trim();
   if (!book || !state.readerSelectedText || !note) return toast(state.language === 'en' ? 'Write a note first' : '请先写下标注内容', 'error');
-  const currentPage = state.readerPage;
+  const position = captureReaderPosition();
   const selection = state.readerSelection || {};
   book.annotations ||= []; book.annotations.push({ id: uid(), kind: 'comment', quote: state.readerSelectedText, note, start: selection.start, end: selection.end, createdAt: Date.now() });
-  clearReaderSelectionState(); suppressReaderPageGesture(1200); hideReaderSelectionMenu(); saveLibrary(); $('#annotationDialog').hidden = true; render(); preserveReaderPageAfterRender(currentPage);
+  clearReaderSelectionState(); suppressReaderPageGesture(1200); hideReaderSelectionMenu(); saveLibrary(); $('#annotationDialog').hidden = true; render(); preserveReaderPositionAfterRender(position);
 });
 document.addEventListener('selectionchange', () => {
   if (!state.readerBookId || state.readerMode !== 'reading') return;
   const selection = window.getSelection(); const content = $('[data-reader-content]');
-  if (!selection || !content || selection.rangeCount === 0 || selection.isCollapsed) { hideReaderSelectionMenu(); return; }
+  if (!selection || !content || selection.rangeCount === 0 || selection.isCollapsed) {
+    // WebKit can briefly collapse the Range after the long-press menu event
+    // and restore it on the next selection tick. Keep the OneBox bar alive
+    // during that hand-off instead of hiding it permanently.
+    if (state.readerSelection && Date.now() < readerSelectionSuppressUntil) return;
+    scheduleReaderSelectionMenuHide();
+    return;
+  }
   const range = selection.getRangeAt(0);
-  if (!content.contains(range.commonAncestorContainer)) { hideReaderSelectionMenu(); return; }
+  if (!content.contains(range.commonAncestorContainer)) { scheduleReaderSelectionMenuHide(); return; }
   suppressReaderPageGesture(1200);
   readerShowSelectionMenu(range);
 });
