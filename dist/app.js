@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.203';
+const APP_VERSION = '2.18.204';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -1940,7 +1940,7 @@ let readerRestoreTimer = null;
 let readerPageLayoutFrame = 0;
 let readerPageResizeObserver = null;
 let readerPageResizeTarget = null;
-let readerTurnTimer = null;
+let readerTurnCleanupTimer = null;
 let readerNativeFullscreen = false;
 let readerMarkupRestoreTimer = null;
 function readerUsesDocumentScroll() {
@@ -2218,6 +2218,52 @@ function updateReaderPager() {
   if (previous) previous.disabled = state.readerPage <= 0;
   if (next) next.disabled = state.readerPage >= count - 1;
   updateReaderReferenceChrome();
+}
+function clearReaderTurnOverlay() {
+  const overlay = $('.reader-page-turn-overlay');
+  if (!overlay) return;
+  clearTimeout(readerTurnCleanupTimer);
+  readerTurnCleanupTimer = null;
+  overlay.replaceChildren();
+  overlay.removeAttribute('data-reader-turn-direction');
+}
+function prepareReaderTurnOverlay(viewport, direction) {
+  const overlay = $('.reader-page-turn-overlay');
+  const flow = viewport?.querySelector('.reader-page-flow');
+  if (!overlay || !flow || !viewport.clientWidth || !viewport.clientHeight) return false;
+  clearReaderTurnOverlay();
+  const face = document.createElement('div');
+  face.className = 'reader-page-turn-face ' + (direction > 0 ? 'reader-page-turn-face-forward' : 'reader-page-turn-face-back');
+  face.setAttribute('aria-hidden', 'true');
+  const host = document.createElement('div');
+  host.className = 'reader-reference-viewer reader-page-viewport reader-page-turn-page-host';
+  host.setAttribute('aria-hidden', 'true');
+  const page = flow.cloneNode(true);
+  page.className = 'reader-page-flow reader-page-turn-page';
+  page.removeAttribute('id');
+  page.style.width = Math.max(flow.scrollWidth, viewport.clientWidth) + 'px';
+  page.style.height = viewport.clientHeight + 'px';
+  page.style.transform = 'translate3d(' + (-state.readerPage * viewport.clientWidth) + 'px, 0, 0)';
+  page.style.webkitTransform = page.style.transform;
+  page.style.transition = 'none';
+  page.style.webkitTransition = 'none';
+  page.querySelectorAll('[id]').forEach((node) => node.removeAttribute('id'));
+  page.querySelectorAll('a, button, input, textarea, select, [tabindex]').forEach((node) => node.setAttribute('tabindex', '-1'));
+  host.append(page);
+  face.append(host);
+  overlay.append(face);
+  overlay.dataset.readerTurnDirection = direction > 0 ? 'forward' : 'back';
+  void face.offsetWidth;
+  requestAnimationFrame(() => {
+    if (face.isConnected) face.classList.add('is-active');
+  });
+  const cleanup = () => {
+    if (!face.isConnected) return;
+    clearReaderTurnOverlay();
+  };
+  face.addEventListener('animationend', cleanup, { once: true });
+  readerTurnCleanupTimer = setTimeout(cleanup, 820);
+  return true;
 }
 function restoreReaderPosition() {
   const book = readerBookById(state.readerBookId); const content = $('[data-reader-content]'); if (!book || !content) return;
@@ -3036,25 +3082,14 @@ function turnReaderPage(direction) {
   const count = readerPageCount(viewport);
   const nextPage = Math.min(Math.max(0, state.readerPage + direction), count - 1);
   if (nextPage === state.readerPage) return;
-  const body = $('.reader-reference-body');
-  if (body && state.readerPreferences.pageAnimation !== 'none') {
-    body.classList.remove('reader-page-turn-forward', 'reader-page-turn-back');
-    void body.offsetWidth;
-    body.classList.add(direction > 0 ? 'reader-page-turn-forward' : 'reader-page-turn-back');
-    clearTimeout(readerTurnTimer);
-    readerTurnTimer = setTimeout(() => body.classList.remove('reader-page-turn-forward', 'reader-page-turn-back'), 560);
-  }
-  if (body && state.readerPreferences.pageAnimation === 'none') {
-    body.classList.remove('reader-page-turn-forward', 'reader-page-turn-back');
-  }
-  const animationTarget = viewport;
-  animationTarget.classList.remove('reader-turn-forward', 'reader-turn-back', 'reader-turn-cover-forward', 'reader-turn-cover-back');
-  if (state.readerPreferences.pageAnimation !== 'none') {
-    void animationTarget.offsetWidth;
-    const animationClass = state.readerPreferences.pageAnimation === 'cover' ? (direction > 0 ? 'reader-turn-cover-forward' : 'reader-turn-cover-back') : (direction > 0 ? 'reader-turn-forward' : 'reader-turn-back');
-    animationTarget.classList.add(animationClass);
-  }
-  setReaderPagePosition(nextPage, 'smooth');
+  const prefersReducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  const animate = state.readerPreferences.pageAnimation !== 'none' && !prefersReducedMotion;
+  const hasTurnFace = animate && prepareReaderTurnOverlay(viewport, direction);
+  if (!hasTurnFace) clearReaderTurnOverlay();
+  // Move the real column track immediately. The visible page is now supplied
+  // by the turn face, so Safari never animates the entire multi-column strip
+  // like a plain horizontal scroller underneath the page-turn effect.
+  setReaderPagePosition(nextPage, 'instant');
 }
 function renderAnnotationDialog() {
   if (!state.readerSelectedText) return;
