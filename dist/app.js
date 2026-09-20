@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.201';
+const APP_VERSION = '2.18.202';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -2625,8 +2625,38 @@ function captureReaderPosition(content = $('[data-reader-content]')) {
     anchor: state.readerSelection ? { ...state.readerSelection } : null,
   };
 }
+function syncReaderBookProgressToSnapshot(book, position) {
+  if (!book || !position) return;
+  if (position.mode === 'pages') {
+    const content = $('[data-reader-content]');
+    const count = content?.classList.contains('reader-page-viewport') ? readerPageCount(content) : 1;
+    book.progress = Math.min(1, Math.max(0, Number(position.page || 0) / Math.max(1, count - 1)));
+  } else if (Number.isFinite(Number(position.progress))) {
+    book.progress = Math.min(1, Math.max(0, Number(position.progress)));
+  }
+}
+function restoreReaderSnapshotImmediately(position) {
+  if (!position || state.readerMode !== 'reading') return;
+  const content = $('[data-reader-content]');
+  if (!content) return;
+  if (position.mode === 'pages' && state.readerReadingMode === 'pages' && content.classList.contains('reader-page-viewport')) {
+    state.readerPage = Math.max(0, Number(position.page) || 0);
+    setReaderPagePosition(state.readerPage, 'instant');
+    updateReaderPager();
+    return;
+  }
+  const progress = Math.min(1, Math.max(0, Number(position.progress) || 0));
+  const metrics = readerDocumentScrollMetrics(content);
+  if (metrics) window.scrollTo({ top: metrics.documentTop + metrics.max * progress, behavior: 'auto' });
+  else content.scrollTop = progress * Math.max(0, content.scrollHeight - content.clientHeight);
+  updateReaderReferenceChrome();
+}
 function preserveReaderPositionAfterRender(position) {
   if (!position) return;
+  // workspace.innerHTML is replaced synchronously by render(). Put the old
+  // page/scroll position back before the browser paints that new DOM, then
+  // keep the existing delayed pass for CSS columns that settle one frame later.
+  restoreReaderSnapshotImmediately(position);
   requestAnimationFrame(() => requestAnimationFrame(() => {
     if (state.readerMode !== 'reading') return;
     const content = $('[data-reader-content]');
@@ -2855,6 +2885,7 @@ async function applyReaderSelectionAction(action) {
   }
   book.markups ||= [];
   book.markups.push({ id: uid(), type: action, start: selection.start, end: selection.end, quote: selection.quote, createdAt: Date.now() });
+  syncReaderBookProgressToSnapshot(book, position);
   clearReaderSelectionState();
   saveLibrary(); render();
   preserveReaderPositionAfterRender(position);
@@ -5645,6 +5676,7 @@ $('#annotationDialog').addEventListener('click', (event) => {
   const position = draft?.position || captureReaderPosition();
   const selection = draft || state.readerSelection || {};
   book.annotations ||= []; book.annotations.push({ id: uid(), kind: 'comment', quote: selectedText, note, start: selection.start, end: selection.end, createdAt: Date.now() });
+  syncReaderBookProgressToSnapshot(book, position);
   clearReaderSelectionState(); suppressReaderPageGesture(1200); hideReaderSelectionMenu(); saveLibrary(); $('#annotationDialog').hidden = true; render(); preserveReaderPositionAfterRender(position);
 });
 document.addEventListener('selectionchange', () => {
