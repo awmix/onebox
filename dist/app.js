@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.213';
+const APP_VERSION = '2.18.214';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -1370,7 +1370,6 @@ function mountMascot() {
   mascotRuntime.button.addEventListener('pointermove', mascotUpdateDrag, { passive: false });
   mascotRuntime.button.addEventListener('pointerup', mascotFinishDrag, { passive: false });
   mascotRuntime.button.addEventListener('pointercancel', mascotFinishDrag, { passive: false });
-  mascotRuntime.button.addEventListener('click', () => { if (Date.now() >= mascotRuntime.suppressClickUntil) mascotHandleTap(); });
   mascotRuntime.button.addEventListener('keydown', (event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); mascotHandleTap(); } });
   mascotRuntime.panel.addEventListener('click', (event) => { if (event.target.closest('[data-close-mascot]')) closeMascotBriefing(); });
   document.addEventListener('pointerdown', (event) => { if (mascotRuntime.panel && mascotRuntime.root && !mascotRuntime.root.contains(event.target)) closeMascotBriefing(); }, true);
