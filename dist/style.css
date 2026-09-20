@@ -6724,7 +6724,7 @@ html[data-theme="dark"] #githubDialog .github-dialog-head { background: var(--pa
   perspective: 1000px;
   pointer-events: none;
 }
-/* 2.18.209: page mode uses one real column track and a calm horizontal slide.
+/* 2.18.210: page mode coalesces Safari touch updates onto one compositor frame.
    Keeping the transition on the track avoids a second visual layer competing
    with Safari's text-selection and touch gesture handling. */
 .reader-page-turn-overlay {

@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.209';
+const APP_VERSION = '2.18.210';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -5152,6 +5152,21 @@ function readerPageDragOffset(gesture, dx) {
   if ((current <= 0 && movement > 0) || (current >= count - 1 && movement < 0)) movement *= .22;
   return { viewport, flow, width, count, offset: -current * width + movement };
 }
+let readerPageDragFrame = 0;
+let readerPageDragPending = null;
+function flushReaderPageDrag() {
+  readerPageDragFrame = 0;
+  const pending = readerPageDragPending;
+  readerPageDragPending = null;
+  const gesture = readerSurfaceGesture;
+  if (!pending || !gesture || gesture !== pending.gesture || !gesture.dragging || gesture.cancelled) return;
+  const drag = readerPageDragOffset(gesture, pending.dx);
+  if (!drag) return;
+  const transform = 'translate3d(' + drag.offset + 'px, 0, 0)';
+  // Keep the gesture on the compositor. Safari can dispatch several input
+  // events before a paint; coalescing them prevents duplicate style commits.
+  drag.flow.style.transform = transform;
+}
 function updateReaderPageDrag(event) {
   const gesture = readerSurfaceGesture;
   if (!gesture || gesture.pointerType !== 'touch' || state.readerMode !== 'reading' || state.readerReadingMode !== 'pages') return;
@@ -5183,15 +5198,22 @@ function updateReaderPageDrag(event) {
   }
   const drag = readerPageDragOffset(gesture, dx);
   if (!drag) return;
-  drag.flow.style.transition = 'none';
-  drag.flow.style.webkitTransition = 'none';
-  const transform = 'translate3d(' + drag.offset + 'px, 0, 0)';
-  drag.flow.style.transform = transform;
-  drag.flow.style.webkitTransform = transform;
+  if (!gesture.dragFramePrepared) {
+    drag.flow.style.transition = 'none';
+    drag.flow.style.webkitTransition = 'none';
+    gesture.dragFramePrepared = true;
+  }
+  readerPageDragPending = { gesture, dx };
+  if (!readerPageDragFrame) readerPageDragFrame = requestAnimationFrame(flushReaderPageDrag);
   if (event.cancelable) event.preventDefault();
 }
 function settleReaderPageDrag(gesture, dx, cancelled = false) {
   if (!gesture?.dragging) return false;
+  if (readerPageDragPending?.gesture === gesture) {
+    readerPageDragPending = null;
+    if (readerPageDragFrame) cancelAnimationFrame(readerPageDragFrame);
+    readerPageDragFrame = 0;
+  }
   const drag = readerPageDragOffset(gesture, dx);
   if (!drag) return false;
   const elapsed = Math.max(1, Date.now() - (gesture.dragStartedAt || gesture.startedAt));
@@ -5207,9 +5229,14 @@ function settleReaderPageDrag(gesture, dx, cancelled = false) {
   return true;
 }
 workspace.addEventListener('pointermove', suppressReaderPageNativePan, { passive: false });
-workspace.addEventListener('touchmove', suppressReaderPageNativePan, { passive: false });
 document.addEventListener('pointermove', updateReaderPageDrag, { passive: false });
-document.addEventListener('touchmove', updateReaderPageDrag, { passive: false });
+// iOS Safari with Pointer Events also emits touchmove for the same gesture.
+// Listening to both paths makes one finger movement update the track twice.
+// Keep touchmove only for older engines without Pointer Events.
+if (!('PointerEvent' in window)) {
+  workspace.addEventListener('touchmove', suppressReaderPageNativePan, { passive: false });
+  document.addEventListener('touchmove', updateReaderPageDrag, { passive: false });
+}
 function finishReaderSurfaceGesture(clientX, clientY, target) {
   const gesture = readerSurfaceGesture; readerSurfaceGesture = null;
   if (!gesture || state.readerMode !== 'reading') return;
