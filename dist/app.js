@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.202';
+const APP_VERSION = '2.18.203';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -2742,7 +2742,8 @@ function readerSelectionMenuPosition(range) {
   menu.hidden = false;
   const shellRect = shell.getBoundingClientRect();
   const rects = [...range.getClientRects()].filter((item) => item.width > 0 && item.height > 0);
-  const rect = rects[0] || range.getBoundingClientRect();
+  const visibleRect = rects.find((item) => item.bottom >= shellRect.top && item.top <= shellRect.bottom && item.right >= shellRect.left && item.left <= shellRect.right);
+  const rect = visibleRect || rects[0] || range.getBoundingClientRect();
   const menuRect = menu.getBoundingClientRect();
   const left = Math.min(Math.max(8, rect.left - shellRect.left + (rect.width - menuRect.width) / 2), shellRect.width - menuRect.width - 8);
   const above = rect.top - shellRect.top - menuRect.height - 8;

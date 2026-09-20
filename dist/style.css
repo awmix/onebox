@@ -8290,6 +8290,22 @@ html.ios-safari-browser.reader-focus.reader-safari-page-surface .reader-referenc
   pointer-events: auto !important;
   -webkit-touch-callout: none !important;
 }
+/* Safari continuous reading uses the document-scroll surface above, whose
+   direct-child stacking rule intentionally flattens the reader layers. Keep
+   the OneBox selection bar above that surface in both scroll and page modes;
+   otherwise the Range exists but the custom menu is painted underneath text. */
+html.ios-safari-browser.reader-focus.reader-safari-surface .reader-reference-shell .reader-selection-menu {
+  position: absolute !important;
+  z-index: 140 !important;
+  pointer-events: auto !important;
+  -webkit-touch-callout: none !important;
+}
+html.ios-safari-browser.reader-focus.reader-safari-surface .reader-reference-shell .reader-reference-viewer,
+html.ios-safari-browser.reader-focus.reader-safari-surface .reader-reference-shell .reader-reference-viewer * {
+  -webkit-touch-callout: none !important;
+  -webkit-user-select: text !important;
+  user-select: text !important;
+}
 @keyframes reader-page-surface-dim {
   0%, 100% { opacity: 1; filter: brightness(1); }
   45% { opacity: .88; filter: brightness(.96); }
