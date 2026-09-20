@@ -8174,6 +8174,71 @@ main:has(#toolNav[hidden]):has(#workspace[data-tool="navigation"]) { padding-top
 .reader-reference-viewer.reader-page-viewport.reader-turn-cover-back {
   animation: reader-page-surface-dim .52s cubic-bezier(.22,.8,.28,1) both !important;
 }
+
+/* 2.18.196: Safari fullscreen page mode must keep a real viewport. The
+   document-scroll fallback is correct for continuous reading, but its
+   auto-height overrides turn a paged column track into a blank/unclickable
+   surface on WebKit. Keep page mode isolated and let only the track move. */
+@media (max-width: 760px) {
+  html.ios-safari-browser.reader-focus.reader-safari-page-surface,
+  html.ios-safari-browser.reader-focus.reader-safari-page-surface body {
+    height: 100% !important;
+    min-height: 100% !important;
+    max-height: 100% !important;
+    overflow: hidden !important;
+    overscroll-behavior: none !important;
+  }
+
+  html.ios-safari-browser.reader-focus.reader-safari-page-surface .shell,
+  html.ios-safari-browser.reader-focus.reader-safari-page-surface main,
+  html.ios-safari-browser.reader-focus.reader-safari-page-surface #pageSwipeStage,
+  html.ios-safari-browser.reader-focus.reader-safari-page-surface #workspace[data-tool="reader"] {
+    position: static !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    max-height: 100% !important;
+    overflow: hidden !important;
+    transform: none !important;
+    contain: none !important;
+  }
+
+  html.ios-safari-browser.reader-focus.reader-safari-page-surface #workspace[data-tool="reader"] .reader-reference-shell {
+    position: fixed !important;
+    inset: 0 !important;
+    display: flex !important;
+    width: 100% !important;
+    height: 100svh !important;
+    min-height: 100svh !important;
+    max-height: 100svh !important;
+    overflow: hidden !important;
+    transform: none !important;
+  }
+
+  html.ios-safari-browser.reader-focus.reader-safari-page-surface #workspace[data-tool="reader"] .reader-reference-body {
+    flex: 1 1 auto !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow: hidden !important;
+  }
+
+  html.ios-safari-browser.reader-focus.reader-safari-page-surface #workspace[data-tool="reader"] .reader-reference-viewer.reader-page-viewport {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow: hidden !important;
+    touch-action: pan-y pinch-zoom !important;
+  }
+
+  html.ios-safari-browser.reader-focus.reader-safari-page-surface #workspace[data-tool="reader"] .reader-page-flow {
+    height: 100% !important;
+    min-height: 0 !important;
+  }
+}
 @keyframes reader-page-surface-dim {
   0%, 100% { opacity: 1; filter: brightness(1); }
   45% { opacity: .88; filter: brightness(.96); }

@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.195';
+const APP_VERSION = '2.18.196';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -455,7 +455,7 @@ const state = {
   translationHistoryOpen: storedTranslationHistoryOpen,
   library: normalizeReaderLibrary(storedLibrary),
   readerBookId: null, readerUrl: '', readerAssetUrls: [], readerContent: '', readerHint: '', readerToc: [], readerDialog: '', readerChromeHidden: false, readerImmersive: false, readerMode: 'library', readerReadingMode: 'scroll', readerPage: 0, readerSelectedText: '', readerSelection: null, readerSelectionInput: 'mouse', readerLayout: storedReaderLayout === 'list' ? 'list' : 'grid', annotationBookId: null,
-  readerPreferences: { theme: ['paper', 'sepia', 'green', 'dark'].includes(storedReaderPreferences.theme) ? storedReaderPreferences.theme : 'paper', fontSize: Number.isFinite(Number(storedReaderPreferences.fontSize)) ? Math.min(26, Math.max(15, Number(storedReaderPreferences.fontSize))) : 18, fontFamily: ['system', 'serif', 'mono'].includes(storedReaderPreferences.fontFamily) ? storedReaderPreferences.fontFamily : 'system', lineHeight: Number.isFinite(Number(storedReaderPreferences.lineHeight)) ? Math.min(2.2, Math.max(1.35, Number(storedReaderPreferences.lineHeight))) : 1.8, paragraphSpacing: Number.isFinite(Number(storedReaderPreferences.paragraphSpacing)) ? Math.min(28, Math.max(6, Number(storedReaderPreferences.paragraphSpacing))) : 14, letterSpacing: Number.isFinite(Number(storedReaderPreferences.letterSpacing)) ? Math.min(2, Math.max(0, Number(storedReaderPreferences.letterSpacing))) : 0, pageAnimation: ['slide', 'cover', 'none'].includes(storedReaderPreferences.pageAnimation) ? storedReaderPreferences.pageAnimation : 'slide', fullscreenOnOpen: storedReaderPreferences.fullscreenOnOpen === true },
+  readerPreferences: { theme: ['paper', 'sepia', 'green', 'dark'].includes(storedReaderPreferences.theme) ? storedReaderPreferences.theme : 'paper', fontSize: Number.isFinite(Number(storedReaderPreferences.fontSize)) ? Math.min(26, Math.max(15, Number(storedReaderPreferences.fontSize))) : 18, fontFamily: ['system', 'serif', 'mono'].includes(storedReaderPreferences.fontFamily) ? storedReaderPreferences.fontFamily : 'system', lineHeight: Number.isFinite(Number(storedReaderPreferences.lineHeight)) ? Math.min(2.2, Math.max(1.35, Number(storedReaderPreferences.lineHeight))) : 1.8, paragraphSpacing: Number.isFinite(Number(storedReaderPreferences.paragraphSpacing)) ? Math.min(28, Math.max(6, Number(storedReaderPreferences.paragraphSpacing))) : 14, letterSpacing: Number.isFinite(Number(storedReaderPreferences.letterSpacing)) ? Math.min(2, Math.max(0, Number(storedReaderPreferences.letterSpacing))) : 0, pageAnimation: ['slide', 'cover', 'none'].includes(storedReaderPreferences.pageAnimation) ? storedReaderPreferences.pageAnimation : 'slide', readingMode: storedReaderPreferences.readingMode === 'pages' ? 'pages' : 'scroll', fullscreenOnOpen: storedReaderPreferences.fullscreenOnOpen === true },
   homeFeed: { active: DEFAULT_HOME_FEED_VISIBLE[0] || DEFAULT_HOME_FEED_ORDER[0], order: normalizeHomeFeedOrder(storedHomeFeedOrder), visible: normalizeHomeFeedVisibility(storedHomeFeedVisibility), hasNew: false, loading: false, errors: {}, stale: {}, updatedAt: Number(storedHomeFeeds.updatedAt || 0), cacheVersion: storedHomeFeeds.cacheVersion || '', sources: storedHomeFeeds.sources && typeof storedHomeFeeds.sources === 'object' ? storedHomeFeeds.sources : {} },
   navigation: normalizeNavigation(storedNavigation), navigationLocation: storedNavigationLocation, navigationDialog: null, navigationFolderDraft: null, navigationSettingsOpen: false,
   homeFeedRead: storedHomeFeedRead && typeof storedHomeFeedRead === 'object' ? storedHomeFeedRead : {},
@@ -2049,6 +2049,8 @@ function readerPageGeometry(viewport, flow = viewport?.querySelector('.reader-pa
 }
 function applyReaderPageColumns(viewport, flow) {
   const geometry = readerPageGeometry(viewport, flow);
+  delete viewport.dataset.readerPageMeasureKey;
+  delete viewport.dataset.readerMeasuredPages;
   flow.style.columnWidth = geometry.columnWidth + 'px';
   flow.style.webkitColumnWidth = geometry.columnWidth + 'px';
   flow.style.columnGap = geometry.columnGap + 'px';
@@ -2058,12 +2060,73 @@ function applyReaderPageColumns(viewport, flow) {
   flow.style.height = Math.max(1, Math.round(viewport.clientHeight)) + 'px';
   return geometry;
 }
+function readerPageMeasureKey(viewport, flow, geometry) {
+  return [
+    viewport.clientWidth,
+    viewport.clientHeight,
+    geometry.columnWidth,
+    geometry.columnGap,
+    flow.scrollWidth,
+    flow.scrollHeight,
+    flow.childElementCount,
+  ].join('|');
+}
+function readerMeasuredLastContentPage(viewport, flow, geometry) {
+  const key = readerPageMeasureKey(viewport, flow, geometry);
+  if (viewport.dataset.readerPageMeasureKey === key && viewport.dataset.readerMeasuredPages) {
+    return Number(viewport.dataset.readerMeasuredPages) || 0;
+  }
+
+  // WebKit can expose one extra CSS column for the trailing padding. Counting
+  // scrollWidth then makes the last page look real even though it contains no
+  // content. Measure the last painted text line instead, with the track
+  // transform temporarily removed so this also works after a page turn.
+  const previousTransform = flow.style.transform;
+  const previousWebkitTransform = flow.style.webkitTransform;
+  flow.style.transform = 'none';
+  flow.style.webkitTransform = 'none';
+  let pages = 0;
+  try {
+    const styles = getComputedStyle(flow);
+    const leftPadding = Math.max(0, Number.parseFloat(styles.paddingLeft || 0) || 0);
+    const flowRect = flow.getBoundingClientRect();
+    const contentLeft = flowRect.left + leftPadding;
+    const stride = Math.max(1, geometry.columnWidth + geometry.columnGap);
+    const walker = document.createTreeWalker(flow, NodeFilter.SHOW_TEXT);
+    let node;
+    let lastRect = null;
+    while ((node = walker.nextNode())) {
+      if (!node.nodeValue?.trim()) continue;
+      const range = document.createRange();
+      try {
+        range.selectNodeContents(node);
+        const rects = [...range.getClientRects()].filter((rect) => rect.width > 0 && rect.height > 0);
+        if (rects.length) lastRect = rects[rects.length - 1];
+      } catch { /* Ignore detached or non-rendered text nodes. */ }
+      finally { range.detach?.(); }
+    }
+    if (lastRect) {
+      const column = Math.max(0, Math.floor((lastRect.left - contentLeft + 1) / stride));
+      pages = column + 1;
+    }
+  } finally {
+    flow.style.transform = previousTransform;
+    flow.style.webkitTransform = previousWebkitTransform;
+  }
+
+  if (!pages) {
+    const totalWidth = Math.max(geometry.columnWidth, flow.scrollWidth - geometry.horizontalPadding + geometry.columnGap);
+    pages = Math.max(1, Math.ceil(totalWidth / Math.max(1, geometry.columnWidth + geometry.columnGap)));
+  }
+  viewport.dataset.readerPageMeasureKey = key;
+  viewport.dataset.readerMeasuredPages = String(pages);
+  return pages;
+}
 function readerPageCount(viewport) {
   const flow = viewport?.querySelector('.reader-page-flow');
   if (!viewport || !flow) return 1;
   const geometry = readerPageGeometry(viewport, flow);
-  const totalWidth = Math.max(geometry.columnWidth, flow.scrollWidth - geometry.horizontalPadding + geometry.columnGap);
-  return Math.max(1, Math.ceil(totalWidth / Math.max(1, geometry.columnWidth + geometry.columnGap)));
+  return readerMeasuredLastContentPage(viewport, flow, geometry);
 }
 function setReaderPagePosition(page, behavior = 'smooth') {
   const viewport = $('.reader-page-viewport');
@@ -2234,10 +2297,9 @@ async function openReaderBook(id) {
       else if (book.type === 'epub') { const parsed = await epubToHtml(bytes); content = parsed.html; toc = parsed.toc || []; hint = parsed.title ? parsed.title + ' · ' + t('epubHint') : t('epubHint'); }
       else { state.readerUrl = URL.createObjectURL(new Blob([bytes], { type: 'application/pdf' })); content = '<iframe class="reader-pdf" title="' + escapeHtml(book.name) + '" src="' + state.readerUrl + '"></iframe>'; hint = t('pdfHint'); }
     }
-    // Start with continuous reading for every format so the first screen is
-    // immediately readable on mobile; the reference-style paged mode remains
-    // available from Reading settings.
-    renderReaderView(content, hint, toc, 'scroll');
+    // Restore the user's last reading mode for both Safari and the PWA. The
+    // mode is a device preference, not a per-open default.
+    renderReaderView(content, hint, toc, state.readerPreferences.readingMode === 'pages' ? 'pages' : 'scroll');
   } catch { releaseReaderAssets(); toast(t('importFailed'), 'error'); state.readerBookId = null; }
 }
 function closeReader() {
@@ -2281,6 +2343,7 @@ function syncReaderSafariSurface() {
   const body = document.body;
   const active = isIosSafariReaderSurfaceActive();
   root.classList.toggle('reader-safari-surface', active);
+  root.classList.toggle('reader-safari-page-surface', active && state.readerReadingMode === 'pages');
   const metas = $$('meta[name="theme-color"]');
   if (!active) {
     readerSafariTintPulse += 1;
@@ -2450,6 +2513,8 @@ function setReaderReadingMode(mode) {
       saveLibrary();
     }
   }
+  state.readerPreferences.readingMode = nextMode;
+  saveReaderPreferences();
   state.readerReadingMode = nextMode;
   state.readerChromeHidden = state.readerImmersive;
   state.readerPage = 0;
@@ -2461,6 +2526,28 @@ function hideReaderSelectionMenu() {
   if (menu) menu.hidden = true;
   const dock = $('[data-reader-selection-dock]');
   if (dock) dock.hidden = true;
+}
+function suppressReaderPageGesture(duration = 900) {
+  readerSelectionSuppressUntil = Math.max(readerSelectionSuppressUntil, Date.now() + duration);
+}
+function readerHasLiveSelection() {
+  const selection = window.getSelection?.();
+  return Boolean(state.readerSelection || (selection?.rangeCount && !selection.isCollapsed));
+}
+function clearReaderSelectionState() {
+  state.readerSelection = null;
+  state.readerSelectedText = '';
+  window.getSelection?.()?.removeAllRanges();
+}
+function preserveReaderPageAfterRender(page) {
+  if (state.readerReadingMode !== 'pages') return;
+  state.readerPage = Math.max(0, Number(page) || 0);
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    if (state.readerMode !== 'reading' || state.readerReadingMode !== 'pages') return;
+    state.readerPage = Math.max(0, Number(page) || 0);
+    updateReaderPager();
+    setReaderPagePosition(state.readerPage, 'instant');
+  }));
 }
 function readerTextOffset(root, container, offset) {
   if (!root || !container) return -1;
@@ -2509,6 +2596,7 @@ function readerShowSelectionMenu(range) {
   if (!anchor || !anchor.quote) return hideReaderSelectionMenu();
   state.readerSelectedText = anchor.quote;
   state.readerSelection = anchor;
+  suppressReaderPageGesture(1200);
   const menu = $('[data-reader-selection-menu]');
   if (menu) menu.hidden = false;
   // Keep the browser's live range intact. Clearing it here makes the native
@@ -2584,6 +2672,8 @@ async function copyReaderText(text) {
 }
 async function applyReaderSelectionAction(action) {
   const book = readerBookById(state.readerBookId); const selection = state.readerSelection;
+  const currentPage = state.readerPage;
+  suppressReaderPageGesture(1200);
   hideReaderSelectionMenu();
   if (!book || !selection?.quote) return;
   if (action === 'comment') return renderAnnotationDialog();
@@ -2595,12 +2685,14 @@ async function applyReaderSelectionAction(action) {
     } catch (error) {
       if (error?.name !== 'AbortError') toast(state.language === 'en' ? 'Copy failed' : '复制失败', 'error');
     }
+    clearReaderSelectionState();
     return;
   }
   book.markups ||= [];
   book.markups.push({ id: uid(), type: action, start: selection.start, end: selection.end, quote: selection.quote, createdAt: Date.now() });
-  state.readerSelection = null; state.readerSelectedText = '';
-  window.getSelection()?.removeAllRanges(); saveLibrary(); render();
+  clearReaderSelectionState();
+  saveLibrary(); render();
+  preserveReaderPageAfterRender(currentPage);
 }
 function jumpToReaderToc(item) {
   closeReaderDialog();
@@ -4037,6 +4129,7 @@ let pageSwipeSuppressClickUntil = 0;
 let pageSwipeTrackState = null;
 let pageSwipeNavState = null;
 let readerSurfaceGesture = null;
+let readerSelectionSuppressUntil = 0;
 let readerBookDrag = null;
 let readerBookSuppressClickUntil = 0;
 let navigationPressTimer = null;
@@ -4808,7 +4901,7 @@ document.querySelector('main')?.addEventListener('pointerdown', beginPageSwipe);
 document.addEventListener('pointermove', updatePageSwipe, { passive: false });
 document.addEventListener('pointerup', finishPageSwipe, { passive: true });
 document.addEventListener('pointercancel', () => {
-  tabSwipeGesture = null; pageSwipeGesture = null; endLongPress(); cancelReorderDrag();
+  tabSwipeGesture = null; pageSwipeGesture = null; readerSurfaceGesture = null; endLongPress(); cancelReorderDrag();
   if (navigationDrag) { restoreNavigationDrag(navigationDrag); navigationDrag = null; }
   endNavigationLongPress(); cancelNavigationDialogLongPress(); clearNavigationDragClasses(); swipeGesture = null; resetPageSwipeTransform();
   if (readerBookDrag) {
@@ -4823,24 +4916,59 @@ workspace.addEventListener('pointerdown', (event) => {
   const surface = event.target.closest('[data-reader-surface]');
   if (state.readerMode === 'reading' && surface) {
     state.readerSelectionInput = event.pointerType === 'touch' ? 'touch' : 'mouse';
-    readerSurfaceGesture = { surface, x: event.clientX, y: event.clientY };
+    readerSurfaceGesture = { surface, x: event.clientX, y: event.clientY, pointerId: event.pointerId, pointerType: event.pointerType, startedAt: Date.now() };
+    try { surface.setPointerCapture?.(event.pointerId); } catch { /* Safari may reject a stale pointer id. */ }
   }
 });
+workspace.addEventListener('touchstart', (event) => {
+  if (readerSurfaceGesture || state.readerMode !== 'reading') return;
+  const surface = event.target.closest('[data-reader-surface]');
+  const touch = event.touches[0];
+  if (surface && touch) readerSurfaceGesture = { surface, x: touch.clientX, y: touch.clientY, pointerId: null, pointerType: 'touch', startedAt: Date.now() };
+}, { passive: true });
 let readerSurfaceTapSuppressClickUntil = 0;
-document.addEventListener('pointerup', (event) => {
+function finishReaderSurfaceGesture(clientX, clientY, target) {
   const gesture = readerSurfaceGesture; readerSurfaceGesture = null;
   if (!gesture || state.readerMode !== 'reading') return;
-  const dx = event.clientX - gesture.x; const dy = event.clientY - gesture.y;
-  if (state.readerReadingMode === 'scroll' && isIosSafariBrowser() && state.readerImmersive && Math.abs(dx) <= 12 && Math.abs(dy) <= 12 && !event.target.closest('a,button,input,textarea,select,[data-reader-comment-id],[data-reader-selection-menu],[data-reader-comment-popover]')) {
+  const dx = clientX - gesture.x; const dy = clientY - gesture.y;
+  const targetElement = target instanceof Element ? target : null;
+  const onInteractiveControl = targetElement?.closest('a,button,input,textarea,select,[data-reader-comment-id],[data-reader-selection-menu],[data-reader-comment-popover]');
+  // A native text selection can move more than a tap while its handles are
+  // being adjusted. Never reinterpret that gesture as a page turn.
+  if (readerHasLiveSelection() || Date.now() < readerSelectionSuppressUntil || onInteractiveControl) return;
+  if (state.readerReadingMode === 'scroll' && isIosSafariBrowser() && state.readerImmersive && Math.abs(dx) <= 12 && Math.abs(dy) <= 12) {
     readerSurfaceTapSuppressClickUntil = Date.now() + 500;
     toggleReaderChrome();
     return;
   }
   if (state.readerReadingMode !== 'pages') return;
   if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) + 15) {
-    swipeSuppressClickUntil = Date.now() + 400;
-    turnReaderPage(dx < 0 ? 1 : -1);
+    // Always swallow the synthetic click produced at the end of a drag. This
+    // is essential for mouse text selection, where no page turn is scheduled
+    // but the click would otherwise toggle the reader chrome.
+    swipeSuppressClickUntil = Date.now() + 500;
+    // A mouse drag over text is a selection gesture, not a page swipe. On
+    // touch, a long press followed by movement is likewise selection; only a
+    // short touch drag is eligible for page navigation.
+    if (gesture.pointerType !== 'touch' || Date.now() - gesture.startedAt > 300) return;
+    // Safari dispatches selectionchange just after pointerup for a drag that
+    // started on selectable text. Suppress the synthetic click immediately,
+    // then decide whether this was a page swipe after the selection has had a
+    // chance to settle.
+    const direction = dx < 0 ? 1 : -1;
+    window.setTimeout(() => {
+      if (readerHasLiveSelection() || Date.now() < readerSelectionSuppressUntil) return;
+      if (state.readerMode === 'reading' && state.readerReadingMode === 'pages') turnReaderPage(direction);
+    }, 70);
   }
+}
+document.addEventListener('pointerup', (event) => {
+  finishReaderSurfaceGesture(event.clientX, event.clientY, event.target);
+}, { passive: true });
+workspace.addEventListener('touchend', (event) => {
+  if (!readerSurfaceGesture || readerSurfaceGesture.pointerId !== null) return;
+  const touch = event.changedTouches[0];
+  if (touch) finishReaderSurfaceGesture(touch.clientX, touch.clientY, event.target);
 }, { passive: true });
 workspace.addEventListener('dragstart', (event) => { const card = event.target.closest('[data-weather-card]'); if (card) event.dataTransfer.setData('text/plain', card.dataset.weatherIndex); });
 workspace.addEventListener('dragover', (event) => { if (event.target.closest('[data-weather-card]')) event.preventDefault(); });
@@ -4873,6 +5001,9 @@ workspace.addEventListener('click', async (event) => {
   if (Date.now() < navigationSuppressClickUntil && event.target.closest('[data-navigation-item]') && !event.target.closest('[data-navigation-delete], [data-navigation-edit]')) { event.preventDefault(); return; }
   if (Date.now() < readerBookSuppressClickUntil && event.target.closest('[data-reader-book-card]')) { event.preventDefault(); return; }
   if (Date.now() < swipeSuppressClickUntil && event.target.closest('[data-swipe-row]') && !event.target.closest('.swipe-delete')) return;
+  if (Date.now() < swipeSuppressClickUntil && state.readerMode === 'reading') { event.preventDefault(); event.stopPropagation(); return; }
+  const readerSelectionControl = event.target.closest('[data-reader-selection-action], [data-reader-comment-popover], [data-reader-comment-id]');
+  if (state.readerMode === 'reading' && readerHasLiveSelection() && !readerSelectionControl) { event.preventDefault(); event.stopPropagation(); return; }
   if (state.tool === 'reader' && state.readerMode === 'library' && !event.target.closest('[data-reader-book-card]')) clearReaderDeleteMode();
   const section = event.target.closest('[data-section]');
   if (section) return selectSection(section.dataset.section);
@@ -5271,13 +5402,14 @@ window.addEventListener('scroll', () => {
   if (readerUsesDocumentScroll()) scheduleReaderProgress($('[data-reader-content]'));
 }, { passive: true });
 $('#annotationDialog').addEventListener('click', (event) => {
-  if (event.target === $('#annotationDialog') || event.target.closest('[data-close-annotation]')) { $('#annotationDialog').hidden = true; state.readerSelection = null; state.readerSelectedText = ''; hideReaderSelectionMenu(); return; }
+  if (event.target === $('#annotationDialog') || event.target.closest('[data-close-annotation]')) { $('#annotationDialog').hidden = true; clearReaderSelectionState(); suppressReaderPageGesture(700); hideReaderSelectionMenu(); return; }
   if (!event.target.closest('[data-save-annotation]')) return;
   const book = readerBookById(state.readerBookId); const note = $('#annotationText')?.value.trim();
   if (!book || !state.readerSelectedText || !note) return toast(state.language === 'en' ? 'Write a note first' : '请先写下标注内容', 'error');
+  const currentPage = state.readerPage;
   const selection = state.readerSelection || {};
   book.annotations ||= []; book.annotations.push({ id: uid(), kind: 'comment', quote: state.readerSelectedText, note, start: selection.start, end: selection.end, createdAt: Date.now() });
-  state.readerSelection = null; state.readerSelectedText = ''; hideReaderSelectionMenu(); saveLibrary(); $('#annotationDialog').hidden = true; render();
+  clearReaderSelectionState(); suppressReaderPageGesture(1200); hideReaderSelectionMenu(); saveLibrary(); $('#annotationDialog').hidden = true; render(); preserveReaderPageAfterRender(currentPage);
 });
 document.addEventListener('selectionchange', () => {
   if (!state.readerBookId || state.readerMode !== 'reading') return;
@@ -5285,6 +5417,7 @@ document.addEventListener('selectionchange', () => {
   if (!selection || !content || selection.rangeCount === 0 || selection.isCollapsed) { hideReaderSelectionMenu(); return; }
   const range = selection.getRangeAt(0);
   if (!content.contains(range.commonAncestorContainer)) { hideReaderSelectionMenu(); return; }
+  suppressReaderPageGesture(1200);
   readerShowSelectionMenu(range);
 });
 
