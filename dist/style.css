@@ -6724,9 +6724,9 @@ html[data-theme="dark"] #githubDialog .github-dialog-head { background: var(--pa
   perspective: 1000px;
   pointer-events: none;
 }
-/* 2.18.204: turn a real page face above the already-positioned column track.
-   The old overlay was only a moving gradient, so WebKit exposed the track's
-   smooth transform while the PWA looked like a shadow sliding over text. */
+/* 2.18.206: keep the real column track positioned underneath a two-sided
+   turning sheet. The back face and moving crease make this a page turn rather
+   than a card rotating away and revealing a new page underneath. */
 .reader-page-turn-overlay {
   z-index: 8;
   isolation: isolate;
@@ -6739,8 +6739,8 @@ html[data-theme="dark"] #githubDialog .github-dialog-head { background: var(--pa
   overflow: hidden;
   background: var(--reader-bg);
   transform-style: preserve-3d;
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
+  backface-visibility: visible;
+  -webkit-backface-visibility: visible;
   will-change: transform;
   pointer-events: none;
 }
@@ -6752,12 +6752,34 @@ html[data-theme="dark"] #githubDialog .github-dialog-head { background: var(--pa
   z-index: 2;
   content: '';
   opacity: .58;
-  background: linear-gradient(90deg, transparent 48%, color-mix(in srgb, var(--reader-ink) 9%, transparent) 72%, color-mix(in srgb, var(--reader-bg) 84%, transparent) 100%);
+  background: linear-gradient(90deg, transparent 44%, color-mix(in srgb, var(--reader-ink) 7%, transparent) 68%, color-mix(in srgb, var(--reader-bg) 86%, transparent) 100%);
   mix-blend-mode: multiply;
   pointer-events: none;
 }
 .reader-page-turn-face-back::before {
-  background: linear-gradient(270deg, transparent 48%, color-mix(in srgb, var(--reader-ink) 13%, transparent) 72%, color-mix(in srgb, var(--reader-bg) 80%, transparent) 100%);
+  background: linear-gradient(270deg, transparent 44%, color-mix(in srgb, var(--reader-ink) 7%, transparent) 68%, color-mix(in srgb, var(--reader-bg) 86%, transparent) 100%);
+}
+.reader-page-turn-face::after {
+  position: absolute;
+  top: -8%;
+  bottom: -8%;
+  z-index: 3;
+  width: 23%;
+  content: '';
+  opacity: 0;
+  border-radius: 50%;
+  filter: blur(1px);
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent 0%, color-mix(in srgb, var(--reader-ink) 7%, transparent) 38%, color-mix(in srgb, var(--reader-bg) 42%, white) 51%, color-mix(in srgb, var(--reader-ink) 10%, transparent) 67%, transparent 100%);
+}
+.reader-page-turn-face-forward::after {
+  right: -7%;
+  transform-origin: left center;
+}
+.reader-page-turn-face-back::after {
+  left: -7%;
+  transform-origin: right center;
+  background: linear-gradient(270deg, transparent 0%, color-mix(in srgb, var(--reader-ink) 7%, transparent) 38%, color-mix(in srgb, var(--reader-bg) 42%, white) 51%, color-mix(in srgb, var(--reader-ink) 10%, transparent) 67%, transparent 100%);
 }
 .reader-page-turn-face .reader-page-turn-page-host {
   position: absolute !important;
@@ -6774,7 +6796,14 @@ html[data-theme="dark"] #githubDialog .github-dialog-head { background: var(--pa
   background: var(--reader-bg) !important;
   box-shadow: none !important;
   transform: none !important;
+  transform-style: preserve-3d !important;
+  backface-visibility: hidden !important;
+  -webkit-backface-visibility: hidden !important;
   pointer-events: none !important;
+}
+.reader-page-turn-face .reader-page-turn-back-page-host {
+  z-index: 0 !important;
+  transform: rotateY(180deg) !important;
 }
 .reader-page-turn-face .reader-page-turn-page {
   position: absolute !important;
@@ -6783,31 +6812,49 @@ html[data-theme="dark"] #githubDialog .github-dialog-head { background: var(--pa
   max-width: none !important;
   margin: 0 !important;
   background: var(--reader-bg) !important;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
   transform-origin: left top;
   pointer-events: none !important;
 }
 .reader-page-turn-face-back .reader-page-turn-page { transform-origin: right top; }
 .reader-page-turn-face.is-active.reader-page-turn-face-forward {
-  animation: reader-page-flip-forward .92s cubic-bezier(.22,.68,.24,1) both;
+  animation: reader-page-flip-forward .92s cubic-bezier(.2,.72,.25,1) both;
 }
 .reader-page-turn-face.is-active.reader-page-turn-face-back {
-  animation: reader-page-flip-back .92s cubic-bezier(.22,.68,.24,1) both;
+  animation: reader-page-flip-back .92s cubic-bezier(.2,.72,.25,1) both;
+}
+.reader-page-turn-face.is-active.reader-page-turn-face-forward::after {
+  animation: reader-page-curl-forward .92s cubic-bezier(.2,.72,.25,1) both;
+}
+.reader-page-turn-face.is-active.reader-page-turn-face-back::after {
+  animation: reader-page-curl-back .92s cubic-bezier(.2,.72,.25,1) both;
 }
 @keyframes reader-page-flip-forward {
-  0% { opacity: 1; transform: perspective(1500px) rotateY(0deg) translateZ(0); }
-  16% { opacity: 1; transform: perspective(1500px) rotateY(-8deg) translate3d(-.2%, 0, .5px); }
-  42% { opacity: .995; transform: perspective(1500px) rotateY(-48deg) translate3d(-.8%, 0, 2px); }
-  68% { opacity: .96; transform: perspective(1500px) rotateY(-112deg) translate3d(-1.8%, 0, 1px); }
-  86% { opacity: .72; transform: perspective(1500px) rotateY(-154deg) translate3d(-2.8%, 0, 0); }
-  100% { opacity: 0; transform: perspective(1500px) rotateY(-180deg) translate3d(-3.5%, 0, 0); }
+  0% { transform: perspective(1500px) rotateY(0deg) rotateZ(0deg) translateZ(0); box-shadow: 6px 0 16px color-mix(in srgb, var(--reader-ink) 8%, transparent); }
+  18% { transform: perspective(1500px) rotateY(-14deg) rotateZ(-.2deg) translate3d(-.2%, 0, 1px); box-shadow: 14px 0 24px color-mix(in srgb, var(--reader-ink) 12%, transparent); }
+  46% { transform: perspective(1500px) rotateY(-72deg) rotateZ(-.6deg) translate3d(-.8%, 0, 3px); box-shadow: 24px 0 38px color-mix(in srgb, var(--reader-ink) 18%, transparent); }
+  72% { transform: perspective(1500px) rotateY(-132deg) rotateZ(-.35deg) translate3d(-1.8%, 0, 2px); box-shadow: 10px 0 26px color-mix(in srgb, var(--reader-ink) 12%, transparent); }
+  100% { transform: perspective(1500px) rotateY(-180deg) rotateZ(0deg) translate3d(-3.5%, 0, 0); box-shadow: -5px 0 16px color-mix(in srgb, var(--reader-ink) 8%, transparent); }
 }
 @keyframes reader-page-flip-back {
-  0% { opacity: 1; transform: perspective(1500px) rotateY(0deg) translateZ(0); }
-  16% { opacity: 1; transform: perspective(1500px) rotateY(8deg) translate3d(.2%, 0, .5px); }
-  42% { opacity: .995; transform: perspective(1500px) rotateY(48deg) translate3d(.8%, 0, 2px); }
-  68% { opacity: .96; transform: perspective(1500px) rotateY(112deg) translate3d(1.8%, 0, 1px); }
-  86% { opacity: .72; transform: perspective(1500px) rotateY(154deg) translate3d(2.8%, 0, 0); }
-  100% { opacity: 0; transform: perspective(1500px) rotateY(180deg) translate3d(3.5%, 0, 0); }
+  0% { transform: perspective(1500px) rotateY(0deg) rotateZ(0deg) translateZ(0); box-shadow: -6px 0 16px color-mix(in srgb, var(--reader-ink) 8%, transparent); }
+  18% { transform: perspective(1500px) rotateY(14deg) rotateZ(.2deg) translate3d(.2%, 0, 1px); box-shadow: -14px 0 24px color-mix(in srgb, var(--reader-ink) 12%, transparent); }
+  46% { transform: perspective(1500px) rotateY(72deg) rotateZ(.6deg) translate3d(.8%, 0, 3px); box-shadow: -24px 0 38px color-mix(in srgb, var(--reader-ink) 18%, transparent); }
+  72% { transform: perspective(1500px) rotateY(132deg) rotateZ(.35deg) translate3d(1.8%, 0, 2px); box-shadow: -10px 0 26px color-mix(in srgb, var(--reader-ink) 12%, transparent); }
+  100% { transform: perspective(1500px) rotateY(180deg) rotateZ(0deg) translate3d(3.5%, 0, 0); box-shadow: 5px 0 16px color-mix(in srgb, var(--reader-ink) 8%, transparent); }
+}
+@keyframes reader-page-curl-forward {
+  0%, 100% { opacity: 0; transform: translate3d(0, 0, 0) scaleX(1) skewY(0deg); }
+  22% { opacity: .18; transform: translate3d(-7%, 0, 1px) scaleX(.96) skewY(-1deg); }
+  48% { opacity: .44; transform: translate3d(-45%, 0, 2px) scaleX(.78) skewY(-3deg); }
+  74% { opacity: .24; transform: translate3d(-88%, 0, 1px) scaleX(.62) skewY(1deg); }
+}
+@keyframes reader-page-curl-back {
+  0%, 100% { opacity: 0; transform: translate3d(0, 0, 0) scaleX(1) skewY(0deg); }
+  22% { opacity: .18; transform: translate3d(7%, 0, 1px) scaleX(.96) skewY(1deg); }
+  48% { opacity: .44; transform: translate3d(45%, 0, 2px) scaleX(.78) skewY(3deg); }
+  74% { opacity: .24; transform: translate3d(88%, 0, 1px) scaleX(.62) skewY(-1deg); }
 }
 .reader-page-turn-corner {
   position: absolute;

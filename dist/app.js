@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.205';
+const APP_VERSION = '2.18.206';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -2227,7 +2227,25 @@ function clearReaderTurnOverlay() {
   overlay.replaceChildren();
   overlay.removeAttribute('data-reader-turn-direction');
 }
-function prepareReaderTurnOverlay(viewport, direction) {
+function createReaderTurnPage(flow, viewport, pageIndex, extraClass = '') {
+  const host = document.createElement('div');
+  host.className = 'reader-reference-viewer reader-page-viewport reader-page-turn-page-host' + extraClass;
+  host.setAttribute('aria-hidden', 'true');
+  const page = flow.cloneNode(true);
+  page.className = 'reader-page-flow reader-page-turn-page';
+  page.removeAttribute('id');
+  page.style.width = Math.max(flow.scrollWidth, viewport.clientWidth) + 'px';
+  page.style.height = viewport.clientHeight + 'px';
+  page.style.transform = 'translate3d(' + (-pageIndex * viewport.clientWidth) + 'px, 0, 0)';
+  page.style.webkitTransform = page.style.transform;
+  page.style.transition = 'none';
+  page.style.webkitTransition = 'none';
+  page.querySelectorAll('[id]').forEach((node) => node.removeAttribute('id'));
+  page.querySelectorAll('a, button, input, textarea, select, [tabindex]').forEach((node) => node.setAttribute('tabindex', '-1'));
+  host.append(page);
+  return host;
+}
+function prepareReaderTurnOverlay(viewport, direction, nextPage) {
   const overlay = $('.reader-page-turn-overlay');
   const flow = viewport?.querySelector('.reader-page-flow');
   if (!overlay || !flow || !viewport.clientWidth || !viewport.clientHeight) return false;
@@ -2235,22 +2253,11 @@ function prepareReaderTurnOverlay(viewport, direction) {
   const face = document.createElement('div');
   face.className = 'reader-page-turn-face ' + (direction > 0 ? 'reader-page-turn-face-forward' : 'reader-page-turn-face-back');
   face.setAttribute('aria-hidden', 'true');
-  const host = document.createElement('div');
-  host.className = 'reader-reference-viewer reader-page-viewport reader-page-turn-page-host';
-  host.setAttribute('aria-hidden', 'true');
-  const page = flow.cloneNode(true);
-  page.className = 'reader-page-flow reader-page-turn-page';
-  page.removeAttribute('id');
-  page.style.width = Math.max(flow.scrollWidth, viewport.clientWidth) + 'px';
-  page.style.height = viewport.clientHeight + 'px';
-  page.style.transform = 'translate3d(' + (-state.readerPage * viewport.clientWidth) + 'px, 0, 0)';
-  page.style.webkitTransform = page.style.transform;
-  page.style.transition = 'none';
-  page.style.webkitTransition = 'none';
-  page.querySelectorAll('[id]').forEach((node) => node.removeAttribute('id'));
-  page.querySelectorAll('a, button, input, textarea, select, [tabindex]').forEach((node) => node.setAttribute('tabindex', '-1'));
-  host.append(page);
-  face.append(host);
+  // A real turn has two readable sides: the current page on the front and
+  // the destination page on the back. Without the back face, a CSS rotateY
+  // becomes a card that narrows and disappears instead of turning a sheet.
+  face.append(createReaderTurnPage(flow, viewport, state.readerPage));
+  face.append(createReaderTurnPage(flow, viewport, nextPage, ' reader-page-turn-back-page-host'));
   overlay.append(face);
   overlay.dataset.readerTurnDirection = direction > 0 ? 'forward' : 'back';
   void face.offsetWidth;
@@ -2262,7 +2269,7 @@ function prepareReaderTurnOverlay(viewport, direction) {
     clearReaderTurnOverlay();
   };
   face.addEventListener('animationend', cleanup, { once: true });
-  readerTurnCleanupTimer = setTimeout(cleanup, 820);
+  readerTurnCleanupTimer = setTimeout(cleanup, 1100);
   return true;
 }
 function restoreReaderPosition() {
@@ -3084,7 +3091,7 @@ function turnReaderPage(direction) {
   if (nextPage === state.readerPage) return;
   const prefersReducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
   const animate = state.readerPreferences.pageAnimation !== 'none' && !prefersReducedMotion;
-  const hasTurnFace = animate && prepareReaderTurnOverlay(viewport, direction);
+  const hasTurnFace = animate && prepareReaderTurnOverlay(viewport, direction, nextPage);
   if (!hasTurnFace) clearReaderTurnOverlay();
   // Move the real column track immediately. The visible page is now supplied
   // by the turn face, so Safari never animates the entire multi-column strip
