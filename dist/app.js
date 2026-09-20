@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.190';
+const APP_VERSION = '2.18.191';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -454,7 +454,7 @@ const state = {
   translationHistory: parseStored(STORAGE.translationHistory, []),
   translationHistoryOpen: storedTranslationHistoryOpen,
   library: normalizeReaderLibrary(storedLibrary),
-  readerBookId: null, readerUrl: '', readerContent: '', readerHint: '', readerToc: [], readerDialog: '', readerChromeHidden: false, readerImmersive: false, readerMode: 'library', readerReadingMode: 'scroll', readerPage: 0, readerSelectedText: '', readerSelection: null, readerSelectionInput: 'mouse', readerLayout: storedReaderLayout === 'list' ? 'list' : 'grid', annotationBookId: null,
+  readerBookId: null, readerUrl: '', readerAssetUrls: [], readerContent: '', readerHint: '', readerToc: [], readerDialog: '', readerChromeHidden: false, readerImmersive: false, readerMode: 'library', readerReadingMode: 'scroll', readerPage: 0, readerSelectedText: '', readerSelection: null, readerSelectionInput: 'mouse', readerLayout: storedReaderLayout === 'list' ? 'list' : 'grid', annotationBookId: null,
   readerPreferences: { theme: ['paper', 'sepia', 'green', 'dark'].includes(storedReaderPreferences.theme) ? storedReaderPreferences.theme : 'paper', fontSize: Number.isFinite(Number(storedReaderPreferences.fontSize)) ? Math.min(26, Math.max(15, Number(storedReaderPreferences.fontSize))) : 18, fontFamily: ['system', 'serif', 'mono'].includes(storedReaderPreferences.fontFamily) ? storedReaderPreferences.fontFamily : 'system', lineHeight: Number.isFinite(Number(storedReaderPreferences.lineHeight)) ? Math.min(2.2, Math.max(1.35, Number(storedReaderPreferences.lineHeight))) : 1.8, paragraphSpacing: Number.isFinite(Number(storedReaderPreferences.paragraphSpacing)) ? Math.min(28, Math.max(6, Number(storedReaderPreferences.paragraphSpacing))) : 14, letterSpacing: Number.isFinite(Number(storedReaderPreferences.letterSpacing)) ? Math.min(2, Math.max(0, Number(storedReaderPreferences.letterSpacing))) : 0, pageAnimation: ['slide', 'cover', 'none'].includes(storedReaderPreferences.pageAnimation) ? storedReaderPreferences.pageAnimation : 'slide', fullscreenOnOpen: storedReaderPreferences.fullscreenOnOpen === true },
   homeFeed: { active: DEFAULT_HOME_FEED_VISIBLE[0] || DEFAULT_HOME_FEED_ORDER[0], order: normalizeHomeFeedOrder(storedHomeFeedOrder), visible: normalizeHomeFeedVisibility(storedHomeFeedVisibility), hasNew: false, loading: false, errors: {}, stale: {}, updatedAt: Number(storedHomeFeeds.updatedAt || 0), cacheVersion: storedHomeFeeds.cacheVersion || '', sources: storedHomeFeeds.sources && typeof storedHomeFeeds.sources === 'object' ? storedHomeFeeds.sources : {} },
   navigation: normalizeNavigation(storedNavigation), navigationLocation: storedNavigationLocation, navigationDialog: null, navigationFolderDraft: null, navigationSettingsOpen: false,
@@ -1693,9 +1693,11 @@ function readerPath(dir, href) {
 function readerHrefParts(href) {
   const value = String(href || '');
   const hashIndex = value.indexOf('#');
-  let anchor = hashIndex < 0 ? '' : value.slice(hashIndex + 1);
+  const queryIndex = value.indexOf('?');
+  const pathEnd = [hashIndex, queryIndex].filter((index) => index >= 0).sort((a, b) => a - b)[0] ?? value.length;
+  let anchor = hashIndex < 0 ? '' : value.slice(hashIndex + 1).split('?')[0];
   try { anchor = decodeURIComponent(anchor); } catch { /* keep the original anchor */ }
-  return { path: hashIndex < 0 ? value : value.slice(0, hashIndex), anchor };
+  return { path: value.slice(0, pathEnd), anchor };
 }
 function readerStripTags(value) { return String(value || '').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim(); }
 const READER_COVER_MAX_BYTES = 180 * 1024;
@@ -1704,8 +1706,9 @@ function readerBytesToBase64(bytes) {
   for (let index = 0; index < bytes.length; index += 0x8000) value += String.fromCharCode(...bytes.subarray(index, index + 0x8000));
   return btoa(value);
 }
-function readerImageDataUrl(bytes, media = '') {
-  if (!bytes?.length || bytes.length > READER_COVER_MAX_BYTES) return '';
+function readerImageMime(bytes, media = '', path = '') {
+  if (!bytes?.length) return '';
+  if (/^image\//i.test(media)) return media.split(';')[0].trim();
   const head = bytes.subarray(0, 16);
   let detected = '';
   if (head[0] === 0xff && head[1] === 0xd8 && head[2] === 0xff) detected = 'image/jpeg';
@@ -1713,8 +1716,27 @@ function readerImageDataUrl(bytes, media = '') {
   else if (head[0] === 0x47 && head[1] === 0x49 && head[2] === 0x46) detected = 'image/gif';
   else if (head[0] === 0x52 && head[1] === 0x49 && head[2] === 0x46 && head[8] === 0x57 && head[9] === 0x45 && head[10] === 0x42 && head[11] === 0x50) detected = 'image/webp';
   else if (/^\s*(?:<\?xml[^>]*>\s*)?<svg\b/i.test(new TextDecoder().decode(bytes.subarray(0, 600)))) detected = 'image/svg+xml';
-  const mime = /^image\//i.test(media) ? media : detected;
+  if (detected) return detected;
+  const extension = String(path || '').split(/[?#]/)[0].split('.').pop()?.toLowerCase();
+  return ({ jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', gif: 'image/gif', webp: 'image/webp', svg: 'image/svg+xml', avif: 'image/avif', bmp: 'image/bmp' })[extension] || '';
+}
+function readerImageDataUrl(bytes, media = '') {
+  if (!bytes?.length || bytes.length > READER_COVER_MAX_BYTES) return '';
+  const mime = readerImageMime(bytes, media);
   return mime ? 'data:' + mime + ';base64,' + readerBytesToBase64(bytes) : '';
+}
+const READER_EMBEDDED_IMAGE_MAX_BYTES = 8 * 1024 * 1024;
+function readerImageObjectUrl(bytes, media = '', path = '') {
+  if (!bytes?.length || bytes.length > READER_EMBEDDED_IMAGE_MAX_BYTES || typeof URL.createObjectURL !== 'function') return '';
+  const mime = readerImageMime(bytes, media, path);
+  if (!mime) return '';
+  const url = URL.createObjectURL(new Blob([bytes], { type: mime }));
+  state.readerAssetUrls.push(url);
+  return url;
+}
+function releaseReaderAssets() {
+  (state.readerAssetUrls || []).forEach((url) => { try { URL.revokeObjectURL(url); } catch {} });
+  state.readerAssetUrls = [];
 }
 function readerDefineCover(book, data) {
   if (!book || !data) return;
@@ -1786,6 +1808,7 @@ async function epubToHtml(bytes) {
     const tag = match[0]; const id = xmlAttribute(tag, 'id');
     if (id) manifest[id] = { href: decodeURIComponent(xmlAttribute(tag, 'href')), media: xmlAttribute(tag, 'media-type'), properties: xmlAttribute(tag, 'properties') };
   });
+  const manifestByPath = new Map(Object.values(manifest).map((item) => [readerPath(base, item.href), item]));
   const spine = [...opf.matchAll(/<itemref\b[^>]*>/gi)].map((match) => xmlAttribute(match[0], 'idref')).map((id) => manifest[id]).filter(Boolean);
   const spineEntries = [];
   const parts = [];
@@ -1798,6 +1821,24 @@ async function epubToHtml(bytes) {
     const section = spineEntries.length;
     spineEntries.push({ item, path, section });
     const sectionDocument = new DOMParser().parseFromString('<body>' + sanitizeReaderMarkup(body) + '</body>', 'text/html');
+    const sectionBase = path.includes('/') ? path.slice(0, path.lastIndexOf('/') + 1) : '';
+    for (const mediaNode of sectionDocument.body.querySelectorAll('img, image')) {
+      const source = mediaNode.getAttribute('src') || mediaNode.getAttribute('data-src') || mediaNode.getAttribute('href') || mediaNode.getAttribute('xlink:href') || '';
+      const sourcePath = readerHrefParts(source).path;
+      if (!sourcePath || /^(?:data|blob|https?|file):/i.test(sourcePath)) continue;
+      const assetPath = readerPath(sectionBase, sourcePath);
+      const asset = await readZipEntry(bytes, entries, assetPath);
+      const assetUrl = readerImageObjectUrl(asset, manifestByPath.get(assetPath)?.media || '', assetPath);
+      if (!assetUrl) continue;
+      if (mediaNode.localName === 'image') {
+        mediaNode.setAttribute('href', assetUrl);
+        mediaNode.setAttribute('xlink:href', assetUrl);
+      } else {
+        mediaNode.setAttribute('src', assetUrl);
+        mediaNode.removeAttribute('srcset');
+      }
+      mediaNode.removeAttribute('data-src');
+    }
     [...sectionDocument.body.querySelectorAll('h1,h2,h3,h4,h5,h6')].forEach((heading, headingIndex) => {
       if (!heading.id) heading.id = 'reader-epub-heading-' + section + '-' + headingIndex;
       const label = readerStripTags(heading.textContent);
@@ -2062,6 +2103,7 @@ function renderReaderView(content, hint = '', toc = [], readingMode = 'pages') {
 }
 async function openReaderBook(id) {
   const book = readerBookById(id); if (!book) return;
+  releaseReaderAssets();
   state.readerImmersive = state.readerPreferences.fullscreenOnOpen === true;
   if (state.readerImmersive) requestReaderFullscreen(); else exitReaderFullscreen();
   state.readerBookId = id; state.readerSelectedText = ''; state.readerSelection = null; book.lastOpenedAt = Date.now(); saveLibrary();
@@ -2080,12 +2122,13 @@ async function openReaderBook(id) {
     // immediately readable on mobile; the reference-style paged mode remains
     // available from Reading settings.
     renderReaderView(content, hint, toc, 'scroll');
-  } catch { toast(t('importFailed'), 'error'); state.readerBookId = null; }
+  } catch { releaseReaderAssets(); toast(t('importFailed'), 'error'); state.readerBookId = null; }
 }
 function closeReader() {
   const wasDocumentScroll = readerUsesDocumentScroll();
   exitReaderFullscreen();
   if (state.readerUrl) URL.revokeObjectURL(state.readerUrl);
+  releaseReaderAssets();
   flushReaderProgress();
   if (wasDocumentScroll) window.scrollTo({ top: 0, behavior: 'auto' });
   state.readerUrl = ''; state.readerBookId = null; state.readerContent = ''; state.readerHint = ''; state.readerToc = []; state.readerDialog = ''; state.readerChromeHidden = false; state.readerImmersive = false; state.readerMode = 'library'; state.readerReadingMode = 'scroll'; state.readerPage = 0; state.readerSelectedText = ''; state.readerSelection = null;

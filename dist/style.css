@@ -39,6 +39,8 @@ main:has(#workspace[data-tool="navigation"]) { padding-top: calc(var(--app-heade
 .navigation-card-main small { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted); font-size: 10px; }
 .navigation-site-icon { display: grid; place-items: center; flex: 0 0 auto; width: 48px; height: 48px; border: 1px solid var(--line); border-radius: 14px; background: var(--panel-2); color: var(--primary); font-size: 20px; font-weight: 800; overflow: hidden; }
 .navigation-site-icon img { display: block; width: 100%; height: 100%; object-fit: contain; border-radius: inherit; }
+.navigation-site-icon img[hidden],
+.navigation-icon-fallback[hidden] { display: none !important; }
 .navigation-icon-fallback { display: grid; place-items: center; width: 100%; height: 100%; }
 .navigation-card-actions { position: absolute; top: -8px; right: -8px; z-index: 3; display: inline-flex; gap: 4px; opacity: 0; pointer-events: none; }
 .navigation-card-actions button { position: static; display: grid; place-items: center; width: 23px; height: 23px; padding: 0; border: 1px solid var(--line); border-radius: 50%; background: var(--panel); cursor: pointer; }
@@ -3875,6 +3877,14 @@ html.reader-focus .shell { width: 100%; padding: 0; }
 .reader-reference-viewer.reader-scroll-content svg {
   max-width: 100%;
   height: auto;
+}
+.reader-reference-viewer.reader-epub-content img,
+.reader-reference-viewer.reader-epub-content image {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin-inline: auto;
+  object-fit: contain;
 }
 .reader-reference-viewer.reader-scroll-content pre {
   max-width: 100%;
@@ -7936,7 +7946,7 @@ main:has(#toolNav[hidden]):has(#workspace[data-tool="navigation"]) { padding-top
   #workspace[data-tool="navigation"] .navigation-toolbar-caption { max-width: min(220px, calc(100vw - 82px)); }
 }
 
-/* 2.18.190: keep the launcher dense and predictable at phone widths: five
+/* 2.18.191: keep the launcher dense and predictable at phone widths: five
    sites per row, with a smaller vertical rhythm between rows. */
 #workspace[data-tool="navigation"] .navigation-grid {
   grid-template-columns: repeat(5, minmax(0, 1fr));
