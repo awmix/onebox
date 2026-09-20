@@ -8268,7 +8268,10 @@ main:has(#toolNav[hidden]):has(#workspace[data-tool="navigation"]) { padding-top
 }
 .reader-reference-viewer.reader-page-viewport,
 .reader-reference-viewer.reader-page-viewport .reader-page-flow {
-  touch-action: none;
+  /* Keep long-press selection handles/caret available in the standalone PWA.
+     The reader shell and page viewport are overflow-hidden, so the browser
+     has no vertical scroll surface to steal a tap from page navigation. */
+  touch-action: auto;
   overscroll-behavior: none;
 }
 /* iOS Safari must retain its native long-press selection handles/callout.

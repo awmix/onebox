@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.200';
+const APP_VERSION = '2.18.201';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -454,7 +454,7 @@ const state = {
   translationHistory: parseStored(STORAGE.translationHistory, []),
   translationHistoryOpen: storedTranslationHistoryOpen,
   library: normalizeReaderLibrary(storedLibrary),
-  readerBookId: null, readerUrl: '', readerAssetUrls: [], readerContent: '', readerHint: '', readerToc: [], readerDialog: '', readerChromeHidden: false, readerImmersive: false, readerMode: 'library', readerReadingMode: 'scroll', readerPage: 0, readerSelectedText: '', readerSelection: null, readerSelectionInput: 'mouse', readerLayout: storedReaderLayout === 'list' ? 'list' : 'grid', annotationBookId: null,
+  readerBookId: null, readerUrl: '', readerAssetUrls: [], readerContent: '', readerHint: '', readerToc: [], readerDialog: '', readerChromeHidden: false, readerImmersive: false, readerMode: 'library', readerReadingMode: 'scroll', readerPage: 0, readerSelectedText: '', readerSelection: null, readerAnnotationDraft: null, readerSelectionInput: 'mouse', readerLayout: storedReaderLayout === 'list' ? 'list' : 'grid', annotationBookId: null,
   readerPreferences: { theme: ['paper', 'sepia', 'green', 'dark'].includes(storedReaderPreferences.theme) ? storedReaderPreferences.theme : 'paper', fontSize: Number.isFinite(Number(storedReaderPreferences.fontSize)) ? Math.min(26, Math.max(15, Number(storedReaderPreferences.fontSize))) : 18, fontFamily: ['system', 'serif', 'mono'].includes(storedReaderPreferences.fontFamily) ? storedReaderPreferences.fontFamily : 'system', lineHeight: Number.isFinite(Number(storedReaderPreferences.lineHeight)) ? Math.min(2.2, Math.max(1.35, Number(storedReaderPreferences.lineHeight))) : 1.8, paragraphSpacing: Number.isFinite(Number(storedReaderPreferences.paragraphSpacing)) ? Math.min(28, Math.max(6, Number(storedReaderPreferences.paragraphSpacing))) : 14, letterSpacing: Number.isFinite(Number(storedReaderPreferences.letterSpacing)) ? Math.min(2, Math.max(0, Number(storedReaderPreferences.letterSpacing))) : 0, pageAnimation: ['slide', 'cover', 'none'].includes(storedReaderPreferences.pageAnimation) ? storedReaderPreferences.pageAnimation : 'slide', readingMode: storedReaderPreferences.readingMode === 'pages' ? 'pages' : 'scroll', fullscreenOnOpen: storedReaderPreferences.fullscreenOnOpen === true },
   homeFeed: { active: DEFAULT_HOME_FEED_VISIBLE[0] || DEFAULT_HOME_FEED_ORDER[0], order: normalizeHomeFeedOrder(storedHomeFeedOrder), visible: normalizeHomeFeedVisibility(storedHomeFeedVisibility), hasNew: false, loading: false, errors: {}, stale: {}, updatedAt: Number(storedHomeFeeds.updatedAt || 0), cacheVersion: storedHomeFeeds.cacheVersion || '', sources: storedHomeFeeds.sources && typeof storedHomeFeeds.sources === 'object' ? storedHomeFeeds.sources : {} },
   navigation: normalizeNavigation(storedNavigation), navigationLocation: storedNavigationLocation, navigationDialog: null, navigationFolderDraft: null, navigationSettingsOpen: false,
@@ -2326,7 +2326,7 @@ async function openReaderBook(id) {
   releaseReaderAssets();
   state.readerImmersive = state.readerPreferences.fullscreenOnOpen === true;
   if (state.readerImmersive) requestReaderFullscreen(); else exitReaderFullscreen();
-  state.readerBookId = id; state.readerSelectedText = ''; state.readerSelection = null; book.lastOpenedAt = Date.now(); saveLibrary();
+  state.readerBookId = id; state.readerSelectedText = ''; state.readerSelection = null; state.readerAnnotationDraft = null; book.lastOpenedAt = Date.now(); saveLibrary();
   try {
     let content = ''; let hint = ''; let toc = [];
     if (book.type === 'md') { content = markdownToHtml(book.content); toc = readerTextToc(book.content).map((item) => ({ ...item })); }
@@ -2350,7 +2350,7 @@ function closeReader() {
   releaseReaderAssets();
   flushReaderProgress();
   if (wasDocumentScroll) window.scrollTo({ top: 0, behavior: 'auto' });
-  state.readerUrl = ''; state.readerBookId = null; state.readerContent = ''; state.readerHint = ''; state.readerToc = []; state.readerDialog = ''; state.readerChromeHidden = false; state.readerImmersive = false; state.readerMode = 'library'; state.readerReadingMode = 'scroll'; state.readerPage = 0; state.readerSelectedText = ''; state.readerSelection = null;
+  state.readerUrl = ''; state.readerBookId = null; state.readerContent = ''; state.readerHint = ''; state.readerToc = []; state.readerDialog = ''; state.readerChromeHidden = false; state.readerImmersive = false; state.readerMode = 'library'; state.readerReadingMode = 'scroll'; state.readerPage = 0; state.readerSelectedText = ''; state.readerSelection = null; state.readerAnnotationDraft = null;
   render();
 }
 const READER_THEME_VALUES = {
@@ -2613,6 +2613,7 @@ function readerNativeSelectionRange() {
 function clearReaderSelectionState() {
   state.readerSelection = null;
   state.readerSelectedText = '';
+  state.readerAnnotationDraft = null;
   window.getSelection?.()?.removeAllRanges();
 }
 function captureReaderPosition(content = $('[data-reader-content]')) {
@@ -2827,7 +2828,20 @@ async function applyReaderSelectionAction(action) {
   suppressReaderPageGesture(1200);
   hideReaderSelectionMenu();
   if (!book || !selection?.quote) return;
-  if (action === 'comment') return renderAnnotationDialog();
+  if (action === 'comment') {
+    // Moving focus into the note textarea collapses the native Range. Keep a
+    // durable copy of the selection until the user explicitly saves/cancels;
+    // otherwise delayed selection cleanup erases the note target while the
+    // user is still typing.
+    state.readerAnnotationDraft = {
+      bookId: state.readerBookId,
+      quote: selection.quote,
+      start: selection.start,
+      end: selection.end,
+      position,
+    };
+    return renderAnnotationDialog();
+  }
   if (action === 'copy' || action === 'share') {
     try {
       if (action === 'share' && navigator.share) await navigator.share({ title: book.name, text: selection.quote });
@@ -5624,11 +5638,13 @@ window.addEventListener('scroll', () => {
 $('#annotationDialog').addEventListener('click', (event) => {
   if (event.target === $('#annotationDialog') || event.target.closest('[data-close-annotation]')) { $('#annotationDialog').hidden = true; clearReaderSelectionState(); suppressReaderPageGesture(700); hideReaderSelectionMenu(); return; }
   if (!event.target.closest('[data-save-annotation]')) return;
-  const book = readerBookById(state.readerBookId); const note = $('#annotationText')?.value.trim();
-  if (!book || !state.readerSelectedText || !note) return toast(state.language === 'en' ? 'Write a note first' : '请先写下标注内容', 'error');
-  const position = captureReaderPosition();
-  const selection = state.readerSelection || {};
-  book.annotations ||= []; book.annotations.push({ id: uid(), kind: 'comment', quote: state.readerSelectedText, note, start: selection.start, end: selection.end, createdAt: Date.now() });
+  const draft = state.readerAnnotationDraft;
+  const book = readerBookById(draft?.bookId || state.readerBookId); const note = $('#annotationText')?.value.trim();
+  const selectedText = draft?.quote || state.readerSelectedText;
+  if (!book || !selectedText || !note) return toast(state.language === 'en' ? 'Write a note first' : '请先写下标注内容', 'error');
+  const position = draft?.position || captureReaderPosition();
+  const selection = draft || state.readerSelection || {};
+  book.annotations ||= []; book.annotations.push({ id: uid(), kind: 'comment', quote: selectedText, note, start: selection.start, end: selection.end, createdAt: Date.now() });
   clearReaderSelectionState(); suppressReaderPageGesture(1200); hideReaderSelectionMenu(); saveLibrary(); $('#annotationDialog').hidden = true; render(); preserveReaderPositionAfterRender(position);
 });
 document.addEventListener('selectionchange', () => {
