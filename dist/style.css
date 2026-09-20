@@ -2515,7 +2515,7 @@ html.reader-focus main:has(#workspace[data-tool="reader"]) { padding-top: calc(v
 .reader-scroll-content { overflow: auto; padding: 28px clamp(20px, 6vw, 76px); }
 .reader-page-viewport { overflow-x: hidden; overflow-y: hidden; padding: 0; scroll-behavior: smooth; }
 .reader-page-flow { height: 100%; padding: 28px clamp(20px, 6vw, 76px); box-sizing: border-box; column-width: calc(100% - 0px); column-gap: 0; column-fill: auto; }
-.reader-page-flow > * { break-inside: avoid; }
+.reader-page-flow > * { break-inside: auto; }
 .reader-page-viewport.reader-turn-forward { animation: reader-page-turn-forward .28s ease; }
 .reader-page-viewport.reader-turn-back { animation: reader-page-turn-back .28s ease; }
 @keyframes reader-page-turn-forward { 50% { transform: translateX(-8px); opacity: .65; } }
@@ -8079,3 +8079,81 @@ main:has(#toolNav[hidden]):has(#workspace[data-tool="navigation"]) { padding-top
   #workspace[data-tool="navigation"] .navigation-toolbar-copy .navigation-toolbar-caption { font-size: 10px; }
   #workspace[data-tool="weather"] .weather-card-meta { font-size: 9.5px; }
 }
+
+/* 2.18.193: make the four reading surfaces materially different and keep
+   paged content from being clipped when a paragraph or EPUB block is taller
+   than one viewport column. */
+.reader-reference-shell[data-reader-theme="paper"],
+.reader-reference-shell[data-reader-theme="paper"] .reader-reference-top,
+.reader-reference-shell[data-reader-theme="paper"] .reader-reference-body,
+.reader-reference-shell[data-reader-theme="paper"] .reader-reference-viewer,
+.reader-reference-shell[data-reader-theme="paper"] .reader-page-flow,
+.reader-reference-shell[data-reader-theme="paper"] .reader-reference-bottom {
+  background-color: var(--reader-bg) !important;
+  background-image:
+    radial-gradient(circle at 16% 18%, rgba(105, 91, 65, .045) 0 1px, transparent 1.5px),
+    radial-gradient(circle at 76% 64%, rgba(105, 91, 65, .032) 0 1px, transparent 1.4px),
+    repeating-linear-gradient(0deg, rgba(105, 91, 65, .018) 0 1px, transparent 1px 4px),
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, .16) 0 1px, transparent 1px 7px) !important;
+  background-blend-mode: multiply;
+}
+.reader-reference-shell[data-reader-theme="sepia"] .reader-reference-viewer,
+.reader-reference-shell[data-reader-theme="sepia"] .reader-page-flow,
+.reader-reference-shell[data-reader-theme="sepia"] .reader-reference-body {
+  background-color: var(--reader-bg) !important;
+  background-image: repeating-linear-gradient(0deg, rgba(92, 80, 57, .018) 0 1px, transparent 1px 5px) !important;
+}
+.reader-reference-shell[data-reader-theme="dark"] .reader-reference-top,
+.reader-reference-shell[data-reader-theme="dark"] .reader-reference-body,
+.reader-reference-shell[data-reader-theme="dark"] .reader-reference-viewer,
+.reader-reference-shell[data-reader-theme="dark"] .reader-page-flow,
+.reader-reference-shell[data-reader-theme="dark"] .reader-reference-bottom {
+  background-color: var(--reader-bg) !important;
+  background-image: none !important;
+}
+.reader-reference-shell[data-reader-theme="paper"] .reader-page-flow,
+.reader-reference-shell[data-reader-theme="sepia"] .reader-page-flow,
+.reader-reference-shell[data-reader-theme="dark"] .reader-page-flow {
+  color: var(--reader-ink);
+}
+.reader-page-flow > *,
+.reader-page-flow p,
+.reader-page-flow li,
+.reader-page-flow blockquote,
+.reader-page-flow pre,
+.reader-page-flow figure,
+.reader-page-flow table {
+  break-inside: auto;
+  overflow-wrap: anywhere;
+  widows: 2;
+  orphans: 2;
+}
+.reader-page-flow pre {
+  white-space: pre-wrap;
+}
+.reader-page-flow img,
+.reader-page-flow video,
+.reader-page-flow svg {
+  max-width: 100%;
+  max-height: calc(100% - 24px);
+  object-fit: contain;
+  break-inside: avoid;
+}
+.reader-page-flow table {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  overflow: auto;
+}
+.reader-reference-viewer.reader-page-viewport {
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.reader-reference-viewer.reader-page-viewport::-webkit-scrollbar {
+  display: none;
+}
+.reader-theme-dot.theme-paper { background: #f4f0e7; border-color: #d9d3c8; }
+.reader-theme-dot.theme-sepia { background: #e7e2d6; border-color: #c9c2b5; }
+.reader-theme-dot.theme-dark { background: #1d1f24; border-color: #3b3f49; }

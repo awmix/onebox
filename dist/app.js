@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.192';
+const APP_VERSION = '2.18.193';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -214,7 +214,7 @@ const DICT = {
     markRead: '全部已读', close: '关闭', system: '跟随系统', light: '浅色', dark: '深色', darkGray: '黑灰',
     layout: '布局', classicLayout: '经典布局', simpleLayout: '简约布局', navigationLocation: '导航位置', navigationLocationMain: '主导航', navigationLocationTools: '工具 Tab', openMode: '打开方式', openCurrent: '当前页打开', openNewTab: '新标签页打开', language: '语言', theme: '主题', color: '颜色', blackWhite: '黑白配', noblePurple: '贵族紫', skyBlue: '天空蓝', notBananaGreen: '不蕉绿', meituanYellow: '美团黄', topDisplay: '顶部显示', footprint: '足迹', showFootprint: '在首页显示', hideFootprint: '不在首页显示', reorderHint: '长按工具标签可以调整顺序',
     languagePending: '日语、韩语语言包已预留，当前版本先提供中文和英文。',
-    bookshelf: '书架', addBook: '添加文档', noBooks: '还没有本地文档。', readerHint: '支持 Markdown、TXT、PDF、EPUB；文档仅保存在当前设备。', openBook: '打开阅读', deleteBook: '删除文档', annotations: '笔记', readerComments: '笔记', readerNotesHint: '已保存的阅读笔记', addAnnotation: '笔记', annotationPlaceholder: '添加你的感受…', saveAnnotation: '保存', annotationHint: '选择文字后长按或点击笔记按钮。', noAnnotations: '还没有笔记。', reading: '正在阅读', closeReader: '关闭阅读', unsupportedFile: '请选择 .md、.markdown、.txt、.pdf 或 .epub 文件。', importFailed: '文档读取失败，请重试。', deleteConfirm: '确定删除这本文档吗？', pdfHint: 'PDF 使用浏览器原生阅读器打开。', epubHint: 'EPUB 已转换为适合 OneBox 的连续阅读视图。', readerContents: '目录', readerSettings: '阅读设置', readerReadingMethod: '阅读方式', readerTheme: '阅读背景', readerThemePaper: '纸张', readerThemeSepia: '墨水屏', readerThemeGreen: '护眼绿', readerThemeDark: '夜间', readerFontSize: '字号', readerFontFamily: '字体', readerLineHeight: '行距', readerParagraphSpacing: '段落间距', readerLetterSpacing: '字间距', readerAnimation: '翻页动画', readerAnimationSlide: '滑动', readerAnimationCover: '覆盖', readerAnimationNone: '无', readerScroll: '滚动', readerPages: '翻页', readerProgress: '进度', readerFullscreen: '全屏', readerExitFullscreen: '退出全屏', readerFullscreenOnOpen: '是否全屏', readerFullscreenOnOpenHint: '下次打开文档时按此设置进入', readerNoContents: '暂无章节目录。', readerSettingsHint: '设置仅作用于当前设备上的阅读内容。', readerTocHint: '选择章节后跳转到对应位置。',
+    bookshelf: '书架', addBook: '添加文档', noBooks: '还没有本地文档。', readerHint: '支持 Markdown、TXT、PDF、EPUB；文档仅保存在当前设备。', openBook: '打开阅读', deleteBook: '删除文档', annotations: '笔记', readerComments: '笔记', readerNotesHint: '已保存的阅读笔记', addAnnotation: '笔记', annotationPlaceholder: '添加你的感受…', saveAnnotation: '保存', annotationHint: '选择文字后长按或点击笔记按钮。', noAnnotations: '还没有笔记。', reading: '正在阅读', closeReader: '关闭阅读', unsupportedFile: '请选择 .md、.markdown、.txt、.pdf 或 .epub 文件。', importFailed: '文档读取失败，请重试。', deleteConfirm: '确定删除这本文档吗？', pdfHint: 'PDF 使用浏览器原生阅读器打开。', epubHint: 'EPUB 已转换为适合 OneBox 的阅读视图。', readerContents: '目录', readerSettings: '阅读设置', readerReadingMethod: '阅读方式', readerTheme: '阅读背景', readerThemePaper: '纸张', readerThemeSepia: '墨水屏', readerThemeGreen: '护眼绿', readerThemeDark: '夜间', readerFontSize: '字号', readerFontFamily: '字体', readerLineHeight: '行距', readerParagraphSpacing: '段落间距', readerLetterSpacing: '字间距', readerAnimation: '翻页动画', readerAnimationSlide: '滑动', readerAnimationCover: '覆盖', readerAnimationNone: '无', readerScroll: '上下滚动', readerPages: '模拟翻页', readerProgress: '进度', readerFullscreen: '全屏', readerExitFullscreen: '退出全屏', readerFullscreenOnOpen: '是否全屏', readerFullscreenOnOpenHint: '下次打开文档时按此设置进入', readerNoContents: '暂无章节目录。', readerSettingsHint: '设置仅作用于当前设备上的阅读内容。', readerTocHint: '选择章节后跳转到对应位置。',
   },
   en: {
     calculator: 'Calculator', calendar: 'Calendar', weather: 'Weather', convert: 'Convert', unitConvert: 'Convert', translate: 'Translate', translateConvert: 'Convert', reader: 'Reader',
@@ -258,7 +258,7 @@ const DICT = {
     layout: 'Layout', classicLayout: 'Classic layout', simpleLayout: 'Simple layout', openMode: 'Open links', openCurrent: 'Current page', openNewTab: 'New tab', theme: 'Theme', language: 'Language', color: 'Color', blackWhite: 'Black and white', noblePurple: 'Noble purple', skyBlue: 'Sky blue', notBananaGreen: 'WeChat green', meituanYellow: 'Meituan yellow', topDisplay: 'Show at top', footprint: 'Footprints', showFootprint: 'Show on Home', hideFootprint: 'Hide from Home', homeSourceManage: 'Home sources', homeSourceManageHint: 'Choose sources to show in the home navigation', homeSourceAdd: 'Add', homeSourceRemove: 'Remove', homeSourceEmpty: 'No other sources available', reorderHint: 'Long-press a tool tab to reorder',
     navigationLocation: 'Navigation location', navigationLocationMain: 'Main navigation', navigationLocationTools: 'Tool tabs',
     languagePending: 'Japanese and Korean are reserved for a future language pack. Chinese and English are available now.',
-    bookshelf: 'Bookshelf', addBook: 'Add document', noBooks: 'No local documents yet.', readerHint: 'Supports Markdown, TXT, PDF and EPUB. Files stay on this device.', openBook: 'Open', deleteBook: 'Delete', annotations: 'Notes', readerComments: 'Notes', readerNotesHint: 'Saved reading notes', addAnnotation: 'Note', annotationPlaceholder: 'Add your thoughts…', saveAnnotation: 'Save', annotationHint: 'Select text, long-press or use the notes button.', noAnnotations: 'No notes yet.', reading: 'Reading', closeReader: 'Close reader', unsupportedFile: 'Choose a .md, .markdown, .txt, .pdf or .epub file.', importFailed: 'Could not read this document.', deleteConfirm: 'Delete this document?', pdfHint: 'PDF opens in the browser native reader.', epubHint: 'EPUB is converted into a continuous OneBox reading view.', readerContents: 'Contents', readerSettings: 'Reading settings', readerReadingMethod: 'Reading mode', readerTheme: 'Reading background', readerThemePaper: 'Paper', readerThemeSepia: 'E-ink', readerThemeGreen: 'Green', readerThemeDark: 'Night', readerFontSize: 'Font size', readerFontFamily: 'Font', readerLineHeight: 'Line height', readerParagraphSpacing: 'Paragraph spacing', readerLetterSpacing: 'Letter spacing', readerAnimation: 'Page animation', readerAnimationSlide: 'Slide', readerAnimationCover: 'Cover', readerAnimationNone: 'None', readerScroll: 'Scroll', readerPages: 'Pages', readerProgress: 'Progress', readerFullscreen: 'Fullscreen', readerExitFullscreen: 'Exit fullscreen', readerFullscreenOnOpen: 'Open in fullscreen', readerFullscreenOnOpenHint: 'Apply this choice the next time a document opens', readerNoContents: 'No chapter contents.', readerSettingsHint: 'These settings apply only to reading on this device.', readerTocHint: 'Choose a chapter to jump to it.',
+    bookshelf: 'Bookshelf', addBook: 'Add document', noBooks: 'No local documents yet.', readerHint: 'Supports Markdown, TXT, PDF and EPUB. Files stay on this device.', openBook: 'Open', deleteBook: 'Delete', annotations: 'Notes', readerComments: 'Notes', readerNotesHint: 'Saved reading notes', addAnnotation: 'Note', annotationPlaceholder: 'Add your thoughts…', saveAnnotation: 'Save', annotationHint: 'Select text, long-press or use the notes button.', noAnnotations: 'No notes yet.', reading: 'Reading', closeReader: 'Close reader', unsupportedFile: 'Choose a .md, .markdown, .txt, .pdf or .epub file.', importFailed: 'Could not read this document.', deleteConfirm: 'Delete this document?', pdfHint: 'PDF opens in the browser native reader.', epubHint: 'EPUB is converted into an adaptive OneBox reading view.', readerContents: 'Contents', readerSettings: 'Reading settings', readerReadingMethod: 'Reading mode', readerTheme: 'Reading background', readerThemePaper: 'Paper', readerThemeSepia: 'E-ink', readerThemeGreen: 'Green', readerThemeDark: 'Night', readerFontSize: 'Font size', readerFontFamily: 'Font', readerLineHeight: 'Line height', readerParagraphSpacing: 'Paragraph spacing', readerLetterSpacing: 'Letter spacing', readerAnimation: 'Page animation', readerAnimationSlide: 'Slide', readerAnimationCover: 'Cover', readerAnimationNone: 'None', readerScroll: 'Vertical scroll', readerPages: 'Page turn', readerProgress: 'Progress', readerFullscreen: 'Fullscreen', readerExitFullscreen: 'Exit fullscreen', readerFullscreenOnOpen: 'Open in fullscreen', readerFullscreenOnOpenHint: 'Apply this choice the next time a document opens', readerNoContents: 'No chapter contents.', readerSettingsHint: 'These settings apply only to reading on this device.', readerTocHint: 'Choose a chapter to jump to it.',
   },
 };
 const t = (key) => DICT[state.language]?.[key] || DICT.zh[key] || key;
@@ -2152,10 +2152,10 @@ function closeReader() {
   render();
 }
 const READER_THEME_VALUES = {
-  paper: { bg: '#fffefa', panel: '#ffffff', ink: '#161a22', muted: '#6f7788', line: '#dfe4ee' },
-  sepia: { bg: '#e8e6de', panel: '#eeece4', ink: '#2f302d', muted: '#686963', line: '#c9c8c0' },
+  paper: { bg: '#f4f0e7', panel: '#faf7ef', ink: '#2d3035', muted: '#74736d', line: '#d9d3c8' },
+  sepia: { bg: '#e7e2d6', panel: '#eee9dd', ink: '#45423b', muted: '#777268', line: '#c9c2b5' },
   green: { bg: '#e7f1e7', panel: '#f5fbf5', ink: '#263b2e', muted: '#65756a', line: '#cbdcca' },
-  dark: { bg: '#000000', panel: '#0b0b0b', ink: '#f5f5f5', muted: '#9b9b9b', line: '#2b2b2b' },
+  dark: { bg: '#1d1f24', panel: '#25282f', ink: '#c5c8cf', muted: '#959aa5', line: '#3b3f49' },
 };
 const READER_FONT_VALUES = { system: 'var(--font-sans)', serif: 'Georgia, "Times New Roman", serif', mono: 'ui-monospace, SFMono-Regular, Menlo, monospace' };
 function saveReaderPreferences() { saveStored(STORAGE.readerPreferences, state.readerPreferences); }
@@ -2311,8 +2311,8 @@ function readerDialogMarkup(kind) {
       prefs.fontSize = fontSizeCurrent; prefs.lineHeight = lineHeightCurrent; prefs.paragraphSpacing = paragraphSpacingCurrent; prefs.letterSpacing = letterSpacingCurrent; saveReaderPreferences(); applyReaderPreferences();
     }
     const fullscreenChoice = choiceGroup(t('readerFullscreenOnOpen'), 'fullscreenOnOpen', prefs.fullscreenOnOpen ? 'true' : 'false', [['true', state.language === 'en' ? 'Fullscreen' : '全屏'], ['false', state.language === 'en' ? 'Windowed' : '非全屏']], 'reader-choice-grid-2');
-    const readingCurrent = state.readerReadingMode === 'scroll' ? 'scroll' : 'pages-' + (prefs.pageAnimation || 'slide');
-    const readingChoices = choiceGroup(t('readerReadingMethod'), 'readingMode', readingCurrent, [['scroll', t('readerScroll')], ['pages-slide', t('readerPages') + ' · ' + t('readerAnimationSlide')], ['pages-cover', t('readerPages') + ' · ' + t('readerAnimationCover')], ['pages-none', t('readerPages') + ' · ' + t('readerAnimationNone')]], 'reader-choice-grid-4');
+    const readingCurrent = state.readerReadingMode === 'scroll' ? 'scroll' : 'pages';
+    const readingChoices = choiceGroup(t('readerReadingMethod'), 'readingMode', readingCurrent, [['scroll', t('readerScroll')], ['pages', t('readerPages')]], 'reader-choice-grid-2');
     const fontSizeChoices = choiceGroup(t('readerFontSize'), 'fontSize', fontSizeCurrent, fontSizeValues.map((value) => [String(value), value + 'px']), 'reader-choice-grid-5');
     const fontChoices = choiceGroup(t('readerFontFamily'), 'fontFamily', prefs.fontFamily, [['system', '系统无衬线'], ['serif', '阅读衬线'], ['mono', '等宽字体']], 'reader-choice-grid-3');
     const lineHeightChoices = choiceGroup(t('readerLineHeight'), 'lineHeight', lineHeightCurrent, lineHeightValues.map((value) => [String(value), value.toFixed(1)]), 'reader-choice-grid-3');
@@ -2338,6 +2338,24 @@ function readerPreferenceChanged(input) {
   saveReaderPreferences(); applyReaderPreferences();
   const value = $('[data-reader-value="' + key + '"]', $('#readerDialog'));
   if (value) value.textContent = readerPreferenceLabel(key, state.readerPreferences[key]);
+}
+function setReaderReadingMode(mode) {
+  const nextMode = mode === 'pages' ? 'pages' : 'scroll';
+  if (state.readerMode === 'reading' && state.readerReadingMode !== nextMode) {
+    const content = $('[data-reader-content]');
+    const book = readerBookById(state.readerBookId);
+    if (content && book) {
+      book.progress = state.readerReadingMode === 'pages' && content.classList.contains('reader-page-viewport')
+        ? Math.min(1, Math.max(0, content.scrollLeft / Math.max(1, content.scrollWidth - content.clientWidth)))
+        : readerScrollProgress(content);
+      saveLibrary();
+    }
+  }
+  state.readerReadingMode = nextMode;
+  state.readerChromeHidden = state.readerImmersive;
+  state.readerPage = 0;
+  render();
+  scheduleReaderPositionRestore();
 }
 function hideReaderSelectionMenu() {
   const menu = $('[data-reader-selection-menu]');
@@ -4881,9 +4899,8 @@ workspace.addEventListener('click', async (event) => {
   if (event.target.closest('[data-close-reader]')) return closeReader();
   const readerMode = event.target.closest('[data-reader-mode]');
   if (readerMode) {
-    state.readerReadingMode = readerMode.dataset.readerMode === 'pages' ? 'pages' : 'scroll';
-    state.readerPage = 0;
-    render(); requestAnimationFrame(restoreReaderPosition); return;
+    setReaderReadingMode(readerMode.dataset.readerMode);
+    return;
   }
   const readerPageButton = event.target.closest('[data-reader-page-prev], [data-reader-page-next]');
   if (readerPageButton) {
@@ -5069,9 +5086,8 @@ $('#lunarDialog').addEventListener('click', (event) => {
 function applyReaderDialogChoice(choice) {
   const group = choice.dataset.readerChoice; const value = choice.dataset.readerChoiceValue;
   if (group === 'readingMode') {
-    state.readerReadingMode = value === 'scroll' ? 'scroll' : 'pages';
-    if (value !== 'scroll') state.readerPreferences.pageAnimation = value.slice('pages-'.length) || 'slide';
-    state.readerChromeHidden = state.readerImmersive; state.readerPage = 0; saveReaderPreferences(); closeReaderDialog(); render(); scheduleReaderPositionRestore();
+    setReaderReadingMode(value);
+    closeReaderDialog();
   } else if (group === 'fontSize') {
     state.readerPreferences.fontSize = Math.min(26, Math.max(15, Number(value) || 18)); saveReaderPreferences(); applyReaderPreferences(); readerDialogMarkup('settings');
   } else if (group === 'lineHeight' || group === 'paragraphSpacing' || group === 'letterSpacing') {
@@ -5104,8 +5120,20 @@ document.addEventListener('click', (event) => {
   const dialog = $('#readerDialog');
   const choice = event.target.closest?.('[data-reader-choice]');
   if (!dialog || !choice || !dialog.contains(choice)) return;
-  event.stopPropagation();
+  event.preventDefault();
+  event.stopImmediatePropagation();
   applyReaderDialogChoice(choice);
+}, true);
+
+// Page corners sit above the reading surface and need to remain a direct,
+// reliable control on WebKit as well as desktop browsers. Handle them during
+// capture so a surface gesture or a retargeted click cannot swallow the turn.
+document.addEventListener('click', (event) => {
+  const pageButton = event.target.closest?.('[data-reader-page-prev], [data-reader-page-next]');
+  if (!pageButton || pageButton.disabled || state.readerMode !== 'reading' || state.readerReadingMode !== 'pages') return;
+  event.preventDefault();
+  event.stopImmediatePropagation();
+  turnReaderPage(pageButton.hasAttribute('data-reader-page-next') ? 1 : -1);
 }, true);
 
 $('#readerDialog').addEventListener('click', (event) => {
@@ -5134,7 +5162,7 @@ $('#readerDialog').addEventListener('click', (event) => {
 $('#readerDialog').addEventListener('input', (event) => { if (event.target.matches('[data-reader-preference]')) readerPreferenceChanged(event.target); });
 $('#readerDialog').addEventListener('change', (event) => {
   if (event.target.matches('[data-reader-preference]')) readerPreferenceChanged(event.target);
-  if (event.target.matches('[data-reader-reading-mode]')) { state.readerReadingMode = event.target.value === 'pages' ? 'pages' : 'scroll'; state.readerChromeHidden = state.readerImmersive; state.readerPage = 0; closeReaderDialog(); render(); scheduleReaderPositionRestore(); }
+  if (event.target.matches('[data-reader-reading-mode]')) { closeReaderDialog(); setReaderReadingMode(event.target.value); }
 });
 workspace.addEventListener('scroll', (event) => {
   scheduleReaderProgress(event.target.closest('[data-reader-content]'));
