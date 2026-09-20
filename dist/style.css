@@ -6748,32 +6748,42 @@ html[data-theme="dark"] #githubDialog .github-dialog-head { background: var(--pa
   inset: 0;
   opacity: 0;
   content: '';
-  background: linear-gradient(90deg, color-mix(in srgb, var(--reader-panel) 90%, var(--reader-ink)), color-mix(in srgb, var(--reader-bg) 76%, transparent) 48%, transparent 70%);
-  box-shadow: -24px 0 34px color-mix(in srgb, var(--reader-ink) 22%, transparent);
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--reader-ink) 13%, var(--reader-bg)), var(--reader-bg) 9%, var(--reader-bg) 84%, color-mix(in srgb, var(--reader-panel) 74%, var(--reader-ink)) 100%),
+    repeating-linear-gradient(0deg, color-mix(in srgb, var(--reader-ink) 2%, transparent) 0 1px, transparent 1px 4px);
+  border-left: 1px solid color-mix(in srgb, var(--reader-ink) 20%, transparent);
+  box-shadow: -18px 0 32px color-mix(in srgb, var(--reader-ink) 26%, transparent), inset -18px 0 22px color-mix(in srgb, var(--reader-ink) 11%, transparent);
   transform-style: preserve-3d;
   backface-visibility: hidden;
+  will-change: transform, opacity;
 }
 .reader-reference-body.reader-page-turn-forward .reader-page-turn-overlay::before {
   animation: reader-real-turn-forward .52s cubic-bezier(.22,.8,.22,1) both;
   transform-origin: right center;
 }
 .reader-reference-body.reader-page-turn-back .reader-page-turn-overlay::before {
-  background: linear-gradient(270deg, color-mix(in srgb, var(--reader-panel) 90%, var(--reader-ink)), color-mix(in srgb, var(--reader-bg) 76%, transparent) 48%, transparent 70%);
-  box-shadow: 24px 0 34px color-mix(in srgb, var(--reader-ink) 22%, transparent);
+  background:
+    linear-gradient(270deg, color-mix(in srgb, var(--reader-ink) 13%, var(--reader-bg)), var(--reader-bg) 9%, var(--reader-bg) 84%, color-mix(in srgb, var(--reader-panel) 74%, var(--reader-ink)) 100%),
+    repeating-linear-gradient(0deg, color-mix(in srgb, var(--reader-ink) 2%, transparent) 0 1px, transparent 1px 4px);
+  border-left: 0;
+  border-right: 1px solid color-mix(in srgb, var(--reader-ink) 20%, transparent);
+  box-shadow: 18px 0 32px color-mix(in srgb, var(--reader-ink) 26%, transparent), inset 18px 0 22px color-mix(in srgb, var(--reader-ink) 11%, transparent);
   animation: reader-real-turn-back .52s cubic-bezier(.22,.8,.22,1) both;
   transform-origin: left center;
 }
 @keyframes reader-real-turn-forward {
-  0% { opacity: 0; transform: translateX(106%) rotateY(-10deg); }
-  14% { opacity: .92; }
-  54% { opacity: .72; transform: translateX(-6%) rotateY(-2deg); }
-  100% { opacity: 0; transform: translateX(-106%) rotateY(4deg); }
+  0% { opacity: 1; transform: translateX(0) rotateY(0deg); }
+  18% { opacity: .98; transform: translateX(-2%) rotateY(-18deg); }
+  58% { opacity: .86; transform: translateX(-42%) rotateY(-58deg); }
+  86% { opacity: .34; transform: translateX(-94%) rotateY(-82deg); }
+  100% { opacity: 0; transform: translateX(-108%) rotateY(-88deg); }
 }
 @keyframes reader-real-turn-back {
-  0% { opacity: 0; transform: translateX(-106%) rotateY(10deg); }
-  14% { opacity: .92; }
-  54% { opacity: .72; transform: translateX(6%) rotateY(2deg); }
-  100% { opacity: 0; transform: translateX(106%) rotateY(-4deg); }
+  0% { opacity: 1; transform: translateX(0) rotateY(0deg); }
+  18% { opacity: .98; transform: translateX(2%) rotateY(18deg); }
+  58% { opacity: .86; transform: translateX(42%) rotateY(58deg); }
+  86% { opacity: .34; transform: translateX(94%) rotateY(82deg); }
+  100% { opacity: 0; transform: translateX(108%) rotateY(88deg); }
 }
 .reader-page-turn-corner {
   position: absolute;
@@ -8166,13 +8176,14 @@ main:has(#toolNav[hidden]):has(#workspace[data-tool="navigation"]) { padding-top
 .reader-theme-dot.theme-sepia { background: #e7e2d6; border-color: #c9c2b5; }
 .reader-theme-dot.theme-dark { background: #1d1f24; border-color: #3b3f49; }
 
-/* A page turn moves the column track; the viewport itself must stay still so
-   Safari does not look like it is horizontally scrolling the whole reader. */
+/* The overlay above is the page face. Keep the viewport still while the
+   column track moves underneath it, otherwise Safari looks like a raw
+   horizontal scroll instead of a page turn. */
 .reader-reference-viewer.reader-page-viewport.reader-turn-forward,
 .reader-reference-viewer.reader-page-viewport.reader-turn-back,
 .reader-reference-viewer.reader-page-viewport.reader-turn-cover-forward,
 .reader-reference-viewer.reader-page-viewport.reader-turn-cover-back {
-  animation: reader-page-surface-dim .52s cubic-bezier(.22,.8,.28,1) both !important;
+  animation: none !important;
 }
 
 /* 2.18.196: Safari fullscreen page mode must keep a real viewport. The
@@ -8255,6 +8266,16 @@ main:has(#toolNav[hidden]):has(#workspace[data-tool="navigation"]) { padding-top
 .reader-reference-viewer.reader-page-viewport .reader-page-flow {
   touch-action: none;
   overscroll-behavior: none;
+}
+/* iOS Safari must retain its native long-press selection handles/callout.
+   The app action bar mirrors the native Range; it must not disable the
+   browser's selection pipeline while the page gesture remains horizontal. */
+html.ios-safari-browser.reader-focus.reader-safari-page-surface .reader-reference-shell,
+html.ios-safari-browser.reader-focus.reader-safari-page-surface .reader-reference-shell .reader-reference-viewer,
+html.ios-safari-browser.reader-focus.reader-safari-page-surface .reader-reference-shell .reader-reference-viewer * {
+  -webkit-touch-callout: default !important;
+  -webkit-user-select: text !important;
+  user-select: text !important;
 }
 @keyframes reader-page-surface-dim {
   0%, 100% { opacity: 1; filter: brightness(1); }

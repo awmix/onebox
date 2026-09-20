@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.198';
+const APP_VERSION = '2.18.199';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -2141,6 +2141,35 @@ function ensureReaderPageColumns(viewport, flow) {
     applyReaderPageColumns(viewport, flow);
   }
 }
+function readerPageForTarget(viewport, target) {
+  const flow = viewport?.querySelector('.reader-page-flow');
+  if (!viewport || !flow || !target || !viewport.clientWidth) return 0;
+  ensureReaderPageColumns(viewport, flow);
+  const geometry = readerPageGeometry(viewport, flow);
+  const count = readerPageCount(viewport);
+  const previousTransform = flow.style.transform;
+  const previousWebkitTransform = flow.style.webkitTransform;
+  flow.style.transform = 'none';
+  flow.style.webkitTransform = 'none';
+  let page = 0;
+  try {
+    // offsetLeft is relative to the nearest offset parent and is not a page
+    // coordinate for nested EPUB sections or headings split by CSS columns.
+    // Read the actual painted position with the track untransformed instead.
+    void flow.offsetWidth;
+    const styles = getComputedStyle(flow);
+    const leftPadding = Math.max(0, Number.parseFloat(styles.paddingLeft || 0) || 0);
+    const flowRect = flow.getBoundingClientRect();
+    const targetRect = target.getBoundingClientRect();
+    const firstColumnLeft = flowRect.left + leftPadding;
+    const stride = Math.max(1, geometry.columnWidth + geometry.columnGap);
+    page = Math.floor(Math.max(0, targetRect.left - firstColumnLeft + 1) / stride);
+  } finally {
+    flow.style.transform = previousTransform;
+    flow.style.webkitTransform = previousWebkitTransform;
+  }
+  return Math.min(Math.max(0, page), Math.max(0, count - 1));
+}
 function setReaderPagePosition(page, behavior = 'smooth') {
   const viewport = $('.reader-page-viewport');
   const flow = $('.reader-page-flow');
@@ -2150,7 +2179,7 @@ function setReaderPagePosition(page, behavior = 'smooth') {
   const nextPage = Math.min(Math.max(0, Math.round(Number(page) || 0)), count - 1);
   state.readerPage = nextPage;
   const transform = 'translate3d(' + (-nextPage * viewport.clientWidth) + 'px, 0, 0)';
-  const transition = behavior === 'smooth' ? 'transform .48s cubic-bezier(.22,.8,.28,1)' : 'none';
+  const transition = behavior === 'smooth' ? 'transform .62s cubic-bezier(.16,.86,.22,1)' : 'none';
   flow.style.transition = transition;
   flow.style.webkitTransition = transition;
   flow.style.transform = transform;
@@ -2712,6 +2741,12 @@ function syncReaderNativeSelectionMenu() {
     scheduleReaderSelectionMenuHide();
   }
 }
+function scheduleReaderNativeSelectionMenuSync() {
+  // iOS Safari can publish the final Range after pointerup/contextmenu. A
+  // single immediate read races that hand-off, especially inside a CSS
+  // column track, so keep a short bounded retry window.
+  [60, 180, 360].forEach((delay) => window.setTimeout(syncReaderNativeSelectionMenu, delay));
+}
 function readerFindQuoteRange(root, quote) {
   const text = String(quote || '').trim(); if (!text) return null;
   const start = root.textContent.indexOf(text);
@@ -2808,7 +2843,7 @@ function jumpToReaderToc(item) {
   const target = readerTocTarget(item);
   if (!target) return;
   if (state.readerReadingMode === 'pages' && content.classList.contains('reader-page-viewport')) {
-    const page = Math.max(0, Math.floor(target.offsetLeft / Math.max(1, content.clientWidth)));
+    const page = readerPageForTarget(content, target);
     setReaderPagePosition(page, 'smooth');
   } else if (readerUsesDocumentScroll()) {
     const header = $('.reader-reference-top');
@@ -2838,7 +2873,7 @@ function jumpToReaderComment(id) {
   closeReaderDialog();
   const content = $('[data-reader-content]'); if (!content) return;
   if (state.readerReadingMode === 'pages' && content.classList.contains('reader-page-viewport')) {
-    const page = Math.max(0, Math.floor(target.offsetLeft / Math.max(1, content.clientWidth)));
+    const page = readerPageForTarget(content, target);
     setReaderPagePosition(page, 'smooth');
   } else {
     target.scrollIntoView({ behavior: 'smooth', block: 'center' }); setTimeout(updateReaderReferenceChrome, 260);
@@ -2848,7 +2883,7 @@ function currentReaderChapterIndex() {
   const content = $('[data-reader-content]'); if (!content || !state.readerToc.length) return -1;
   if (state.readerReadingMode === 'pages' && content.classList.contains('reader-page-viewport')) {
     const page = state.readerPage || 0; let index = 0;
-    state.readerToc.forEach((item, position) => { const target = readerTocTarget(item); if (target && Math.floor(target.offsetLeft / Math.max(1, content.clientWidth)) <= page) index = position; });
+    state.readerToc.forEach((item, position) => { const target = readerTocTarget(item); if (target && readerPageForTarget(content, target) <= page) index = position; });
     return index;
   }
   const header = $('.reader-reference-top');
@@ -2948,12 +2983,15 @@ function turnReaderPage(direction) {
   const nextPage = Math.min(Math.max(0, state.readerPage + direction), count - 1);
   if (nextPage === state.readerPage) return;
   const body = $('.reader-reference-body');
-  if (body) {
+  if (body && state.readerPreferences.pageAnimation !== 'none') {
     body.classList.remove('reader-page-turn-forward', 'reader-page-turn-back');
     void body.offsetWidth;
     body.classList.add(direction > 0 ? 'reader-page-turn-forward' : 'reader-page-turn-back');
     clearTimeout(readerTurnTimer);
     readerTurnTimer = setTimeout(() => body.classList.remove('reader-page-turn-forward', 'reader-page-turn-back'), 560);
+  }
+  if (body && state.readerPreferences.pageAnimation === 'none') {
+    body.classList.remove('reader-page-turn-forward', 'reader-page-turn-back');
   }
   const animationTarget = viewport;
   animationTarget.classList.remove('reader-turn-forward', 'reader-turn-back', 'reader-turn-cover-forward', 'reader-turn-cover-back');
@@ -5104,14 +5142,14 @@ function finishReaderSurfaceGesture(clientX, clientY, target) {
 document.addEventListener('pointerup', (event) => {
   finishReaderSurfaceGesture(event.clientX, event.clientY, event.target);
   // WebKit queues selectionchange after pointerup. Give that native range a
-  // tick to settle, then mirror it into the OneBox action bar if needed.
-  window.setTimeout(syncReaderNativeSelectionMenu, 60);
+  // few bounded ticks to settle, then mirror it into the OneBox action bar.
+  scheduleReaderNativeSelectionMenuSync();
 }, { passive: true });
 workspace.addEventListener('touchend', (event) => {
   if (!readerSurfaceGesture || readerSurfaceGesture.pointerId !== null) return;
   const touch = event.changedTouches[0];
   if (touch) finishReaderSurfaceGesture(touch.clientX, touch.clientY, event.target);
-  window.setTimeout(syncReaderNativeSelectionMenu, 60);
+  scheduleReaderNativeSelectionMenuSync();
 }, { passive: true });
 workspace.addEventListener('dragstart', (event) => { const card = event.target.closest('[data-weather-card]'); if (card) event.dataTransfer.setData('text/plain', card.dataset.weatherIndex); });
 workspace.addEventListener('dragover', (event) => { if (event.target.closest('[data-weather-card]')) event.preventDefault(); });
@@ -5128,9 +5166,13 @@ workspace.addEventListener('contextmenu', (event) => {
     event.stopPropagation();
     return;
   }
-  if (state.readerMode !== 'reading' || !event.target.closest('[data-reader-content]')) return;
+  if (state.readerMode !== 'reading') return;
   const selection = window.getSelection();
-  const content = event.target.closest('[data-reader-content]');
+  // Safari may retarget the long-press contextmenu to the fixed reader shell
+  // rather than the text node that owns the native Range. Resolve the reader
+  // root independently and only intercept when the live selection belongs to
+  // it; otherwise leave Safari's native selection callout untouched.
+  const content = $('[data-reader-content]');
   const hasSelection = Boolean(selection?.rangeCount && !selection.isCollapsed && content && content.contains(selection.getRangeAt(0).commonAncestorContainer));
   // Do not cancel an empty contextmenu on Safari. iOS uses this event as part
   // of the long-press-to-select sequence; cancelling it before a Range exists
@@ -5139,6 +5181,7 @@ workspace.addEventListener('contextmenu', (event) => {
   event.preventDefault();
   event.stopPropagation();
   readerShowSelectionMenu(selection.getRangeAt(0));
+  scheduleReaderNativeSelectionMenuSync();
 });
 workspace.addEventListener('click', async (event) => {
   if (Date.now() < reorderSuppressClickUntil || Date.now() < pageSwipeSuppressClickUntil) { event.preventDefault(); return; }
@@ -5583,6 +5626,10 @@ document.addEventListener('selectionchange', () => {
   suppressReaderPageGesture(1200);
   readerShowSelectionMenu(range);
 });
+document.addEventListener('selectstart', () => {
+  if (state.readerMode !== 'reading') return;
+  scheduleReaderNativeSelectionMenuSync();
+}, { passive: true });
 
 $('#bottomNav').addEventListener('click', (event) => {
   const tab = event.target.closest('[data-section]');
