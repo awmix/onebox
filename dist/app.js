@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.207';
+const APP_VERSION = '2.18.208';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -455,7 +455,7 @@ const state = {
   translationHistoryOpen: storedTranslationHistoryOpen,
   library: normalizeReaderLibrary(storedLibrary),
   readerBookId: null, readerUrl: '', readerAssetUrls: [], readerContent: '', readerHint: '', readerToc: [], readerDialog: '', readerChromeHidden: false, readerImmersive: false, readerMode: 'library', readerReadingMode: 'scroll', readerPage: 0, readerSelectedText: '', readerSelection: null, readerAnnotationDraft: null, readerSelectionInput: 'mouse', readerLayout: storedReaderLayout === 'list' ? 'list' : 'grid', annotationBookId: null,
-  readerPreferences: { theme: ['paper', 'sepia', 'green', 'dark'].includes(storedReaderPreferences.theme) ? storedReaderPreferences.theme : 'paper', fontSize: Number.isFinite(Number(storedReaderPreferences.fontSize)) ? Math.min(26, Math.max(15, Number(storedReaderPreferences.fontSize))) : 18, fontFamily: ['system', 'serif', 'mono'].includes(storedReaderPreferences.fontFamily) ? storedReaderPreferences.fontFamily : 'system', lineHeight: Number.isFinite(Number(storedReaderPreferences.lineHeight)) ? Math.min(2.2, Math.max(1.35, Number(storedReaderPreferences.lineHeight))) : 1.8, paragraphSpacing: Number.isFinite(Number(storedReaderPreferences.paragraphSpacing)) ? Math.min(28, Math.max(6, Number(storedReaderPreferences.paragraphSpacing))) : 14, letterSpacing: Number.isFinite(Number(storedReaderPreferences.letterSpacing)) ? Math.min(2, Math.max(0, Number(storedReaderPreferences.letterSpacing))) : 0, pageAnimation: ['slide', 'cover', 'none'].includes(storedReaderPreferences.pageAnimation) ? storedReaderPreferences.pageAnimation : 'slide', readingMode: storedReaderPreferences.readingMode === 'pages' ? 'pages' : 'scroll', fullscreenOnOpen: storedReaderPreferences.fullscreenOnOpen === true },
+  readerPreferences: { theme: ['paper', 'sepia', 'green', 'dark'].includes(storedReaderPreferences.theme) ? storedReaderPreferences.theme : 'paper', fontSize: Number.isFinite(Number(storedReaderPreferences.fontSize)) ? Math.min(26, Math.max(15, Number(storedReaderPreferences.fontSize))) : 18, fontFamily: ['system', 'serif', 'mono'].includes(storedReaderPreferences.fontFamily) ? storedReaderPreferences.fontFamily : 'system', lineHeight: Number.isFinite(Number(storedReaderPreferences.lineHeight)) ? Math.min(2.2, Math.max(1.35, Number(storedReaderPreferences.lineHeight))) : 1.8, paragraphSpacing: Number.isFinite(Number(storedReaderPreferences.paragraphSpacing)) ? Math.min(28, Math.max(6, Number(storedReaderPreferences.paragraphSpacing))) : 14, letterSpacing: Number.isFinite(Number(storedReaderPreferences.letterSpacing)) ? Math.min(2, Math.max(0, Number(storedReaderPreferences.letterSpacing))) : 0, pageAnimation: ['slide', 'none'].includes(storedReaderPreferences.pageAnimation) ? storedReaderPreferences.pageAnimation : 'slide', readingMode: storedReaderPreferences.readingMode === 'pages' ? 'pages' : 'scroll', fullscreenOnOpen: storedReaderPreferences.fullscreenOnOpen === true },
   homeFeed: { active: DEFAULT_HOME_FEED_VISIBLE[0] || DEFAULT_HOME_FEED_ORDER[0], order: normalizeHomeFeedOrder(storedHomeFeedOrder), visible: normalizeHomeFeedVisibility(storedHomeFeedVisibility), hasNew: false, loading: false, errors: {}, stale: {}, updatedAt: Number(storedHomeFeeds.updatedAt || 0), cacheVersion: storedHomeFeeds.cacheVersion || '', sources: storedHomeFeeds.sources && typeof storedHomeFeeds.sources === 'object' ? storedHomeFeeds.sources : {} },
   navigation: normalizeNavigation(storedNavigation), navigationLocation: storedNavigationLocation, navigationDialog: null, navigationFolderDraft: null, navigationSettingsOpen: false,
   homeFeedRead: storedHomeFeedRead && typeof storedHomeFeedRead === 'object' ? storedHomeFeedRead : {},
@@ -1940,7 +1940,6 @@ let readerRestoreTimer = null;
 let readerPageLayoutFrame = 0;
 let readerPageResizeObserver = null;
 let readerPageResizeTarget = null;
-let readerTurnCleanupTimer = null;
 let readerNativeFullscreen = false;
 let readerMarkupRestoreTimer = null;
 function readerUsesDocumentScroll() {
@@ -2179,7 +2178,7 @@ function setReaderPagePosition(page, behavior = 'smooth') {
   const nextPage = Math.min(Math.max(0, Math.round(Number(page) || 0)), count - 1);
   state.readerPage = nextPage;
   const transform = 'translate3d(' + (-nextPage * viewport.clientWidth) + 'px, 0, 0)';
-  const transition = behavior === 'smooth' ? 'transform .62s cubic-bezier(.16,.86,.22,1)' : 'none';
+  const transition = behavior === 'smooth' ? 'transform .68s cubic-bezier(.22,.72,.24,1)' : 'none';
   flow.style.transition = transition;
   flow.style.webkitTransition = transition;
   flow.style.transform = transform;
@@ -2194,7 +2193,7 @@ function setReaderPagePosition(page, behavior = 'smooth') {
       if (!flow.isConnected) return;
       flow.style.transition = '';
       flow.style.webkitTransition = '';
-    }, 540);
+    }, 720);
   }
   updateReaderPager();
   return nextPage;
@@ -2218,59 +2217,6 @@ function updateReaderPager() {
   if (previous) previous.disabled = state.readerPage <= 0;
   if (next) next.disabled = state.readerPage >= count - 1;
   updateReaderReferenceChrome();
-}
-function clearReaderTurnOverlay() {
-  const overlay = $('.reader-page-turn-overlay');
-  if (!overlay) return;
-  clearTimeout(readerTurnCleanupTimer);
-  readerTurnCleanupTimer = null;
-  overlay.replaceChildren();
-  overlay.removeAttribute('data-reader-turn-direction');
-}
-function createReaderTurnPage(flow, viewport, pageIndex, extraClass = '') {
-  const host = document.createElement('div');
-  host.className = 'reader-reference-viewer reader-page-viewport reader-page-turn-page-host' + extraClass;
-  host.setAttribute('aria-hidden', 'true');
-  const page = flow.cloneNode(true);
-  page.className = 'reader-page-flow reader-page-turn-page';
-  page.removeAttribute('id');
-  page.style.width = Math.max(flow.scrollWidth, viewport.clientWidth) + 'px';
-  page.style.height = viewport.clientHeight + 'px';
-  page.style.transform = 'translate3d(' + (-pageIndex * viewport.clientWidth) + 'px, 0, 0)';
-  page.style.webkitTransform = page.style.transform;
-  page.style.transition = 'none';
-  page.style.webkitTransition = 'none';
-  page.querySelectorAll('[id]').forEach((node) => node.removeAttribute('id'));
-  page.querySelectorAll('a, button, input, textarea, select, [tabindex]').forEach((node) => node.setAttribute('tabindex', '-1'));
-  host.append(page);
-  return host;
-}
-function prepareReaderTurnOverlay(viewport, direction, nextPage) {
-  const overlay = $('.reader-page-turn-overlay');
-  const flow = viewport?.querySelector('.reader-page-flow');
-  if (!overlay || !flow || !viewport.clientWidth || !viewport.clientHeight) return false;
-  clearReaderTurnOverlay();
-  const face = document.createElement('div');
-  face.className = 'reader-page-turn-face ' + (direction > 0 ? 'reader-page-turn-face-forward' : 'reader-page-turn-face-back');
-  face.setAttribute('aria-hidden', 'true');
-  // A real turn has two readable sides: the current page on the front and
-  // the destination page on the back. Without the back face, a CSS rotateY
-  // becomes a card that narrows and disappears instead of turning a sheet.
-  face.append(createReaderTurnPage(flow, viewport, state.readerPage, ' reader-page-turn-front-page-host'));
-  face.append(createReaderTurnPage(flow, viewport, nextPage, ' reader-page-turn-back-page-host'));
-  overlay.append(face);
-  overlay.dataset.readerTurnDirection = direction > 0 ? 'forward' : 'back';
-  void face.offsetWidth;
-  requestAnimationFrame(() => {
-    if (face.isConnected) face.classList.add('is-active');
-  });
-  const cleanup = () => {
-    if (!face.isConnected) return;
-    clearReaderTurnOverlay();
-  };
-  face.addEventListener('animationend', cleanup, { once: true });
-  readerTurnCleanupTimer = setTimeout(cleanup, 1100);
-  return true;
 }
 function restoreReaderPosition() {
   const book = readerBookById(state.readerBookId); const content = $('[data-reader-content]'); if (!book || !content) return;
@@ -2552,7 +2498,7 @@ function readerDialogMarkup(kind) {
     dialog.innerHTML = '<div class="reader-dialog-card reader-panel-card reader-comments-card" role="dialog" aria-modal="true"><div class="dialog-head reader-dialog-head">' + title(t('readerComments'), t('readerNotesHint')) + closeButton + '</div><div class="reader-comments-list">' + body + '</div></div>';
   } else if (kind === 'animation') {
     const option = (value, label) => '<button class="reader-sheet-choice ' + (prefs.pageAnimation === value ? 'active' : '') + '" data-reader-animation="' + value + '"><span>' + label + '</span><i>' + (prefs.pageAnimation === value ? '✓' : '') + '</i></button>';
-    dialog.innerHTML = '<div class="reader-dialog-card reader-panel-card reader-sheet-card" role="dialog" aria-modal="true"><div class="dialog-head reader-dialog-head">' + title(t('readerAnimation'), t('readerSettingsHint')) + closeButton + '</div><div class="reader-sheet-body reader-choice-list">' + option('slide', t('readerAnimationSlide')) + option('cover', t('readerAnimationCover')) + option('none', t('readerAnimationNone')) + '</div></div>';
+    dialog.innerHTML = '<div class="reader-dialog-card reader-panel-card reader-sheet-card" role="dialog" aria-modal="true"><div class="dialog-head reader-dialog-head">' + title(t('readerAnimation'), t('readerSettingsHint')) + closeButton + '</div><div class="reader-sheet-body reader-choice-list">' + option('slide', state.language === 'en' ? 'Smooth horizontal slide' : '水平平滑翻页') + option('none', t('readerAnimationNone')) + '</div></div>';
   } else {
     const nearestChoice = (value, choices) => choices.reduce((best, choice) => Math.abs(Number(choice) - Number(value)) < Math.abs(Number(best) - Number(value)) ? choice : best, choices[0]);
     const fontSizeValues = [16, 18, 20, 22, 24];
@@ -3090,13 +3036,11 @@ function turnReaderPage(direction) {
   const nextPage = Math.min(Math.max(0, state.readerPage + direction), count - 1);
   if (nextPage === state.readerPage) return;
   const prefersReducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-  const animate = state.readerPreferences.pageAnimation !== 'none' && !prefersReducedMotion;
-  const hasTurnFace = animate && prepareReaderTurnOverlay(viewport, direction, nextPage);
-  if (!hasTurnFace) clearReaderTurnOverlay();
-  // Move the real column track immediately. The visible page is now supplied
-  // by the turn face, so Safari never animates the entire multi-column strip
-  // like a plain horizontal scroller underneath the page-turn effect.
-  setReaderPagePosition(nextPage, 'instant');
+  const behavior = state.readerPreferences.pageAnimation !== 'none' && !prefersReducedMotion ? 'smooth' : 'instant';
+  // Keep one source of truth for the visible page. Moving the real column
+  // track directly avoids the Safari/PWA desynchronisation caused by a
+  // second animated overlay and gives the reader a calm horizontal slide.
+  setReaderPagePosition(nextPage, behavior);
 }
 function renderAnnotationDialog() {
   if (!state.readerSelectedText) return;
@@ -3119,7 +3063,7 @@ function readerReadingView(book) {
   const pageCorners = state.readerReadingMode === 'pages' && !isPdf ? '<button type="button" class="reader-page-turn-corner reader-page-turn-corner-prev" data-reader-page-prev aria-label="' + (state.language === 'en' ? 'Previous page' : '上一页') + '"><span aria-hidden="true"></span></button><button type="button" class="reader-page-turn-corner reader-page-turn-corner-next" data-reader-page-next aria-label="' + (state.language === 'en' ? 'Next page' : '下一页') + '"><span aria-hidden="true"></span></button>' : '';
   return '<div class="reader-reference-shell' + chromeClass + '" data-reader-theme="' + escapeHtml(state.readerPreferences.theme) + '">' +
     '<div class="reader-safari-edge-top" aria-hidden="true"></div><header class="reader-reference-top"><button class="reader-ref-icon reader-fullscreen-tool reader-reference-top-fullscreen" data-reader-fullscreen aria-label="' + t('readerFullscreen') + '"></button><div class="reader-reference-title"><strong>' + escapeHtml(book.name) + '</strong><small>' + escapeHtml(hint) + '</small></div><div class="reader-reference-header-progress" data-reader-progress-line role="progressbar" aria-label="' + t('readerProgress') + '" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span class="reader-reference-header-track"><i data-reader-progress-fill></i></span><b class="reader-reference-header-percent" data-reader-progress-label>0%</b></div></header>' +
-    '<main class="reader-reference-body"><article class="' + contentClass + ' reader-reference-viewer" data-reader-content data-reader-surface>' + content + '</article><div class="reader-page-turn-overlay" aria-hidden="true"></div>' + pageCorners + '</main>' +
+    '<main class="reader-reference-body"><article class="' + contentClass + ' reader-reference-viewer" data-reader-content data-reader-surface>' + content + '</article>' + pageCorners + '</main>' +
     '<footer class="reader-reference-bottom"><div class="reader-reference-chapter"><span class="reader-reference-chapter-name" data-reader-chapter-name>' + escapeHtml(chapter) + '</span><span class="reader-reference-page-meta" data-reader-page-info>—</span></div>' +
     '<div class="reader-reference-tool-row"><button class="reader-reference-tool reader-shelf-tool" data-close-reader aria-label="' + t('bookshelf') + '">' + icon('<path d="m15 5-7 7 7 7"/>') + '<span>' + t('bookshelf') + '</span></button>' + tool('reader-toc', '<path d="M5 5h14M5 12h14M5 19h9"/>', t('readerContents')) + '<button class="reader-reference-tool reader-settings-tool" data-reader-settings>' + icon('<path d="M4 7h8M16 7h4M4 12h3M11 12h9M4 17h8M16 17h4"/><circle cx="14" cy="7" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="14" cy="17" r="2"/>') + '<span>' + t('settings') + '</span></button>' + '<button class="reader-reference-tool reader-comments-tool" data-reader-comments aria-label="' + t('readerComments') + '">' + icon(commentsIcon) + '<span>' + t('readerComments') + '</span></button>' + '<button class="reader-reference-tool reader-fullscreen-tool" data-reader-fullscreen aria-label="' + t('readerFullscreen') + '"></button></div></footer><div class="reader-selection-menu" data-reader-selection-menu hidden role="menu">' + selectionActions + '</div><div class="reader-comment-popover" data-reader-comment-popover hidden></div></div>';
 }

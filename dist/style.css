@@ -6724,9 +6724,9 @@ html[data-theme="dark"] #githubDialog .github-dialog-head { background: var(--pa
   perspective: 1000px;
   pointer-events: none;
 }
-/* 2.18.207: keep the real column track positioned underneath a two-sided
-   folding sheet. The moving outline and crease follow the turn.js-style
-   corner turn instead of rotating a whole card away. */
+/* 2.18.208: page mode uses one real column track and a calm horizontal slide.
+   Keeping the transition on the track avoids a second visual layer competing
+   with Safari's text-selection and touch gesture handling. */
 .reader-page-turn-overlay {
   z-index: 8;
   isolation: isolate;
@@ -8390,12 +8390,6 @@ html.ios-safari-browser.reader-focus.reader-safari-surface .reader-reference-she
   -webkit-touch-callout: none !important;
   -webkit-user-select: text !important;
   user-select: text !important;
-}
-html.ios-safari-browser.reader-focus.reader-safari-page-surface .reader-reference-body .reader-page-turn-overlay,
-html.ios-safari-browser.reader-focus.reader-safari-surface .reader-reference-body .reader-page-turn-overlay {
-  position: absolute !important;
-  z-index: 8 !important;
-  pointer-events: none !important;
 }
 @keyframes reader-page-surface-dim {
   0%, 100% { opacity: 1; filter: brightness(1); }
