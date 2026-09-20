@@ -6744,15 +6744,15 @@ html[data-theme="dark"] #githubDialog .github-dialog-head { background: var(--pa
   will-change: transform;
   pointer-events: none;
 }
-.reader-page-turn-face-forward { transform-origin: left center; box-shadow: 18px 0 34px color-mix(in srgb, var(--reader-ink) 22%, transparent); }
-.reader-page-turn-face-back { transform-origin: right center; box-shadow: -18px 0 34px color-mix(in srgb, var(--reader-ink) 22%, transparent); }
+.reader-page-turn-face-forward { transform-origin: left center; box-shadow: 12px 0 28px color-mix(in srgb, var(--reader-ink) 16%, transparent); }
+.reader-page-turn-face-back { transform-origin: right center; box-shadow: -12px 0 28px color-mix(in srgb, var(--reader-ink) 16%, transparent); }
 .reader-page-turn-face::before {
   position: absolute;
   inset: 0;
   z-index: 2;
   content: '';
-  opacity: .78;
-  background: linear-gradient(90deg, transparent 48%, color-mix(in srgb, var(--reader-ink) 13%, transparent) 72%, color-mix(in srgb, var(--reader-bg) 80%, transparent) 100%);
+  opacity: .58;
+  background: linear-gradient(90deg, transparent 48%, color-mix(in srgb, var(--reader-ink) 9%, transparent) 72%, color-mix(in srgb, var(--reader-bg) 84%, transparent) 100%);
   mix-blend-mode: multiply;
   pointer-events: none;
 }
@@ -6788,24 +6788,26 @@ html[data-theme="dark"] #githubDialog .github-dialog-head { background: var(--pa
 }
 .reader-page-turn-face-back .reader-page-turn-page { transform-origin: right top; }
 .reader-page-turn-face.is-active.reader-page-turn-face-forward {
-  animation: reader-page-flip-forward .66s cubic-bezier(.18,.82,.22,1) both;
+  animation: reader-page-flip-forward .92s cubic-bezier(.22,.68,.24,1) both;
 }
 .reader-page-turn-face.is-active.reader-page-turn-face-back {
-  animation: reader-page-flip-back .66s cubic-bezier(.18,.82,.22,1) both;
+  animation: reader-page-flip-back .92s cubic-bezier(.22,.68,.24,1) both;
 }
 @keyframes reader-page-flip-forward {
   0% { opacity: 1; transform: perspective(1500px) rotateY(0deg) translateZ(0); }
-  18% { opacity: 1; transform: perspective(1500px) rotateY(-16deg) translateX(-1%); }
-  54% { opacity: .98; transform: perspective(1500px) rotateY(-92deg) translateX(-2%); }
-  82% { opacity: .84; transform: perspective(1500px) rotateY(-154deg) translateX(-3%); }
-  100% { opacity: 0; transform: perspective(1500px) rotateY(-180deg) translateX(-4%); }
+  16% { opacity: 1; transform: perspective(1500px) rotateY(-8deg) translate3d(-.2%, 0, .5px); }
+  42% { opacity: .995; transform: perspective(1500px) rotateY(-48deg) translate3d(-.8%, 0, 2px); }
+  68% { opacity: .96; transform: perspective(1500px) rotateY(-112deg) translate3d(-1.8%, 0, 1px); }
+  86% { opacity: .72; transform: perspective(1500px) rotateY(-154deg) translate3d(-2.8%, 0, 0); }
+  100% { opacity: 0; transform: perspective(1500px) rotateY(-180deg) translate3d(-3.5%, 0, 0); }
 }
 @keyframes reader-page-flip-back {
   0% { opacity: 1; transform: perspective(1500px) rotateY(0deg) translateZ(0); }
-  18% { opacity: 1; transform: perspective(1500px) rotateY(16deg) translateX(1%); }
-  54% { opacity: .98; transform: perspective(1500px) rotateY(92deg) translateX(2%); }
-  82% { opacity: .84; transform: perspective(1500px) rotateY(154deg) translateX(3%); }
-  100% { opacity: 0; transform: perspective(1500px) rotateY(180deg) translateX(4%); }
+  16% { opacity: 1; transform: perspective(1500px) rotateY(8deg) translate3d(.2%, 0, .5px); }
+  42% { opacity: .995; transform: perspective(1500px) rotateY(48deg) translate3d(.8%, 0, 2px); }
+  68% { opacity: .96; transform: perspective(1500px) rotateY(112deg) translate3d(1.8%, 0, 1px); }
+  86% { opacity: .72; transform: perspective(1500px) rotateY(154deg) translate3d(2.8%, 0, 0); }
+  100% { opacity: 0; transform: perspective(1500px) rotateY(180deg) translate3d(3.5%, 0, 0); }
 }
 .reader-page-turn-corner {
   position: absolute;
