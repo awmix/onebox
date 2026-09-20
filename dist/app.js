@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.214';
+const APP_VERSION = '2.18.215';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -1314,7 +1314,6 @@ function mascotFinishDrag(event) {
     return;
   }
   if (!cancelled) {
-    mascotRuntime.suppressClickUntil = Date.now() + 350;
     mascotHandleTap();
   }
 }
