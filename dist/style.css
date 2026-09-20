@@ -4732,7 +4732,8 @@ main { overflow-x: hidden; }
 .reader-book-progress em { flex: 0 0 auto; color: var(--muted); font-size: 9px; font-style: normal; font-variant-numeric: tabular-nums; }
 .reader-reference-viewer,
 .reader-reference-shell { -webkit-touch-callout: none; }
-.reader-reference-viewer { -webkit-user-select: text; user-select: text; }
+.reader-reference-viewer,
+.reader-reference-viewer * { -webkit-user-select: text; user-select: text; }
 
 /* A single iOS-like selection menu is used on both touch and desktop. On
    touch Safari the native callout is suppressed for the reader surface. */
@@ -8245,22 +8246,25 @@ main:has(#toolNav[hidden]):has(#workspace[data-tool="navigation"]) { padding-top
     /* Keep Safari's native long-press selection pipeline alive. The fixed,
        overflow-hidden reader surface already blocks vertical document pan;
        the app handles horizontal page turns itself. */
-    touch-action: pan-x !important;
+    /* Keep WebKit's native long-press selection available. The viewport is
+       overflow-hidden, so allowing the browser gesture here cannot create a
+       second scroll surface; our touch handlers still turn pages on swipe. */
+    touch-action: auto !important;
   }
 
   html.ios-safari-browser.reader-focus.reader-safari-page-surface #workspace[data-tool="reader"] .reader-page-flow {
     height: 100% !important;
     min-height: 0 !important;
-    touch-action: pan-x !important;
+    touch-action: auto !important;
   }
 }
 
-/* 2.18.198: PWA page mode owns the gesture so a tap never starts a vertical
-   scroll. Safari gets the platform-specific pan-x override above so its
-   native long-press Range/callout remains available for annotations. */
+/* PWA page mode owns the gesture so a tap never starts a vertical scroll.
+   Safari intentionally uses the platform default on selectable reader text;
+   its fixed overflow-hidden surface prevents accidental document scrolling. */
 .reader-reference-viewer,
 .reader-reference-viewer * {
-  -webkit-touch-callout: default;
+  -webkit-touch-callout: none;
 }
 .reader-reference-viewer.reader-page-viewport,
 .reader-reference-viewer.reader-page-viewport .reader-page-flow {
@@ -8273,9 +8277,15 @@ main:has(#toolNav[hidden]):has(#workspace[data-tool="navigation"]) { padding-top
 html.ios-safari-browser.reader-focus.reader-safari-page-surface .reader-reference-shell,
 html.ios-safari-browser.reader-focus.reader-safari-page-surface .reader-reference-shell .reader-reference-viewer,
 html.ios-safari-browser.reader-focus.reader-safari-page-surface .reader-reference-shell .reader-reference-viewer * {
-  -webkit-touch-callout: default !important;
+  -webkit-touch-callout: none !important;
   -webkit-user-select: text !important;
   user-select: text !important;
+}
+html.ios-safari-browser.reader-focus.reader-safari-page-surface .reader-reference-shell .reader-selection-menu {
+  position: absolute !important;
+  z-index: 140 !important;
+  pointer-events: auto !important;
+  -webkit-touch-callout: none !important;
 }
 @keyframes reader-page-surface-dim {
   0%, 100% { opacity: 1; filter: brightness(1); }

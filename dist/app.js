@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.199';
+const APP_VERSION = '2.18.200';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -2604,7 +2604,11 @@ function readerNativeSelectionRange() {
   const content = $('[data-reader-content]');
   if (!selection || !content || selection.rangeCount === 0 || selection.isCollapsed) return null;
   const range = selection.getRangeAt(0);
-  return content.contains(range.commonAncestorContainer) ? range : null;
+  const inside = (node) => Boolean(node && (node === content || content.contains(node)));
+  // WebKit can report the common ancestor as a document/column wrapper while
+  // the actual endpoints are still inside the reader. Check both endpoints so
+  // a valid iOS selection is not discarded before the action bar is shown.
+  return inside(range.commonAncestorContainer) || (inside(range.startContainer) && inside(range.endContainer)) ? range : null;
 }
 function clearReaderSelectionState() {
   state.readerSelection = null;
@@ -2705,7 +2709,9 @@ function readerSelectionMenuPosition(range) {
   const menu = $('[data-reader-selection-menu]'); const shell = $('.reader-reference-shell');
   if (!menu || !shell) return;
   menu.hidden = false;
-  const shellRect = shell.getBoundingClientRect(); const rect = range.getBoundingClientRect();
+  const shellRect = shell.getBoundingClientRect();
+  const rects = [...range.getClientRects()].filter((item) => item.width > 0 && item.height > 0);
+  const rect = rects[0] || range.getBoundingClientRect();
   const menuRect = menu.getBoundingClientRect();
   const left = Math.min(Math.max(8, rect.left - shellRect.left + (rect.width - menuRect.width) / 2), shellRect.width - menuRect.width - 8);
   const above = rect.top - shellRect.top - menuRect.height - 8;
@@ -2714,7 +2720,9 @@ function readerSelectionMenuPosition(range) {
   menu.style.top = Math.max(8, top) + 'px';
 }
 function readerShowSelectionMenu(range) {
-  const root = $('[data-reader-content]'); if (!root || !range || !root.contains(range.commonAncestorContainer)) return;
+  const root = $('[data-reader-content]');
+  const inside = (node) => Boolean(node && (node === root || root?.contains(node)));
+  if (!root || !range || !(inside(range.commonAncestorContainer) || (inside(range.startContainer) && inside(range.endContainer)))) return;
   const anchor = readerSelectionAnchor(root, range);
   if (!anchor || !anchor.quote) return hideReaderSelectionMenu();
   if (readerSelectionHideTimer) {
@@ -2745,7 +2753,7 @@ function scheduleReaderNativeSelectionMenuSync() {
   // iOS Safari can publish the final Range after pointerup/contextmenu. A
   // single immediate read races that hand-off, especially inside a CSS
   // column track, so keep a short bounded retry window.
-  [60, 180, 360].forEach((delay) => window.setTimeout(syncReaderNativeSelectionMenu, delay));
+  [60, 180, 360, 700, 1000].forEach((delay) => window.setTimeout(syncReaderNativeSelectionMenu, delay));
 }
 function readerFindQuoteRange(root, quote) {
   const text = String(quote || '').trim(); if (!text) return null;
@@ -5083,6 +5091,10 @@ function suppressReaderPageNativePan(event) {
   if (!gesture || state.readerMode !== 'reading' || state.readerReadingMode !== 'pages') return;
   const pointerType = event.pointerType || gesture.pointerType;
   if (pointerType !== 'touch') return;
+  // iOS Safari owns long-press text selection. Do not cancel a touch move
+  // that started on reader text; even small finger drift before the long-press
+  // threshold can otherwise abort WebKit's selection/callout pipeline.
+  if (isIosSafariBrowser() && event.target.closest?.('[data-reader-content]')) return;
   const point = event.touches?.[0] || event;
   const dx = point.clientX - gesture.x;
   const dy = point.clientY - gesture.y;
@@ -5145,6 +5157,11 @@ document.addEventListener('pointerup', (event) => {
   // few bounded ticks to settle, then mirror it into the OneBox action bar.
   scheduleReaderNativeSelectionMenuSync();
 }, { passive: true });
+document.addEventListener('touchend', () => {
+  // Some iOS versions complete the native Range on touchend without a
+  // corresponding pointerup after the page gesture recognizer intervenes.
+  scheduleReaderNativeSelectionMenuSync();
+}, { capture: true, passive: true });
 workspace.addEventListener('touchend', (event) => {
   if (!readerSurfaceGesture || readerSurfaceGesture.pointerId !== null) return;
   const touch = event.changedTouches[0];
@@ -5173,14 +5190,16 @@ workspace.addEventListener('contextmenu', (event) => {
   // root independently and only intercept when the live selection belongs to
   // it; otherwise leave Safari's native selection callout untouched.
   const content = $('[data-reader-content]');
-  const hasSelection = Boolean(selection?.rangeCount && !selection.isCollapsed && content && content.contains(selection.getRangeAt(0).commonAncestorContainer));
+  const range = selection?.rangeCount && !selection.isCollapsed ? selection.getRangeAt(0) : null;
+  const inside = (node) => Boolean(node && content && (node === content || content.contains(node)));
+  const hasSelection = Boolean(range && content && (inside(range.commonAncestorContainer) || (inside(range.startContainer) && inside(range.endContainer))));
   // Do not cancel an empty contextmenu on Safari. iOS uses this event as part
   // of the long-press-to-select sequence; cancelling it before a Range exists
   // removes the native selection handles and leaves no action bar to use.
   if (!hasSelection) return;
   event.preventDefault();
   event.stopPropagation();
-  readerShowSelectionMenu(selection.getRangeAt(0));
+  readerShowSelectionMenu(range);
   scheduleReaderNativeSelectionMenuSync();
 });
 workspace.addEventListener('click', async (event) => {
