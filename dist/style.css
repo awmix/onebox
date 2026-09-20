@@ -8080,7 +8080,7 @@ main:has(#toolNav[hidden]):has(#workspace[data-tool="navigation"]) { padding-top
   #workspace[data-tool="weather"] .weather-card-meta { font-size: 9.5px; }
 }
 
-/* 2.18.194: make the four reading surfaces materially different and keep
+/* 2.18.195: make the four reading surfaces materially different and keep
    paged content from being clipped when a paragraph or EPUB block is taller
    than one viewport column. */
 .reader-reference-shell[data-reader-theme="paper"],
@@ -8146,12 +8146,18 @@ main:has(#toolNav[hidden]):has(#workspace[data-tool="navigation"]) { padding-top
   overflow: auto;
 }
 .reader-reference-viewer.reader-page-viewport {
-  overflow-x: auto !important;
+  overflow: hidden !important;
   overflow-y: hidden !important;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior-x: contain;
+  touch-action: pan-y;
+  overscroll-behavior: contain;
   scrollbar-width: none;
   -ms-overflow-style: none;
+}
+.reader-reference-viewer.reader-page-viewport .reader-page-flow {
+  will-change: transform;
+  transform-origin: center center;
+  transform: translate3d(0, 0, 0);
+  -webkit-transform: translate3d(0, 0, 0);
 }
 .reader-reference-viewer.reader-page-viewport::-webkit-scrollbar {
   display: none;
@@ -8159,3 +8165,16 @@ main:has(#toolNav[hidden]):has(#workspace[data-tool="navigation"]) { padding-top
 .reader-theme-dot.theme-paper { background: #f4f0e7; border-color: #d9d3c8; }
 .reader-theme-dot.theme-sepia { background: #e7e2d6; border-color: #c9c2b5; }
 .reader-theme-dot.theme-dark { background: #1d1f24; border-color: #3b3f49; }
+
+/* A page turn moves the column track; the viewport itself must stay still so
+   Safari does not look like it is horizontally scrolling the whole reader. */
+.reader-reference-viewer.reader-page-viewport.reader-turn-forward,
+.reader-reference-viewer.reader-page-viewport.reader-turn-back,
+.reader-reference-viewer.reader-page-viewport.reader-turn-cover-forward,
+.reader-reference-viewer.reader-page-viewport.reader-turn-cover-back {
+  animation: reader-page-surface-dim .52s cubic-bezier(.22,.8,.28,1) both !important;
+}
+@keyframes reader-page-surface-dim {
+  0%, 100% { opacity: 1; filter: brightness(1); }
+  45% { opacity: .88; filter: brightness(.96); }
+}

@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.194';
+const APP_VERSION = '2.18.195';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -1982,7 +1982,8 @@ function scheduleReaderPositionRestore() {
 function scheduleReaderProgress(content) {
   const book = readerBookById(state.readerBookId); if (!book || !content || !content.scrollHeight) return;
   if (state.readerReadingMode === 'pages' && content.classList.contains('reader-page-viewport')) {
-    book.progress = Math.min(1, content.scrollLeft / Math.max(1, content.scrollWidth - content.clientWidth));
+    const count = readerPageCount(content);
+    book.progress = state.readerPage / Math.max(1, count - 1);
   } else {
     book.progress = readerScrollProgress(content);
   }
@@ -1998,7 +1999,8 @@ function flushReaderProgress() {
   const book = readerBookById(state.readerBookId); const content = $('[data-reader-content]');
   if (!book || !content || !content.scrollHeight) return;
   if (state.readerReadingMode === 'pages' && content.classList.contains('reader-page-viewport')) {
-    book.progress = Math.min(1, Math.max(0, content.scrollLeft / Math.max(1, content.scrollWidth - content.clientWidth)));
+    const count = readerPageCount(content);
+    book.progress = Math.min(1, Math.max(0, state.readerPage / Math.max(1, count - 1)));
   } else {
     book.progress = readerScrollProgress(content);
   }
@@ -2008,25 +2010,15 @@ function applyReaderPageLayout(preserveProgress = true) {
   const viewport = $('.reader-page-viewport');
   const flow = $('.reader-page-flow');
   if (!viewport || !flow || !viewport.clientWidth || !viewport.clientHeight) return;
-  const previousMax = Math.max(0, viewport.scrollWidth - viewport.clientWidth);
-  const progress = preserveProgress && previousMax > 0
-    ? Math.min(1, Math.max(0, viewport.scrollLeft / previousMax))
+  const previousCount = Number(viewport.dataset.readerLayoutPages) || readerPageCount(viewport);
+  const progress = preserveProgress && previousCount > 1
+    ? Math.min(1, Math.max(0, state.readerPage / Math.max(1, previousCount - 1)))
     : 0;
-  const width = Math.max(1, Math.round(viewport.clientWidth));
-  const height = Math.max(1, Math.round(viewport.clientHeight));
-  flow.style.columnWidth = width + 'px';
-  flow.style.webkitColumnWidth = width + 'px';
-  flow.style.columnFill = 'auto';
-  flow.style.webkitColumnFill = 'auto';
-  flow.style.height = height + 'px';
+  applyReaderPageColumns(viewport, flow);
   requestAnimationFrame(() => {
     if (!viewport.isConnected || !flow.isConnected) return;
-    const maxScroll = Math.max(0, viewport.scrollWidth - viewport.clientWidth);
-    const previousBehavior = viewport.style.scrollBehavior;
-    viewport.style.scrollBehavior = 'auto';
-    viewport.scrollLeft = progress * maxScroll;
-    viewport.style.scrollBehavior = previousBehavior;
-    updateReaderPager();
+    const count = readerPageCount(viewport);
+    setReaderPagePosition(Math.round(progress * Math.max(0, count - 1)), 'instant');
   });
 }
 function scheduleReaderPageLayout() {
@@ -2046,19 +2038,75 @@ function syncReaderPageResizeObserver() {
   readerPageResizeObserver = new ResizeObserver(scheduleReaderPageLayout);
   readerPageResizeObserver.observe(viewport);
 }
+function readerPageGeometry(viewport, flow = viewport?.querySelector('.reader-page-flow')) {
+  const styles = flow ? getComputedStyle(flow) : null;
+  const leftPadding = Math.max(0, Number.parseFloat(styles?.paddingLeft || 0) || 0);
+  const rightPadding = Math.max(0, Number.parseFloat(styles?.paddingRight || 0) || 0);
+  const pageWidth = Math.max(1, Math.round(viewport?.clientWidth || 1));
+  const columnWidth = Math.max(1, pageWidth - Math.round(leftPadding + rightPadding));
+  const columnGap = Math.max(0, Math.round(leftPadding + rightPadding));
+  return { pageWidth, columnWidth, columnGap, horizontalPadding: leftPadding + rightPadding };
+}
+function applyReaderPageColumns(viewport, flow) {
+  const geometry = readerPageGeometry(viewport, flow);
+  flow.style.columnWidth = geometry.columnWidth + 'px';
+  flow.style.webkitColumnWidth = geometry.columnWidth + 'px';
+  flow.style.columnGap = geometry.columnGap + 'px';
+  flow.style.webkitColumnGap = geometry.columnGap + 'px';
+  flow.style.columnFill = 'auto';
+  flow.style.webkitColumnFill = 'auto';
+  flow.style.height = Math.max(1, Math.round(viewport.clientHeight)) + 'px';
+  return geometry;
+}
+function readerPageCount(viewport) {
+  const flow = viewport?.querySelector('.reader-page-flow');
+  if (!viewport || !flow) return 1;
+  const geometry = readerPageGeometry(viewport, flow);
+  const totalWidth = Math.max(geometry.columnWidth, flow.scrollWidth - geometry.horizontalPadding + geometry.columnGap);
+  return Math.max(1, Math.ceil(totalWidth / Math.max(1, geometry.columnWidth + geometry.columnGap)));
+}
+function setReaderPagePosition(page, behavior = 'smooth') {
+  const viewport = $('.reader-page-viewport');
+  const flow = $('.reader-page-flow');
+  if (!viewport || !flow || !viewport.clientWidth) return 0;
+  const count = readerPageCount(viewport);
+  const nextPage = Math.min(Math.max(0, Math.round(Number(page) || 0)), count - 1);
+  state.readerPage = nextPage;
+  const transform = 'translate3d(' + (-nextPage * viewport.clientWidth) + 'px, 0, 0)';
+  const transition = behavior === 'smooth' ? 'transform .48s cubic-bezier(.22,.8,.28,1)' : 'none';
+  flow.style.transition = transition;
+  flow.style.webkitTransition = transition;
+  flow.style.transform = transform;
+  flow.style.webkitTransform = transform;
+  const previousBehavior = viewport.style.scrollBehavior;
+  viewport.style.scrollBehavior = 'auto';
+  viewport.scrollLeft = 0;
+  viewport.style.scrollBehavior = previousBehavior;
+  if (behavior === 'smooth') {
+    clearTimeout(flow.readerPageTransitionTimer);
+    flow.readerPageTransitionTimer = setTimeout(() => {
+      if (!flow.isConnected) return;
+      flow.style.transition = '';
+      flow.style.webkitTransition = '';
+    }, 540);
+  }
+  updateReaderPager();
+  return nextPage;
+}
 function updateReaderPager() {
   const viewport = $('.reader-page-viewport'); if (!viewport) return;
   const flow = $('.reader-page-flow');
   if (flow) {
-    const width = Math.max(1, Math.round(viewport.clientWidth));
-    flow.style.columnWidth = width + 'px';
-    flow.style.webkitColumnWidth = width + 'px';
-    flow.style.columnFill = 'auto';
-    flow.style.webkitColumnFill = 'auto';
-    flow.style.height = Math.max(1, Math.round(viewport.clientHeight)) + 'px';
+    applyReaderPageColumns(viewport, flow);
   }
-  const count = Math.max(1, Math.ceil(viewport.scrollWidth / Math.max(1, viewport.clientWidth)));
-  state.readerPage = Math.min(Math.max(0, Math.round(viewport.scrollLeft / Math.max(1, viewport.clientWidth))), count - 1);
+  const count = readerPageCount(viewport);
+  state.readerPage = Math.min(Math.max(0, Math.round(Number(state.readerPage) || 0)), count - 1);
+  viewport.dataset.readerLayoutPages = String(count);
+  if (flow) {
+    const transform = 'translate3d(' + (-state.readerPage * viewport.clientWidth) + 'px, 0, 0)';
+    flow.style.transform = transform;
+    flow.style.webkitTransform = transform;
+  }
   const current = $('[data-reader-page-current]'); const total = $('[data-reader-page-count]');
   if (current) current.textContent = String(state.readerPage + 1);
   if (total) total.textContent = String(count);
@@ -2070,10 +2118,9 @@ function updateReaderPager() {
 function restoreReaderPosition() {
   const book = readerBookById(state.readerBookId); const content = $('[data-reader-content]'); if (!book || !content) return;
   if (state.readerReadingMode === 'pages' && content.classList.contains('reader-page-viewport')) {
-    const count = Math.max(1, Math.ceil(content.scrollWidth / Math.max(1, content.clientWidth)));
+    const count = readerPageCount(content);
     const page = state.readerPage || Math.round((book.progress || 0) * Math.max(0, count - 1));
-    content.scrollLeft = Math.min(Math.max(0, page), count - 1) * content.clientWidth;
-    updateReaderPager();
+    setReaderPagePosition(page, 'instant');
   } else if (book.progress) {
     const progress = Math.min(1, Math.max(0, Number(book.progress) || 0));
     const documentMetrics = readerDocumentScrollMetrics(content);
@@ -2398,7 +2445,7 @@ function setReaderReadingMode(mode) {
     const book = readerBookById(state.readerBookId);
     if (content && book) {
       book.progress = state.readerReadingMode === 'pages' && content.classList.contains('reader-page-viewport')
-        ? Math.min(1, Math.max(0, content.scrollLeft / Math.max(1, content.scrollWidth - content.clientWidth)))
+        ? Math.min(1, Math.max(0, state.readerPage / Math.max(1, readerPageCount(content) - 1)))
         : readerScrollProgress(content);
       saveLibrary();
     }
@@ -2562,7 +2609,7 @@ function jumpToReaderToc(item) {
   if (!target) return;
   if (state.readerReadingMode === 'pages' && content.classList.contains('reader-page-viewport')) {
     const page = Math.max(0, Math.floor(target.offsetLeft / Math.max(1, content.clientWidth)));
-    state.readerPage = page; content.scrollTo({ left: page * content.clientWidth, behavior: 'smooth' }); setTimeout(updateReaderPager, 260);
+    setReaderPagePosition(page, 'smooth');
   } else if (readerUsesDocumentScroll()) {
     const header = $('.reader-reference-top');
     const chromeVisible = !(state.readerImmersive && state.readerChromeHidden);
@@ -2592,7 +2639,7 @@ function jumpToReaderComment(id) {
   const content = $('[data-reader-content]'); if (!content) return;
   if (state.readerReadingMode === 'pages' && content.classList.contains('reader-page-viewport')) {
     const page = Math.max(0, Math.floor(target.offsetLeft / Math.max(1, content.clientWidth)));
-    state.readerPage = page; content.scrollTo({ left: page * content.clientWidth, behavior: 'smooth' }); setTimeout(updateReaderPager, 260);
+    setReaderPagePosition(page, 'smooth');
   } else {
     target.scrollIntoView({ behavior: 'smooth', block: 'center' }); setTimeout(updateReaderReferenceChrome, 260);
   }
@@ -2637,7 +2684,7 @@ function updateReaderReferenceChrome() {
   let pageCount = 1;
   if (content) {
     if (state.readerReadingMode === 'pages' && content.classList.contains('reader-page-viewport')) {
-      pageCount = Math.max(1, Math.ceil(content.scrollWidth / Math.max(1, content.clientWidth)));
+      pageCount = readerPageCount(content);
       progress = state.readerPage / Math.max(1, pageCount - 1);
     } else progress = readerScrollProgress(content);
   }
@@ -2689,18 +2736,17 @@ function setReaderProgress(value) {
   const content = $('[data-reader-content]'); if (!content) return;
   const progress = Math.min(1, Math.max(0, Number(value) / 100));
   if (state.readerReadingMode === 'pages' && content.classList.contains('reader-page-viewport')) {
-    const count = Math.max(1, Math.ceil(content.scrollWidth / Math.max(1, content.clientWidth)));
-    state.readerPage = Math.round(progress * Math.max(0, count - 1)); content.scrollTo({ left: state.readerPage * content.clientWidth, behavior: 'smooth' }); updateReaderPager();
+    const count = readerPageCount(content);
+    setReaderPagePosition(Math.round(progress * Math.max(0, count - 1)), 'smooth');
   } else content.scrollTo({ top: progress * Math.max(0, content.scrollHeight - content.clientHeight), behavior: 'smooth' });
   updateReaderReferenceChrome();
 }
 function turnReaderPage(direction) {
   const viewport = $('.reader-page-viewport'); if (!viewport) return;
   updateReaderPager();
-  const count = Math.max(1, Math.ceil(viewport.scrollWidth / Math.max(1, viewport.clientWidth)));
+  const count = readerPageCount(viewport);
   const nextPage = Math.min(Math.max(0, state.readerPage + direction), count - 1);
   if (nextPage === state.readerPage) return;
-  state.readerPage = nextPage;
   const body = $('.reader-reference-body');
   if (body) {
     body.classList.remove('reader-page-turn-forward', 'reader-page-turn-back');
@@ -2716,8 +2762,7 @@ function turnReaderPage(direction) {
     const animationClass = state.readerPreferences.pageAnimation === 'cover' ? (direction > 0 ? 'reader-turn-cover-forward' : 'reader-turn-cover-back') : (direction > 0 ? 'reader-turn-forward' : 'reader-turn-back');
     animationTarget.classList.add(animationClass);
   }
-  viewport.scrollTo({ left: state.readerPage * viewport.clientWidth, behavior: 'smooth' });
-  setTimeout(updateReaderPager, 260);
+  setReaderPagePosition(nextPage, 'smooth');
 }
 function renderAnnotationDialog() {
   if (!state.readerSelectedText) return;
