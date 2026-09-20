@@ -8231,27 +8231,30 @@ main:has(#toolNav[hidden]):has(#workspace[data-tool="navigation"]) { padding-top
     min-height: 0 !important;
     max-height: none !important;
     overflow: hidden !important;
+    /* Keep Safari's native long-press selection pipeline alive. The fixed,
+       overflow-hidden reader surface already blocks vertical document pan;
+       the app handles horizontal page turns itself. */
     touch-action: pan-x !important;
   }
 
   html.ios-safari-browser.reader-focus.reader-safari-page-surface #workspace[data-tool="reader"] .reader-page-flow {
     height: 100% !important;
     min-height: 0 !important;
+    touch-action: pan-x !important;
   }
 }
 
-/* 2.18.197: keep Safari's long-press selection pipeline available. The
-   application action bar only cancels a context menu after a real Range
-   exists; cancelling the empty event prevents iOS from creating that Range.
-   Paged reading accepts horizontal gestures but never native vertical panning
-   from a tap or a small finger drift. */
+/* 2.18.198: PWA page mode owns the gesture so a tap never starts a vertical
+   scroll. Safari gets the platform-specific pan-x override above so its
+   native long-press Range/callout remains available for annotations. */
 .reader-reference-viewer,
 .reader-reference-viewer * {
   -webkit-touch-callout: default;
 }
 .reader-reference-viewer.reader-page-viewport,
 .reader-reference-viewer.reader-page-viewport .reader-page-flow {
-  touch-action: pan-x;
+  touch-action: none;
+  overscroll-behavior: none;
 }
 @keyframes reader-page-surface-dim {
   0%, 100% { opacity: 1; filter: brightness(1); }

@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.197';
+const APP_VERSION = '2.18.198';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -1942,6 +1942,7 @@ let readerPageResizeObserver = null;
 let readerPageResizeTarget = null;
 let readerTurnTimer = null;
 let readerNativeFullscreen = false;
+let readerMarkupRestoreTimer = null;
 function readerUsesDocumentScroll() {
   return isIosSafariBrowser() && state.readerImmersive && state.readerMode === 'reading' && state.readerReadingMode !== 'pages' && document.documentElement.classList.contains('reader-focus');
 }
@@ -2087,6 +2088,10 @@ function readerMeasuredLastContentPage(viewport, flow, geometry) {
   flow.style.webkitTransform = 'none';
   let pages = 0;
   try {
+    // WebKit may defer the column relayout caused by removing the page
+    // transform. Read layout once before walking text ranges so the last
+    // painted line is measured in the untransformed coordinate space.
+    void flow.offsetWidth;
     const styles = getComputedStyle(flow);
     const leftPadding = Math.max(0, Number.parseFloat(styles.paddingLeft || 0) || 0);
     const flowRect = flow.getBoundingClientRect();
@@ -2537,6 +2542,13 @@ function hideReaderSelectionMenu() {
   if (menu) menu.hidden = true;
   const dock = $('[data-reader-selection-dock]');
   if (dock) dock.hidden = true;
+  // A hidden menu means the native range is no longer an actionable reader
+  // selection. Clearing this transient state prevents it from swallowing the
+  // next tap on the reader controls or the page surface.
+  if (Date.now() >= readerSelectionSuppressUntil) {
+    state.readerSelection = null;
+    state.readerSelectedText = '';
+  }
 }
 function scheduleReaderSelectionMenuHide(delay = 180) {
   if (readerSelectionHideTimer) clearTimeout(readerSelectionHideTimer);
@@ -2556,6 +2568,14 @@ function suppressReaderPageGesture(duration = 900) {
 function readerHasLiveSelection() {
   const selection = window.getSelection?.();
   return Boolean(state.readerSelection || (selection?.rangeCount && !selection.isCollapsed));
+}
+function readerNativeSelectionRange() {
+  if (!state.readerBookId || state.readerMode !== 'reading') return null;
+  const selection = window.getSelection?.();
+  const content = $('[data-reader-content]');
+  if (!selection || !content || selection.rangeCount === 0 || selection.isCollapsed) return null;
+  const range = selection.getRangeAt(0);
+  return content.contains(range.commonAncestorContainer) ? range : null;
 }
 function clearReaderSelectionState() {
   state.readerSelection = null;
@@ -2578,9 +2598,26 @@ function preserveReaderPositionAfterRender(position) {
     const content = $('[data-reader-content]');
     if (!content) return;
     if (position.mode === 'pages' && state.readerReadingMode === 'pages' && content.classList.contains('reader-page-viewport')) {
-      state.readerPage = Math.max(0, Number(position.page) || 0);
-      updateReaderPager();
-      setReaderPagePosition(state.readerPage, 'instant');
+      const fallbackPage = Math.max(0, Number(position.page) || 0);
+      // Markup wrappers can change Range geometry while WebKit is rebuilding
+      // CSS columns. The page the user was reading is the stable source of
+      // truth here; restoring from a newly measured Range can incorrectly
+      // move a third-page annotation back to page 2 or page 1.
+      const restorePage = () => {
+        if (state.readerMode !== 'reading' || state.readerReadingMode !== 'pages') return;
+        state.readerPage = fallbackPage;
+        setReaderPagePosition(fallbackPage, 'instant');
+        updateReaderPager();
+      };
+      restorePage();
+      // A newly wrapped selection can make WebKit report one fewer CSS column
+      // for a frame. Retry after the column track settles so that transient
+      // measurement cannot clamp the captured page and leave it there.
+      clearTimeout(readerMarkupRestoreTimer);
+      readerMarkupRestoreTimer = setTimeout(() => {
+        readerMarkupRestoreTimer = null;
+        restorePage();
+      }, 220);
       return;
     }
     if (state.readerReadingMode === 'pages' && content.classList.contains('reader-page-viewport')) return;
@@ -2664,6 +2701,16 @@ function readerShowSelectionMenu(range) {
   // selection highlight disappear on iOS/PWA and also breaks subsequent
   // copy/share actions. The OneBox menu is positioned independently.
   requestAnimationFrame(() => readerSelectionMenuPosition(range));
+}
+function syncReaderNativeSelectionMenu() {
+  if (state.readerMode !== 'reading' || !state.readerBookId) return;
+  const range = readerNativeSelectionRange();
+  if (range) {
+    suppressReaderPageGesture(1200);
+    readerShowSelectionMenu(range);
+  } else if (!state.readerSelection || Date.now() >= readerSelectionSuppressUntil) {
+    scheduleReaderSelectionMenuHide();
+  }
 }
 function readerFindQuoteRange(root, quote) {
   const text = String(quote || '').trim(); if (!text) return null;
@@ -4979,7 +5026,11 @@ workspace.addEventListener('pointerdown', (event) => {
   if (state.readerMode === 'reading' && surface) {
     state.readerSelectionInput = event.pointerType === 'touch' ? 'touch' : 'mouse';
     readerSurfaceGesture = { surface, x: event.clientX, y: event.clientY, pointerId: event.pointerId, pointerType: event.pointerType, startedAt: Date.now() };
-    try { surface.setPointerCapture?.(event.pointerId); } catch { /* Safari may reject a stale pointer id. */ }
+    // Do not capture a touch pointer on selectable reader text. iOS Safari
+    // uses the native target to complete long-press selection; capturing it
+    // here retargets the selection/callout sequence to the article and makes
+    // the browser's copy menu disappear. The document-level pointerup below
+    // still receives the gesture when it leaves the surface.
   }
 });
 workspace.addEventListener('touchstart', (event) => {
@@ -4997,10 +5048,10 @@ function suppressReaderPageNativePan(event) {
   const point = event.touches?.[0] || event;
   const dx = point.clientX - gesture.x;
   const dy = point.clientY - gesture.y;
-  // Let a held text selection take over after the long-press threshold, but
-  // swallow the short accidental drift that Safari interprets as vertical
-  // page scrolling when the user only meant to tap or swipe a page.
-  if (Date.now() - gesture.startedAt < 320 && Math.max(Math.abs(dx), Math.abs(dy)) > 7 && event.cancelable) {
+  // Let a held text selection take over after the long-press threshold. Before
+  // that, only cancel a clearly vertical drift; cancelling every move also
+  // cancels WebKit's native long-press selection pipeline.
+  if (Date.now() - gesture.startedAt < 320 && Math.abs(dy) > 8 && Math.abs(dy) > Math.abs(dx) + 4 && event.cancelable) {
     event.preventDefault();
   }
 }
@@ -5014,13 +5065,22 @@ function finishReaderSurfaceGesture(clientX, clientY, target) {
   const onInteractiveControl = targetElement?.closest('a,button,input,textarea,select,[data-reader-comment-id],[data-reader-selection-menu],[data-reader-comment-popover]');
   // A native text selection can move more than a tap while its handles are
   // being adjusted. Never reinterpret that gesture as a page turn.
-  if (readerHasLiveSelection() || Date.now() < readerSelectionSuppressUntil || onInteractiveControl) return;
+  if (onInteractiveControl || readerHasLiveSelection() || Date.now() < readerSelectionSuppressUntil) return;
   if (state.readerReadingMode === 'scroll' && isIosSafariBrowser() && state.readerImmersive && Math.abs(dx) <= 12 && Math.abs(dy) <= 12) {
     readerSurfaceTapSuppressClickUntil = Date.now() + 500;
     toggleReaderChrome();
     return;
   }
   if (state.readerReadingMode !== 'pages') return;
+  if (Math.abs(dx) <= 12 && Math.abs(dy) <= 12) {
+    // A tap is a chrome toggle in paged reading. Page turns are deliberately
+    // reserved for a horizontal swipe (or the explicit corner buttons), so a
+    // light tap can never become a vertical browser scroll or a fake turn.
+    readerSurfaceTapSuppressClickUntil = Date.now() + 500;
+    if (state.readerImmersive) toggleReaderChrome();
+    else toggleReaderFullscreen();
+    return;
+  }
   if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) + 15) {
     // Always swallow the synthetic click produced at the end of a drag. This
     // is essential for mouse text selection, where no page turn is scheduled
@@ -5043,11 +5103,15 @@ function finishReaderSurfaceGesture(clientX, clientY, target) {
 }
 document.addEventListener('pointerup', (event) => {
   finishReaderSurfaceGesture(event.clientX, event.clientY, event.target);
+  // WebKit queues selectionchange after pointerup. Give that native range a
+  // tick to settle, then mirror it into the OneBox action bar if needed.
+  window.setTimeout(syncReaderNativeSelectionMenu, 60);
 }, { passive: true });
 workspace.addEventListener('touchend', (event) => {
   if (!readerSurfaceGesture || readerSurfaceGesture.pointerId !== null) return;
   const touch = event.changedTouches[0];
   if (touch) finishReaderSurfaceGesture(touch.clientX, touch.clientY, event.target);
+  window.setTimeout(syncReaderNativeSelectionMenu, 60);
 }, { passive: true });
 workspace.addEventListener('dragstart', (event) => { const card = event.target.closest('[data-weather-card]'); if (card) event.dataTransfer.setData('text/plain', card.dataset.weatherIndex); });
 workspace.addEventListener('dragover', (event) => { if (event.target.closest('[data-weather-card]')) event.preventDefault(); });
@@ -5085,7 +5149,19 @@ workspace.addEventListener('click', async (event) => {
   if (Date.now() < swipeSuppressClickUntil && event.target.closest('[data-swipe-row]') && !event.target.closest('.swipe-delete')) return;
   if (Date.now() < swipeSuppressClickUntil && state.readerMode === 'reading') { event.preventDefault(); event.stopPropagation(); return; }
   const readerSelectionControl = event.target.closest('[data-reader-selection-action], [data-reader-comment-popover], [data-reader-comment-id]');
-  if (state.readerMode === 'reading' && readerHasLiveSelection() && !readerSelectionControl) { event.preventDefault(); event.stopPropagation(); return; }
+  const readerSelectionSafeControl = event.target.closest('[data-reader-settings], [data-reader-toc], [data-reader-comments], [data-reader-fullscreen], [data-close-reader], [data-reader-page-prev], [data-reader-page-next], [data-reader-chapter-prev], [data-reader-chapter-next]');
+  if (state.readerMode === 'reading' && readerHasLiveSelection() && !readerSelectionControl && !readerSelectionSafeControl) {
+    // Safari may leave the application anchor alive for one selectionchange
+    // tick after the native range has collapsed. Do not let that stale anchor
+    // block the next toolbar tap; an actual native range still protects the
+    // selection from accidental page gestures.
+    if (!readerNativeSelectionRange() && $('[data-reader-selection-menu]')?.hidden !== false) {
+      clearReaderSelectionState();
+      hideReaderSelectionMenu();
+    } else {
+      event.preventDefault(); event.stopPropagation(); return;
+    }
+  }
   if (state.tool === 'reader' && state.readerMode === 'library' && !event.target.closest('[data-reader-book-card]')) clearReaderDeleteMode();
   const section = event.target.closest('[data-section]');
   if (section) return selectSection(section.dataset.section);
@@ -5495,8 +5571,8 @@ $('#annotationDialog').addEventListener('click', (event) => {
 });
 document.addEventListener('selectionchange', () => {
   if (!state.readerBookId || state.readerMode !== 'reading') return;
-  const selection = window.getSelection(); const content = $('[data-reader-content]');
-  if (!selection || !content || selection.rangeCount === 0 || selection.isCollapsed) {
+  const range = readerNativeSelectionRange();
+  if (!range) {
     // WebKit can briefly collapse the Range after the long-press menu event
     // and restore it on the next selection tick. Keep the OneBox bar alive
     // during that hand-off instead of hiding it permanently.
@@ -5504,8 +5580,6 @@ document.addEventListener('selectionchange', () => {
     scheduleReaderSelectionMenuHide();
     return;
   }
-  const range = selection.getRangeAt(0);
-  if (!content.contains(range.commonAncestorContainer)) { scheduleReaderSelectionMenuHide(); return; }
   suppressReaderPageGesture(1200);
   readerShowSelectionMenu(range);
 });
