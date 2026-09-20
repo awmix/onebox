@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.215';
+const APP_VERSION = '2.18.216';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -1146,7 +1146,9 @@ const MASCOT_HYSTERESIS = 0.12;
 const MASCOT_DEAD_ZONE = 46;
 const MASCOT_DOCK_DELAY = 3000;
 const MASCOT_EDGE_SWIPE_DISTANCE = 34;
-const mascotRuntime = { root: null, button: null, panel: null, directionLayer: null, reactionLayer: null, drag: null, dockTimer: 0, reactionTimer: 0, singleClickTimer: 0, tapAt: 0, boopAt: 0, boops: 0, suppressClickUntil: 0, sector: -1, position: null };
+const MASCOT_IDLE_MIN = 5200;
+const MASCOT_IDLE_MAX = 9800;
+const mascotRuntime = { root: null, button: null, panel: null, directionLayer: null, reactionLayer: null, drag: null, dockTimer: 0, reactionTimer: 0, actionTimer: 0, idleTimer: 0, singleClickTimer: 0, tapAt: 0, boopAt: 0, boops: 0, suppressClickUntil: 0, sector: -1, position: null, lastReaction: '' };
 function mascotCellStyle(index) {
   return { backgroundPosition: (index % 3) * 50 + '% ' + Math.floor(index / 3) * 50 + '%' };
 }
@@ -1190,27 +1192,67 @@ function mascotScheduleDock() {
   mascotClearDockTimer();
   if (!mascotRuntime.root || !mascotRuntime.panel?.hidden || mascotRuntime.drag) return;
   mascotRuntime.dockTimer = window.setTimeout(() => {
-    if (!mascotRuntime.drag && mascotRuntime.panel?.hidden) mascotRuntime.root.classList.add('is-docked');
+    if (!mascotRuntime.drag && mascotRuntime.panel?.hidden) {
+      mascotRuntime.root.classList.add('is-docked');
+      mascotSetReaction('sleepy', 1500);
+      mascotSetAction('dock', 900);
+    }
   }, MASCOT_DOCK_DELAY);
 }
 function mascotReveal() {
+  const wasDocked = mascotRuntime.root?.classList.contains('is-docked');
   mascotRuntime.root?.classList.remove('is-docked');
   mascotClearDockTimer();
   mascotSyncPanelSide();
+  if (wasDocked) mascotSetAction('peek', 520);
 }
-function mascotSetReaction(reaction = null) {
+function mascotSetAction(action = '', duration = 0) {
+  const root = mascotRuntime.root;
+  if (!root) return;
+  clearTimeout(mascotRuntime.actionTimer);
+  if (action) root.dataset.action = action;
+  else delete root.dataset.action;
+  if (action && duration > 0) mascotRuntime.actionTimer = window.setTimeout(() => { delete root.dataset.action; }, duration);
+}
+function mascotSetReaction(reaction = null, duration = null) {
   const root = mascotRuntime.root;
   if (!root) return;
   clearTimeout(mascotRuntime.reactionTimer);
   root.dataset.reaction = reaction || '';
-  if (reaction) mascotRuntime.reactionTimer = window.setTimeout(() => { root.dataset.reaction = ''; }, reaction === 'dizzy' ? 1100 : 560);
+  if (!reaction) return;
+  const index = Math.max(0, MASCOT_REACTIONS.indexOf(reaction));
+  mascotRuntime.reactionLayer.style.backgroundPosition = mascotCellStyle(index).backgroundPosition;
+  const visibleFor = duration ?? (reaction === 'dizzy' ? 1100 : reaction === 'sleepy' ? 1500 : 760);
+  mascotRuntime.reactionTimer = window.setTimeout(() => { root.dataset.reaction = ''; }, visibleFor);
 }
-function mascotPlayReaction() {
+function mascotPlayReaction(preferred = null) {
   const now = Date.now();
   const count = now - (mascotRuntime.boopAt || 0) < 1600 ? Number(mascotRuntime.boops || 0) + 1 : 1;
   mascotRuntime.boops = count >= 4 ? 0 : count;
   mascotRuntime.boopAt = now;
-  mascotSetReaction(count >= 4 ? 'dizzy' : count === 2 ? 'heart' : count === 3 ? 'sparkle' : 'blink');
+  const randomChoices = MASCOT_REACTIONS.filter((reaction) => reaction !== mascotRuntime.lastReaction);
+  const randomReaction = randomChoices[Math.floor(Math.random() * randomChoices.length)] || 'blink';
+  const reaction = preferred || (count >= 4 ? 'dizzy' : count === 2 ? 'heart' : count === 3 ? 'sparkle' : count === 1 ? 'blink' : randomReaction);
+  mascotRuntime.lastReaction = reaction;
+  mascotSetReaction(reaction);
+  mascotSetAction(reaction === 'sleepy' ? 'sleep' : reaction === 'dizzy' ? 'dizzy' : 'happy', reaction === 'dizzy' ? 1100 : reaction === 'sleepy' ? 1500 : 820);
+  return reaction;
+}
+function mascotScheduleIdle() {
+  clearTimeout(mascotRuntime.idleTimer);
+  if (!mascotRuntime.root) return;
+  const delay = MASCOT_IDLE_MIN + Math.random() * (MASCOT_IDLE_MAX - MASCOT_IDLE_MIN);
+  mascotRuntime.idleTimer = window.setTimeout(() => {
+    if (!mascotRuntime.drag && mascotRuntime.panel?.hidden && !mascotTopActionActive()) mascotPlayReaction();
+    mascotScheduleIdle();
+  }, delay);
+}
+function mascotSetDirectionFromVector(dx, dy) {
+  if (!mascotRuntime.directionLayer || Math.hypot(dx, dy) < 8) return;
+  const angle = Math.atan2(dy, dx);
+  const sector = (Math.round(angle / MASCOT_SECTOR) + MASCOT_CLOCKWISE.length) % MASCOT_CLOCKWISE.length;
+  const direction = MASCOT_CLOCKWISE[sector];
+  mascotRuntime.directionLayer.style.backgroundPosition = mascotCellStyle(MASCOT_DIRECTIONS.indexOf(direction)).backgroundPosition;
 }
 function mascotWeatherMarkup() {
   const weather = state.weatherCards.find((item) => item.id === state.activeWeatherId) || state.weatherCards[0];
@@ -1227,8 +1269,10 @@ function mascotBriefingMarkup() {
 }
 function closeMascotBriefing() {
   if (!mascotRuntime.panel) return;
+  const wasOpen = !mascotRuntime.panel.hidden;
   mascotRuntime.panel.hidden = true;
   mascotRuntime.root?.classList.remove('has-briefing');
+  if (wasOpen) mascotSetAction('peek', 480);
   mascotScheduleDock();
 }
 function openMascotBriefing() {
@@ -1237,11 +1281,12 @@ function openMascotBriefing() {
   mascotRuntime.panel.innerHTML = mascotBriefingMarkup();
   mascotRuntime.panel.hidden = false;
   mascotRuntime.root.classList.add('has-briefing');
-  mascotPlayReaction();
+  mascotPlayReaction('delighted');
 }
 function mascotRefreshPage() {
   mascotClearDockTimer();
-  mascotSetReaction('delighted');
+  mascotSetReaction('dizzy');
+  mascotSetAction('dizzy', 1100);
   window.setTimeout(() => window.location.reload(), 150);
 }
 function mascotTopActionActive() {
@@ -1305,15 +1350,21 @@ function mascotFinishDrag(event) {
       mascotRuntime.root.classList.add('is-docked');
       mascotSyncPanelSide();
       mascotClearDockTimer();
+      mascotSetReaction('wink', 760);
+      mascotSetAction('dock', 760);
       return;
     }
     const position = mascotRuntime.position || { left: drag.left, top: drag.top };
     mascotSetPosition(position.left, position.top);
     mascotSyncPanelSide();
     mascotScheduleDock();
+    mascotSetReaction('delighted', 760);
+    mascotSetAction('land', 760);
     return;
   }
   if (!cancelled) {
+    mascotSetReaction('blink', 520);
+    mascotSetAction(mascotTopActionActive() ? 'hop' : 'tap', 520);
     mascotHandleTap();
   }
 }
@@ -1324,6 +1375,8 @@ function mascotUpdateDrag(event) {
   if (!drag.moved && Math.hypot(dx, dy) < 6) return;
   drag.moved = true;
   if (event.cancelable) event.preventDefault();
+  mascotSetAction('drag');
+  mascotSetDirectionFromVector(dx, dy);
   mascotSetPosition(drag.left + dx, drag.top + dy, false);
 }
 function mascotHandleTap() {
@@ -1338,7 +1391,7 @@ function mascotHandleTap() {
   }
   mascotRuntime.tapAt = now;
   mascotRuntime.singleClickTimer = window.setTimeout(() => {
-    if (mascotTopActionActive()) { scrollAppTo(0, 'smooth'); return; }
+    if (mascotTopActionActive()) { mascotSetAction('hop', 720); scrollAppTo(0, 'smooth'); return; }
     openMascotBriefing();
   }, 250);
 }
@@ -1362,6 +1415,7 @@ function mountMascot() {
     if (!event.target.closest?.('.onebox-mascot-button')) return;
     if (event.button != null && event.button !== 0) return;
     mascotReveal(); closeMascotBriefing();
+    mascotSetAction('grab');
     const rect = root.getBoundingClientRect();
     mascotRuntime.drag = { pointerId: event.pointerId, startX: event.clientX, startY: event.clientY, left: rect.left, top: rect.top, moved: false };
     try { mascotRuntime.button.setPointerCapture?.(event.pointerId); } catch {}
@@ -1374,7 +1428,7 @@ function mountMascot() {
   document.addEventListener('pointerdown', (event) => { if (mascotRuntime.panel && mascotRuntime.root && !mascotRuntime.root.contains(event.target)) closeMascotBriefing(); }, true);
   if (window.matchMedia?.('(hover: hover) and (pointer: fine)').matches) window.addEventListener('pointermove', (event) => mascotAim({ x: event.clientX, y: event.clientY }), { passive: true });
   window.addEventListener('resize', () => { if (mascotRuntime.position) mascotSetPosition(mascotRuntime.position.left, mascotRuntime.position.top, false); mascotSyncPanelSide(); }, { passive: true });
-  mascotScheduleDock(); syncMascotContext();
+  mascotScheduleDock(); syncMascotContext(); mascotScheduleIdle();
 }
 let pendingNavigationRestore = null;
 let navigationRestoreTimers = [];

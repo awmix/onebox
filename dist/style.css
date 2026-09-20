@@ -8429,13 +8429,23 @@ html.ios-safari-browser.reader-focus.reader-safari-surface .reader-reference-she
 }
 .onebox-mascot-button:active { cursor: grabbing; }
 .onebox-mascot-button:focus-visible { outline: 2px solid var(--primary); outline-offset: 4px; }
-.onebox-mascot-visual { position: relative; display: block; width: 100%; height: 100%; transform-origin: 50% 78%; }
+.onebox-mascot-visual { position: relative; display: block; width: 100%; height: 100%; transform-origin: 50% 78%; animation: mascot-breathe 5.4s ease-in-out infinite; will-change: transform; }
 .onebox-mascot-layer,
 .onebox-mascot-fallback { position: absolute; inset: 0; display: block; }
 .onebox-mascot-layer { background-repeat: no-repeat; background-size: 300% 300%; pointer-events: none; }
 .onebox-mascot-direction { background-position: 50% 50%; }
 .onebox-mascot-reaction { opacity: 0; background-position: 0% 0%; transition: opacity .08s ease; }
 #oneboxMascotRoot[data-reaction] .onebox-mascot-reaction { opacity: 1; }
+#oneboxMascotRoot[data-action="tap"] .onebox-mascot-visual { animation: mascot-tap .52s cubic-bezier(.2,.9,.28,1); }
+#oneboxMascotRoot[data-action="grab"] .onebox-mascot-visual { animation: mascot-grab .5s ease-in-out infinite; }
+#oneboxMascotRoot[data-action="drag"] .onebox-mascot-visual { animation: mascot-drag .8s ease-in-out infinite; }
+#oneboxMascotRoot[data-action="happy"] .onebox-mascot-visual { animation: mascot-happy .82s cubic-bezier(.2,.86,.3,1); }
+#oneboxMascotRoot[data-action="hop"] .onebox-mascot-visual { animation: mascot-hop .72s cubic-bezier(.2,.86,.3,1); }
+#oneboxMascotRoot[data-action="land"] .onebox-mascot-visual { animation: mascot-land .76s cubic-bezier(.2,.86,.3,1); }
+#oneboxMascotRoot[data-action="peek"] .onebox-mascot-visual { animation: mascot-peek .52s ease-out; }
+#oneboxMascotRoot[data-action="dock"] .onebox-mascot-visual { animation: mascot-dock .9s ease-in-out; }
+#oneboxMascotRoot[data-action="sleep"] .onebox-mascot-visual { animation: mascot-sleep 1.5s ease-in-out infinite; }
+#oneboxMascotRoot[data-action="dizzy"] .onebox-mascot-visual { animation: mascot-dizzy 1.1s ease-in-out; }
 .onebox-mascot-fallback { display: grid; place-items: center; font-size: 46px; line-height: 1; filter: drop-shadow(0 7px 8px color-mix(in srgb, var(--ink) 20%, transparent)); }
 .onebox-mascot-root.assets-loaded .onebox-mascot-fallback { display: none; }
 #oneboxMascotRoot.assets-fallback .onebox-mascot-layer { opacity: 0; }
@@ -8486,6 +8496,63 @@ html.ios-safari-browser.reader-focus.reader-safari-surface .reader-reference-she
 .onebox-mascot-weather-main span { font-size: 22px; font-weight: 800; }
 .onebox-mascot-weather-main small { color: var(--muted); font-size: 11px; }
 .onebox-mascot-weather-meta { display: flex; flex-wrap: wrap; gap: 6px 10px; margin-top: 9px; color: var(--muted); font-size: 11px; }
+@keyframes mascot-breathe {
+  0%, 100% { transform: translateY(0) rotate(0deg) scale(1); }
+  50% { transform: translateY(-2px) rotate(-1deg) scale(1.015); }
+}
+@keyframes mascot-tap {
+  0% { transform: scale(1); }
+  38% { transform: translateY(-5px) scale(1.08, .94); }
+  70% { transform: translateY(1px) scale(.97, 1.04); }
+  100% { transform: scale(1); }
+}
+@keyframes mascot-grab {
+  0%, 100% { transform: rotate(-2deg) translateY(0); }
+  50% { transform: rotate(2deg) translateY(-2px); }
+}
+@keyframes mascot-drag {
+  0%, 100% { transform: rotate(-4deg) scale(1); }
+  50% { transform: rotate(4deg) scale(1.035); }
+}
+@keyframes mascot-happy {
+  0% { transform: translateY(2px) scale(.96); }
+  38% { transform: translateY(-8px) rotate(-4deg) scale(1.06); }
+  70% { transform: translateY(1px) rotate(3deg) scale(.99); }
+  100% { transform: translateY(0) rotate(0) scale(1); }
+}
+@keyframes mascot-hop {
+  0%, 100% { transform: translateY(0) scale(1); }
+  42% { transform: translateY(-13px) scale(1.04); }
+  68% { transform: translateY(0) scale(.96, 1.04); }
+}
+@keyframes mascot-land {
+  0% { transform: translateY(-5px) scale(1.04); }
+  55% { transform: translateY(2px) scale(1.05, .93); }
+  100% { transform: translateY(0) scale(1); }
+}
+@keyframes mascot-peek {
+  0% { transform: translateX(8px) scale(.96); opacity: .7; }
+  65% { transform: translateX(-2px) scale(1.04); opacity: 1; }
+  100% { transform: translateX(0) scale(1); opacity: 1; }
+}
+@keyframes mascot-dock {
+  0%, 100% { transform: translateX(0) rotate(0); }
+  45% { transform: translateX(-4px) rotate(-5deg); }
+  75% { transform: translateX(2px) rotate(3deg); }
+}
+@keyframes mascot-sleep {
+  0%, 100% { transform: translateY(0) rotate(0) scale(1); opacity: .82; }
+  50% { transform: translateY(3px) rotate(2deg) scale(.97); opacity: .66; }
+}
+@keyframes mascot-dizzy {
+  0%, 100% { transform: rotate(0) scale(1); }
+  25% { transform: rotate(-8deg) scale(1.04); }
+  50% { transform: rotate(8deg) scale(.98); }
+  75% { transform: rotate(-5deg) scale(1.02); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .onebox-mascot-visual { animation: none !important; }
+}
 @media (max-width: 600px) {
   #oneboxMascotRoot { width: 70px; height: 70px; top: calc(75vh - 35px); }
   .onebox-mascot-button { width: 70px; height: 70px; border-radius: 22px; }
