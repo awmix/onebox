@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.212';
+const APP_VERSION = '2.18.213';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -1144,7 +1144,8 @@ const MASCOT_CLOCKWISE = ['right', 'down-right', 'down', 'down-left', 'left', 'u
 const MASCOT_SECTOR = (Math.PI * 2) / MASCOT_CLOCKWISE.length;
 const MASCOT_HYSTERESIS = 0.12;
 const MASCOT_DEAD_ZONE = 46;
-const MASCOT_DOCK_DELAY = 6500;
+const MASCOT_DOCK_DELAY = 3000;
+const MASCOT_EDGE_SWIPE_DISTANCE = 34;
 const mascotRuntime = { root: null, button: null, panel: null, directionLayer: null, reactionLayer: null, drag: null, dockTimer: 0, reactionTimer: 0, singleClickTimer: 0, tapAt: 0, boopAt: 0, boops: 0, suppressClickUntil: 0, sector: -1, position: null };
 function mascotCellStyle(index) {
   return { backgroundPosition: (index % 3) * 50 + '% ' + Math.floor(index / 3) * 50 + '%' };
@@ -1211,11 +1212,6 @@ function mascotPlayReaction() {
   mascotRuntime.boopAt = now;
   mascotSetReaction(count >= 4 ? 'dizzy' : count === 2 ? 'heart' : count === 3 ? 'sparkle' : 'blink');
 }
-function mascotAgendaMarkup() {
-  const events = eventsForDate(dateKey(new Date())).sort((a, b) => (a.time || '99:99').localeCompare(b.time || '99:99'));
-  if (!events.length) return '<p class="onebox-mascot-empty">' + escapeHtml(state.language === 'en' ? 'No agenda for today' : '今天没有日程') + '</p>';
-  return '<ul class="onebox-mascot-list">' + events.slice(0, 4).map((event) => '<li><time>' + escapeHtml(event.time || (state.language === 'en' ? 'All day' : '全天')) + '</time><span>' + escapeHtml(event.title) + '</span></li>').join('') + (events.length > 4 ? '<li class="onebox-mascot-more">+' + (events.length - 4) + '</li>' : '') + '</ul>';
-}
 function mascotWeatherMarkup() {
   const weather = state.weatherCards.find((item) => item.id === state.activeWeatherId) || state.weatherCards[0];
   if (!weather) return '<p class="onebox-mascot-empty">' + escapeHtml(state.language === 'en' ? 'Add a weather place first' : '还没有天气卡片') + '</p>';
@@ -1226,8 +1222,8 @@ function mascotWeatherMarkup() {
   return '<div class="onebox-mascot-weather-main"><strong>' + escapeHtml(weather.name || (state.language === 'en' ? 'Weather' : '天气')) + '</strong><span>' + condition[0] + ' ' + escapeHtml(temp) + '</span><small>' + escapeHtml(condition[1]) + '</small></div><div class="onebox-mascot-weather-meta"><span>' + escapeHtml(weatherWindLabel(current.wind_speed_10m)) + '</span><span>' + escapeHtml((state.language === 'en' ? 'Humidity ' : '湿度 ') + (current.relative_humidity_2m ?? '—') + '%') + '</span><span>' + escapeHtml((state.language === 'en' ? 'Elevation ' : '海拔 ') + weatherElevationLabel(weather.elevation)) + '</span></div>';
 }
 function mascotBriefingMarkup() {
-  const todayLabel = new Intl.DateTimeFormat(state.language === 'en' ? 'en-US' : 'zh-CN', { month: 'short', day: 'numeric', weekday: 'short' }).format(new Date());
-  return '<div class="onebox-mascot-panel-head"><div><strong>' + escapeHtml(state.language === 'en' ? 'Today' : '今日速览') + '</strong><small>' + escapeHtml(todayLabel) + '</small></div><button type="button" class="icon-btn small" data-close-mascot aria-label="' + escapeHtml(t('close')) + '">×</button></div><section class="onebox-mascot-section"><h3>📅 ' + escapeHtml(state.language === 'en' ? 'Agenda' : '日程') + '</h3>' + mascotAgendaMarkup() + '</section><section class="onebox-mascot-section"><h3>☁️ ' + escapeHtml(state.language === 'en' ? 'Weather' : '天气') + '</h3>' + mascotWeatherMarkup() + '</section>';
+  const todayLabel = new Intl.DateTimeFormat(state.language === 'en' ? 'en-US' : 'zh-CN', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' }).format(new Date());
+  return '<div class="onebox-mascot-cloud-head"><div class="onebox-mascot-date"><span class="onebox-mascot-date-icon" aria-hidden="true">☀</span><div><strong>' + escapeHtml(state.language === 'en' ? 'Today' : '今天') + '</strong><small>' + escapeHtml(todayLabel) + '</small></div></div><button type="button" class="icon-btn small" data-close-mascot aria-label="' + escapeHtml(t('close')) + '">×</button></div><section class="onebox-mascot-weather-card"><div class="onebox-mascot-weather-label">' + escapeHtml(state.language === 'en' ? 'Current weather' : '当前天气') + '</div>' + mascotWeatherMarkup() + '</section>';
 }
 function closeMascotBriefing() {
   if (!mascotRuntime.panel) return;
@@ -1296,6 +1292,21 @@ function mascotFinishDrag(event) {
   try { if (mascotRuntime.button.hasPointerCapture?.(drag.pointerId)) mascotRuntime.button.releasePointerCapture(drag.pointerId); } catch {}
   if (drag.moved) {
     mascotRuntime.suppressClickUntil = Date.now() + 500;
+    const dx = event.clientX - drag.startX;
+    const dy = event.clientY - drag.startY;
+    const isEdgeSwipe = Math.abs(dx) >= MASCOT_EDGE_SWIPE_DISTANCE && Math.abs(dx) > Math.abs(dy) * 1.2;
+    if (isEdgeSwipe) {
+      const width = mascotRuntime.root.offsetWidth || 82;
+      const edge = dx < 0 ? 'left' : 'right';
+      const left = edge === 'left' ? 8 : window.innerWidth - width - 8;
+      const top = mascotClampPosition(mascotRuntime.position?.left ?? drag.left, mascotRuntime.position?.top ?? drag.top).top;
+      mascotSetPosition(left, top);
+      mascotRuntime.root.dataset.edge = edge;
+      mascotRuntime.root.classList.add('is-docked');
+      mascotSyncPanelSide();
+      mascotClearDockTimer();
+      return;
+    }
     const position = mascotRuntime.position || { left: drag.left, top: drag.top };
     mascotSetPosition(position.left, position.top);
     mascotSyncPanelSide();

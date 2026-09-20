@@ -8447,30 +8447,40 @@ html.ios-safari-browser.reader-focus.reader-safari-surface .reader-reference-she
   box-sizing: border-box;
   width: min(318px, calc(100vw - 28px));
   max-height: min(440px, calc(100vh - 34px));
-  overflow: auto;
+  overflow: visible;
   padding: 14px;
   border: 1px solid color-mix(in srgb, var(--line) 88%, transparent);
-  border-radius: 22px;
+  border-radius: 30px 30px 26px 30px;
   background: color-mix(in srgb, var(--panel) 94%, transparent);
   color: var(--ink);
   box-shadow: 0 24px 60px color-mix(in srgb, var(--ink) 26%, transparent), 0 0 0 1px color-mix(in srgb, var(--line) 28%, transparent);
   -webkit-backdrop-filter: blur(22px);
   backdrop-filter: blur(22px);
 }
+.onebox-mascot-panel::after {
+  content: '';
+  position: absolute;
+  right: 24px;
+  bottom: -8px;
+  width: 17px;
+  height: 17px;
+  border-right: 1px solid color-mix(in srgb, var(--line) 88%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--line) 88%, transparent);
+  background: color-mix(in srgb, var(--panel) 94%, transparent);
+  transform: rotate(45deg);
+  z-index: 0;
+}
+#oneboxMascotRoot .onebox-mascot-panel > * { position: relative; z-index: 1; }
 #oneboxMascotRoot[data-panel-side="left"] .onebox-mascot-panel { right: auto; left: -6px; }
-.onebox-mascot-panel-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding-bottom: 11px; border-bottom: 1px solid var(--line); }
-.onebox-mascot-panel-head strong, .onebox-mascot-panel-head small { display: block; }
-.onebox-mascot-panel-head strong { font-size: 17px; }
-.onebox-mascot-panel-head small { margin-top: 3px; color: var(--muted); font-size: 11px; }
-.onebox-mascot-section { padding: 12px 0 2px; }
-.onebox-mascot-section + .onebox-mascot-section { border-top: 1px solid color-mix(in srgb, var(--line) 72%, transparent); }
-.onebox-mascot-section h3 { margin: 0 0 8px; font-size: 12px; font-weight: 800; }
+.onebox-mascot-cloud-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding-bottom: 12px; border-bottom: 1px solid color-mix(in srgb, var(--line) 72%, transparent); }
+.onebox-mascot-date { display: flex; min-width: 0; align-items: center; gap: 9px; }
+.onebox-mascot-date-icon { display: grid; width: 30px; height: 30px; flex: 0 0 30px; place-items: center; border-radius: 50%; background: color-mix(in srgb, var(--primary) 16%, transparent); color: var(--primary); font-size: 16px; }
+.onebox-mascot-date strong, .onebox-mascot-date small { display: block; }
+.onebox-mascot-date strong { font-size: 17px; }
+.onebox-mascot-date small { margin-top: 3px; color: var(--muted); font-size: 11px; white-space: nowrap; }
+.onebox-mascot-weather-card { padding-top: 12px; }
+.onebox-mascot-weather-label { margin-bottom: 6px; color: var(--muted); font-size: 11px; }
 .onebox-mascot-empty { margin: 0; color: var(--muted); font-size: 12px; }
-.onebox-mascot-list { display: grid; gap: 7px; margin: 0; padding: 0; list-style: none; }
-.onebox-mascot-list li { display: grid; grid-template-columns: 48px minmax(0, 1fr); gap: 8px; align-items: center; font-size: 13px; }
-.onebox-mascot-list time { color: var(--muted); font-variant-numeric: tabular-nums; }
-.onebox-mascot-list span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.onebox-mascot-list .onebox-mascot-more { display: block; padding-left: 56px; color: var(--muted); font-size: 11px; }
 .onebox-mascot-weather-main { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 3px 10px; align-items: baseline; }
 .onebox-mascot-weather-main strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; }
 .onebox-mascot-weather-main span { font-size: 22px; font-weight: 800; }
