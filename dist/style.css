@@ -7998,3 +7998,84 @@ main:has(#toolNav[hidden]):has(#workspace[data-tool="navigation"]) { padding-top
     font-size: 11px;
   }
 }
+
+/* 2.18.192: give the navigation toolbar a clear title while keeping the
+   existing hint and settings control on the same compact row. */
+#workspace[data-tool="navigation"] .navigation-toolbar-copy {
+  display: flex;
+  align-items: baseline;
+  min-width: 0;
+  flex: 1 1 auto;
+  gap: 10px;
+}
+#workspace[data-tool="navigation"] .navigation-toolbar-title {
+  flex: 0 0 auto;
+  color: var(--ink);
+  font-size: 15px;
+  font-weight: 780;
+  line-height: 1.2;
+  letter-spacing: .01em;
+}
+#workspace[data-tool="navigation"] .navigation-toolbar-copy .navigation-toolbar-caption {
+  max-width: none;
+  flex: 1 1 auto;
+}
+
+/* Keep the active marker tied to the semantic tab state. This also restores
+   the marker after a tools-tab rerender caused by changing navigation's
+   location or opening its settings. */
+#toolNav .tool-tabs .tab[aria-current="page"] {
+  color: var(--ink);
+}
+#toolNav .tool-tabs .tab[aria-current="page"]::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+  display: block;
+  height: 2px;
+  border-radius: 2px 2px 0 0;
+  background: var(--primary);
+  opacity: 1;
+}
+
+/* Weather cards now expose the wind force and location elevation without
+   turning the card into a paragraph. */
+#workspace[data-tool="weather"] .weather-card-meta {
+  display: grid;
+  gap: 3px;
+  min-height: 28px;
+  overflow: visible;
+  line-height: 1.3;
+  white-space: normal;
+}
+#workspace[data-tool="weather"] .weather-card-meta-line {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+#workspace[data-tool="weather"] .weather-card-meta-secondary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+#workspace[data-tool="weather"] .weather-card-meta-secondary > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+#workspace[data-tool="weather"] .advice-card {
+  min-width: 218px;
+}
+@media (max-width: 600px) {
+  #workspace[data-tool="navigation"] .navigation-toolbar-copy { gap: 7px; }
+  #workspace[data-tool="navigation"] .navigation-toolbar-title { font-size: 14px; }
+  #workspace[data-tool="navigation"] .navigation-toolbar-copy .navigation-toolbar-caption { font-size: 10px; }
+  #workspace[data-tool="weather"] .weather-card-meta { font-size: 9.5px; }
+}

@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.191';
+const APP_VERSION = '2.18.192';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -193,7 +193,7 @@ const DICT = {
     noWeather: '天气需要联网，搜索一个城市或区县开始。', weatherLoading: '正在获取天气…',
     weatherData: '数据来自 Open-Meteo，最近更新 {time}，离线可查看。',
     sortWeather: '', hourly: '24 小时', daily: '前 3 天 · 今天 · 未来 15 天', advice: '天气建议',
-    commute: '出行', sport: '运动', clothing: '穿衣', sunscreen: '防晒', hiking: '爬山',
+    commute: '出行', sport: '运动', clothing: '穿衣', sunscreen: '防晒', hiking: '爬山', windAdvice: '风力建议', windLevel: '风力', elevation: '海拔',
     addCard: '添加', noResults: '没有找到匹配地点，请换个关键词。',
     home: '首页', tools: '工具', navigation: '导航', messages: '消息', mine: '我的', quickTools: '常用工具', openSettings: '打开设置', noMessages: '还没有消息。', homeTabs: '首页', homeTabsSelected: '已选择 {count} 项', homeSourceManage: '首页来源', homeSourceManageHint: '选择要显示在首页导航中的来源', homeSourceAdd: '添加', homeSourceRemove: '移除', homeSourceEmpty: '暂时没有其他来源',
     navigationTitle: '网站导航', navigationHint: '点击卡片显示操作，长按可以拖动排序或聚合文件夹。', navigationToolbarHint: '长按编辑 · 拖动聚合', navigationAdd: '添加网站', navigationEmpty: '还没有网站，先添加一个常用网址吧。', navigationUrl: '网站地址', navigationUrlPlaceholder: '粘贴或输入网址', navigationName: '网站名称', navigationNamePlaceholder: '可选，默认使用网站名称', navigationIcon: '网站图标', navigationIconHint: '输入网址后自动获取', navigationSave: '保存网站', navigationEdit: '编辑网站', navigationEditSave: '保存修改', navigationActionEdit: '编辑', navigationActionDelete: '删除', navigationActionCancel: '取消', navigationFolderEdit: '编辑文件夹', navigationAddToFolder: '添加到文件夹', navigationFolder: '文件夹', navigationFolderName: '文件夹名称', navigationFolderPlaceholder: '例如：工作、阅读', navigationCreateFolder: '新建文件夹', navigationSaveFolder: '保存文件夹', navigationFolderAdd: '添加网站', navigationFolderDelete: '解散文件夹', navigationFolderDeleteConfirm: '解散文件夹后，里面的网站会保留在导航中，确定解散文件夹吗？', navigationFolderDissolved: '文件夹已解散', navigationFolderEmpty: '文件夹还是空的，添加几个网站吧。', navigationRemove: '删除', navigationOpen: '打开网站', navigationSettings: '导航设置', navigationOpenModeHint: '网站打开方式', navigationOpenModeCurrent: '当前页', navigationOpenModeNewTab: '新标签页', navigationAlreadyExists: '这个网站已经添加过了', navigationInvalidUrl: '请输入有效的 http 或 https 地址', navigationDropHint: '松开后聚合为文件夹', navigationFolderCreated: '文件夹已创建', navigationAdded: '网站已添加', navigationDeleted: '网站已删除', navigationMoved: '网站已移入文件夹', navigationOrderSaved: '导航顺序已保存', navigationSiteCount: '{count} 个网站',
@@ -236,7 +236,7 @@ const DICT = {
     noWeather: 'Search a city or district to get weather.', weatherLoading: 'Loading weather…',
     weatherData: 'Weather data from Open-Meteo · updated {time} · saved locally for offline viewing.',
     sortWeather: '', hourly: '24 hours', daily: '3 days before · today · next 15 days', advice: 'Advice',
-    commute: 'Travel', sport: 'Sport', clothing: 'Clothing', sunscreen: 'Sun care', hiking: 'Hiking',
+    commute: 'Travel', sport: 'Sport', clothing: 'Clothing', sunscreen: 'Sun care', hiking: 'Hiking', windAdvice: 'Wind advice', windLevel: 'Wind', elevation: 'Elevation',
     addCard: 'Add', noResults: 'No matching place. Try another query.',
     home: 'Home', tools: 'Tools', navigation: 'Navigation', messages: 'Messages', mine: 'Me', quickTools: 'Quick tools', openSettings: 'Open settings', noMessages: 'No messages yet.', homeTabs: 'Home', homeTabsSelected: '{count} selected',
     navigationTitle: 'Web navigation', navigationHint: 'Tap a card for actions; long-press to reorder or create a folder.', navigationToolbarHint: 'Long-press to edit · drag to group', navigationAdd: 'Add website', navigationEmpty: 'No websites yet. Add a favorite site to get started.', navigationUrl: 'Website URL', navigationUrlPlaceholder: 'https://example.com', navigationName: 'Website name', navigationNamePlaceholder: 'Optional; defaults to the site name', navigationIcon: 'Website icon', navigationIconHint: 'Fetched automatically from the URL', navigationSave: 'Save website', navigationAddToFolder: 'Add to folder', navigationEdit: 'Edit website', navigationEditSave: 'Save changes', navigationActionEdit: 'Edit', navigationActionDelete: 'Delete', navigationActionCancel: 'Cancel', navigationFolderEdit: 'Edit folder', navigationFolder: 'Folder', navigationFolderName: 'Folder name', navigationFolderPlaceholder: 'For example: Work, Reading', navigationCreateFolder: 'New folder', navigationSaveFolder: 'Save folder', navigationFolderAdd: 'Add website', navigationFolderDelete: 'Dissolve folder', navigationFolderDeleteConfirm: 'Dissolving the folder will keep its websites in navigation. Continue?', navigationFolderDissolved: 'Folder dissolved', navigationFolderEmpty: 'This folder is empty. Add some websites.', navigationRemove: 'Delete', navigationOpen: 'Open website', navigationSettings: 'Navigation settings', navigationOpenModeHint: 'Open websites in', navigationOpenModeCurrent: 'Current page', navigationOpenModeNewTab: 'New tab', navigationAlreadyExists: 'This website has already been added', navigationInvalidUrl: 'Enter a valid http or https URL', navigationDropHint: 'Release to create a folder', navigationFolderCreated: 'Folder created', navigationAdded: 'Website added', navigationDeleted: 'Website deleted', navigationMoved: 'Website moved into folder', navigationOrderSaved: 'Navigation order saved', navigationSiteCount: '{count} sites',
@@ -1371,9 +1371,26 @@ function navigationEverySite() {
 function saveNavigation() { saveStored(STORAGE.navigation, state.navigation); }
 function openNavigationSite(link) {
   const url = safeExternalUrl(link?.getAttribute('href'));
-  if (!url) return;
-  if (link.target === '_blank') window.open(url, '_blank', 'noopener,noreferrer');
-  else window.location.assign(url);
+  if (!url) return false;
+  if (link?.target === '_blank') {
+    const opened = window.open(url, '_blank', 'noopener,noreferrer');
+    if (!opened) {
+      // Safari can return null for a successful tab open when opener access is
+      // disabled. Keep a native-anchor fallback for browsers that reject the
+      // scripted call, while still executing it inside the user's click.
+      const fallback = document.createElement('a');
+      fallback.href = url;
+      fallback.target = '_blank';
+      fallback.rel = 'noreferrer';
+      fallback.hidden = true;
+      document.body.appendChild(fallback);
+      fallback.click();
+      fallback.remove();
+    }
+    return true;
+  }
+  window.location.assign(url);
+  return true;
 }
 function clearNavigationActionCards(except = null) {
   $$('#workspace[data-tool="navigation"] .navigation-card.navigation-actions-visible').forEach((card) => {
@@ -1399,8 +1416,8 @@ function renderNavigation() {
   const emptyBody = '<button class="navigation-card navigation-empty-add-card" type="button" data-open-navigation-add aria-label="' + escapeHtml(t('navigationAdd')) + '"><span class="navigation-add-glyph">＋</span><strong>' + escapeHtml(t('navigationAdd')) + '</strong><small>' + escapeHtml(t('navigationEmpty')) + '</small></button>';
   const body = items.length ? items.map((item, index) => navigationItemMarkup(item, index)).join('') + '<button class="navigation-card navigation-add-card" type="button" data-open-navigation-add aria-label="' + escapeHtml(t('navigationAdd')) + '"><span class="navigation-add-glyph">＋</span><strong>' + escapeHtml(t('navigationAdd')) + '</strong></button>' : emptyBody;
   const settingsButtonMarkup = '<button class="icon-btn header-icon navigation-settings-button" type="button" data-open-navigation-settings aria-expanded="' + String(state.navigationSettingsOpen) + '" aria-label="' + escapeHtml(t('navigationSettings')) + '"><svg class="header-line-icon settings-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 12h2M10 12h10M4 17h10M18 17h2"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="12" r="2"/><circle cx="16" cy="17" r="2"/></svg></button>';
-  const toolbarCaption = '<span class="navigation-toolbar-caption">' + escapeHtml(t('navigationToolbarHint')) + '</span>';
-  return '<div class="section-page navigation-page"><div class="navigation-page-toolbar">' + toolbarCaption + '<div class="navigation-page-tools">' + settingsButtonMarkup + navigationSettingsMarkup() + '</div></div><div class="navigation-grid">' + body + '</div></div>';
+  const toolbarCopy = '<div class="navigation-toolbar-copy"><strong class="navigation-toolbar-title">' + escapeHtml(t('navigationSettings')) + '</strong><span class="navigation-toolbar-caption">' + escapeHtml(t('navigationToolbarHint')) + '</span></div>';
+  return '<div class="section-page navigation-page"><div class="navigation-page-toolbar">' + toolbarCopy + '<div class="navigation-page-tools">' + settingsButtonMarkup + navigationSettingsMarkup() + '</div></div><div class="navigation-grid">' + body + '</div></div>';
 }
 function renderNavigationAddDialog(folderId = '', site = null) {
   const dialog = $('#navigationDialog'); if (!dialog) return;
@@ -3022,12 +3039,24 @@ const weatherCode = (code) => {
   if ([80, 81, 82].includes(code)) return ['🌦️', state.language === 'en' ? 'Showers' : '阵雨'];
   return ['⛈️', state.language === 'en' ? 'Thunderstorm' : '雷雨'];
 };
-const weatherUrl = (lat, lon) => 'https://api.open-meteo.com/v1/forecast?latitude=' + encodeURIComponent(lat) + '&longitude=' + encodeURIComponent(lon) + '&current=temperature_2m,apparent_temperature,weather_code,relative_humidity_2m,wind_speed_10m,precipitation&hourly=temperature_2m,apparent_temperature,weather_code,precipitation_probability,uv_index,wind_speed_10m,relative_humidity_2m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunrise,sunset,uv_index_max,wind_speed_10m_max&timezone=auto&past_days=3&forecast_days=16';
+const weatherUrl = (lat, lon) => 'https://api.open-meteo.com/v1/forecast?latitude=' + encodeURIComponent(lat) + '&longitude=' + encodeURIComponent(lon) + '&current=temperature_2m,apparent_temperature,weather_code,relative_humidity_2m,wind_speed_10m,precipitation&hourly=temperature_2m,apparent_temperature,weather_code,precipitation_probability,uv_index,wind_speed_10m,relative_humidity_2m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunrise,sunset,uv_index_max,wind_speed_10m_max&wind_speed_unit=kmh&timezone=auto&past_days=3&forecast_days=16';
+const weatherElevationUrl = (lat, lon) => 'https://api.open-meteo.com/v1/elevation?latitude=' + encodeURIComponent(lat) + '&longitude=' + encodeURIComponent(lon);
 function saveWeatherCards() { saveStored(STORAGE.weatherCards, state.weatherCards); }
 async function getWeatherData(lat, lon) {
   const response = await fetchWithTimeout(weatherUrl(lat, lon), { headers: { Accept: 'application/json' } }, 9000);
   if (!response.ok) throw Error(state.language === 'en' ? 'Weather service is unavailable' : '天气服务暂时不可用');
-  return response.json();
+  const data = await response.json();
+  if (!Number.isFinite(Number(data.elevation))) {
+    try {
+      const elevationResponse = await fetchWithTimeout(weatherElevationUrl(lat, lon), { headers: { Accept: 'application/json' } }, 5000);
+      if (elevationResponse.ok) {
+        const elevationData = await elevationResponse.json();
+        const elevation = Number(elevationData.elevation?.[0]);
+        if (Number.isFinite(elevation)) data.elevation = elevation;
+      }
+    } catch { /* Forecast data remains usable when the elevation endpoint is unavailable. */ }
+  }
+  return data;
 }
 async function addWeatherPlace(place) {
   const request = ++state.weatherRequest;
@@ -3107,17 +3136,45 @@ function currentHourIndex(weather) {
   const now = Date.now();
   return times.reduce((best, time, index) => Math.abs(new Date(time).getTime() - now) < Math.abs(new Date(times[best]).getTime() - now) ? index : best, 0);
 }
+function weatherWindLevel(speed) {
+  const kmh = Math.max(0, Number(speed) || 0);
+  const levels = [
+    { max: 1, force: 0, zh: '无风', en: 'Calm', zhAdvice: '几乎无风，户外活动基本不受影响。', enAdvice: 'Calm; outdoor activities are generally unaffected.' },
+    { max: 5, force: 1, zh: '软风', en: 'Light air', zhAdvice: '风很轻，适合通勤和轻量户外活动。', enAdvice: 'Very light wind; suitable for commuting and gentle outdoor activity.' },
+    { max: 11, force: 2, zh: '轻风', en: 'Light breeze', zhAdvice: '体感舒适，骑行或散步注意帽子等轻物。', enAdvice: 'Comfortable for most activities; secure hats and light items when cycling or walking.' },
+    { max: 19, force: 3, zh: '和风', en: 'Gentle breeze', zhAdvice: '适合户外活动，骑行和晾晒通常没有问题。', enAdvice: 'Good for outdoor activity; cycling and drying laundry are usually fine.' },
+    { max: 28, force: 4, zh: '清劲风', en: 'Moderate breeze', zhAdvice: '迎风行走会有阻力，骑行和高处作业请留意。', enAdvice: 'Walking against the wind takes effort; take care when cycling or working at height.' },
+    { max: 38, force: 5, zh: '强风', en: 'Fresh breeze', zhAdvice: '不建议在树下、广告牌旁久留，户外运动适当减量。', enAdvice: 'Avoid lingering under trees or signs; reduce the intensity of outdoor exercise.' },
+    { max: 49, force: 6, zh: '大风', en: 'Strong breeze', zhAdvice: '建议减少户外活动，固定阳台物品并注意高空坠物。', enAdvice: 'Limit outdoor activity, secure balcony items and watch for falling objects.' },
+    { max: 61, force: 7, zh: '疾风', en: 'Near gale', zhAdvice: '尽量留在室内，避免靠近临时设施、树木和海边。', enAdvice: 'Stay indoors where possible; avoid temporary structures, trees and exposed waterfronts.' },
+    { max: 74, force: 8, zh: '大风', en: 'Gale', zhAdvice: '不建议出行，关注当地大风预警和交通安排。', enAdvice: 'Avoid unnecessary travel and follow local wind warnings and transport updates.' },
+    { max: Infinity, force: 9, zh: '烈风', en: 'Severe gale', zhAdvice: '强风风险很高，留在安全室内并关注官方预警。', enAdvice: 'Very hazardous winds; remain in a secure place and follow official warnings.' },
+  ];
+  const level = levels.find((item) => kmh <= item.max) || levels[levels.length - 1];
+  return { ...level, speed: Math.round(kmh) };
+}
+function weatherElevationLabel(value) {
+  const elevation = Number(value);
+  if (!Number.isFinite(elevation)) return '—';
+  return Math.round(elevation) + ' m';
+}
+function weatherWindLabel(value) {
+  const level = weatherWindLevel(value);
+  return state.language === 'en' ? 'Bft ' + level.force + ' · ' + level.en : level.force + '级 · ' + level.zh;
+}
 function weatherAdvice(weather, current) {
   const temperature = Number(current.temperature_2m ?? 20);
   const rain = Number(current.precipitation ?? 0);
   const probability = Number(weather.daily?.precipitation_probability_max?.[0] ?? 0);
   const wind = Number(current.wind_speed_10m ?? 0);
+  const windLevel = weatherWindLevel(wind);
   const uv = Number(weather.daily?.uv_index_max?.[0] ?? 0);
   const code = Number(current.weather_code);
   const rainy = rain > .1 || probability >= 55 || [51, 53, 55, 61, 63, 65, 80, 81, 82].includes(code);
   return [
     { icon: '🚶', title: t('commute'), body: rainy ? (state.language === 'en' ? 'Take an umbrella and allow extra travel time.' : '有降雨可能，带伞并预留出行时间。') : (state.language === 'en' ? 'Good conditions for normal travel.' : '适合正常出行，路上注意安全。') },
     { icon: '🏃', title: t('sport'), body: wind > 35 || rainy ? (state.language === 'en' ? 'Consider an indoor workout.' : '风雨较明显，建议选择室内运动。') : (state.language === 'en' ? 'Suitable for outdoor exercise; hydrate.' : '适合户外运动，注意补水。') },
+    { icon: '💨', title: t('windAdvice'), body: (state.language === 'en' ? 'Bft ' + windLevel.force + ' · ' + windLevel.en + ' · ' + windLevel.speed + ' km/h. ' + windLevel.enAdvice : windLevel.force + '级 · ' + windLevel.zh + ' · ' + windLevel.speed + ' km/h。' + windLevel.zhAdvice) },
     { icon: '🧥', title: t('clothing'), body: temperature < 10 ? (state.language === 'en' ? 'Layer up with a warm coat.' : '气温偏低，建议分层保暖。') : temperature > 28 ? (state.language === 'en' ? 'Light, breathable clothing is best.' : '天气偏热，穿轻薄透气衣物。') : (state.language === 'en' ? 'A light layer should be comfortable.' : '薄外套或长袖即可，体感舒适。') },
     { icon: '🕶️', title: t('sunscreen'), body: uv >= 6 ? (state.language === 'en' ? 'High UV: sunscreen, hat and sunglasses recommended.' : '紫外线偏强，建议防晒、戴帽和太阳镜。') : (state.language === 'en' ? 'UV is moderate; sunscreen is still useful.' : '紫外线中等，外出仍建议做好防晒。') },
     { icon: '🥾', title: t('hiking'), body: rainy || wind > 40 ? (state.language === 'en' ? 'Trail may be slippery or windy; check conditions first.' : '山路可能湿滑或风大，出发前确认路况。') : (state.language === 'en' ? 'Good for a short hike; bring water.' : '适合短途爬山，带足饮水。') },
@@ -3133,8 +3190,8 @@ function weather() {
     const item = card.loading && !card.current ? ['⏳', t('weatherLoading')] : weatherCode(card.current?.weather_code);
     const cardCurrent = card.current || {};
     const temperature = card.loading && !card.current ? '…' : Math.round(cardCurrent.temperature_2m ?? 0) + '°';
-    const details = card.loading && !card.current ? t('weatherLoading') : (state.language === 'en' ? 'Feels ' : '体感 ') + Math.round(cardCurrent.apparent_temperature ?? cardCurrent.temperature_2m ?? 0) + '° · ' + (state.language === 'en' ? 'Humidity ' : '湿度 ') + (cardCurrent.relative_humidity_2m ?? '—') + '% · ' + (state.language === 'en' ? 'Wind ' : '风速 ') + Math.round(cardCurrent.wind_speed_10m ?? 0) + ' km/h';
-    return '<button class="weather-card ' + (card.id === active.id ? 'active' : '') + (card.loading ? ' loading' : '') + '" draggable="true" data-weather-card="' + card.id + '" data-weather-index="' + index + '"><span class="weather-card-delete" data-delete-weather="' + escapeHtml(card.id) + '" role="button" tabindex="0" aria-label="' + (state.language === 'en' ? 'Delete weather card' : '删除天气卡片') + '">×</span><div class="weather-card-head"><span><strong>' + escapeHtml(card.name) + '</strong><small>' + escapeHtml([card.admin2, card.admin1].filter(Boolean).join(' · ') || card.country || '') + '</small></span><span class="weather-card-icon" aria-hidden="true">' + item[0] + '</span></div><div class="weather-card-main"><span class="weather-card-temp">' + temperature + '</span><span class="weather-card-condition">' + escapeHtml(item[1]) + '</span></div><span class="weather-card-meta">' + escapeHtml(details) + '</span></button>';
+    const details = card.loading && !card.current ? '<span class="weather-card-meta-line">' + escapeHtml(t('weatherLoading')) + '</span>' : '<span class="weather-card-meta-line">' + escapeHtml((state.language === 'en' ? 'Feels ' : '体感 ') + Math.round(cardCurrent.apparent_temperature ?? cardCurrent.temperature_2m ?? 0) + '° · ' + (state.language === 'en' ? 'Humidity ' : '湿度 ') + (cardCurrent.relative_humidity_2m ?? '—') + '%') + '</span><span class="weather-card-meta-line weather-card-meta-secondary"><span>' + escapeHtml((state.language === 'en' ? 'Wind ' : '风力 ') + weatherWindLabel(cardCurrent.wind_speed_10m) + ' · ' + Math.round(cardCurrent.wind_speed_10m ?? 0) + ' km/h') + '</span><span>' + escapeHtml(t('elevation') + ' ' + weatherElevationLabel(card.elevation)) + '</span></span>';
+    return '<button class="weather-card ' + (card.id === active.id ? 'active' : '') + (card.loading ? ' loading' : '') + '" draggable="true" data-weather-card="' + card.id + '" data-weather-index="' + index + '"><span class="weather-card-delete" data-delete-weather="' + escapeHtml(card.id) + '" role="button" tabindex="0" aria-label="' + (state.language === 'en' ? 'Delete weather card' : '删除天气卡片') + '">×</span><div class="weather-card-head"><span><strong>' + escapeHtml(card.name) + '</strong><small>' + escapeHtml([card.admin2, card.admin1].filter(Boolean).join(' · ') || card.country || '') + '</small></span><span class="weather-card-icon" aria-hidden="true">' + item[0] + '</span></div><div class="weather-card-main"><span class="weather-card-temp">' + temperature + '</span><span class="weather-card-condition">' + escapeHtml(item[1]) + '</span></div><span class="weather-card-meta">' + details + '</span></button>';
   }).join('');
   const title = [active.name, active.admin2, active.admin1, active.country].filter(Boolean).join(' · ');
   if (active.loading && !active.current) {
@@ -3835,7 +3892,7 @@ function render() {
   }
   if (state.section === 'tools' && state.tool === 'calendar') ensureHolidayYear(state.month.getFullYear());
   renderBottomNav();
-  requestAnimationFrame(updateToolTabOverflowControls);
+  requestAnimationFrame(() => { updateToolTabOverflowControls(); focusActiveToolTab(false); });
   updateNotificationBadge();
   if (state.recentReadingOpen) renderRecentReading();
   if (state.navigationDialog) renderNavigationDialog();
@@ -4713,7 +4770,10 @@ workspace.addEventListener('click', async (event) => {
     state.openMode = navigationOpenMode.dataset.navigationOpenMode === 'new-tab' ? 'new-tab' : 'current';
     saveStored(STORAGE.openMode, state.openMode);
     state.navigationSettingsOpen = false;
-    return syncNavigationSettingsPopover();
+    // The opening mode is part of each card's anchor markup. Re-render the
+    // navigation surface so target="_blank" is applied immediately instead
+    // of only taking effect after a later route change.
+    return render();
   }
   if (event.target.closest('[data-open-navigation-add]')) return openNavigationAddDialog();
   const navigationOpenAction = event.target.closest('[data-navigation-open-action]');
@@ -4728,6 +4788,13 @@ workspace.addEventListener('click', async (event) => {
   }
   const navigationPrimary = event.target.closest('[data-navigation-open-site], [data-navigation-open-folder]');
   if (navigationPrimary) {
+    if (navigationPrimary.matches('[data-navigation-open-site]') && navigationPrimary.target === '_blank') {
+      state.navigationSettingsOpen = false;
+      // Let the real anchor perform the new-tab navigation. Safari treats
+      // this native user-gesture path more reliably than a delegated
+      // preventDefault() followed by window.open().
+      return;
+    }
     event.preventDefault(); event.stopPropagation();
     const card = navigationPrimary.closest('[data-navigation-item]');
     if (navigationPrimary.matches('[data-navigation-open-folder]')) return openNavigationFolderDialog(card.dataset.navigationId);
@@ -4745,6 +4812,7 @@ workspace.addEventListener('click', async (event) => {
   }
   const navigationSiteLink = event.target.closest('[data-navigation-open-site]');
   if (navigationSiteLink) {
+    if (navigationSiteLink.target === '_blank') return;
     event.preventDefault(); event.stopPropagation();
     state.navigationSettingsOpen = false;
     return openNavigationSite(navigationSiteLink);
@@ -5193,7 +5261,10 @@ $('#navigationDialog').addEventListener('click', (event) => {
     if (link) return openNavigationSite(link);
   }
   const navigationSiteLink = event.target.closest('[data-navigation-open-site]');
-  if (navigationSiteLink) { event.preventDefault(); event.stopPropagation(); return openNavigationSite(navigationSiteLink); }
+  if (navigationSiteLink) {
+    if (navigationSiteLink.target === '_blank') return;
+    event.preventDefault(); event.stopPropagation(); return openNavigationSite(navigationSiteLink);
+  }
   const edit = event.target.closest('[data-navigation-edit]');
   if (edit) return openNavigationEditDialog(edit.dataset.navigationEdit, edit.closest('[data-navigation-folder-id]')?.dataset.navigationFolderId || state.navigationDialog?.folderId || '');
   const remove = event.target.closest('[data-navigation-delete]');
@@ -5225,7 +5296,7 @@ $('#settingsDialog').addEventListener('change', (event) => {
     localStorage.setItem(STORAGE.navigationLocation, state.navigationLocation);
     state.toolOrder = normalizeToolOrder(state.toolOrder, state.navigationLocation === 'tools', state.navigationLocation === 'tools');
     saveToolOrder();
-    if (state.navigationLocation === 'tools' && state.section === 'navigation') state.section = 'tools', state.tool = 'navigation';
+    if (state.navigationLocation === 'tools') state.section = 'tools', state.tool = 'navigation';
     if (state.navigationLocation === 'main' && state.section === 'tools' && state.tool === 'navigation') state.section = 'navigation';
     const route = state.section === 'tools' ? state.tool : state.section;
     if (location.hash.slice(1) !== route) history.replaceState(null, '', '#' + route);
