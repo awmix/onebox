@@ -6724,9 +6724,9 @@ html[data-theme="dark"] #githubDialog .github-dialog-head { background: var(--pa
   perspective: 1000px;
   pointer-events: none;
 }
-/* 2.18.206: keep the real column track positioned underneath a two-sided
-   turning sheet. The back face and moving crease make this a page turn rather
-   than a card rotating away and revealing a new page underneath. */
+/* 2.18.207: keep the real column track positioned underneath a two-sided
+   folding sheet. The moving outline and crease follow the turn.js-style
+   corner turn instead of rotating a whole card away. */
 .reader-page-turn-overlay {
   z-index: 8;
   isolation: isolate;
@@ -6744,8 +6744,8 @@ html[data-theme="dark"] #githubDialog .github-dialog-head { background: var(--pa
   will-change: transform;
   pointer-events: none;
 }
-.reader-page-turn-face-forward { transform-origin: left center; box-shadow: 12px 0 28px color-mix(in srgb, var(--reader-ink) 16%, transparent); }
-.reader-page-turn-face-back { transform-origin: right center; box-shadow: -12px 0 28px color-mix(in srgb, var(--reader-ink) 16%, transparent); }
+.reader-page-turn-face-forward { transform-origin: right bottom; box-shadow: 12px 0 28px color-mix(in srgb, var(--reader-ink) 16%, transparent); }
+.reader-page-turn-face-back { transform-origin: left bottom; box-shadow: -12px 0 28px color-mix(in srgb, var(--reader-ink) 16%, transparent); }
 .reader-page-turn-face::before {
   position: absolute;
   inset: 0;
@@ -6764,7 +6764,7 @@ html[data-theme="dark"] #githubDialog .github-dialog-head { background: var(--pa
   top: -8%;
   bottom: -8%;
   z-index: 3;
-  width: 23%;
+  width: 16%;
   content: '';
   opacity: 0;
   border-radius: 50%;
@@ -6805,6 +6805,11 @@ html[data-theme="dark"] #githubDialog .github-dialog-head { background: var(--pa
   z-index: 0 !important;
   transform: rotateY(180deg) !important;
 }
+.reader-page-turn-face .reader-page-turn-front-page-host {
+  z-index: 1 !important;
+  -webkit-clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+}
 .reader-page-turn-face .reader-page-turn-page {
   position: absolute !important;
   inset: 0 auto auto 0 !important;
@@ -6819,41 +6824,61 @@ html[data-theme="dark"] #githubDialog .github-dialog-head { background: var(--pa
 }
 .reader-page-turn-face-back .reader-page-turn-page { transform-origin: right top; }
 .reader-page-turn-face.is-active.reader-page-turn-face-forward {
-  animation: reader-page-flip-forward .92s cubic-bezier(.2,.72,.25,1) both;
+  animation: reader-page-flip-forward .82s cubic-bezier(.22,.7,.24,1) both;
 }
 .reader-page-turn-face.is-active.reader-page-turn-face-back {
-  animation: reader-page-flip-back .92s cubic-bezier(.2,.72,.25,1) both;
+  animation: reader-page-flip-back .82s cubic-bezier(.22,.7,.24,1) both;
+}
+.reader-page-turn-face.is-active.reader-page-turn-face-forward .reader-page-turn-front-page-host {
+  animation: reader-page-corner-forward .82s cubic-bezier(.22,.7,.24,1) both;
+}
+.reader-page-turn-face.is-active.reader-page-turn-face-back .reader-page-turn-front-page-host {
+  animation: reader-page-corner-back .82s cubic-bezier(.22,.7,.24,1) both;
 }
 .reader-page-turn-face.is-active.reader-page-turn-face-forward::after {
-  animation: reader-page-curl-forward .92s cubic-bezier(.2,.72,.25,1) both;
+  animation: reader-page-curl-forward .82s cubic-bezier(.22,.7,.24,1) both;
 }
 .reader-page-turn-face.is-active.reader-page-turn-face-back::after {
-  animation: reader-page-curl-back .92s cubic-bezier(.2,.72,.25,1) both;
+  animation: reader-page-curl-back .82s cubic-bezier(.22,.7,.24,1) both;
 }
 @keyframes reader-page-flip-forward {
-  0% { transform: perspective(1500px) rotateY(0deg) rotateZ(0deg) translateZ(0); box-shadow: 6px 0 16px color-mix(in srgb, var(--reader-ink) 8%, transparent); }
-  18% { transform: perspective(1500px) rotateY(-14deg) rotateZ(-.2deg) translate3d(-.2%, 0, 1px); box-shadow: 14px 0 24px color-mix(in srgb, var(--reader-ink) 12%, transparent); }
-  46% { transform: perspective(1500px) rotateY(-72deg) rotateZ(-.6deg) translate3d(-.8%, 0, 3px); box-shadow: 24px 0 38px color-mix(in srgb, var(--reader-ink) 18%, transparent); }
-  72% { transform: perspective(1500px) rotateY(-132deg) rotateZ(-.35deg) translate3d(-1.8%, 0, 2px); box-shadow: 10px 0 26px color-mix(in srgb, var(--reader-ink) 12%, transparent); }
-  100% { transform: perspective(1500px) rotateY(-180deg) rotateZ(0deg) translate3d(-3.5%, 0, 0); box-shadow: -5px 0 16px color-mix(in srgb, var(--reader-ink) 8%, transparent); }
+  0% { transform: perspective(1800px) rotateY(0deg) rotateZ(0deg) translateZ(0); box-shadow: 4px 0 14px color-mix(in srgb, var(--reader-ink) 7%, transparent); }
+  18% { transform: perspective(1800px) rotateY(-11deg) rotateZ(-.25deg) translate3d(-.4%, 0, 1px); box-shadow: 10px 0 20px color-mix(in srgb, var(--reader-ink) 10%, transparent); }
+  48% { transform: perspective(1800px) rotateY(-64deg) rotateZ(-.8deg) translate3d(-1.2%, 0, 3px); box-shadow: 18px 0 30px color-mix(in srgb, var(--reader-ink) 15%, transparent); }
+  76% { transform: perspective(1800px) rotateY(-132deg) rotateZ(-.4deg) translate3d(-2.2%, 0, 2px); box-shadow: 8px 0 22px color-mix(in srgb, var(--reader-ink) 10%, transparent); }
+  100% { transform: perspective(1800px) rotateY(-180deg) rotateZ(0deg) translate3d(-4%, 0, 0); box-shadow: -4px 0 14px color-mix(in srgb, var(--reader-ink) 7%, transparent); }
 }
 @keyframes reader-page-flip-back {
-  0% { transform: perspective(1500px) rotateY(0deg) rotateZ(0deg) translateZ(0); box-shadow: -6px 0 16px color-mix(in srgb, var(--reader-ink) 8%, transparent); }
-  18% { transform: perspective(1500px) rotateY(14deg) rotateZ(.2deg) translate3d(.2%, 0, 1px); box-shadow: -14px 0 24px color-mix(in srgb, var(--reader-ink) 12%, transparent); }
-  46% { transform: perspective(1500px) rotateY(72deg) rotateZ(.6deg) translate3d(.8%, 0, 3px); box-shadow: -24px 0 38px color-mix(in srgb, var(--reader-ink) 18%, transparent); }
-  72% { transform: perspective(1500px) rotateY(132deg) rotateZ(.35deg) translate3d(1.8%, 0, 2px); box-shadow: -10px 0 26px color-mix(in srgb, var(--reader-ink) 12%, transparent); }
-  100% { transform: perspective(1500px) rotateY(180deg) rotateZ(0deg) translate3d(3.5%, 0, 0); box-shadow: 5px 0 16px color-mix(in srgb, var(--reader-ink) 8%, transparent); }
+  0% { transform: perspective(1800px) rotateY(0deg) rotateZ(0deg) translateZ(0); box-shadow: -4px 0 14px color-mix(in srgb, var(--reader-ink) 7%, transparent); }
+  18% { transform: perspective(1800px) rotateY(11deg) rotateZ(.25deg) translate3d(.4%, 0, 1px); box-shadow: -10px 0 20px color-mix(in srgb, var(--reader-ink) 10%, transparent); }
+  48% { transform: perspective(1800px) rotateY(64deg) rotateZ(.8deg) translate3d(1.2%, 0, 3px); box-shadow: -18px 0 30px color-mix(in srgb, var(--reader-ink) 15%, transparent); }
+  76% { transform: perspective(1800px) rotateY(132deg) rotateZ(.4deg) translate3d(2.2%, 0, 2px); box-shadow: -8px 0 22px color-mix(in srgb, var(--reader-ink) 10%, transparent); }
+  100% { transform: perspective(1800px) rotateY(180deg) rotateZ(0deg) translate3d(4%, 0, 0); box-shadow: 4px 0 14px color-mix(in srgb, var(--reader-ink) 7%, transparent); }
+}
+@keyframes reader-page-corner-forward {
+  0% { -webkit-clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); }
+  18% { -webkit-clip-path: polygon(0 0, 90% 0, 100% 8%, 100% 92%, 90% 100%, 0 100%); clip-path: polygon(0 0, 90% 0, 100% 8%, 100% 92%, 90% 100%, 0 100%); }
+  48% { -webkit-clip-path: polygon(0 0, 58% 0, 100% 27%, 100% 73%, 58% 100%, 0 100%); clip-path: polygon(0 0, 58% 0, 100% 27%, 100% 73%, 58% 100%, 0 100%); }
+  76% { -webkit-clip-path: polygon(0 0, 23% 0, 100% 42%, 100% 58%, 23% 100%, 0 100%); clip-path: polygon(0 0, 23% 0, 100% 42%, 100% 58%, 23% 100%, 0 100%); }
+  100% { -webkit-clip-path: polygon(0 0, 0 0, 0 100%, 0 100%); clip-path: polygon(0 0, 0 0, 0 100%, 0 100%); }
+}
+@keyframes reader-page-corner-back {
+  0% { -webkit-clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); }
+  18% { -webkit-clip-path: polygon(10% 0, 100% 0, 100% 100%, 10% 100%, 0 92%, 0 8%); clip-path: polygon(10% 0, 100% 0, 100% 100%, 10% 100%, 0 92%, 0 8%); }
+  48% { -webkit-clip-path: polygon(42% 0, 100% 0, 100% 100%, 42% 100%, 0 73%, 0 27%); clip-path: polygon(42% 0, 100% 0, 100% 100%, 42% 100%, 0 73%, 0 27%); }
+  76% { -webkit-clip-path: polygon(77% 0, 100% 0, 100% 100%, 77% 100%, 0 58%, 0 42%); clip-path: polygon(77% 0, 100% 0, 100% 100%, 77% 100%, 0 58%, 0 42%); }
+  100% { -webkit-clip-path: polygon(100% 0, 100% 0, 100% 100%, 100% 100%); clip-path: polygon(100% 0, 100% 0, 100% 100%, 100% 100%); }
 }
 @keyframes reader-page-curl-forward {
   0%, 100% { opacity: 0; transform: translate3d(0, 0, 0) scaleX(1) skewY(0deg); }
   22% { opacity: .18; transform: translate3d(-7%, 0, 1px) scaleX(.96) skewY(-1deg); }
-  48% { opacity: .44; transform: translate3d(-45%, 0, 2px) scaleX(.78) skewY(-3deg); }
+  48% { opacity: .34; transform: translate3d(-45%, 0, 2px) scaleX(.78) skewY(-3deg); }
   74% { opacity: .24; transform: translate3d(-88%, 0, 1px) scaleX(.62) skewY(1deg); }
 }
 @keyframes reader-page-curl-back {
   0%, 100% { opacity: 0; transform: translate3d(0, 0, 0) scaleX(1) skewY(0deg); }
   22% { opacity: .18; transform: translate3d(7%, 0, 1px) scaleX(.96) skewY(1deg); }
-  48% { opacity: .44; transform: translate3d(45%, 0, 2px) scaleX(.78) skewY(3deg); }
+  48% { opacity: .34; transform: translate3d(45%, 0, 2px) scaleX(.78) skewY(3deg); }
   74% { opacity: .24; transform: translate3d(88%, 0, 1px) scaleX(.62) skewY(-1deg); }
 }
 .reader-page-turn-corner {

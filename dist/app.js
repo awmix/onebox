@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.206';
+const APP_VERSION = '2.18.207';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -2256,7 +2256,7 @@ function prepareReaderTurnOverlay(viewport, direction, nextPage) {
   // A real turn has two readable sides: the current page on the front and
   // the destination page on the back. Without the back face, a CSS rotateY
   // becomes a card that narrows and disappears instead of turning a sheet.
-  face.append(createReaderTurnPage(flow, viewport, state.readerPage));
+  face.append(createReaderTurnPage(flow, viewport, state.readerPage, ' reader-page-turn-front-page-host'));
   face.append(createReaderTurnPage(flow, viewport, nextPage, ' reader-page-turn-back-page-host'));
   overlay.append(face);
   overlay.dataset.readerTurnDirection = direction > 0 ? 'forward' : 'back';
