@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.219';
+const APP_VERSION = '2.18.220';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -1360,13 +1360,19 @@ function mascotWeatherMarkup() {
   const meta = [weatherWindLabel(current.wind_speed_10m), (state.language === 'en' ? 'Humidity ' : '湿度 ') + (current.relative_humidity_2m ?? '—') + '%', (state.language === 'en' ? 'Elevation ' : '海拔 ') + weatherElevationLabel(weather.elevation)].join(' · ');
   return '<div class="onebox-mascot-weather-inline"><div class="onebox-mascot-weather-now"><span class="onebox-mascot-weather-symbol" aria-hidden="true">' + condition[0] + '</span><span><strong>' + escapeHtml(place) + ' ' + escapeHtml(temp) + '</strong><small>' + escapeHtml(condition[1]) + '</small></span></div><p class="onebox-mascot-weather-insight">' + escapeHtml(mascotFutureSixHours(weather)) + '</p><p class="onebox-mascot-weather-meta">' + escapeHtml(meta) + '</p></div>';
 }
+function mascotActionButton(action, label, icon) {
+  return '<button type="button" data-mascot-action="' + action + '" aria-label="' + escapeHtml(label) + '"><span class="onebox-mascot-action-icon" aria-hidden="true">' + icon + '</span><span>' + escapeHtml(label) + '</span></button>';
+}
 function mascotBriefingMarkup() {
   const todayLabel = new Intl.DateTimeFormat(state.language === 'en' ? 'en-US' : 'zh-CN', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' }).format(new Date());
   const language = state.language === 'en';
   const hello = language ? 'Today feels good' : '今天感觉不错';
   const hint = language ? 'Tap a little button, or double-tap me to see a surprise' : '点一点下面的小按钮，或者双击我看看惊喜';
   const holidayMessage = mascotHolidayMessage();
-  return '<div class="onebox-mascot-cloud"><div class="onebox-mascot-cloud-head"><div class="onebox-mascot-date"><div><strong>' + escapeHtml(hello) + '</strong><small>' + escapeHtml(todayLabel) + '</small></div></div><button type="button" class="onebox-mascot-cloud-close" data-close-mascot aria-label="' + escapeHtml(t('close')) + '">×</button></div><div class="onebox-mascot-cloud-story">' + mascotWeatherMarkup() + (holidayMessage ? '<p class="onebox-mascot-holiday-line"><span aria-hidden="true">✦</span>' + escapeHtml(holidayMessage) + '</p>' : '') + mascotReadingMarkup() + '</div><div class="onebox-mascot-cloud-actions"><button type="button" data-mascot-action="pat">♡ ' + escapeHtml(language ? 'Pat me' : '摸摸头') + '</button><button type="button" data-mascot-action="ball">⚽ ' + escapeHtml(language ? 'Play ball' : '玩玩球') + '</button><button type="button" data-mascot-action="weather">' + escapeHtml(language ? 'Weather' : '天气') + '</button><button type="button" data-mascot-action="calendar">' + escapeHtml(language ? 'Calendar' : '日历') + '</button><button type="button" data-mascot-action="reader">' + escapeHtml(language ? 'Reading' : '阅读') + '</button><button type="button" data-mascot-action="calculator">' + escapeHtml(language ? 'Calculator' : '计算') + '</button></div><p class="onebox-mascot-cloud-hint">' + escapeHtml(hint) + '</p></div>';
+  const label = (zh, en) => language ? en : zh;
+  const icon = (id) => TOOL_DEFS[id]?.icon || SECTION_DEFS[id]?.icon || '';
+  const actionRows = '<div class="onebox-mascot-action-row onebox-mascot-action-row-primary">' + mascotActionButton('pat', label('摸摸头', 'Pat me'), '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 8.8c0 5.2-8.8 10-8.8 10s-8.8-4.8-8.8-10A4.8 4.8 0 0 1 12 6.1a4.8 4.8 0 0 1 8.8 2.7Z"/></svg>') + mascotActionButton('ball', label('玩玩球', 'Play ball'), '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="m8.5 5.1 1.1 4.2-3.4 2.5M15.5 5.1l-1.1 4.2 3.4 2.5M7.3 15.3h4.1l2.5 3.5M16.7 15.3h-4.1l-2.5 3.5"/></svg>') + '</div><div class="onebox-mascot-action-row onebox-mascot-action-row-tools">' + mascotActionButton('weather', label('天气', 'Weather'), icon('weather')) + mascotActionButton('calendar', label('日历', 'Calendar'), icon('calendar')) + mascotActionButton('reader', label('阅读', 'Reading'), icon('reader')) + mascotActionButton('navigation', label('导航', 'Navigation'), icon('navigation')) + mascotActionButton('calculator', label('计算', 'Calculator'), icon('calculator')) + '</div><div class="onebox-mascot-action-row onebox-mascot-action-row-sections">' + mascotActionButton('home', label('首页', 'Home'), icon('home')) + mascotActionButton('messages', label('消息', 'Messages'), icon('messages')) + mascotActionButton('mine', label('我的', 'Me'), icon('mine')) + '</div>';
+  return '<div class="onebox-mascot-cloud"><div class="onebox-mascot-cloud-head"><div class="onebox-mascot-date"><div><strong>' + escapeHtml(hello) + '</strong><small>' + escapeHtml(todayLabel) + '</small></div></div><button type="button" class="onebox-mascot-cloud-close" data-close-mascot aria-label="' + escapeHtml(t('close')) + '">×</button></div><div class="onebox-mascot-cloud-story">' + mascotWeatherMarkup() + (holidayMessage ? '<p class="onebox-mascot-holiday-line"><span aria-hidden="true">✦</span>' + escapeHtml(holidayMessage) + '</p>' : '') + mascotReadingMarkup() + '</div><div class="onebox-mascot-cloud-actions">' + actionRows + '</div><p class="onebox-mascot-cloud-hint">' + escapeHtml(hint) + '</p></div>';
 }
 function refreshMascotBriefing() {
   if (mascotRuntime.panel && !mascotRuntime.panel.hidden) mascotRuntime.panel.innerHTML = mascotBriefingMarkup();
@@ -1596,10 +1602,15 @@ function mountMascot() {
       mascotShowSpeech(state.language === 'en' ? 'That tickles!' : '嘿嘿，好痒呀！', 1800, 'pat');
     }
     if (action === 'ball') mascotPlayBall();
-    if (['weather', 'calendar', 'reader', 'calculator'].includes(action)) {
+    if (['weather', 'calendar', 'reader', 'navigation', 'calculator'].includes(action)) {
       closeMascotBriefing();
       mascotPlayReaction('sparkle');
       selectTool(action);
+    }
+    if (['home', 'messages', 'mine'].includes(action)) {
+      closeMascotBriefing();
+      mascotPlayReaction('sparkle');
+      selectSection(action);
     }
   });
   document.addEventListener('pointerdown', (event) => { if (mascotRuntime.panel && mascotRuntime.root && !mascotRuntime.root.contains(event.target)) closeMascotBriefing(); }, true);

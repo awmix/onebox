@@ -8413,12 +8413,12 @@ html.ios-safari-browser.reader-focus.reader-safari-surface .reader-reference-she
 #oneboxMascotRoot[data-edge="right"].is-docked { transform: translateX(calc(100% - 18px)); }
 #oneboxMascotRoot[data-edge="left"].is-docked { transform: translateX(calc(-100% + 18px)); }
 #oneboxMascotRoot.is-top-action:not(.is-docked) .onebox-mascot-button { transform: translateY(10px) scale(.76); transform-origin: 50% 100%; }
-.onebox-mascot-propeller { position: absolute; z-index: 4; top: -3px; left: 50%; width: 76px; height: 25px; pointer-events: none; opacity: 0; transform: translate(-50%, -7px) scale(.6); transform-origin: 50% 100%; transition: opacity .22s ease, transform .32s cubic-bezier(.2,.85,.25,1); }
-.onebox-mascot-propeller i { position: absolute; top: 2px; width: 34px; height: 11px; border: 2px solid #6b92ff; background: linear-gradient(180deg, #8fb8ff, #4771eb); box-shadow: 0 2px 6px rgb(54 105 255 / 28%); }
+.onebox-mascot-propeller { position: absolute; z-index: 4; top: -1px; left: 50%; width: 62px; height: 20px; pointer-events: none; opacity: 0; transform: translate(-50%, -4px) scale(.6); transform-origin: 50% 100%; transition: opacity .22s ease, transform .32s cubic-bezier(.2,.85,.25,1); }
+.onebox-mascot-propeller i { position: absolute; top: 1px; width: 27px; height: 8px; border: 1.5px solid #6b92ff; background: linear-gradient(180deg, #9bbdff, #4b72e4); box-shadow: 0 1px 4px rgb(54 105 255 / 25%); }
 .onebox-mascot-propeller i:first-child { left: 2px; border-radius: 100% 14% 72% 22%; transform: rotate(-8deg); }
 .onebox-mascot-propeller i:nth-child(2) { right: 2px; border-radius: 14% 100% 22% 72%; transform: rotate(8deg); }
-.onebox-mascot-propeller b { position: absolute; left: 50%; top: -1px; width: 8px; height: 21px; border-radius: 99px; background: linear-gradient(90deg, #3557c9, #a8c4ff 48%, #3557c9); box-shadow: 0 2px 5px rgb(54 105 255 / 30%); transform: translateX(-50%); }
-#oneboxMascotRoot.is-top-action:not(.is-docked) .onebox-mascot-propeller { opacity: 1; transform: translate(-50%, 1px) scale(1); animation: mascot-propeller-spin 1.1s linear infinite; }
+.onebox-mascot-propeller b { position: absolute; left: 50%; top: 0; width: 6px; height: 17px; border-radius: 99px; background: linear-gradient(90deg, #3557c9, #a8c4ff 48%, #3557c9); box-shadow: 0 1px 4px rgb(54 105 255 / 26%); transform: translateX(-50%); }
+#oneboxMascotRoot.is-top-action:not(.is-docked) .onebox-mascot-propeller { opacity: 1; transform: translate(-50%, 2px) scale(1); animation: mascot-propeller-spin 1.1s linear infinite; }
 .onebox-mascot-rocket, .onebox-mascot-ball { position: absolute; z-index: 5; pointer-events: none; opacity: 0; }
 .onebox-mascot-rocket { left: 50%; bottom: -10px; font-size: 27px; transform: translate(-50%, 12px) rotate(-32deg); transform-origin: 50% 70%; }
 .onebox-mascot-ball { left: 50%; top: 40%; display: grid; width: 28px; height: 28px; place-items: center; font-size: 23px; line-height: 1; text-shadow: 0 3px 7px color-mix(in srgb, var(--ink) 34%, transparent); transform: translate(-50%, -50%); }
@@ -8569,8 +8569,14 @@ html.ios-safari-browser.reader-focus.reader-safari-surface .reader-reference-she
 .onebox-mascot-reading-line strong { margin-top: 2px; font-size: 12px; }
 .onebox-mascot-reading-line em { margin-left: auto; color: var(--primary); font-size: 12px; font-style: normal; font-weight: 750; }
 .onebox-mascot-empty { margin: 0; color: var(--muted); font-size: 12px; }
-.onebox-mascot-cloud-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
-.onebox-mascot-cloud-actions button { padding: 7px 10px; border: 1px solid var(--line); border-radius: 999px; background: color-mix(in srgb, var(--primary) 9%, transparent); color: var(--ink); cursor: pointer; font: inherit; font-size: 11px; }
+.onebox-mascot-cloud-actions { display: grid; gap: 6px; margin-top: 13px; }
+.onebox-mascot-action-row { display: grid; gap: 5px; min-width: 0; }
+.onebox-mascot-action-row-primary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.onebox-mascot-action-row-tools { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.onebox-mascot-action-row-sections { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.onebox-mascot-cloud-actions button { display: inline-flex; min-width: 0; align-items: center; justify-content: center; gap: 4px; padding: 7px 4px; border: 1px solid var(--line); border-radius: 12px; background: color-mix(in srgb, var(--primary) 8%, transparent); color: var(--ink); cursor: pointer; font: inherit; font-size: 10px; line-height: 1.1; white-space: nowrap; }
+.onebox-mascot-action-icon { display: inline-grid; width: 16px; height: 16px; flex: 0 0 16px; place-items: center; color: var(--muted); }
+.onebox-mascot-action-icon svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.7; }
 .onebox-mascot-cloud-actions button:hover { border-color: color-mix(in srgb, var(--primary) 58%, var(--line)); background: color-mix(in srgb, var(--primary) 16%, transparent); }
 .onebox-mascot-cloud-hint { margin: 10px 1px 0; color: var(--muted); font-size: 10px; }
 @keyframes mascot-speech-in {
@@ -8663,5 +8669,8 @@ html.ios-safari-browser.reader-focus.reader-safari-surface .reader-reference-she
   .onebox-mascot-button { width: 70px; height: 70px; border-radius: 22px; }
   .onebox-mascot-panel { bottom: calc(100% + 9px); width: min(278px, calc(100vw - 20px)); }
   .onebox-mascot-cloud { padding: 15px 14px 13px; }
+  .onebox-mascot-cloud-actions button { gap: 2px; padding: 6px 2px; font-size: 9px; }
+  .onebox-mascot-action-icon { width: 14px; height: 14px; flex-basis: 14px; }
+  .onebox-mascot-action-icon svg { width: 14px; height: 14px; }
   .onebox-mascot-speech { bottom: calc(100% + 8px); max-width: min(210px, calc(100vw - 20px)); }
 }
