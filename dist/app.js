@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.218';
+const APP_VERSION = '2.18.219';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -1155,7 +1155,7 @@ const MASCOT_IDLE_MAX = 9800;
 const MASCOT_IDLE_MESSAGES = ['今天也要轻轻松松哦', '我在这里陪你', '风吹过来啦', '摸摸我会有好运', '要不要看看今天的天气？'];
 const MASCOT_DRAG_MESSAGES = ['抓到我啦', '轻一点，我会晃晕的', '放这里刚刚好', '我也想换个位置'];
 const MASCOT_EDGE_MESSAGES = ['我先躲到边边～', '边边的位置刚刚好', '需要我时再叫我哦'];
-const mascotRuntime = { root: null, button: null, panel: null, speech: null, directionLayer: null, reactionLayer: null, drag: null, dockTimer: 0, reactionTimer: 0, actionTimer: 0, idleTimer: 0, speechTimer: 0, singleClickTimer: 0, tapAt: 0, boopAt: 0, boops: 0, suppressClickUntil: 0, sector: -1, position: null, lastReaction: '', lastSpeech: '' };
+const mascotRuntime = { root: null, button: null, panel: null, speech: null, directionLayer: null, reactionLayer: null, drag: null, dockTimer: 0, reactionTimer: 0, actionTimer: 0, idleTimer: 0, speechTimer: 0, singleClickTimer: 0, tapAt: 0, boopAt: 0, boops: 0, suppressClickUntil: 0, sector: -1, position: null, lastReaction: '', lastSpeech: '', topActionAnnounced: false, launchTimer: 0, ballTimer: 0 };
 function mascotCellStyle(index) {
   return { backgroundPosition: (index % 3) * 50 + '% ' + Math.floor(index / 3) * 50 + '%' };
 }
@@ -1201,8 +1201,10 @@ function mascotScheduleDock() {
   mascotRuntime.dockTimer = window.setTimeout(() => {
     if (!mascotRuntime.drag && mascotRuntime.panel?.hidden) {
       mascotRuntime.root.classList.add('is-docked');
+      mascotRuntime.root.classList.remove('is-top-action');
       mascotSetReaction('sleepy', 1500);
       mascotSetAction('dock', 900);
+      syncMascotContext();
     }
   }, MASCOT_DOCK_DELAY);
 }
@@ -1345,7 +1347,7 @@ function mascotReadingMarkup() {
   if (!book) return '';
   const progress = typeof book.progress === 'number' ? book.progress : Number(book.progress?.percent || 0);
   const percent = Math.round(Math.min(1, Math.max(0, progress)) * 100);
-  return '<div class="onebox-mascot-reading-line"><span class="onebox-mascot-line-icon" aria-hidden="true">⌘</span><span><small>' + escapeHtml(state.language === 'en' ? 'Reading now' : '正在读') + '</small><strong>' + escapeHtml(book.name || (state.language === 'en' ? 'Untitled book' : '未命名文档')) + '</strong></span><em>' + percent + '%</em></div>';
+  return '<div class="onebox-mascot-reading-line"><span class="onebox-mascot-line-icon" aria-hidden="true">' + TOOL_DEFS.reader.icon + '</span><span><small>' + escapeHtml(state.language === 'en' ? 'Reading now' : '正在读') + '</small><strong>' + escapeHtml(book.name || (state.language === 'en' ? 'Untitled book' : '未命名文档')) + '</strong></span><em>' + percent + '%</em></div>';
 }
 function mascotWeatherMarkup() {
   const weather = state.weatherCards.find((item) => item.id === state.activeWeatherId) || state.weatherCards[0];
@@ -1364,7 +1366,7 @@ function mascotBriefingMarkup() {
   const hello = language ? 'Today feels good' : '今天感觉不错';
   const hint = language ? 'Tap a little button, or double-tap me to see a surprise' : '点一点下面的小按钮，或者双击我看看惊喜';
   const holidayMessage = mascotHolidayMessage();
-  return '<div class="onebox-mascot-cloud"><div class="onebox-mascot-cloud-head"><div class="onebox-mascot-date"><span class="onebox-mascot-date-icon" aria-hidden="true">☀</span><div><strong>' + escapeHtml(hello) + '</strong><small>' + escapeHtml(todayLabel) + '</small></div></div><button type="button" class="onebox-mascot-cloud-close" data-close-mascot aria-label="' + escapeHtml(t('close')) + '">×</button></div><div class="onebox-mascot-cloud-story">' + mascotWeatherMarkup() + (holidayMessage ? '<p class="onebox-mascot-holiday-line"><span aria-hidden="true">✦</span>' + escapeHtml(holidayMessage) + '</p>' : '') + mascotReadingMarkup() + '</div><div class="onebox-mascot-cloud-actions"><button type="button" data-mascot-action="pat">♡ ' + escapeHtml(language ? 'Pat me' : '摸摸头') + '</button><button type="button" data-mascot-action="weather">' + escapeHtml(language ? 'Weather' : '天气') + '</button><button type="button" data-mascot-action="calendar">' + escapeHtml(language ? 'Calendar' : '日历') + '</button><button type="button" data-mascot-action="reader">' + escapeHtml(language ? 'Reading' : '阅读') + '</button><button type="button" data-mascot-action="calculator">' + escapeHtml(language ? 'Calculator' : '计算') + '</button></div><p class="onebox-mascot-cloud-hint">' + escapeHtml(hint) + '</p></div>';
+  return '<div class="onebox-mascot-cloud"><div class="onebox-mascot-cloud-head"><div class="onebox-mascot-date"><div><strong>' + escapeHtml(hello) + '</strong><small>' + escapeHtml(todayLabel) + '</small></div></div><button type="button" class="onebox-mascot-cloud-close" data-close-mascot aria-label="' + escapeHtml(t('close')) + '">×</button></div><div class="onebox-mascot-cloud-story">' + mascotWeatherMarkup() + (holidayMessage ? '<p class="onebox-mascot-holiday-line"><span aria-hidden="true">✦</span>' + escapeHtml(holidayMessage) + '</p>' : '') + mascotReadingMarkup() + '</div><div class="onebox-mascot-cloud-actions"><button type="button" data-mascot-action="pat">♡ ' + escapeHtml(language ? 'Pat me' : '摸摸头') + '</button><button type="button" data-mascot-action="ball">⚽ ' + escapeHtml(language ? 'Play ball' : '玩玩球') + '</button><button type="button" data-mascot-action="weather">' + escapeHtml(language ? 'Weather' : '天气') + '</button><button type="button" data-mascot-action="calendar">' + escapeHtml(language ? 'Calendar' : '日历') + '</button><button type="button" data-mascot-action="reader">' + escapeHtml(language ? 'Reading' : '阅读') + '</button><button type="button" data-mascot-action="calculator">' + escapeHtml(language ? 'Calculator' : '计算') + '</button></div><p class="onebox-mascot-cloud-hint">' + escapeHtml(hint) + '</p></div>';
 }
 function refreshMascotBriefing() {
   if (mascotRuntime.panel && !mascotRuntime.panel.hidden) mascotRuntime.panel.innerHTML = mascotBriefingMarkup();
@@ -1397,18 +1399,29 @@ function mascotPlayTrick() {
   mascotShowSpeech(state.language === 'en' ? 'Whoa, too fast!' : '哎呀，转晕啦！', 1800, 'dizzy');
 }
 function mascotTopActionActive() {
-  return state.section === 'home' && appScrollTop() > 84;
+  return state.section === 'home' && appScrollTop() > 84 && !mascotRuntime.root?.classList.contains('is-docked');
 }
 function syncMascotContext() {
   const root = mascotRuntime.root;
   const button = mascotRuntime.button;
   if (!root || !button) return;
   const topAction = mascotTopActionActive();
+  const wasTopAction = root.classList.contains('is-top-action');
   root.classList.toggle('is-top-action', topAction);
   button.setAttribute('aria-label', topAction ? (state.language === 'en' ? 'Back to top' : '回到顶部') : (state.language === 'en' ? 'Open today overview' : '查看今日速览'));
+  if (topAction && !wasTopAction && !mascotRuntime.topActionAnnounced) {
+    mascotRuntime.topActionAnnounced = true;
+    mascotShowSpeech(state.language === 'en' ? 'Tap me to go back up!' : '点我就可以回到上方哟！', 2300, 'top');
+  }
+  if (!topAction) mascotRuntime.topActionAnnounced = false;
   mascotSyncPanelSide();
 }
 function updateMascotScrollState() {
+  const scrollingHome = state.section === 'home';
+  if (scrollingHome) {
+    mascotReveal();
+    mascotClearDockTimer();
+  }
   const topAction = mascotTopActionActive();
   if (topAction && mascotRuntime.panel && !mascotRuntime.panel.hidden) {
     mascotRuntime.panel.hidden = true;
@@ -1416,7 +1429,7 @@ function updateMascotScrollState() {
     mascotClearDockTimer();
   }
   syncMascotContext();
-  if (!topAction) mascotScheduleDock();
+  if (scrollingHome) mascotScheduleDock();
 }
 function mascotAim(pointer) {
   const root = mascotRuntime.root;
@@ -1446,6 +1459,11 @@ function mascotFinishDrag(event) {
     mascotRuntime.suppressClickUntil = Date.now() + 500;
     const dx = event.clientX - drag.startX;
     const dy = event.clientY - drag.startY;
+    const droppedAtBottom = event.clientY >= window.innerHeight - Math.max(72, (mascotRuntime.root.offsetHeight || 82) * .9);
+    if (!cancelled && droppedAtBottom) {
+      mascotLaunchRocket();
+      return;
+    }
     const isEdgeSwipe = Math.abs(dx) >= MASCOT_EDGE_SWIPE_DISTANCE && Math.abs(dx) > Math.abs(dy) * 1.2;
     if (isEdgeSwipe) {
       const width = mascotRuntime.root.offsetWidth || 82;
@@ -1503,11 +1521,47 @@ function mascotHandleTap() {
     openMascotBriefing();
   }, 250);
 }
+function mascotLaunchRocket() {
+  const root = mascotRuntime.root;
+  if (!root) return;
+  clearTimeout(mascotRuntime.launchTimer);
+  closeMascotBriefing();
+  mascotClearDockTimer();
+  mascotReveal();
+  root.classList.remove('is-playing-ball');
+  root.classList.add('is-launching');
+  mascotSetReaction('delighted', 1100);
+  mascotSetAction('rocket', 1100);
+  mascotShowSpeech(state.language === 'en' ? 'Rocket launch! Up we go!' : '咻——火箭发射，冲上去啦！', 1800, 'rocket');
+  mascotRuntime.launchTimer = window.setTimeout(() => {
+    root.classList.remove('is-launching');
+    mascotSetAction('', 0);
+    mascotScheduleDock();
+  }, 1150);
+}
+function mascotPlayBall() {
+  const root = mascotRuntime.root;
+  if (!root) return;
+  clearTimeout(mascotRuntime.ballTimer);
+  closeMascotBriefing();
+  mascotClearDockTimer();
+  mascotReveal();
+  root.classList.remove('is-launching');
+  root.classList.add('is-playing-ball');
+  mascotSetReaction('heart', 1200);
+  mascotSetAction('ball', 1200);
+  mascotShowSpeech(state.language === 'en' ? 'Catch it!' : '接住球球！', 1800, 'ball');
+  mascotRuntime.ballTimer = window.setTimeout(() => {
+    root.classList.remove('is-playing-ball');
+    mascotSetAction('', 0);
+    mascotScheduleDock();
+  }, 1300);
+}
 function mountMascot() {
   if (mascotRuntime.root) return;
   const root = document.createElement('aside');
   root.id = 'oneboxMascotRoot'; root.className = 'onebox-mascot-root'; root.dataset.edge = 'right'; root.dataset.panelSide = 'right';
-  root.innerHTML = '<span class="onebox-mascot-propeller" aria-hidden="true"><i></i><i></i><b></b></span><div class="onebox-mascot-speech" role="status" aria-live="polite" hidden></div><div class="onebox-mascot-panel" hidden></div><button type="button" class="onebox-mascot-button" aria-label="查看今日速览"><span class="onebox-mascot-visual" aria-hidden="true"><span class="onebox-mascot-layer onebox-mascot-direction"></span><span class="onebox-mascot-layer onebox-mascot-reaction"></span><span class="onebox-mascot-fallback">🦊</span></span></button>';
+  root.innerHTML = '<span class="onebox-mascot-propeller" aria-hidden="true"><i></i><i></i><b></b></span><span class="onebox-mascot-rocket" aria-hidden="true">🚀</span><span class="onebox-mascot-ball" aria-hidden="true">⚽</span><div class="onebox-mascot-speech" role="status" aria-live="polite" hidden></div><div class="onebox-mascot-panel" hidden></div><button type="button" class="onebox-mascot-button" aria-label="查看今日速览"><span class="onebox-mascot-visual" aria-hidden="true"><span class="onebox-mascot-layer onebox-mascot-direction"></span><span class="onebox-mascot-layer onebox-mascot-reaction"></span><span class="onebox-mascot-fallback">🦊</span></span></button>';
   document.body.appendChild(root);
   mascotRuntime.root = root; mascotRuntime.button = $('.onebox-mascot-button', root); mascotRuntime.panel = $('.onebox-mascot-panel', root); mascotRuntime.speech = $('.onebox-mascot-speech', root); mascotRuntime.directionLayer = $('.onebox-mascot-direction', root); mascotRuntime.reactionLayer = $('.onebox-mascot-reaction', root);
   mascotRuntime.directionLayer.style.backgroundImage = 'url("' + MASCOT_ASSETS.directions + '")';
@@ -1541,6 +1595,7 @@ function mountMascot() {
       mascotPlayReaction('heart');
       mascotShowSpeech(state.language === 'en' ? 'That tickles!' : '嘿嘿，好痒呀！', 1800, 'pat');
     }
+    if (action === 'ball') mascotPlayBall();
     if (['weather', 'calendar', 'reader', 'calculator'].includes(action)) {
       closeMascotBriefing();
       mascotPlayReaction('sparkle');
