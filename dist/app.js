@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.250';
+const APP_VERSION = '2.18.251';
 // The OAuth secret stays in the Cloudflare Worker. The browser only knows the
 // public client id and receives the authorization result in the URL fragment,
 // which is consumed immediately and never sent to a server.
@@ -65,8 +65,8 @@ const FEED_SOURCE_REGISTRY = [
   { id: 'bilibili', name: 'B站', badge: 'B', icon: 'icons/bilibili.ico?v=2.18.124', className: 'bilibili', mobileHost: 'm.bilibili.com', visibleByDefault: false, siteUrl: 'https://search.bilibili.com/all', fetchers: [{ kind: 'bilibili-hot', url: 'https://api.bilibili.com/x/web-interface/search/square?limit=30&platform=web' }, { kind: 'bilibili-hotword', url: 'https://s.search.bilibili.com/main/hotword' }] },
   { id: 'guancha', name: '风闻', badge: '风', icon: 'icons/guancha.png?v=2.18.124', className: 'guancha', mobileHost: 'user.guancha.cn', visibleByDefault: true, siteUrl: 'https://user.guancha.cn/main/index?s=fwdhsy', fetchers: [{ kind: 'guancha-fengwen', url: 'https://user.guancha.cn/main/index-list.json?page=1&order=1' }, { kind: 'guancha-fengwen', url: 'https://rsshub.app/guancha/topic/0/1' }] },
   { id: 'hupu', name: '虎扑', badge: '虎', icon: 'icons/hupu.ico?v=2.18.124', className: 'hupu', mobileHost: 'm.hupu.com', visibleByDefault: true, siteUrl: 'https://bbs.hupu.com/bxj', fetchers: [{ kind: 'hupu-bbs', url: 'https://bbs.hupu.com/bxj' }, { kind: 'hupu-bbs', url: 'https://bbs.hupu.com/topic-daily' }] },
-  { id: 'xiaohongshu', name: '红书', badge: '红', icon: 'https://www.xiaohongshu.com/favicon.ico?v=2.18.250', className: 'xiaohongshu', visibleByDefault: true, siteUrl: 'https://www.xiaohongshu.com/explore', fetchers: [{ kind: 'xiaohongshu-explore', url: 'https://www.xiaohongshu.com/explore' }, { kind: 'xiaohongshu-hotboard', url: 'https://uapis.cn/api/v1/misc/hotboard?type=xiaohongshu&limit=30', direct: true }] },
-  { id: 'douyin', name: '抖音', badge: '音', icon: 'https://www.douyin.com/favicon.ico?v=2.18.250', className: 'douyin', visibleByDefault: true, siteUrl: 'https://www.douyin.com/jingxuan', fetchers: [{ kind: 'douyin-hotboard', url: 'https://uapis.cn/api/v1/misc/hotboard?type=douyin&limit=30', direct: true }, { kind: 'douyin-jingxuan', url: 'https://www.douyin.com/jingxuan' }] },
+  { id: 'xiaohongshu', name: '红书', badge: '红', icon: 'https://www.xiaohongshu.com/favicon.ico?v=2.18.251', className: 'xiaohongshu', visibleByDefault: true, siteUrl: 'https://www.xiaohongshu.com/explore', fetchers: [{ kind: 'xiaohongshu-explore', url: 'https://www.xiaohongshu.com/explore' }, { kind: 'xiaohongshu-hotboard', url: 'https://uapis.cn/api/v1/misc/hotboard?type=xiaohongshu&limit=30', direct: true }] },
+  { id: 'douyin', name: '抖音', badge: '音', icon: 'https://www.douyin.com/favicon.ico?v=2.18.251', className: 'douyin', visibleByDefault: true, siteUrl: 'https://www.douyin.com/jingxuan', fetchers: [{ kind: 'douyin-hotboard', url: 'https://uapis.cn/api/v1/misc/hotboard?type=douyin&limit=30', direct: true }, { kind: 'douyin-jingxuan', url: 'https://www.douyin.com/jingxuan' }] },
 ];
 const RSS_SOURCES = FEED_SOURCE_REGISTRY.filter((source) => source.enabled !== false);
 const RSS_REFRESH_INTERVAL = 2 * 60 * 1000;
@@ -208,7 +208,7 @@ const DICT = {
     addCard: '添加', noResults: '没有找到匹配地点，请换个关键词。',
     home: '首页', tools: '工具', navigation: '导航', messages: '消息', mine: '我的', quickTools: '常用工具', openSettings: '打开设置', noMessages: '还没有消息。', homeTabs: '首页', homeTabsSelected: '已选择 {count} 项', homeSourceManage: '首页来源', homeSourceManageHint: '选择要显示在首页导航中的来源', homeSourceAdd: '添加', homeSourceRemove: '移除', homeSourceEmpty: '暂时没有其他来源',
     navigationTitle: '网站导航', navigationHint: '点击卡片显示操作，长按可以拖动排序或聚合文件夹。', navigationToolbarHint: '长按编辑 · 拖动聚合', navigationAdd: '添加网站', navigationEmpty: '还没有网站，先添加一个常用网址吧。', navigationUrl: '网站地址', navigationUrlPlaceholder: '粘贴或输入网址', navigationName: '网站名称', navigationNamePlaceholder: '可选，默认使用网站名称', navigationIcon: '网站图标', navigationIconHint: '输入网址后自动获取', navigationSave: '保存网站', navigationEdit: '编辑网站', navigationEditSave: '保存修改', navigationActionEdit: '编辑', navigationActionDelete: '删除', navigationActionCancel: '取消', navigationFolderEdit: '编辑文件夹', navigationAddToFolder: '添加到文件夹', navigationFolder: '文件夹', navigationFolderName: '文件夹名称', navigationFolderPlaceholder: '例如：工作、阅读', navigationCreateFolder: '新建文件夹', navigationSaveFolder: '保存文件夹', navigationFolderAdd: '添加网站', navigationFolderDelete: '解散文件夹', navigationFolderDeleteConfirm: '解散文件夹后，里面的网站会保留在导航中，确定解散文件夹吗？', navigationFolderDissolved: '文件夹已解散', navigationFolderEmpty: '文件夹还是空的，添加几个网站吧。', navigationRemove: '删除', navigationOpen: '打开网站', navigationSettings: '导航设置', navigationOpenModeHint: '网站打开方式', navigationOpenModeCurrent: '当前页', navigationOpenModeNewTab: '新标签页', navigationAlreadyExists: '这个网站已经添加过了', navigationInvalidUrl: '请输入有效的 http 或 https 地址', navigationDropHint: '松开后聚合为文件夹', navigationFolderCreated: '文件夹已创建', navigationAdded: '网站已添加', navigationDeleted: '网站已删除', navigationMoved: '网站已移入文件夹', navigationOrderSaved: '导航顺序已保存', navigationSiteCount: '{count} 个网站',
-    allFeeds: '全部', feedRefresh: '刷新', feedLoading: '正在加载信息流…', feedEmpty: '暂时没有可显示的内容。', feedUpdated: '更新于', feedOpen: '打开原文', feedPartial: '部分订阅源暂时不可用', feedProxyHint: '内容来自公开 RSS 订阅，首页只保留最近内容。', feedTabPrevious: '查看前面的首页 Tab', feedTabNext: '查看后面的首页 Tab',
+    allFeeds: '全部', feedRefresh: '刷新', feedLoading: '正在加载信息流…', feedEmpty: '暂时没有可显示的内容。', feedUpdated: '更新于', feedLastRefresh: '上次成功刷新', feedNewItems: '刷新后新增', feedShowNew: '只看新增', feedShowAll: '显示全部', feedTabNew: '新增', feedOpen: '打开原文', feedPartial: '部分订阅源暂时不可用', feedProxyHint: '内容来自公开 RSS 订阅，首页只保留最近内容。', feedTabPrevious: '查看前面的首页 Tab', feedTabNext: '查看后面的首页 Tab',
     converterType: '换算类型', from: '从', to: '到', result: '结果', swap: '交换单位', copyResult: '复制结果',
     copied: '已复制', translationInput: '输入待翻译内容', translateNow: '开始翻译', saveTranslation: '保存到本机',
     source: '源语言', target: '目标语言', translationResult: '翻译结果', translationHistory: '最近翻译',
@@ -252,7 +252,7 @@ const DICT = {
     addCard: 'Add', noResults: 'No matching place. Try another query.',
     home: 'Home', tools: 'Tools', navigation: 'Navigation', messages: 'Messages', mine: 'Me', quickTools: 'Quick tools', openSettings: 'Open settings', noMessages: 'No messages yet.', homeTabs: 'Home', homeTabsSelected: '{count} selected',
     navigationTitle: 'Web navigation', navigationHint: 'Tap a card for actions; long-press to reorder or create a folder.', navigationToolbarHint: 'Long-press to edit · drag to group', navigationAdd: 'Add website', navigationEmpty: 'No websites yet. Add a favorite site to get started.', navigationUrl: 'Website URL', navigationUrlPlaceholder: 'https://example.com', navigationName: 'Website name', navigationNamePlaceholder: 'Optional; defaults to the site name', navigationIcon: 'Website icon', navigationIconHint: 'Fetched automatically from the URL', navigationSave: 'Save website', navigationAddToFolder: 'Add to folder', navigationEdit: 'Edit website', navigationEditSave: 'Save changes', navigationActionEdit: 'Edit', navigationActionDelete: 'Delete', navigationActionCancel: 'Cancel', navigationFolderEdit: 'Edit folder', navigationFolder: 'Folder', navigationFolderName: 'Folder name', navigationFolderPlaceholder: 'For example: Work, Reading', navigationCreateFolder: 'New folder', navigationSaveFolder: 'Save folder', navigationFolderAdd: 'Add website', navigationFolderDelete: 'Dissolve folder', navigationFolderDeleteConfirm: 'Dissolving the folder will keep its websites in navigation. Continue?', navigationFolderDissolved: 'Folder dissolved', navigationFolderEmpty: 'This folder is empty. Add some websites.', navigationRemove: 'Delete', navigationOpen: 'Open website', navigationSettings: 'Navigation settings', navigationOpenModeHint: 'Open websites in', navigationOpenModeCurrent: 'Current page', navigationOpenModeNewTab: 'New tab', navigationAlreadyExists: 'This website has already been added', navigationInvalidUrl: 'Enter a valid http or https URL', navigationDropHint: 'Release to create a folder', navigationFolderCreated: 'Folder created', navigationAdded: 'Website added', navigationDeleted: 'Website deleted', navigationMoved: 'Website moved into folder', navigationOrderSaved: 'Navigation order saved', navigationSiteCount: '{count} sites',
-    allFeeds: 'All', feedRefresh: 'Refresh', feedLoading: 'Loading feeds…', feedEmpty: 'No items to show yet.', feedUpdated: 'Updated', feedOpen: 'Open original', feedPartial: 'Some feeds are temporarily unavailable', feedProxyHint: 'Public RSS subscriptions; only recent items are kept on this device.', feedTabPrevious: 'Show previous home tabs', feedTabNext: 'Show more home tabs',
+    allFeeds: 'All', feedRefresh: 'Refresh', feedLoading: 'Loading feeds…', feedEmpty: 'No items to show yet.', feedUpdated: 'Updated', feedLastRefresh: 'Last successful refresh', feedNewItems: 'New since refresh', feedShowNew: 'Only new', feedShowAll: 'Show all', feedTabNew: 'new', feedOpen: 'Open original', feedPartial: 'Some feeds are temporarily unavailable', feedProxyHint: 'Public RSS subscriptions; only recent items are kept on this device.', feedTabPrevious: 'Show previous home tabs', feedTabNext: 'Show more home tabs',
     converterType: 'Conversion', from: 'From', to: 'To', result: 'Result', swap: 'Swap units', copyResult: 'Copy result',
     copied: 'Copied', translationInput: 'Text to translate', translateNow: 'Translate', saveTranslation: 'Save locally',
     source: 'Source', target: 'Target', translationResult: 'Translation', translationHistory: 'Recent translations',
@@ -297,7 +297,7 @@ const storedNavigation = parseStored(STORAGE.navigation, null);
 const storedNavigationLocation = localStorage.getItem(STORAGE.navigationLocation) === 'tools' ? 'tools' : 'main';
 const storedNotificationPreference = parseStored(STORAGE.notificationPreference, 'allow');
 const storedTopDisplay = parseStored(STORAGE.topDisplay, {}) || {};
-const storedFootprint = parseStored(STORAGE.footprint, false) === true;
+const storedFootprint = parseStored(STORAGE.footprint, true) !== false;
 const storedOpenMode = localStorage.getItem(STORAGE.openMode) || 'current';
 const storedMascotVisible = localStorage.getItem(STORAGE.mascotVisible) !== 'false';
 const storedMascotDisplayMode = localStorage.getItem(STORAGE.mascotDisplayMode) === 'full' ? 'full' : 'half';
@@ -425,14 +425,14 @@ function homeTabIsVisible(id) {
 }
 function homeTabEntries() {
   const sources = state?.homeFeed?.order?.map((id) => RSS_SOURCES.find((source) => source.id === id)).filter(Boolean) || RSS_SOURCES;
-  return [...sources, { id: 'footprint', name: t('footprint'), badge: '足', className: 'footprint', local: true }];
+  return [{ id: 'footprint', name: t('footprint'), badge: '足', className: 'footprint', local: true }, ...sources];
 }
 function homeTabMarkMarkup(entry, extraClass = '') {
   if (entry.id === 'footprint') return '<span class="feed-source-mark footprint' + (extraClass ? ' ' + extraClass : '') + '"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="7" cy="7" r="2.2"/><circle cx="16.5" cy="8.5" r="2.2"/><circle cx="6" cy="16.5" r="2.2"/><circle cx="15.5" cy="18" r="2.2"/></svg></span>';
   return homeFeedSourceMarkMarkup(entry, extraClass);
 }
 function homeTabIds() {
-  return [...homeFeedSources().map((source) => source.id), ...(state.footprint ? ['footprint'] : [])];
+  return [...(state.footprint ? ['footprint'] : []), ...homeFeedSources().map((source) => source.id)];
 }
 function homeFeedSourceMarkMarkup(source, extraClass = '') {
   return '<span class="feed-source-mark ' + escapeHtml(source.className) + (extraClass ? ' ' + extraClass : '') + '"><img src="' + escapeHtml(source.icon) + '" alt="" loading="eager" onerror="this.hidden=true;this.nextElementSibling.style.display=\'inline\'"><span class="feed-source-fallback">' + escapeHtml(source.badge) + '</span></span>';
@@ -483,7 +483,7 @@ const state = {
   library: normalizeReaderLibrary(storedLibrary),
   readerBookId: null, readerUrl: '', readerAssetUrls: [], readerContent: '', readerHint: '', readerToc: [], readerDialog: '', readerChromeHidden: false, readerImmersive: false, readerMode: 'library', readerReadingMode: 'scroll', readerPage: 0, readerSelectedText: '', readerSelection: null, readerAnnotationDraft: null, readerSelectionInput: 'mouse', readerLayout: storedReaderLayout === 'list' ? 'list' : 'grid', annotationBookId: null,
   readerPreferences: { theme: ['paper', 'sepia', 'green', 'dark'].includes(storedReaderPreferences.theme) ? storedReaderPreferences.theme : 'paper', fontSize: Number.isFinite(Number(storedReaderPreferences.fontSize)) ? Math.min(26, Math.max(15, Number(storedReaderPreferences.fontSize))) : 18, fontFamily: ['system', 'serif', 'mono'].includes(storedReaderPreferences.fontFamily) ? storedReaderPreferences.fontFamily : 'system', lineHeight: Number.isFinite(Number(storedReaderPreferences.lineHeight)) ? Math.min(2.2, Math.max(1.35, Number(storedReaderPreferences.lineHeight))) : 1.8, paragraphSpacing: Number.isFinite(Number(storedReaderPreferences.paragraphSpacing)) ? Math.min(28, Math.max(6, Number(storedReaderPreferences.paragraphSpacing))) : 14, letterSpacing: Number.isFinite(Number(storedReaderPreferences.letterSpacing)) ? Math.min(2, Math.max(0, Number(storedReaderPreferences.letterSpacing))) : 0, pageAnimation: ['slide', 'none'].includes(storedReaderPreferences.pageAnimation) ? storedReaderPreferences.pageAnimation : 'slide', readingMode: storedReaderPreferences.readingMode === 'pages' ? 'pages' : 'scroll', fullscreenOnOpen: storedReaderPreferences.fullscreenOnOpen === true },
-  homeFeed: { active: DEFAULT_HOME_FEED_VISIBLE[0] || DEFAULT_HOME_FEED_ORDER[0], order: normalizeHomeFeedOrder(storedHomeFeedOrder), visible: normalizeHomeFeedVisibility(storedHomeFeedVisibility), hasNew: false, loading: false, errors: {}, stale: {}, updatedAt: Number(storedHomeFeeds.updatedAt || 0), cacheVersion: storedHomeFeeds.cacheVersion || '', sources: storedHomeFeeds.sources && typeof storedHomeFeeds.sources === 'object' ? storedHomeFeeds.sources : {} },
+  homeFeed: { active: storedFootprint ? 'footprint' : (DEFAULT_HOME_FEED_VISIBLE[0] || DEFAULT_HOME_FEED_ORDER[0]), order: normalizeHomeFeedOrder(storedHomeFeedOrder), visible: normalizeHomeFeedVisibility(storedHomeFeedVisibility), hasNew: false, loading: false, errors: {}, stale: {}, updatedAt: Number(storedHomeFeeds.updatedAt || 0), cacheVersion: storedHomeFeeds.cacheVersion || '', newItems: storedHomeFeeds.newItems && typeof storedHomeFeeds.newItems === 'object' ? storedHomeFeeds.newItems : {}, onlyNew: false, sources: storedHomeFeeds.sources && typeof storedHomeFeeds.sources === 'object' ? storedHomeFeeds.sources : {} },
   navigation: normalizeNavigation(storedNavigation), navigationLocation: storedNavigationLocation, navigationDialog: null, navigationFolderDraft: null, navigationSettingsOpen: false,
   homeFeedRead: storedHomeFeedRead && typeof storedHomeFeedRead === 'object' ? storedHomeFeedRead : {},
   homeFeedRequest: 0,
@@ -734,6 +734,15 @@ function homeFeedSources() {
   const visible = new Set(state.homeFeed.visible || DEFAULT_HOME_FEED_VISIBLE);
   return state.homeFeed.order.map((id) => RSS_SOURCES.find((source) => source.id === id)).filter((source) => source && visible.has(source.id));
 }
+function homeFeedNewIds(sourceId = state.homeFeed.active) {
+  return new Set(Array.isArray(state.homeFeed.newItems?.[sourceId]) ? state.homeFeed.newItems[sourceId] : []);
+}
+function homeFeedNewCount(sourceId = state.homeFeed.active, items = null) {
+  const ids = homeFeedNewIds(sourceId);
+  if (!ids.size) return 0;
+  if (!Array.isArray(items)) return ids.size;
+  return items.reduce((count, item) => count + (ids.has(item.id) ? 1 : 0), 0);
+}
 function saveHomeFeedOrder() { saveStored(STORAGE.homeFeedOrder, state.homeFeed.order); }
 function saveHomeFeedVisibility() { saveStored(STORAGE.homeFeedVisibility, state.homeFeed.visible); }
 function swapHomeFeedSources(from, to) {
@@ -745,6 +754,7 @@ function swapHomeFeedSources(from, to) {
 function selectHomeFeedSource(sourceId) {
   if (!homeTabIds().includes(sourceId)) return;
   state.homeFeed.active = sourceId;
+  state.homeFeed.onlyNew = false;
   if (state.section === 'home') {
     render();
     requestAnimationFrame(() => focusActiveHomeFeedTab(true));
@@ -1168,9 +1178,9 @@ async function loadHomeFeeds(force = false, sourceId = '') {
   const hasItems = visibleSources.some((source) => state.homeFeed.sources[source.id]?.items?.length);
   const cacheIsCurrent = state.homeFeed.cacheVersion === APP_VERSION;
   if (!force && cacheIsCurrent && hasItems && Date.now() - state.homeFeed.updatedAt < RSS_REFRESH_INTERVAL) return;
+  const preservedPosition = captureHomeFeedPosition();
   state.homeFeed.loading = true; state.homeFeed.errors = {}; state.homeFeed.stale = {}; const request = ++state.homeFeedRequest;
-  if (state.section === 'home') render();
-  const hadCachedItems = hasItems;
+  if (state.section === 'home') { render(); restoreHomeFeedPosition(preservedPosition); }
   let discoveredNewItems = false;
   const sourcesToLoad = sourceId && sourceId !== 'footprint' ? visibleSources.filter((source) => source.id === sourceId) : visibleSources;
   const results = await Promise.all(sourcesToLoad.map(async (source) => {
@@ -1181,7 +1191,9 @@ async function loadHomeFeeds(force = false, sourceId = '') {
   results.forEach(({ source, result, error }) => {
     if (result) {
       const previousIds = new Set((state.homeFeed.sources[source.id]?.items || []).map((item) => item.id));
-      if (hadCachedItems && result.items.some((item) => !previousIds.has(item.id))) discoveredNewItems = true;
+      const discoveredIds = previousIds.size ? result.items.filter((item) => !previousIds.has(item.id)).map((item) => item.id) : [];
+      if (discoveredIds.length) discoveredNewItems = true;
+      state.homeFeed.newItems[source.id] = discoveredIds;
       state.homeFeed.sources[source.id] = { ...result, items: mergeFeedItems(source, result.items) };
     } else if (state.homeFeed.sources[source.id]?.items?.length) state.homeFeed.stale[source.id] = true;
     else state.homeFeed.errors[source.id] = error;
@@ -1191,9 +1203,10 @@ async function loadHomeFeeds(force = false, sourceId = '') {
   state.homeFeed.loading = false;
   state.homeFeed.hasNew = state.section === 'home' ? false : state.homeFeed.hasNew || discoveredNewItems;
   state.homeFeed.cacheVersion = hasFreshResult ? APP_VERSION : '';
-  saveStored(STORAGE.homeFeeds, { cacheVersion: hasFreshResult ? APP_VERSION : '', updatedAt: state.homeFeed.updatedAt, sources: state.homeFeed.sources });
+  saveStored(STORAGE.homeFeeds, { cacheVersion: hasFreshResult ? APP_VERSION : '', updatedAt: state.homeFeed.updatedAt, newItems: state.homeFeed.newItems, sources: state.homeFeed.sources });
   if (state.section === 'home') {
     render();
+    restoreHomeFeedPosition(preservedPosition);
     requestAnimationFrame(() => focusActiveHomeFeedTab(false));
   } else renderBottomNav();
 }
@@ -1271,6 +1284,25 @@ function scrollAppTo(top, behavior = 'auto') {
   }
   scrollElement.scrollTo({ top: targetTop, behavior });
 }
+function captureHomeFeedPosition() {
+  if (state.section !== 'home') return null;
+  return { top: appScrollTop(), sourceLeft: homeSourceNav.querySelector('.feed-source-tabs')?.scrollLeft || 0 };
+}
+function restoreHomeFeedPosition(position) {
+  if (!position || state.section !== 'home') return;
+  const restore = () => {
+    const scrollElement = appScrollElement();
+    if (scrollElement) {
+      const maxTop = Math.max(0, scrollElement.scrollHeight - scrollElement.clientHeight);
+      scrollAppTo(Math.min(Math.max(0, Number(position.top) || 0), maxTop), 'instant');
+    }
+    const tabs = homeSourceNav.querySelector('.feed-source-tabs');
+    if (tabs) tabs.scrollLeft = Math.max(0, Number(position.sourceLeft) || 0);
+  };
+  requestAnimationFrame(restore);
+  window.setTimeout(restore, 120);
+  window.setTimeout(restore, 420);
+}
 
 // Page mascot ---------------------------------------------------------------
 // page-mascot uses two aligned 3×3 sheets: one for the direction the
@@ -1283,8 +1315,8 @@ const MASCOT_ASSETS = {
 };
 const MASCOT_DIRECTIONS = ['up-left', 'up', 'up-right', 'left', 'center', 'right', 'down-left', 'down', 'down-right'];
 const MASCOT_REACTIONS = ['blink', 'heart', 'sparkle', 'surprised', 'wink', 'bashful', 'sleepy', 'dizzy', 'delighted'];
-const MASCOT_FULL_BODY_MARKUP = '<img class="onebox-mascot-fullbody" src="icons/mascot-fox-full.png?v=2.18.250" alt="" draggable="false">';
-const MASCOT_FULL_BODY_REACTIONS = 'icons/mascot-fox-full-reactions.png?v=2.18.250';
+const MASCOT_FULL_BODY_MARKUP = '<img class="onebox-mascot-fullbody" src="icons/mascot-fox-full.png?v=2.18.251" alt="" draggable="false">';
+const MASCOT_FULL_BODY_REACTIONS = 'icons/mascot-fox-full-reactions.png?v=2.18.251';
 const MASCOT_CLOCKWISE = ['right', 'down-right', 'down', 'down-left', 'left', 'up-left', 'up', 'up-right'];
 const MASCOT_SECTOR = (Math.PI * 2) / MASCOT_CLOCKWISE.length;
 const MASCOT_HYSTERESIS = 0.12;
@@ -1939,9 +1971,13 @@ function openFeedLink(link) {
 }
 function homeSourceTabsMarkup() {
   const sources = homeFeedSources();
-  const sourceTabs = sources.map((source, index) => '<button class="feed-source-tab ' + (state.homeFeed.active === source.id ? 'active' : '') + '" draggable="true" data-feed-source="' + source.id + '" data-feed-source-index="' + index + '">' + homeTabMarkMarkup(source) + '<span>' + escapeHtml(source.name) + '</span></button>').join('');
+  const sourceTabs = sources.map((source, index) => {
+    const newCount = homeFeedNewCount(source.id);
+    const newBadge = newCount ? '<em class="feed-source-new-count" aria-label="' + escapeHtml(t('feedTabNew')) + ' ' + newCount + '">+' + (newCount > 99 ? '99+' : newCount) + '</em>' : '';
+    return '<button class="feed-source-tab ' + (state.homeFeed.active === source.id ? 'active' : '') + '" draggable="true" data-feed-source="' + source.id + '" data-feed-source-index="' + index + '">' + homeTabMarkMarkup(source) + '<span>' + escapeHtml(source.name) + '</span>' + newBadge + '</button>';
+  }).join('');
   const footprintTab = state.footprint ? '<button class="feed-source-tab ' + (state.homeFeed.active === 'footprint' ? 'active' : '') + '" data-feed-source="footprint" aria-label="' + t('footprint') + '">' + homeTabMarkMarkup({ id: 'footprint' }) + '<span>' + t('footprint') + '</span></button>' : '';
-  return sourceTabs + footprintTab;
+  return footprintTab + sourceTabs;
 }
 function homeSourcePickerMarkup() {
   const options = homeTabEntries().map((entry) => {
@@ -1971,7 +2007,7 @@ function renderHomeSourceNav() {
   homeSourceNav.hidden = state.section !== 'home';
   const previousTabs = homeSourceNav.querySelector('.feed-source-tabs');
   const previousScrollLeft = previousTabs?.scrollLeft || 0;
-  homeSourceNav.innerHTML = state.section === 'home' ? '<div class="feed-source-panel"><button class="feed-source-scroll-button" data-feed-source-scroll="previous" type="button" hidden aria-label="' + escapeHtml(t('feedTabPrevious')) + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5.25 8.25 12 15 18.75"/></svg></button><div class="feed-source-tabs" role="tablist" aria-label="RSS 来源">' + homeSourceTabsMarkup() + '</div><button class="feed-source-scroll-button" data-feed-source-scroll="next" type="button" hidden aria-label="' + escapeHtml(t('feedTabNext')) + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5.25 15.75 12 9 18.75"/></svg></button><button class="feed-source-manage" type="button" data-open-home-source-picker aria-label="' + escapeHtml(t('homeSourceManage')) + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button></div>' : '';
+  homeSourceNav.innerHTML = state.section === 'home' ? '<div class="feed-source-panel"><button class="feed-source-scroll-button" data-feed-source-scroll="previous" type="button" hidden aria-label="' + escapeHtml(t('feedTabPrevious')) + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5.25 8.25 12 15 18.75"/></svg></button><div class="feed-source-tabs" role="tablist" aria-label="RSS 来源">' + homeSourceTabsMarkup() + '</div><button class="feed-source-scroll-button" data-feed-source-scroll="next" type="button" hidden aria-label="' + escapeHtml(t('feedTabNext')) + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5.25 15.75 12 9 18.75"/></svg></button><button class="feed-refresh" type="button" data-refresh-feeds aria-label="' + escapeHtml(t('feedRefresh')) + '" ' + (state.homeFeed.loading ? 'disabled' : '') + '><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0 1 4"/><path d="M20 5v6h-6"/></svg></button><button class="feed-source-manage" type="button" data-open-home-source-picker aria-label="' + escapeHtml(t('homeSourceManage')) + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button></div>' : '';
   const nextTabs = homeSourceNav.querySelector('.feed-source-tabs');
   if (nextTabs) {
     nextTabs.scrollLeft = Math.min(previousScrollLeft, Math.max(0, nextTabs.scrollWidth - nextTabs.clientWidth));
@@ -1986,7 +2022,11 @@ function renderHome() {
   // Also clean the already-rendered cache. A previous build could have saved
   // a street-level local item, so waiting for another network refresh would
   // otherwise keep showing both the old and the city-level entry.
-  const items = sourceItems.filter((item) => !isStaleGeneratedLocalFeedItem(item)).filter((item) => { const timestamp = feedItemTimestamp(item); return !Number.isFinite(timestamp) || timestamp >= cutoff; });
+  const baseItems = sourceItems.filter((item) => !isStaleGeneratedLocalFeedItem(item)).filter((item) => { const timestamp = feedItemTimestamp(item); return !Number.isFinite(timestamp) || timestamp >= cutoff; });
+  const newCount = isFootprint ? 0 : homeFeedNewCount(state.homeFeed.active, baseItems);
+  const onlyNew = !isFootprint && state.homeFeed.onlyNew && newCount > 0;
+  const newIds = homeFeedNewIds(state.homeFeed.active);
+  const items = onlyNew ? baseItems.filter((item) => newIds.has(item.id)) : baseItems;
   if (!isFootprint) items.sort((a, b) => (feedItemTimestamp(b) || 0) - (feedItemTimestamp(a) || 0));
   const visibleItems = items.slice(0, RSS_MAX_ITEMS_PER_SOURCE);
   const hasItems = visibleItems.length > 0;
@@ -1996,7 +2036,8 @@ function renderHome() {
   // a new row above them makes the whole feed jump when returning from an
   // external article; only an empty feed needs the blocking loading state.
   const refreshState = state.homeFeed.loading && !hasItems ? '<div class="feed-refresh-state" role="status"><span></span>' + (state.language === 'en' ? 'Refreshing' : '正在刷新') + '</div>' : '';
-  return '<div class="home-page feed-home"><section class="feed-panel">' + refreshState + (errors ? '<p class="feed-warning">' + t('feedPartial') + '</p>' : '') + feedBody + '<p class="feed-hint">' + t('feedProxyHint') + (state.homeFeed.updatedAt ? ' · ' + t('feedUpdated') + ' ' + escapeHtml(feedDate(state.homeFeed.updatedAt)) : '') + '</p></section></div>';
+  const refreshSummary = newCount ? '<div class="feed-new-summary" role="status"><span><strong>' + escapeHtml(t('feedNewItems')) + ' ' + newCount + (state.language === 'en' ? '' : ' 条') + '</strong><small>' + escapeHtml(t('feedLastRefresh')) + ' ' + escapeHtml(feedDate(state.homeFeed.updatedAt)) + '</small></span><button class="secondary compact-action" type="button" data-feed-only-new>' + escapeHtml(onlyNew ? t('feedShowAll') : t('feedShowNew')) + '</button></div>' : '';
+  return '<div class="home-page feed-home"><section class="feed-panel">' + refreshState + refreshSummary + (errors ? '<p class="feed-warning">' + t('feedPartial') + '</p>' : '') + feedBody + '<p class="feed-hint">' + t('feedProxyHint') + (state.homeFeed.updatedAt ? ' · ' + t('feedLastRefresh') + ' ' + escapeHtml(feedDate(state.homeFeed.updatedAt)) : '') + '</p></section></div>';
 }
 function navigationIconMarkup(site, extraClass = '') {
   const generatedSources = navigationIconSources(site?.url);
@@ -6171,6 +6212,11 @@ homeSourceNav.addEventListener('pointerdown', (event) => {
 homeSourceNav.addEventListener('pointerup', endLongPress);
 homeSourceNav.addEventListener('pointercancel', endLongPress);
 homeSourceNav.addEventListener('click', (event) => {
+  if (event.target.closest('[data-refresh-feeds]')) {
+    event.preventDefault();
+    loadHomeFeeds(true);
+    return;
+  }
   if (event.target.closest('[data-open-home-source-picker]')) {
     event.preventDefault();
     openHomeSourceDialog();
@@ -6577,6 +6623,12 @@ workspace.addEventListener('click', async (event) => {
   if (event.target.closest('[data-reader-layout-toggle]')) {
     state.readerLayout = state.readerLayout === 'list' ? 'grid' : 'list';
     saveReaderLayout(); return render();
+  }
+  if (event.target.closest('[data-feed-only-new]')) {
+    state.homeFeed.onlyNew = !state.homeFeed.onlyNew;
+    render();
+    if (state.homeFeed.onlyNew) scrollAppTo(0, 'smooth');
+    return;
   }
   const feedSource = event.target.closest('[data-feed-source]');
   if (feedSource) {

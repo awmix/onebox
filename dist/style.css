@@ -1241,6 +1241,7 @@ html.reader-focus #readerDialog .reader-dialog-card { width: min(720px, 100%); m
 .feed-source-scroll-button svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 2; }
 .feed-source-tab { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 7px; padding: 8px 11px; border: 1px solid transparent; border-radius: 11px; background: transparent; color: var(--muted); font-weight: 700; cursor: pointer; white-space: nowrap; }
 .feed-source-tab.active { background: var(--soft); border-color: var(--primary); color: var(--primary); }
+.feed-source-new-count { display: inline-grid; min-width: 18px; height: 18px; place-items: center; padding: 0 4px; border-radius: 999px; background: color-mix(in srgb, var(--primary) 14%, transparent); color: var(--primary); font-size: 10px; font-style: normal; font-weight: 850; line-height: 1; }
 .feed-source-mark, .feed-source-tag b { display: inline-grid; place-items: center; flex: 0 0 auto; width: 22px; height: 22px; border-radius: 7px; font-size: 10px; font-weight: 850; letter-spacing: -.04em; }
 .feed-source-mark.all, .feed-source-tag.all b { background: var(--primary); color: #fff; }
 .feed-source-mark.ithome, .feed-source-tag.ithome b { background: #d92f36; color: #fff; }
@@ -1430,6 +1431,11 @@ main:has(#workspace[data-tool="home"]), main:has(#workspace[data-tool="messages"
 .feed-item-media .feed-item-image { display: block; width: 100%; height: 100%; border: 0; }
 .feed-refresh-state { display: flex; align-items: center; justify-content: center; gap: 7px; padding: 7px 14px; color: var(--primary); font-size: 12px; font-weight: 750; border-bottom: 1px solid var(--line); }
 .feed-refresh-state span { width: 10px; height: 10px; border: 2px solid color-mix(in srgb, var(--primary) 28%, transparent); border-top-color: var(--primary); border-radius: 50%; animation: feed-spin .75s linear infinite; }
+.feed-new-summary { position: sticky; top: 8px; z-index: 4; display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 10px 12px -2px; padding: 9px 11px 9px 13px; border: 1px solid color-mix(in srgb, var(--primary) 26%, var(--line)); border-radius: 13px; background: color-mix(in srgb, var(--panel) 92%, var(--primary)); box-shadow: 0 8px 22px color-mix(in srgb, var(--ink) 9%, transparent); backdrop-filter: blur(12px); }
+.feed-new-summary span { display: grid; gap: 2px; min-width: 0; }
+.feed-new-summary strong { color: var(--ink); font-size: 12px; line-height: 1.25; }
+.feed-new-summary small { color: var(--muted); font-size: 10px; line-height: 1.25; }
+.feed-new-summary .compact-action { flex: 0 0 auto; padding: 6px 9px; border-color: color-mix(in srgb, var(--primary) 34%, var(--line)); color: var(--primary); font-size: 11px; }
 
 #settingsDialog .settings-preferences { width: min(500px, 100%); }
 #settingsDialog .settings-preference-row { display: grid; grid-template-columns: 78px minmax(0, 1fr); gap: 8px; min-height: 54px; }
