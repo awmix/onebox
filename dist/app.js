@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.241';
+const APP_VERSION = '2.18.242';
 // The OAuth secret stays in the Cloudflare Worker. The browser only knows the
 // public client id and receives the authorization result in the URL fragment,
 // which is consumed immediately and never sent to a server.
@@ -398,7 +398,10 @@ function normalizeNavigation(value) {
   const normalizeSite = (item) => {
     const url = navigationSafeUrl(item?.url);
     if (!url) return null;
-    const icon = navigationIconUrl(url);
+    // Keep the last known-good icon across reloads. Replacing it with the
+    // first probe URL here made every refresh start over at a commonly
+    // missing apple-touch-icon path, even after a fallback had succeeded.
+    const icon = navigationSafeUrl(item?.icon) || navigationIconUrl(url);
     return { id: uniqueId(item?.id, 'site'), type: 'site', name: String(item?.name || navigationNameFromUrl(url)).trim() || navigationNameFromUrl(url), url, icon, createdAt: Number(item?.createdAt) || Date.now() };
   };
   const items = rawItems.map((item) => {
@@ -1161,8 +1164,8 @@ const MASCOT_ASSETS = {
 };
 const MASCOT_DIRECTIONS = ['up-left', 'up', 'up-right', 'left', 'center', 'right', 'down-left', 'down', 'down-right'];
 const MASCOT_REACTIONS = ['blink', 'heart', 'sparkle', 'surprised', 'wink', 'bashful', 'sleepy', 'dizzy', 'delighted'];
-const MASCOT_FULL_BODY_MARKUP = '<img class="onebox-mascot-fullbody" src="icons/mascot-fox-full.png?v=2.18.241" alt="" draggable="false">';
-const MASCOT_FULL_BODY_REACTIONS = 'icons/mascot-fox-full-reactions.png?v=2.18.241';
+const MASCOT_FULL_BODY_MARKUP = '<img class="onebox-mascot-fullbody" src="icons/mascot-fox-full.png?v=2.18.242" alt="" draggable="false">';
+const MASCOT_FULL_BODY_REACTIONS = 'icons/mascot-fox-full-reactions.png?v=2.18.242';
 const MASCOT_CLOCKWISE = ['right', 'down-right', 'down', 'down-left', 'left', 'up-left', 'up', 'up-right'];
 const MASCOT_SECTOR = (Math.PI * 2) / MASCOT_CLOCKWISE.length;
 const MASCOT_HYSTERESIS = 0.12;
@@ -1875,14 +1878,17 @@ function renderHome() {
 }
 function navigationIconMarkup(site, extraClass = '') {
   const generatedSources = navigationIconSources(site?.url);
-  const preferredIcon = site?.icon && !isNavigationIconServiceUrl(site.icon) ? site.icon : '';
+  // A service URL can be the only reliable source for a site. It is still a
+  // valid cached result and must be preferred on the next render/reload.
+  const preferredIcon = navigationSafeUrl(site?.icon);
   const preferGenerated = navigationUsesDesktopBrandIcon(site?.url) || navigationUsesOneBoxBrandIcon(site?.url);
   const sources = preferGenerated
     ? [...new Set([...generatedSources, preferredIcon].filter(Boolean))]
     : [...new Set([preferredIcon, ...generatedSources].filter(Boolean))];
   const icon = sources.shift() || '';
   const fallbackAttribute = sources.length ? ' data-fallback-sources="' + escapeHtml(sources.join('|')) + '"' : '';
-  return '<span class="navigation-site-icon ' + extraClass + '"><img src="' + escapeHtml(icon) + '" alt="" loading="lazy" referrerpolicy="no-referrer"' + fallbackAttribute + ' onload="handleNavigationIconLoad(this)" onerror="handleNavigationIconError(this)"><span class="navigation-icon-fallback" hidden aria-hidden="true"><span class="navigation-fallback-glyph"><i></i><i></i><i></i><i></i></span></span></span>';
+  const siteUrlAttribute = navigationSafeUrl(site?.url) ? ' data-navigation-url="' + escapeHtml(site.url) + '"' : '';
+  return '<span class="navigation-site-icon ' + extraClass + '"><img src="' + escapeHtml(icon) + '" alt="" loading="eager" decoding="async" referrerpolicy="no-referrer"' + siteUrlAttribute + fallbackAttribute + ' onload="handleNavigationIconLoad(this)" onerror="handleNavigationIconError(this)"><span class="navigation-icon-fallback" hidden aria-hidden="true"><span class="navigation-fallback-glyph"><i></i><i></i><i></i><i></i></span></span></span>';
 }
 function advanceNavigationIcon(image, allowLowResolution = false) {
   if (!image?.dataset?.fallbackSources) return false;
@@ -1899,10 +1905,25 @@ function showNavigationIconFallback(image) {
   image.hidden = true;
   image.nextElementSibling?.removeAttribute('hidden');
 }
+function rememberNavigationIcon(image, source = '') {
+  const url = navigationSafeUrl(image?.dataset?.navigationUrl);
+  const icon = navigationSafeUrl(source || image?.currentSrc || image?.src);
+  if (!url || !icon) return;
+  const site = navigationEverySite().find((item) => item.url === url);
+  if (!site || site.icon === icon) return;
+  site.icon = icon;
+  saveNavigation();
+}
 function handleNavigationIconLoad(image) {
   if (!image) return;
-  if (Number(image.naturalWidth || 0) >= 64) return;
+  if (Number(image.naturalWidth || 0) >= 64) {
+    rememberNavigationIcon(image);
+    return;
+  }
   if (advanceNavigationIcon(image, true)) return;
+  // Some providers only expose a small but usable favicon. Cache that final
+  // service result instead of probing every direct path after each reload.
+  if (Number(image.naturalWidth || 0) > 0 && isNavigationIconServiceUrl(image.currentSrc || image.src)) rememberNavigationIcon(image);
   showNavigationIconFallback(image);
 }
 function handleNavigationIconError(image) {
@@ -2061,9 +2082,10 @@ function editNavigationSite(siteId, folderId, urlValue, nameValue) {
   const url = navigationSafeUrl(urlValue);
   if (!site || !url) return toast(t('navigationInvalidUrl'), 'error');
   if (navigationEverySite().some((candidate) => candidate.id !== siteId && candidate.url === url)) return toast(t('navigationAlreadyExists'), 'error');
+  const previousUrl = site.url;
   site.url = url;
   site.name = String(nameValue || '').trim() || navigationNameFromUrl(url);
-  site.icon = navigationIconUrl(url);
+  site.icon = previousUrl === url ? (navigationSafeUrl(site.icon) || navigationIconUrl(url)) : navigationIconUrl(url);
   saveNavigation(); closeNavigationDialog(); render(); toast(t('navigationEditSave'));
 }
 function deleteNavigationSite(siteId, folderId = '') {
