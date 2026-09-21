@@ -6600,8 +6600,20 @@ html[data-theme="dark"] #homeSourceNav .feed-source-mark.bilibili { background: 
 .github-actions { display: grid; gap: 9px; padding-top: 2px; }
 .github-action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
 .github-actions button { min-height: 40px; }
+.github-actions button:disabled { cursor: wait; opacity: .58; }
 .github-connect { width: 100%; }
 .github-disconnect { justify-self: center; color: var(--muted); }
+.github-sync-progress { display: grid; gap: 8px; padding: 12px 13px; border: 1px solid color-mix(in srgb, var(--primary) 24%, var(--line)); border-radius: 14px; background: color-mix(in srgb, var(--primary) 7%, var(--panel-2)); }
+.github-sync-progress.is-error { border-color: color-mix(in srgb, var(--danger, #d85b6a) 42%, var(--line)); background: color-mix(in srgb, var(--danger, #d85b6a) 8%, var(--panel-2)); }
+.github-sync-progress-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; color: var(--ink); font-size: 12px; }
+.github-sync-progress-head strong { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.github-sync-progress-head span { flex: 0 0 auto; color: var(--primary); font-size: 11px; font-variant-numeric: tabular-nums; font-weight: 800; }
+.github-sync-progress.is-error .github-sync-progress-head span { color: var(--danger, #d85b6a); }
+.github-sync-progress-track { overflow: hidden; width: 100%; height: 6px; border-radius: 999px; background: color-mix(in srgb, var(--primary) 13%, var(--line)); }
+.github-sync-progress-track > span { display: block; height: 100%; min-width: 3px; border-radius: inherit; background: var(--primary); transition: width .35s ease; }
+.github-sync-progress.is-error .github-sync-progress-track > span { background: var(--danger, #d85b6a); }
+.github-sync-progress small, .github-sync-progress p { margin: 0; color: var(--muted); font-size: 10px; line-height: 1.45; }
+.github-sync-progress p { color: var(--danger, #d85b6a); word-break: break-word; }
 .github-manual-token { display: grid; gap: 9px; padding-top: 14px; border-top: 1px solid var(--line); }
 .github-manual-token[hidden] { display: none; }
 .github-manual-token label { color: var(--ink); font-size: 13px; font-weight: 750; }

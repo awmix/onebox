@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.240';
+const APP_VERSION = '2.18.241';
 // The OAuth secret stays in the Cloudflare Worker. The browser only knows the
 // public client id and receives the authorization result in the URL fragment,
 // which is consumed immediately and never sent to a server.
@@ -487,6 +487,7 @@ const state = {
   mascotDisplayMode: storedMascotDisplayMode,
   swRegistration: null, updateAvailable: false, updateChecking: false, updateApplying: false, updateReloading: false, updateError: false,
   github: (() => { const value = parseStored(STORAGE.github, {}) || {}; return { clientId: GITHUB_CLIENT_ID, token: value.token || '', user: value.user || null, gistId: value.gistId || '', deviceCode: '', userCode: '', verificationUri: '', verificationUriComplete: '', expiresAt: 0, interval: 5, manualTokenOpen: false }; })(),
+  githubSync: { active: false, mode: '', progress: 0, message: '', error: '' },
 };
 function formatNumber(value) {
   if (!Number.isFinite(value)) return '—';
@@ -1160,8 +1161,8 @@ const MASCOT_ASSETS = {
 };
 const MASCOT_DIRECTIONS = ['up-left', 'up', 'up-right', 'left', 'center', 'right', 'down-left', 'down', 'down-right'];
 const MASCOT_REACTIONS = ['blink', 'heart', 'sparkle', 'surprised', 'wink', 'bashful', 'sleepy', 'dizzy', 'delighted'];
-const MASCOT_FULL_BODY_MARKUP = '<img class="onebox-mascot-fullbody" src="icons/mascot-fox-full.png?v=2.18.240" alt="" draggable="false">';
-const MASCOT_FULL_BODY_REACTIONS = 'icons/mascot-fox-full-reactions.png?v=2.18.240';
+const MASCOT_FULL_BODY_MARKUP = '<img class="onebox-mascot-fullbody" src="icons/mascot-fox-full.png?v=2.18.241" alt="" draggable="false">';
+const MASCOT_FULL_BODY_REACTIONS = 'icons/mascot-fox-full-reactions.png?v=2.18.241';
 const MASCOT_CLOCKWISE = ['right', 'down-right', 'down', 'down-left', 'left', 'up-left', 'up', 'up-right'];
 const MASCOT_SECTOR = (Math.PI * 2) / MASCOT_CLOCKWISE.length;
 const MASCOT_HYSTERESIS = 0.12;
@@ -4779,6 +4780,31 @@ function githubBrowserError(error) {
   }
   return message;
 }
+async function githubApiError(response, fallback = '') {
+  let message = '';
+  try {
+    const data = await response.clone().json();
+    message = data?.message || data?.error_description || data?.error || '';
+  } catch { /* GitHub may return an empty or non-JSON error body. */ }
+  const suffix = response?.status ? ' (' + response.status + ')' : '';
+  return Error(message || fallback || (state.language === 'en' ? 'GitHub request failed' : 'GitHub 请求失败') + suffix);
+}
+function githubSyncLabel(mode, key) {
+  const english = state.language === 'en';
+  const labels = {
+    upload: { preparing: ['Preparing your OneBox data…', '正在准备 OneBox 数据…'], bundle: ['Reading local books and settings…', '正在读取本地书籍和设置…'], gist: ['Checking your private Gist…', '正在检查你的私有 Gist…'], upload: ['Uploading to GitHub…', '正在上传到 GitHub…'], finishing: ['Finishing sync…', '正在完成同步…'] },
+    download: { preparing: ['Preparing restore…', '正在准备恢复…'], gist: ['Reading your private Gist…', '正在读取你的私有 Gist…'], download: ['Downloading GitHub data…', '正在下载 GitHub 数据…'], restore: ['Restoring books and settings…', '正在恢复书籍和设置…'], finishing: ['Finishing restore…', '正在完成恢复…'] },
+  };
+  return labels[mode]?.[key]?.[english ? 0 : 1] || '';
+}
+function updateGithubSync(mode, progress, message, error = '') {
+  state.githubSync = { active: !error && progress < 100, mode, progress: Math.max(0, Math.min(100, Math.round(progress))), message: message || '', error: error || '' };
+  if (state.githubDialogOpen && !$('#githubDialog')?.hidden) renderGithubDialog();
+}
+function finishGithubSync(mode, message, error = '') {
+  state.githubSync = { active: false, mode, progress: error ? state.githubSync.progress : 100, message: message || '', error: error || '' };
+  if (state.githubDialogOpen && !$('#githubDialog')?.hidden) renderGithubDialog();
+}
 function consumeGithubOAuthCallback() {
   const marker = '#github-callback?';
   if (!location.hash.startsWith(marker)) return null;
@@ -4849,42 +4875,61 @@ async function githubUseAccessToken() {
     toast(error.message || t('githubTokenInvalid'), 'error');
   }
 }
-async function findOrCreateGist(bundle = null) {
+async function findOrCreateGist(bundle = null, onProgress = null) {
   if (state.github.gistId) return state.github.gistId;
+  onProgress?.(42, githubSyncLabel('upload', 'gist'));
   const response = await fetch('https://api.github.com/gists?per_page=100', { headers: githubHeaders() });
-  if (!response.ok) throw Error();
+  if (!response.ok) throw await githubApiError(response);
   const gists = await response.json();
   const found = gists.find((item) => item.description === 'OneBox settings sync' && item.files?.['onebox-settings.json']);
   if (found) { state.github.gistId = found.id; saveGithub(); return found.id; }
   const initialBundle = bundle || await buildGithubSyncBundle();
+  onProgress?.(57, githubSyncLabel('upload', 'gist'));
   const created = await fetch('https://api.github.com/gists', { method: 'POST', headers: githubHeaders(), body: JSON.stringify({ description: 'OneBox settings sync', public: false, files: Object.fromEntries(Object.entries(initialBundle.files).map(([name, content]) => [name, { content }])) }) });
-  if (!created.ok) throw Error();
+  if (!created.ok) throw await githubApiError(created);
   const gist = await created.json(); state.github.gistId = gist.id; saveGithub(); return gist.id;
 }
 async function githubUpload() {
   if (!state.github.token) return toast(state.language === 'en' ? 'Connect GitHub first' : '请先连接 GitHub', 'error');
+  if (state.githubSync.active) return;
+  const mode = 'upload';
+  updateGithubSync(mode, 4, githubSyncLabel(mode, 'preparing'));
   try {
+    updateGithubSync(mode, 12, githubSyncLabel(mode, 'bundle'));
     const bundle = await buildGithubSyncBundle();
-    const id = await findOrCreateGist(bundle);
+    updateGithubSync(mode, 32, githubSyncLabel(mode, 'gist'));
+    const id = await findOrCreateGist(bundle, (progress, message) => updateGithubSync(mode, progress, message));
+    updateGithubSync(mode, 62, githubSyncLabel(mode, 'upload'));
     const currentResponse = await fetch('https://api.github.com/gists/' + id, { headers: githubHeaders() });
-    if (!currentResponse.ok) throw Error();
+    if (!currentResponse.ok) throw await githubApiError(currentResponse);
     const current = await currentResponse.json();
     const files = Object.fromEntries(Object.entries(bundle.files).map(([name, content]) => [name, { content }]));
     Object.keys(current.files || {}).filter((name) => name.startsWith('onebox-book-') && !Object.prototype.hasOwnProperty.call(bundle.files, name)).forEach((name) => { files[name] = null; });
     const response = await fetch('https://api.github.com/gists/' + id, { method: 'PATCH', headers: githubHeaders(), body: JSON.stringify({ files }) });
-    if (!response.ok) throw Error();
+    if (!response.ok) throw await githubApiError(response);
+    finishGithubSync(mode, state.language === 'en' ? 'Upload complete' : '上传完成');
     toast(state.language === 'en' ? 'OneBox data uploaded to GitHub' : 'OneBox 数据已上传到 GitHub');
-  } catch { toast(state.language === 'en' ? 'GitHub upload failed' : 'GitHub 上传失败，请重试', 'error'); }
+  } catch (error) {
+    const message = githubBrowserError(error) || (state.language === 'en' ? 'GitHub upload failed' : 'GitHub 上传失败，请重试');
+    finishGithubSync(mode, state.language === 'en' ? 'Upload failed' : '上传失败', message);
+    toast((state.language === 'en' ? 'GitHub upload failed: ' : 'GitHub 上传失败：') + message, 'error');
+  }
 }
 async function githubDownload() {
   if (!state.github.token) return toast(state.language === 'en' ? 'Connect GitHub first' : '请先连接 GitHub', 'error');
+  if (state.githubSync.active) return;
+  const mode = 'download';
+  updateGithubSync(mode, 5, githubSyncLabel(mode, 'preparing'));
   try {
+    updateGithubSync(mode, 24, githubSyncLabel(mode, 'gist'));
     const id = await findOrCreateGist();
+    updateGithubSync(mode, 42, githubSyncLabel(mode, 'download'));
     const response = await fetch('https://api.github.com/gists/' + id, { headers: githubHeaders() });
-    if (!response.ok) throw Error();
+    if (!response.ok) throw await githubApiError(response);
     const gist = await response.json(); const content = await githubFileContent(gist.files?.['onebox-settings.json']);
     if (!content) throw Error();
     const remote = JSON.parse(content);
+    updateGithubSync(mode, 67, githubSyncLabel(mode, 'restore'));
     applyRemoteStorageSnapshot(remote.storage);
     await restoreReaderSyncAssets(remote, gist);
     if (['light', 'dark', 'dark-gray', 'system'].includes(remote.theme)) state.theme = remote.theme;
@@ -4921,9 +4966,14 @@ async function githubDownload() {
     if (remote.mascotPosition && Number.isFinite(Number(remote.mascotPosition.left)) && Number.isFinite(Number(remote.mascotPosition.top))) saveStored(STORAGE.mascotPosition, { left: Number(remote.mascotPosition.left), top: Number(remote.mascotPosition.top) });
     if (remote.notificationPreference === 'deny' || remote.notificationPreference === 'allow') { state.notificationPreference = remote.notificationPreference; saveStored(STORAGE.notificationPreference, state.notificationPreference); }
     if (remote.openMode === 'new-tab' || remote.openMode === 'current') { state.openMode = remote.openMode; saveStored(STORAGE.openMode, state.openMode); }
-    state.github.gistId = id; saveGithub(); applyLanguage(); syncMascotDisplayMode(true); renderNav(); render(); renderGithubDialog();
+    state.github.gistId = id; saveGithub(); applyLanguage(); syncMascotDisplayMode(true); renderNav(); render();
+    finishGithubSync(mode, state.language === 'en' ? 'Restore complete' : '恢复完成');
     toast(state.language === 'en' ? 'Settings restored from GitHub' : '已从 GitHub 恢复设置');
-  } catch { toast(state.language === 'en' ? 'GitHub restore failed' : 'GitHub 恢复失败', 'error'); }
+  } catch (error) {
+    const message = githubBrowserError(error) || (state.language === 'en' ? 'GitHub restore failed' : 'GitHub 恢复失败');
+    finishGithubSync(mode, state.language === 'en' ? 'Restore failed' : '恢复失败', message);
+    toast((state.language === 'en' ? 'GitHub restore failed: ' : 'GitHub 恢复失败：') + message, 'error');
+  }
 }
 function disconnectGithub() {
   state.github = { clientId: GITHUB_CLIENT_ID, token: '', user: null, gistId: '', deviceCode: '', userCode: '', verificationUri: '', verificationUriComplete: '', expiresAt: 0, interval: 5, manualTokenOpen: false };
@@ -4942,6 +4992,8 @@ function renderGithubDialog() {
   const dialog = $('#githubDialog');
   if (!dialog) return;
   const connected = Boolean(state.github.token && state.github.user);
+  const sync = state.githubSync || { active: false, mode: '', progress: 0, message: '', error: '' };
+  const syncing = Boolean(sync.active);
   const account = connected
     ? '<div class="github-status-card is-connected"><span class="github-status-icon github-avatar"><img src="' + escapeHtml(state.github.user.avatar_url || '') + '" alt="" onerror="this.hidden=true;this.parentElement.classList.add(\'is-fallback\')"></span><span class="github-status-copy"><strong>' + escapeHtml(state.github.user.login || 'GitHub') + '</strong><small>' + t('githubConnected') + '</small></span><span class="github-status-badge">✓</span></div>'
     : '<div class="github-status-card"><span class="github-status-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 18h10a3.5 3.5 0 0 0 .5-6.96A5.5 5.5 0 0 0 7 9.5a4.25 4.25 0 0 0 0 8.5Z"/><path d="m12 12 2-2m-2 2-2-2m2 2v4"/></svg></span><span class="github-status-copy"><strong>' + t('githubNotConnected') + '</strong><small>' + t('githubNotConnectedHint') + '</small></span></div>';
@@ -4949,9 +5001,10 @@ function renderGithubDialog() {
   const code = state.github.userCode ? '<div class="device-code"><div><small>' + (state.language === 'en' ? 'Authorize OneBox in GitHub' : '请在 GitHub 中授权 OneBox') + '</small><strong>' + escapeHtml(state.github.userCode) + '</strong><small>' + escapeHtml(t('githubWaiting')) + '</small></div><a class="secondary github-device-link" href="' + escapeHtml(state.github.verificationUriComplete || state.github.verificationUri || 'https://github.com/login/device') + '" target="_blank" rel="noreferrer">' + t('openDevice') + '</a></div>' : '';
   const manualToken = state.github.manualTokenOpen && !connected ? '<section class="github-manual-token"><label for="githubAccessToken">' + t('githubAccessToken') + '</label><input id="githubAccessToken" type="password" placeholder="github_pat_…" autocomplete="off"><p>' + t('githubTokenHint') + '</p><button class="secondary" data-github-token>' + t('githubUseToken') + '</button></section>' : '';
   const actions = connected
-    ? '<div class="github-action-grid"><button class="primary" data-github-upload>' + t('upload') + '</button><button class="secondary" data-github-download>' + t('download') + '</button></div><button class="text-btn github-disconnect" data-github-logout>' + t('githubLogout') + '</button>'
+    ? '<div class="github-action-grid"><button class="primary" data-github-upload ' + (syncing ? 'disabled' : '') + '>' + t('upload') + '</button><button class="secondary" data-github-download ' + (syncing ? 'disabled' : '') + '>' + t('download') + '</button></div><button class="text-btn github-disconnect" data-github-logout ' + (syncing ? 'disabled' : '') + '>' + t('githubLogout') + '</button>'
     : (waiting ? '<button class="secondary github-connect" disabled>' + t('githubWaiting') + '</button><button class="text-btn github-cancel" data-github-cancel>' + t('githubCancel') + '</button>' : '<button class="primary github-connect" data-github-login>' + t('githubLogin') + '</button>');
-  dialog.innerHTML = '<div class="dialog-card github-dialog-card" role="dialog" aria-modal="true"><div class="dialog-head github-dialog-head"><div><h2>GitHub</h2></div><button class="icon-btn small github-dialog-close" data-close-github aria-label="' + t('close') + '">×</button></div><div class="github-dialog-body"><section class="github-status-section"><div class="github-section-label"><h3>' + t('githubSync') + '</h3></div>' + account + '</section><p class="github-dialog-note">' + escapeHtml(t('githubDescription')) + '</p><section class="github-sync-scope"><strong>' + t('githubSyncScopeTitle') + '</strong><p>' + escapeHtml(t('githubSyncScope')) + '</p><small>' + escapeHtml(t('githubSyncPrivacy')) + '</small></section><p class="github-dialog-note github-auth-hint">' + escapeHtml(t('githubAuthHint')) + '</p>' + code + manualToken + '<section class="github-actions">' + actions + '</section></div></div>';
+  const syncProgress = (sync.message || syncing || sync.error) ? '<section class="github-sync-progress ' + (sync.error ? 'is-error' : '') + '" aria-live="polite"><div class="github-sync-progress-head"><strong>' + escapeHtml(sync.message || (state.language === 'en' ? 'Syncing…' : '正在同步…')) + '</strong><span>' + (sync.error ? '!' : String(sync.progress) + '%') + '</span></div><div class="github-sync-progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + String(sync.progress) + '"><span style="width:' + String(sync.progress) + '%"></span></div>' + (sync.error ? '<p>' + escapeHtml(sync.error) + '</p>' : '<small>' + escapeHtml(state.language === 'en' ? 'You can close this dialog; the sync will continue.' : '可以关闭此窗口，同步仍会继续。') + '</small>') + '</section>' : '';
+  dialog.innerHTML = '<div class="dialog-card github-dialog-card" role="dialog" aria-modal="true"><div class="dialog-head github-dialog-head"><div><h2>GitHub</h2></div><button class="icon-btn small github-dialog-close" data-close-github aria-label="' + t('close') + '">×</button></div><div class="github-dialog-body"><section class="github-status-section"><div class="github-section-label"><h3>' + t('githubSync') + '</h3></div>' + account + '</section><p class="github-dialog-note">' + escapeHtml(t('githubDescription')) + '</p><section class="github-sync-scope"><strong>' + t('githubSyncScopeTitle') + '</strong><p>' + escapeHtml(t('githubSyncScope')) + '</p><small>' + escapeHtml(t('githubSyncPrivacy')) + '</small></section><p class="github-dialog-note github-auth-hint">' + escapeHtml(t('githubAuthHint')) + '</p>' + code + manualToken + syncProgress + '<section class="github-actions">' + actions + '</section></div></div>';
   dialog.hidden = false; state.githubDialogOpen = true;
 }
 function closeGithubDialog() { const dialog = $('#githubDialog'); if (dialog) dialog.hidden = true; state.githubDialogOpen = false; }
@@ -6995,8 +7048,14 @@ function bootApp() {
   setupServiceWorker();
   if (githubCallback?.token) toast(state.language === 'en' ? 'GitHub connected' : 'GitHub 已连接');
   else if (githubCallback?.error) toast(githubCallback.error === 'missing_worker_secret' ? (state.language === 'en' ? 'OAuth service is not configured yet' : 'OAuth 服务尚未配置完成') : (state.language === 'en' ? 'GitHub authorization failed' : 'GitHub 授权失败'), 'error');
+  return Boolean(githubCallback);
 }
+// Render the shell immediately. IndexedDB snapshot recovery is a best-effort
+// background task; blocking boot here leaves Safari showing an empty shell while
+// an OAuth callback or a slow private-mode database request is being processed.
+const githubCallbackHandled = bootApp();
 restorePersistentSnapshot().then((restored) => {
-  if (restored) { window.location.reload(); return; }
-  bootApp();
-}).catch(bootApp);
+  // A late snapshot must never reload the OAuth callback page. Also avoid
+  // surprising a user with a reload after a very slow database response.
+  if (restored && !githubCallbackHandled && performance.now() < 5000) window.location.reload();
+}).catch(() => { /* local persistence is optional */ });
