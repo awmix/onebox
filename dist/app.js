@@ -1,10 +1,10 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.239';
-// Public OAuth identifiers are safe to ship in a browser client. The secret
-// is intentionally not used: OneBox uses GitHub's device authorization grant
-// so a static GitHub Pages deployment can authenticate without asking users to
-// create or paste an OAuth configuration value.
+const APP_VERSION = '2.18.240';
+// The OAuth secret stays in the Cloudflare Worker. The browser only knows the
+// public client id and receives the authorization result in the URL fragment,
+// which is consumed immediately and never sent to a server.
 const GITHUB_CLIENT_ID = 'Ov23ctkkhpGrGvqFTNhn';
+const GITHUB_OAUTH_PROXY = 'https://onebox-github-oauth.secoder.workers.dev';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -210,10 +210,10 @@ const DICT = {
     copied: '已复制', translationInput: '输入待翻译内容', translateNow: '开始翻译', saveTranslation: '保存到本机',
     source: '源语言', target: '目标语言', translationResult: '翻译结果', translationHistory: '最近翻译',
     noTranslation: '翻译结果会显示在这里。', noHistory: '还没有保存翻译。',
-    githubSync: 'GitHub 云同步', githubDescription: '点击后打开 GitHub 设备授权页，登录并授权 OneBox；数据保存到你自己的私有 Gist。', githubNotConnectedHint: '点击下方按钮打开 GitHub 授权。',
+    githubSync: 'GitHub 云同步', githubDescription: '点击后跳转到 GitHub 授权页，授权成功后自动返回 OneBox；数据保存到你自己的私有 Gist。', githubNotConnectedHint: '点击下方按钮跳转到 GitHub 授权。',
     githubClientId: 'GitHub OAuth Client ID', githubClientHint: 'OneBox 已内置公开的授权标识，不需要手动配置。', githubDeveloperSettings: '打开 OAuth Apps 设置',
     githubBrowserFlowError: '无法打开 GitHub 授权页，请检查网络后重试。', githubAccessToken: 'GitHub 访问令牌', githubTokenHint: '仅将令牌保存在当前设备，并通过 GitHub API 验证；建议使用只包含 gist 权限的令牌。', githubUseToken: '使用访问令牌连接', githubTokenMissing: '请先填写 GitHub 访问令牌。', githubTokenInvalid: '访问令牌无效或没有可用权限。', githubTokenConnected: 'GitHub 已连接', githubWaiting: '等待 GitHub 授权…', githubCancel: '取消授权',
-    githubSyncScopeTitle: '同步范围', githubSyncScope: '设置、工具顺序、导航、首页来源、日程、天气卡片、翻译记录、通知、阅读书架、阅读进度、笔记和已导入的本地书籍文件。', githubSyncPrivacy: 'GitHub 令牌不会上传；首页订阅内容、节假日和天气接口缓存属于网络缓存，不参与同步。', githubAuthHint: '授权页会在新标签页打开；完成授权后回到 OneBox，应用会自动完成登录。',
+    githubSyncScopeTitle: '同步范围', githubSyncScope: '设置、工具顺序、导航、首页来源、日程、天气卡片、翻译记录、通知、阅读书架、阅读进度、笔记和已导入的本地书籍文件。', githubSyncPrivacy: 'GitHub 令牌不会上传；首页订阅内容、节假日和天气接口缓存属于网络缓存，不参与同步。', githubAuthHint: '点击连接后会跳转到 GitHub，完成授权后自动返回 OneBox。',
     githubLogin: '连接 GitHub', githubLogout: '退出 GitHub', upload: '上传到 GitHub', download: '从 GitHub 恢复',
     githubConnected: '已连接', githubNotConnected: '尚未连接', openDevice: '打开验证页面',
     appUpdate: '应用更新', checkUpdate: '更新', updateAvailable: '发现有新版本', upToDate: '已是最新版', updating: '检查中', updateApplying: '更新中', updateCheckFailed: '检查失败，可重试', applyUpdate: '更新',
@@ -254,10 +254,10 @@ const DICT = {
     copied: 'Copied', translationInput: 'Text to translate', translateNow: 'Translate', saveTranslation: 'Save locally',
     source: 'Source', target: 'Target', translationResult: 'Translation', translationHistory: 'Recent translations',
     noTranslation: 'Your translation will appear here.', noHistory: 'No saved translations yet.',
-    githubSync: 'GitHub cloud sync', githubDescription: 'Open GitHub device authorization, sign in and authorize OneBox; data is saved in your own private Gist.', githubNotConnectedHint: 'Click below to open GitHub authorization.',
+    githubSync: 'GitHub cloud sync', githubDescription: 'Jump to GitHub authorization and return to OneBox after approval; data is saved in your own private Gist.', githubNotConnectedHint: 'Click below to jump to GitHub authorization.',
     githubClientId: 'GitHub OAuth Client ID', githubClientHint: 'OneBox includes its public authorization identifier; no manual setup is required.', githubDeveloperSettings: 'Open OAuth Apps settings',
     githubBrowserFlowError: 'GitHub authorization could not be opened. Check your network and try again.', githubAccessToken: 'GitHub access token', githubTokenHint: 'The token is stored only on this device and verified through GitHub API. A token with gist permission is recommended.', githubUseToken: 'Connect with access token', githubTokenMissing: 'Enter a GitHub access token first.', githubTokenInvalid: 'The access token is invalid or lacks the required permission.', githubTokenConnected: 'GitHub connected', githubWaiting: 'Waiting for GitHub authorization…', githubCancel: 'Cancel authorization',
-    githubSyncScopeTitle: 'Sync scope', githubSyncScope: 'Settings, tool order, navigation, home sources, events, weather cards, translation history, notifications, the reading shelf, reading progress, notes and imported local book files.', githubSyncPrivacy: 'The GitHub token is never uploaded. Home feeds, holidays and weather API caches are network caches and are not synced.', githubAuthHint: 'The authorization page opens in a new tab. Return to OneBox after approving it; the app will finish signing in automatically.',
+    githubSyncScopeTitle: 'Sync scope', githubSyncScope: 'Settings, tool order, navigation, home sources, events, weather cards, translation history, notifications, the reading shelf, reading progress, notes and imported local book files.', githubSyncPrivacy: 'The GitHub token is never uploaded. Home feeds, holidays and weather API caches are network caches and are not synced.', githubAuthHint: 'Connect to jump to GitHub; after approval you will return to OneBox automatically.',
     githubLogin: 'Connect GitHub', githubLogout: 'Disconnect GitHub', upload: 'Upload to GitHub', download: 'Restore from GitHub',
     githubConnected: 'Connected', githubNotConnected: 'Not connected', openDevice: 'Open verification page',
     appUpdate: 'App update', checkUpdate: 'Update', updateAvailable: 'A new version is available', upToDate: 'Latest version', updating: 'Checking', updateApplying: 'Updating', updateCheckFailed: 'Check failed. Try again.', applyUpdate: 'Update',
@@ -1160,8 +1160,8 @@ const MASCOT_ASSETS = {
 };
 const MASCOT_DIRECTIONS = ['up-left', 'up', 'up-right', 'left', 'center', 'right', 'down-left', 'down', 'down-right'];
 const MASCOT_REACTIONS = ['blink', 'heart', 'sparkle', 'surprised', 'wink', 'bashful', 'sleepy', 'dizzy', 'delighted'];
-const MASCOT_FULL_BODY_MARKUP = '<img class="onebox-mascot-fullbody" src="icons/mascot-fox-full.png?v=2.18.239" alt="" draggable="false">';
-const MASCOT_FULL_BODY_REACTIONS = 'icons/mascot-fox-full-reactions.png?v=2.18.239';
+const MASCOT_FULL_BODY_MARKUP = '<img class="onebox-mascot-fullbody" src="icons/mascot-fox-full.png?v=2.18.240" alt="" draggable="false">';
+const MASCOT_FULL_BODY_REACTIONS = 'icons/mascot-fox-full-reactions.png?v=2.18.240';
 const MASCOT_CLOCKWISE = ['right', 'down-right', 'down', 'down-left', 'left', 'up-left', 'up', 'up-right'];
 const MASCOT_SECTOR = (Math.PI * 2) / MASCOT_CLOCKWISE.length;
 const MASCOT_HYSTERESIS = 0.12;
@@ -4779,24 +4779,28 @@ function githubBrowserError(error) {
   }
   return message;
 }
-async function githubLogin() {
+function consumeGithubOAuthCallback() {
+  const marker = '#github-callback?';
+  if (!location.hash.startsWith(marker)) return null;
+  const params = new URLSearchParams(location.hash.slice(marker.length));
+  const result = { token: params.get('access_token') || '', login: params.get('login') || '', error: params.get('error') || '' };
+  history.replaceState(null, '', '#mine');
+  if (result.token) {
+    state.github.token = result.token;
+    state.github.user = { login: result.login || 'GitHub' };
+    state.github.deviceCode = '';
+    state.github.userCode = '';
+    state.github.verificationUri = '';
+    state.github.verificationUriComplete = '';
+    saveGithub();
+  }
+  return result;
+}
+function githubLogin() {
   if (state.github.deviceCode) return;
-  const clientId = GITHUB_CLIENT_ID;
-  state.github.clientId = clientId; saveGithub();
-  const authWindow = window.open('about:blank', '_blank', 'noopener,noreferrer');
-  try {
-    const response = await fetch('https://github.com/login/device/code', { method: 'POST', headers: { Accept: 'application/json', 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ client_id: clientId, scope: 'gist read:user' }) });
-    const data = await response.json();
-    if (!response.ok || !data.device_code) throw Error(data.error_description || (state.language === 'en' ? 'Unable to start GitHub login' : '无法启动 GitHub 登录'));
-    const verificationUri = data.verification_uri || 'https://github.com/login/device';
-    const verificationUriComplete = data.verification_uri_complete || verificationUri + '?user_code=' + encodeURIComponent(data.user_code || '');
-    Object.assign(state.github, { deviceCode: data.device_code, userCode: data.user_code, verificationUri, verificationUriComplete, expiresAt: Date.now() + Number(data.expires_in || 900) * 1000, interval: Number(data.interval || 5) });
-    renderGithubDialog();
-    if (authWindow) authWindow.location.href = state.github.verificationUriComplete;
-    else window.open(state.github.verificationUriComplete, '_blank', 'noopener,noreferrer');
-    toast(state.language === 'en' ? 'Authorize OneBox in GitHub, then return here' : '请在 GitHub 页面授权 OneBox，完成后回到这里');
-    pollGithubLogin();
-  } catch (error) { if (authWindow) authWindow.close(); toast(githubBrowserError(error) || (state.language === 'en' ? 'Unable to start GitHub login' : '无法启动 GitHub 登录'), 'error'); }
+  state.github.clientId = GITHUB_CLIENT_ID;
+  saveGithub();
+  window.location.assign(GITHUB_OAUTH_PROXY + '/auth/login');
 }
 async function pollGithubLogin() {
   while (state.github.deviceCode && Date.now() < state.github.expiresAt) {
@@ -6979,11 +6983,18 @@ function scheduleHomeFeedPolling() {
   }, RSS_REFRESH_INTERVAL);
 }
 function bootApp() {
+  const githubCallback = consumeGithubOAuthCallback();
+  if (githubCallback) {
+    state.section = 'mine';
+    state.tool = 'calculator';
+  }
   try { history.scrollRestoration = 'manual'; } catch { /* unsupported */ }
   mountMascot();
   setInterval(checkNotifications, 30000);
   applyLanguage(); renderNav(); render(); checkNotifications(); scheduleHomeFeedPolling(); loadHomeFeeds();
   setupServiceWorker();
+  if (githubCallback?.token) toast(state.language === 'en' ? 'GitHub connected' : 'GitHub 已连接');
+  else if (githubCallback?.error) toast(githubCallback.error === 'missing_worker_secret' ? (state.language === 'en' ? 'OAuth service is not configured yet' : 'OAuth 服务尚未配置完成') : (state.language === 'en' ? 'GitHub authorization failed' : 'GitHub 授权失败'), 'error');
 }
 restorePersistentSnapshot().then((restored) => {
   if (restored) { window.location.reload(); return; }
