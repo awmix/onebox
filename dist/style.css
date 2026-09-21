@@ -8551,30 +8551,36 @@ html.ios-safari-browser.reader-focus.reader-safari-surface .reader-reference-she
 .onebox-mascot-cloud-close:hover { color: var(--ink); border-color: color-mix(in srgb, var(--primary) 48%, var(--line)); }
 .onebox-mascot-cloud-story { margin-top: 17px; }
 .onebox-mascot-weather-inline { padding: 0 2px 2px; }
-.onebox-mascot-weather-now { display: flex; align-items: center; gap: 10px; }
+.onebox-mascot-weather-now { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .onebox-mascot-weather-symbol { display: grid; width: 37px; height: 37px; place-items: center; font-size: 25px; }
-.onebox-mascot-weather-now strong, .onebox-mascot-weather-now small { display: block; }
+.onebox-mascot-weather-now > span:last-child { min-width: 0; }
+.onebox-mascot-weather-now strong { display: block; }
 .onebox-mascot-weather-now strong { font-size: 16px; letter-spacing: -.02em; }
-.onebox-mascot-weather-now small { margin-top: 3px; color: var(--muted); font-size: 11px; }
+.onebox-mascot-weather-condition { display: flex; min-width: 0; align-items: center; gap: 6px; margin-top: 3px; }
+.onebox-mascot-weather-now small { color: var(--muted); font-size: 11px; line-height: 1.3; white-space: nowrap; }
+.onebox-mascot-weather-meta { min-width: 0; overflow: hidden; text-overflow: ellipsis; font-size: 10px !important; }
 .onebox-mascot-weather-insight { margin: 13px 0 0; color: var(--ink); font-size: 12px; line-height: 1.55; }
-.onebox-mascot-weather-meta { margin: 8px 0 0; color: var(--muted); font-size: 10px; line-height: 1.4; }
 .onebox-mascot-holiday-line { display: flex; align-items: flex-start; gap: 7px; margin: 13px 0 0; color: var(--primary); font-size: 12px; line-height: 1.5; }
 .onebox-mascot-holiday-line span { flex: 0 0 auto; }
-.onebox-mascot-reading-line { display: flex; align-items: center; gap: 8px; min-width: 0; margin-top: 13px; padding-top: 11px; border-top: 1px solid var(--line); }
+.onebox-mascot-reading-line { display: flex; width: 100%; align-items: center; gap: 8px; min-width: 0; margin-top: 13px; padding: 11px 0 0; border: 0; border-top: 1px solid var(--line); background: transparent; color: inherit; cursor: pointer; font: inherit; text-align: left; }
+.onebox-mascot-reading-line:hover { color: var(--ink); }
 .onebox-mascot-line-icon { display: grid; width: 26px; height: 26px; flex: 0 0 26px; place-items: center; color: var(--muted); }
 .onebox-mascot-line-icon svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.8; }
-.onebox-mascot-reading-line span:nth-child(2) { min-width: 0; }
+.onebox-mascot-reading-content { min-width: 0; flex: 1; }
+.onebox-mascot-reading-label, .onebox-mascot-reading-book { display: flex; min-width: 0; align-items: center; }
 .onebox-mascot-reading-line small, .onebox-mascot-reading-line strong { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .onebox-mascot-reading-line small { color: var(--muted); font-size: 10px; }
-.onebox-mascot-reading-line strong { margin-top: 2px; font-size: 12px; }
+.onebox-mascot-reading-book { gap: 8px; margin-top: 2px; }
+.onebox-mascot-reading-line strong { min-width: 0; flex: 1; font-size: 12px; }
 .onebox-mascot-reading-line em { margin-left: auto; color: var(--primary); font-size: 12px; font-style: normal; font-weight: 750; }
 .onebox-mascot-empty { margin: 0; color: var(--muted); font-size: 12px; }
 .onebox-mascot-cloud-actions { display: grid; gap: 6px; margin-top: 13px; }
-.onebox-mascot-action-row { display: grid; gap: 5px; min-width: 0; }
-.onebox-mascot-action-row-primary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-.onebox-mascot-action-row-tools { grid-template-columns: repeat(5, minmax(0, 1fr)); }
-.onebox-mascot-action-row-sections { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-.onebox-mascot-cloud-actions button { display: inline-flex; min-width: 0; align-items: center; justify-content: center; gap: 4px; padding: 7px 4px; border: 1px solid var(--line); border-radius: 12px; background: color-mix(in srgb, var(--primary) 8%, transparent); color: var(--ink); cursor: pointer; font: inherit; font-size: 10px; line-height: 1.1; white-space: nowrap; }
+.onebox-mascot-action-row { display: flex; flex-wrap: wrap; gap: 5px; min-width: 0; align-items: stretch; justify-content: flex-start; }
+.onebox-mascot-cloud-actions button { display: inline-flex; flex: 0 0 auto; min-width: 0; align-items: center; justify-content: flex-start; gap: 4px; padding: 7px 7px; border: 1px solid var(--line); border-radius: 12px; background: color-mix(in srgb, var(--primary) 8%, transparent); color: var(--ink); cursor: pointer; font: inherit; font-size: 10px; line-height: 1.1; white-space: nowrap; }
+.onebox-mascot-action-row-tools { width: 100%; }
+.onebox-mascot-action-row-tools button { gap: 2px; padding: 5px 3px; font-size: 9px; }
+.onebox-mascot-action-row-tools .onebox-mascot-action-icon { width: 13px; height: 13px; flex-basis: 13px; }
+.onebox-mascot-action-row-tools .onebox-mascot-action-icon svg { width: 13px; height: 13px; }
 .onebox-mascot-action-icon { display: inline-grid; width: 16px; height: 16px; flex: 0 0 16px; place-items: center; color: var(--muted); }
 .onebox-mascot-action-icon svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.7; }
 .onebox-mascot-cloud-actions button:hover { border-color: color-mix(in srgb, var(--primary) 58%, var(--line)); background: color-mix(in srgb, var(--primary) 16%, transparent); }
