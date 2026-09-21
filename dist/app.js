@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.233';
+const APP_VERSION = '2.18.234';
 // Public OAuth identifiers are safe to ship in a browser client. The secret
 // is intentionally not used: OneBox uses GitHub's device authorization grant
 // so a static GitHub Pages deployment can authenticate without asking users to
@@ -4114,6 +4114,26 @@ const weatherCode = (code) => {
 const weatherUrl = (lat, lon) => 'https://api.open-meteo.com/v1/forecast?latitude=' + encodeURIComponent(lat) + '&longitude=' + encodeURIComponent(lon) + '&current=temperature_2m,apparent_temperature,weather_code,relative_humidity_2m,wind_speed_10m,precipitation&hourly=temperature_2m,apparent_temperature,weather_code,precipitation_probability,uv_index,wind_speed_10m,relative_humidity_2m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunrise,sunset,uv_index_max,wind_speed_10m_max&wind_speed_unit=kmh&timezone=auto&past_days=3&forecast_days=16';
 const weatherElevationUrl = (lat, lon) => 'https://api.open-meteo.com/v1/elevation?latitude=' + encodeURIComponent(lat) + '&longitude=' + encodeURIComponent(lon);
 function saveWeatherCards() { saveStored(STORAGE.weatherCards, state.weatherCards); }
+function removeWeatherCard(id) {
+  if (!id) return false;
+  const index = state.weatherCards.findIndex((card) => card.id === id);
+  if (index < 0) return false;
+  state.weatherCards.splice(index, 1);
+  if (state.activeWeatherId === id) state.activeWeatherId = state.weatherCards[0]?.id || null;
+  reorderTarget = null;
+  reorderDrag = null;
+  saveWeatherCards();
+  render();
+  return true;
+}
+function handleWeatherDeletePointer(event) {
+  const button = event.target?.closest?.('[data-delete-weather]');
+  if (!button) return false;
+  event.preventDefault();
+  event.stopPropagation();
+  removeWeatherCard(button.dataset.deleteWeather);
+  return true;
+}
 function weatherCardFailureText() { return state.language === 'en' ? 'Weather failed to load' : '天气获取失败'; }
 async function getWeatherData(lat, lon) {
   const response = await fetchWithTimeout(weatherUrl(lat, lon), { headers: { Accept: 'application/json' } }, 9000);
@@ -5913,6 +5933,11 @@ homeSourceNav.addEventListener('dragover', (event) => { if (event.target.closest
 homeSourceNav.addEventListener('drop', (event) => { event.preventDefault(); const source = event.target.closest('[data-feed-source]'); if (source) swapHomeFeedSources(Number(event.dataTransfer.getData('text/plain')), Number(source.dataset.feedSourceIndex)); });
 
 workspace.addEventListener('pointerdown', (event) => { const card = event.target.closest('[data-weather-card]'); if (card && !event.target.closest('[data-delete-weather]')) startLongPress(card, 'weather', Number(card.dataset.weatherIndex), event); });
+// Weather cards are draggable and also own a long-press gesture. Handle the
+// delete control during capture so touch/PWA pointer events cannot be claimed
+// by the card's reorder lifecycle before the delegated click handler sees it.
+workspace.addEventListener('pointerup', handleWeatherDeletePointer, true);
+workspace.addEventListener('click', handleWeatherDeletePointer, true);
 workspace.addEventListener('pointerdown', (event) => { const source = event.target.closest('[data-feed-source]'); if (source?.dataset.feedSourceIndex != null) startLongPress(source, 'feed', Number(source.dataset.feedSourceIndex), event); });
 workspace.addEventListener('pointerdown', (event) => {
   const navigationVisible = state.section === 'navigation' || (state.section === 'tools' && state.tool === 'navigation');
@@ -6424,10 +6449,7 @@ workspace.addEventListener('click', async (event) => {
   const deleteWeather = event.target.closest('[data-delete-weather]');
   if (deleteWeather) {
     event.preventDefault(); event.stopPropagation();
-    const id = deleteWeather.dataset.deleteWeather;
-    state.weatherCards = state.weatherCards.filter((card) => card.id !== id);
-    if (state.activeWeatherId === id) state.activeWeatherId = state.weatherCards[0]?.id || null;
-    reorderTarget = null; saveWeatherCards(); return render();
+    return removeWeatherCard(deleteWeather.dataset.deleteWeather);
   }
   const weatherCard = event.target.closest('[data-weather-card]');
   if (weatherCard) {
