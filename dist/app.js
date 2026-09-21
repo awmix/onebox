@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.222';
+const APP_VERSION = '2.18.223';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -4626,6 +4626,10 @@ function versionedServiceWorkerUrl(version = APP_VERSION) {
 function registerVersionedServiceWorker(version = APP_VERSION) {
   return navigator.serviceWorker.register(versionedServiceWorkerUrl(version), { updateViaCache: 'none' });
 }
+async function getAppServiceWorkerRegistration() {
+  const existing = await navigator.serviceWorker.getRegistration();
+  return existing || registerVersionedServiceWorker();
+}
 async function updateServiceWorkerRegistration(registration) {
   let lastError = null;
   for (let attempt = 0; attempt < 2; attempt += 1) {
@@ -4762,7 +4766,7 @@ function setupServiceWorker() {
     didReload = true;
     requestAppReload();
   });
-  registerVersionedServiceWorker().then((registration) => {
+  getAppServiceWorkerRegistration().then((registration) => {
     state.swRegistration = registration;
     if (registration.waiting) {
       if (navigator.serviceWorker.controller) markUpdateAvailable();
