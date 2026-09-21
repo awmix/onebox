@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.221';
+const APP_VERSION = '2.18.222';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -4618,6 +4618,14 @@ function observeUpdateWorker(registration) {
     timeout = setTimeout(() => finish(registration.waiting), 15000);
   });
 }
+function versionedServiceWorkerUrl(version = APP_VERSION) {
+  const url = new URL('sw.js', document.baseURI);
+  url.searchParams.set('version', version);
+  return url.href;
+}
+function registerVersionedServiceWorker(version = APP_VERSION) {
+  return navigator.serviceWorker.register(versionedServiceWorkerUrl(version), { updateViaCache: 'none' });
+}
 async function updateServiceWorkerRegistration(registration) {
   let lastError = null;
   for (let attempt = 0; attempt < 2; attempt += 1) {
@@ -4657,7 +4665,7 @@ async function fetchLatestAppVersion() {
 }
 async function checkForUpdate() {
   if (state.updateChecking || state.updateApplying) return;
-  const registration = state.swRegistration || await navigator.serviceWorker?.getRegistration();
+  let registration = state.swRegistration || await navigator.serviceWorker?.getRegistration();
   if (!registration) return toast(state.language === 'en' ? 'Updates are unavailable in this browser' : '当前浏览器暂不支持更新检查', 'error');
   state.swRegistration = registration;
   state.updateError = false;
@@ -4665,13 +4673,16 @@ async function checkForUpdate() {
   if (state.settingsOpen) renderSettings();
   if (state.section === 'mine') render();
   try {
-    const latestVersionPromise = fetchLatestAppVersion().catch(() => null);
+    const latestVersion = await fetchLatestAppVersion().catch(() => null);
+    const remoteNewer = latestVersion ? compareAppVersions(latestVersion, APP_VERSION) > 0 : false;
+    if (remoteNewer) {
+      registration = await registerVersionedServiceWorker(latestVersion);
+      state.swRegistration = registration;
+    }
     const installingBeforeCheck = registration.installing;
     const workerPromise = observeUpdateWorker(registration);
     await updateServiceWorkerRegistration(registration);
     let worker = registration.waiting;
-    const latestVersion = await latestVersionPromise;
-    const remoteNewer = latestVersion ? compareAppVersions(latestVersion, APP_VERSION) > 0 : false;
     if (!worker) {
       const newWorkerStarted = registration.installing && registration.installing !== installingBeforeCheck;
       const waitMilliseconds = remoteNewer || newWorkerStarted || registration.installing ? 15000 : 2500;
@@ -4751,14 +4762,19 @@ function setupServiceWorker() {
     didReload = true;
     requestAppReload();
   });
-  navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then((registration) => {
+  registerVersionedServiceWorker().then((registration) => {
     state.swRegistration = registration;
-    if (registration.waiting) markUpdateAvailable();
+    if (registration.waiting) {
+      if (navigator.serviceWorker.controller) markUpdateAvailable();
+      else registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+    }
     registration.addEventListener('updatefound', () => {
       const worker = registration.installing;
       if (!worker) return;
       worker.addEventListener('statechange', () => {
-        if (worker.state === 'installed' && navigator.serviceWorker.controller) markUpdateAvailable();
+        if (worker.state !== 'installed') return;
+        if (navigator.serviceWorker.controller) markUpdateAvailable();
+        else worker.postMessage({ type: 'SKIP_WAITING' });
       });
     });
     registration.update().catch(() => {});

@@ -1,5 +1,5 @@
-const CACHE = 'onebox-v251';
-const APP_SHELL = ['./', 'index.html', 'style.css?v=2.18.221', 'app.js?v=2.18.221', 'calendar-data.js?v=2.18.221', 'manifest.webmanifest', 'icons/icon.svg', 'icons/icon.svg?v=2.18.221', 'icons/icon-180.png', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-dark-180.png', 'icons/icon-dark-192.png', 'icons/icon-dark-512.png', 'icons/favicon-light-64.png', 'icons/favicon-light-64.png?v=2.18.221', 'icons/favicon-dark-64.png', 'icons/favicon-dark-64.png?v=2.18.221', 'apple-touch-icon.png', 'apple-touch-icon.png?v=2.18.221', 'apple-touch-icon-dark.png', 'apple-touch-icon-dark.png?v=2.18.221', 'icons/apple-touch-icon.png', 'icons/apple-touch-icon.png?v=2.18.221', 'icons/apple-touch-icon-dark.png', 'icons/apple-touch-icon-dark.png?v=2.18.221', 'icons/bell.svg', 'icons/bell-192.png', 'icons/weibo.png', 'icons/guancha.png?v=2.18.221', 'icons/ithome.svg', 'icons/ithome.svg?v=2.18.221', 'icons/bilibili.ico', 'icons/bilibili.ico?v=2.18.221', 'icons/bilibili.svg', 'icons/bilibili.svg?v=2.18.221', 'icons/hupu.ico', 'icons/hupu.ico?v=2.18.221'];
+const CACHE = 'onebox-v252';
+const APP_SHELL = ['./', 'index.html', 'style.css?v=2.18.222', 'app.js?v=2.18.222', 'calendar-data.js?v=2.18.222', 'manifest.webmanifest', 'icons/icon.svg', 'icons/icon.svg?v=2.18.222', 'icons/icon-180.png', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-dark-180.png', 'icons/icon-dark-192.png', 'icons/icon-dark-512.png', 'icons/favicon-light-64.png', 'icons/favicon-light-64.png?v=2.18.222', 'icons/favicon-dark-64.png', 'icons/favicon-dark-64.png?v=2.18.222', 'apple-touch-icon.png', 'apple-touch-icon.png?v=2.18.222', 'apple-touch-icon-dark.png', 'apple-touch-icon-dark.png?v=2.18.222', 'icons/apple-touch-icon.png', 'icons/apple-touch-icon.png?v=2.18.222', 'icons/apple-touch-icon-dark.png', 'icons/apple-touch-icon-dark.png?v=2.18.222', 'icons/bell.svg', 'icons/bell-192.png', 'icons/weibo.png', 'icons/guancha.png?v=2.18.222', 'icons/ithome.svg', 'icons/ithome.svg?v=2.18.222', 'icons/bilibili.ico', 'icons/bilibili.ico?v=2.18.222', 'icons/bilibili.svg', 'icons/bilibili.svg?v=2.18.222', 'icons/hupu.ico', 'icons/hupu.ico?v=2.18.222'];
 const CORE_APP_SHELL = APP_SHELL.slice(0, 6);
 const OPTIONAL_APP_SHELL = APP_SHELL.slice(6);
 const OPEN_METEO = /(^|\.)open-meteo\.com$/;
@@ -7,7 +7,7 @@ self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(CACHE)
     .then((cache) => cache.addAll(CORE_APP_SHELL)
       .then(() => Promise.all(OPTIONAL_APP_SHELL.map((asset) => cache.add(asset).catch(() => null)))))
-    .then(() => self.skipWaiting()));
+    .then(() => undefined));
 });
 self.addEventListener('activate', (event) => {
   event.waitUntil(caches.keys().then((keys) => Promise.all(keys.filter((key) => key !== CACHE).map((key) => caches.delete(key)))).then(() => self.clients.claim()));
