@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.223';
+const APP_VERSION = '2.18.224';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -4679,6 +4679,15 @@ async function checkForUpdate() {
   try {
     const latestVersion = await fetchLatestAppVersion().catch(() => null);
     const remoteNewer = latestVersion ? compareAppVersions(latestVersion, APP_VERSION) > 0 : false;
+    if (latestVersion && !remoteNewer) {
+      state.updateAvailable = false;
+      state.updateError = false;
+      refreshUpdateIndicator();
+      if (state.settingsOpen) renderSettings();
+      if (state.section === 'mine') render();
+      toast(t('upToDate'));
+      return;
+    }
     if (remoteNewer) {
       registration = await registerVersionedServiceWorker(latestVersion);
       state.swRegistration = registration;
@@ -4769,19 +4778,16 @@ function setupServiceWorker() {
   getAppServiceWorkerRegistration().then((registration) => {
     state.swRegistration = registration;
     if (registration.waiting) {
-      if (navigator.serviceWorker.controller) markUpdateAvailable();
-      else registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+      if (!navigator.serviceWorker.controller) registration.waiting.postMessage({ type: 'SKIP_WAITING' });
     }
     registration.addEventListener('updatefound', () => {
       const worker = registration.installing;
       if (!worker) return;
       worker.addEventListener('statechange', () => {
         if (worker.state !== 'installed') return;
-        if (navigator.serviceWorker.controller) markUpdateAvailable();
-        else worker.postMessage({ type: 'SKIP_WAITING' });
+        if (!navigator.serviceWorker.controller) worker.postMessage({ type: 'SKIP_WAITING' });
       });
     });
-    registration.update().catch(() => {});
   }).catch(() => {});
 }
 
