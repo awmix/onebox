@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.231';
+const APP_VERSION = '2.18.233';
 // Public OAuth identifiers are safe to ship in a browser client. The secret
 // is intentionally not used: OneBox uses GitHub's device authorization grant
 // so a static GitHub Pages deployment can authenticate without asking users to
@@ -197,7 +197,7 @@ const DICT = {
     noAgenda: '这一天还没有安排。', agenda: '日程', addAgenda: '新增日程', newReminder: '新增日程', eventContent: '日程内容', eventPlaceholder: '请输入你的日程信息', addEvent: '添加日程', addToDay: '添加日程', eventDate: '日期', eventTime: '时间', eventDateTime: '选择提醒时间', reminderSchedule: '提醒日程', eventRepeat: '重复方式',
     noteOptional: '备注（可选）', weatherSearch: '搜索', currentLocation: '当前位置',
     refresh: '刷新', searchPlace: '搜索城市或区县',
-    noWeather: '天气需要联网，搜索一个城市或区县开始。', weatherLoading: '正在获取天气…',
+    noWeather: '天气需要联网，搜索一个城市或区县开始。', weatherLoading: '正在获取天气…', weatherLoadFailed: '天气获取失败，点击卡片重试。',
     weatherData: '数据来自 Open-Meteo，最近更新 {time}，离线可查看。',
     sortWeather: '', hourly: '24 小时', daily: '前 3 天 · 今天 · 未来 15 天', advice: '天气建议',
     commute: '出行', sport: '运动', clothing: '穿衣', sunscreen: '防晒', hiking: '爬山', windAdvice: '风力建议', windLevel: '风力', elevation: '海拔',
@@ -209,10 +209,10 @@ const DICT = {
     copied: '已复制', translationInput: '输入待翻译内容', translateNow: '开始翻译', saveTranslation: '保存到本机',
     source: '源语言', target: '目标语言', translationResult: '翻译结果', translationHistory: '最近翻译',
     noTranslation: '翻译结果会显示在这里。', noHistory: '还没有保存翻译。',
-    githubSync: 'GitHub 云同步', githubDescription: '点击后进入 GitHub 官方授权，数据保存到你自己的私有 Gist，OneBox 不会获取你的 GitHub 密码。', githubNotConnectedHint: '点击下方按钮进入 GitHub 授权。',
+    githubSync: 'GitHub 云同步', githubDescription: '点击后打开 GitHub 设备授权页，登录并授权 OneBox；数据保存到你自己的私有 Gist。', githubNotConnectedHint: '点击下方按钮打开 GitHub 授权。',
     githubClientId: 'GitHub OAuth Client ID', githubClientHint: 'OneBox 已内置公开的授权标识，不需要手动配置。', githubDeveloperSettings: '打开 OAuth Apps 设置',
-    githubBrowserFlowError: '无法连接 GitHub 授权服务，请检查网络后重试。', githubAccessToken: 'GitHub 访问令牌', githubTokenHint: '仅将令牌保存在当前设备，并通过 GitHub API 验证；建议使用只包含 gist 权限的令牌。', githubUseToken: '使用访问令牌连接', githubTokenMissing: '请先填写 GitHub 访问令牌。', githubTokenInvalid: '访问令牌无效或没有可用权限。', githubTokenConnected: 'GitHub 已连接',
-    githubSyncScopeTitle: '同步范围', githubSyncScope: '设置、工具顺序、导航、首页来源、日程、天气卡片、翻译记录、通知、阅读书架、阅读进度、笔记和已导入的本地书籍文件。', githubSyncPrivacy: 'GitHub 令牌不会上传；首页订阅内容、节假日和天气接口缓存属于网络缓存，不参与同步。', githubAuthHint: '将打开 GitHub 授权页面，授权完成后回到 OneBox 即可。',
+    githubBrowserFlowError: '无法打开 GitHub 授权页，请检查网络后重试。', githubAccessToken: 'GitHub 访问令牌', githubTokenHint: '仅将令牌保存在当前设备，并通过 GitHub API 验证；建议使用只包含 gist 权限的令牌。', githubUseToken: '使用访问令牌连接', githubTokenMissing: '请先填写 GitHub 访问令牌。', githubTokenInvalid: '访问令牌无效或没有可用权限。', githubTokenConnected: 'GitHub 已连接', githubWaiting: '等待 GitHub 授权…', githubCancel: '取消授权',
+    githubSyncScopeTitle: '同步范围', githubSyncScope: '设置、工具顺序、导航、首页来源、日程、天气卡片、翻译记录、通知、阅读书架、阅读进度、笔记和已导入的本地书籍文件。', githubSyncPrivacy: 'GitHub 令牌不会上传；首页订阅内容、节假日和天气接口缓存属于网络缓存，不参与同步。', githubAuthHint: '授权页会在新标签页打开；完成授权后回到 OneBox，应用会自动完成登录。',
     githubLogin: '连接 GitHub', githubLogout: '退出 GitHub', upload: '上传到 GitHub', download: '从 GitHub 恢复',
     githubConnected: '已连接', githubNotConnected: '尚未连接', openDevice: '打开验证页面',
     appUpdate: '应用更新', checkUpdate: '更新', updateAvailable: '发现有新版本', upToDate: '已是最新版', updating: '检查中', updateApplying: '更新中', updateCheckFailed: '检查失败，可重试', applyUpdate: '更新',
@@ -241,7 +241,7 @@ const DICT = {
     noAgenda: 'Nothing planned for this day.', agenda: 'Events', addAgenda: 'New event', newReminder: 'New reminder', eventContent: 'Event details', eventPlaceholder: 'Enter your event details', addEvent: 'Add event', addToDay: 'Add event', eventDate: 'Date', eventTime: 'Time', eventDateTime: 'Date and time', reminderSchedule: 'Reminder time', eventRepeat: 'Repeat',
     noteOptional: 'Note (optional)', weatherSearch: 'Search', currentLocation: 'Current location',
     refresh: 'Refresh', searchPlace: 'Search city or district',
-    noWeather: 'Search a city or district to get weather.', weatherLoading: 'Loading weather…',
+    noWeather: 'Search a city or district to get weather.', weatherLoading: 'Loading weather…', weatherLoadFailed: 'Weather failed to load. Click the card to retry.',
     weatherData: 'Weather data from Open-Meteo · updated {time} · saved locally for offline viewing.',
     sortWeather: '', hourly: '24 hours', daily: '3 days before · today · next 15 days', advice: 'Advice',
     commute: 'Travel', sport: 'Sport', clothing: 'Clothing', sunscreen: 'Sun care', hiking: 'Hiking', windAdvice: 'Wind advice', windLevel: 'Wind', elevation: 'Elevation',
@@ -253,10 +253,10 @@ const DICT = {
     copied: 'Copied', translationInput: 'Text to translate', translateNow: 'Translate', saveTranslation: 'Save locally',
     source: 'Source', target: 'Target', translationResult: 'Translation', translationHistory: 'Recent translations',
     noTranslation: 'Your translation will appear here.', noHistory: 'No saved translations yet.',
-    githubSync: 'GitHub cloud sync', githubDescription: 'Click to enter GitHub authorization. Data is saved in your own private Gist; OneBox never receives your GitHub password.', githubNotConnectedHint: 'Click below to authorize with GitHub.',
+    githubSync: 'GitHub cloud sync', githubDescription: 'Open GitHub device authorization, sign in and authorize OneBox; data is saved in your own private Gist.', githubNotConnectedHint: 'Click below to open GitHub authorization.',
     githubClientId: 'GitHub OAuth Client ID', githubClientHint: 'OneBox includes its public authorization identifier; no manual setup is required.', githubDeveloperSettings: 'Open OAuth Apps settings',
-    githubBrowserFlowError: 'GitHub authorization is unavailable. Check your network and try again.', githubAccessToken: 'GitHub access token', githubTokenHint: 'The token is stored only on this device and verified through GitHub API. A token with gist permission is recommended.', githubUseToken: 'Connect with access token', githubTokenMissing: 'Enter a GitHub access token first.', githubTokenInvalid: 'The access token is invalid or lacks the required permission.', githubTokenConnected: 'GitHub connected',
-    githubSyncScopeTitle: 'Sync scope', githubSyncScope: 'Settings, tool order, navigation, home sources, events, weather cards, translation history, notifications, the reading shelf, reading progress, notes and imported local book files.', githubSyncPrivacy: 'The GitHub token is never uploaded. Home feeds, holidays and weather API caches are network caches and are not synced.', githubAuthHint: 'GitHub authorization will open in a new tab. Return to OneBox when it is complete.',
+    githubBrowserFlowError: 'GitHub authorization could not be opened. Check your network and try again.', githubAccessToken: 'GitHub access token', githubTokenHint: 'The token is stored only on this device and verified through GitHub API. A token with gist permission is recommended.', githubUseToken: 'Connect with access token', githubTokenMissing: 'Enter a GitHub access token first.', githubTokenInvalid: 'The access token is invalid or lacks the required permission.', githubTokenConnected: 'GitHub connected', githubWaiting: 'Waiting for GitHub authorization…', githubCancel: 'Cancel authorization',
+    githubSyncScopeTitle: 'Sync scope', githubSyncScope: 'Settings, tool order, navigation, home sources, events, weather cards, translation history, notifications, the reading shelf, reading progress, notes and imported local book files.', githubSyncPrivacy: 'The GitHub token is never uploaded. Home feeds, holidays and weather API caches are network caches and are not synced.', githubAuthHint: 'The authorization page opens in a new tab. Return to OneBox after approving it; the app will finish signing in automatically.',
     githubLogin: 'Connect GitHub', githubLogout: 'Disconnect GitHub', upload: 'Upload to GitHub', download: 'Restore from GitHub',
     githubConnected: 'Connected', githubNotConnected: 'Not connected', openDevice: 'Open verification page',
     appUpdate: 'App update', checkUpdate: 'Update', updateAvailable: 'A new version is available', upToDate: 'Latest version', updating: 'Checking', updateApplying: 'Updating', updateCheckFailed: 'Check failed. Try again.', applyUpdate: 'Update',
@@ -427,6 +427,11 @@ function homeFeedSourceMarkMarkup(source, extraClass = '') {
 }
 const initialWeatherCards = (Array.isArray(rawWeatherCards) && rawWeatherCards.length ? rawWeatherCards : legacyWeather ? [legacyWeather] : []).map((item) => ({
   ...item,
+  // Loading is a transient request state and must never survive a page
+  // reload. Keep the place visible as a retryable failed card instead of
+  // leaving it permanently stuck on the hourglass.
+  loading: false,
+  loadError: item.loadError || (item.loading && !item.current ? 'weather-load-failed' : ''),
   isCurrentLocation: Boolean(item.isCurrentLocation || item.name === '当前位置' || item.name === 'Current location'),
 })).filter((item, index, cards) => !item.isCurrentLocation || cards.findIndex((candidate) => candidate.isCurrentLocation) === index);
 const initialHash = location.hash.slice(1);
@@ -4109,6 +4114,7 @@ const weatherCode = (code) => {
 const weatherUrl = (lat, lon) => 'https://api.open-meteo.com/v1/forecast?latitude=' + encodeURIComponent(lat) + '&longitude=' + encodeURIComponent(lon) + '&current=temperature_2m,apparent_temperature,weather_code,relative_humidity_2m,wind_speed_10m,precipitation&hourly=temperature_2m,apparent_temperature,weather_code,precipitation_probability,uv_index,wind_speed_10m,relative_humidity_2m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunrise,sunset,uv_index_max,wind_speed_10m_max&wind_speed_unit=kmh&timezone=auto&past_days=3&forecast_days=16';
 const weatherElevationUrl = (lat, lon) => 'https://api.open-meteo.com/v1/elevation?latitude=' + encodeURIComponent(lat) + '&longitude=' + encodeURIComponent(lon);
 function saveWeatherCards() { saveStored(STORAGE.weatherCards, state.weatherCards); }
+function weatherCardFailureText() { return state.language === 'en' ? 'Weather failed to load' : '天气获取失败'; }
 async function getWeatherData(lat, lon) {
   const response = await fetchWithTimeout(weatherUrl(lat, lon), { headers: { Accept: 'application/json' } }, 9000);
   if (!response.ok) throw Error(state.language === 'en' ? 'Weather service is unavailable' : '天气服务暂时不可用');
@@ -4131,35 +4137,50 @@ async function addWeatherPlace(place) {
   const coordinateIndex = state.weatherCards.findIndex((item) => Math.abs(Number(item.latitude) - Number(place.latitude)) < .01 && Math.abs(Number(item.longitude) - Number(place.longitude)) < .01);
   const existingIndex = currentIndex >= 0 ? currentIndex : coordinateIndex;
   const cardId = existingIndex >= 0 ? state.weatherCards[existingIndex].id : uid();
-  const created = existingIndex < 0;
-  if (created) state.weatherCards.push({ id: cardId, ...place, isCurrentLocation: Boolean(place.isCurrentLocation), loading: true });
-  else Object.assign(state.weatherCards[existingIndex], place, { isCurrentLocation: Boolean(place.isCurrentLocation || state.weatherCards[existingIndex].isCurrentLocation), loading: true });
+  if (existingIndex < 0) state.weatherCards.push({ id: cardId, ...place, isCurrentLocation: Boolean(place.isCurrentLocation), loading: true, loadError: false });
+  else Object.assign(state.weatherCards[existingIndex], place, { isCurrentLocation: Boolean(place.isCurrentLocation || state.weatherCards[existingIndex].isCurrentLocation), loading: true, loadError: false });
   state.activeWeatherId = cardId; state.weatherSearchResults = []; state.weatherLoading = true; state.weatherError = ''; render();
   try {
     const data = await getWeatherData(place.latitude, place.longitude);
-    if (request !== state.weatherRequest) return;
-    const card = { ...data, id: cardId, name: place.name, admin1: place.admin1 || '', admin2: place.admin2 || '', country: place.country || '', latitude: place.latitude, longitude: place.longitude, isCurrentLocation: Boolean(place.isCurrentLocation), updatedAt: Date.now(), loading: false };
+    if (request !== state.weatherRequest) {
+      const staleIndex = state.weatherCards.findIndex((item) => item.id === cardId);
+      if (staleIndex >= 0) {
+        state.weatherCards[staleIndex].loading = false;
+        state.weatherCards[staleIndex].loadError = true;
+        saveWeatherCards();
+      }
+      return;
+    }
+    const card = { ...data, id: cardId, name: place.name, admin1: place.admin1 || '', admin2: place.admin2 || '', country: place.country || '', latitude: place.latitude, longitude: place.longitude, isCurrentLocation: Boolean(place.isCurrentLocation), updatedAt: Date.now(), loading: false, loadError: false };
     const targetIndex = state.weatherCards.findIndex((item) => item.id === cardId);
     if (targetIndex >= 0) state.weatherCards[targetIndex] = card; else state.weatherCards.push(card);
     state.activeWeatherId = card.id; saveWeatherCards();
     toast(state.language === 'en' ? 'Weather card saved' : '天气卡片已保存');
   } catch (error) {
     const failedIndex = state.weatherCards.findIndex((item) => item.id === cardId);
-    if (created && failedIndex >= 0) state.weatherCards.splice(failedIndex, 1);
-    else if (failedIndex >= 0) state.weatherCards[failedIndex].loading = false;
-    state.weatherError = error.message || (state.language === 'en' ? 'Weather search failed' : '天气获取失败');
+    if (failedIndex >= 0) {
+      // Keep a failed place as an explicit, removable card. Removing it here
+      // made a failed add look like a frozen card and gave users no recovery
+      // path when the request had already rendered on screen.
+      state.weatherCards[failedIndex].loading = false;
+      state.weatherCards[failedIndex].loadError = true;
+      saveWeatherCards();
+    }
+    state.weatherError = error.message || weatherCardFailureText();
   }
   finally { if (request === state.weatherRequest) { state.weatherLoading = false; render(); } }
 }
 async function refreshWeatherCard(card) {
   if (!card || state.weatherLoading) return;
-  const request = ++state.weatherRequest; state.weatherLoading = true; state.weatherError = ''; card.loading = true;
+  const request = ++state.weatherRequest; state.weatherLoading = true; state.weatherError = ''; card.loading = true; card.loadError = false;
   try {
     const data = await getWeatherData(card.latitude, card.longitude);
     if (request !== state.weatherRequest) return;
-    Object.assign(card, data, { updatedAt: Date.now(), loading: false }); saveWeatherCards();
+    Object.assign(card, data, { updatedAt: Date.now(), loading: false, loadError: false }); saveWeatherCards();
   } catch (error) {
     card.loading = false;
+    card.loadError = true;
+    saveWeatherCards();
     state.weatherError = error.message || (state.language === 'en' ? 'Refresh failed' : '刷新失败');
   } finally {
     if (request === state.weatherRequest) { state.weatherLoading = false; render(); }
@@ -4254,15 +4275,17 @@ function weather() {
   if (!active) return heading(t('weather'), t('weatherDesc')) + search + results + '<div class="empty weather-empty">' + (state.weatherLoading ? '<span class="loader"></span>' + t('weatherLoading') : t('noWeather')) + (state.weatherError ? '<strong class="error-text">' + escapeHtml(state.weatherError) + '</strong>' : '') + '</div>';
   const current = active.current || {};
   const cards = state.weatherCards.map((card, index) => {
-    const item = card.loading && !card.current ? ['⏳', t('weatherLoading')] : weatherCode(card.current?.weather_code);
+    const failed = Boolean(card.loadError && !card.current);
+    const item = card.loading && !card.current ? ['⏳', t('weatherLoading')] : failed ? ['⚠️', t('weatherLoadFailed')] : weatherCode(card.current?.weather_code);
     const cardCurrent = card.current || {};
-    const temperature = card.loading && !card.current ? '…' : Math.round(cardCurrent.temperature_2m ?? 0) + '°';
-    const details = card.loading && !card.current ? '<span class="weather-card-meta-line">' + escapeHtml(t('weatherLoading')) + '</span>' : '<span class="weather-card-meta-line">' + escapeHtml((state.language === 'en' ? 'Feels ' : '体感 ') + Math.round(cardCurrent.apparent_temperature ?? cardCurrent.temperature_2m ?? 0) + '° · ' + (state.language === 'en' ? 'Humidity ' : '湿度 ') + (cardCurrent.relative_humidity_2m ?? '—') + '%') + '</span><span class="weather-card-meta-line weather-card-meta-secondary"><span>' + escapeHtml((state.language === 'en' ? 'Wind ' : '风力 ') + weatherWindLabel(cardCurrent.wind_speed_10m) + ' · ' + Math.round(cardCurrent.wind_speed_10m ?? 0) + ' km/h') + '</span><span>' + escapeHtml(t('elevation') + ' ' + weatherElevationLabel(card.elevation)) + '</span></span>';
-    return '<button class="weather-card ' + (card.id === active.id ? 'active' : '') + (card.loading ? ' loading' : '') + '" draggable="true" data-weather-card="' + card.id + '" data-weather-index="' + index + '"><span class="weather-card-delete" data-delete-weather="' + escapeHtml(card.id) + '" role="button" tabindex="0" aria-label="' + (state.language === 'en' ? 'Delete weather card' : '删除天气卡片') + '">×</span><div class="weather-card-head"><span><strong>' + escapeHtml(card.name) + '</strong><small>' + escapeHtml([card.admin2, card.admin1].filter(Boolean).join(' · ') || card.country || '') + '</small></span><span class="weather-card-icon" aria-hidden="true">' + item[0] + '</span></div><div class="weather-card-main"><span class="weather-card-temp">' + temperature + '</span><span class="weather-card-condition">' + escapeHtml(item[1]) + '</span></div><span class="weather-card-meta">' + details + '</span></button>';
+    const temperature = card.loading && !card.current ? '…' : failed ? '—' : Math.round(cardCurrent.temperature_2m ?? 0) + '°';
+    const details = card.loading && !card.current ? '<span class="weather-card-meta-line">' + escapeHtml(t('weatherLoading')) + '</span>' : failed ? '<span class="weather-card-meta-line">' + escapeHtml(t('weatherLoadFailed')) + '</span>' : '<span class="weather-card-meta-line">' + escapeHtml((state.language === 'en' ? 'Feels ' : '体感 ') + Math.round(cardCurrent.apparent_temperature ?? cardCurrent.temperature_2m ?? 0) + '° · ' + (state.language === 'en' ? 'Humidity ' : '湿度 ') + (cardCurrent.relative_humidity_2m ?? '—') + '%') + '</span><span class="weather-card-meta-line weather-card-meta-secondary"><span>' + escapeHtml((state.language === 'en' ? 'Wind ' : '风力 ') + weatherWindLabel(cardCurrent.wind_speed_10m) + ' · ' + Math.round(cardCurrent.wind_speed_10m ?? 0) + ' km/h') + '</span><span>' + escapeHtml(t('elevation') + ' ' + weatherElevationLabel(card.elevation)) + '</span></span>';
+    return '<article class="weather-card ' + (card.id === active.id ? 'active' : '') + (card.loading ? ' loading' : '') + (failed ? ' has-error' : '') + '" draggable="true" data-weather-card="' + card.id + '" data-weather-index="' + index + '"><button type="button" class="weather-card-delete" data-delete-weather="' + escapeHtml(card.id) + '" aria-label="' + (state.language === 'en' ? 'Delete weather card' : '删除天气卡片') + '">×</button><div class="weather-card-head"><span><strong>' + escapeHtml(card.name) + '</strong><small>' + escapeHtml([card.admin2, card.admin1].filter(Boolean).join(' · ') || card.country || '') + '</small></span><span class="weather-card-icon" aria-hidden="true">' + item[0] + '</span></div><div class="weather-card-main"><span class="weather-card-temp">' + temperature + '</span><span class="weather-card-condition">' + escapeHtml(item[1]) + '</span></div><span class="weather-card-meta">' + details + '</span></article>';
   }).join('');
   const title = [active.name, active.admin2, active.admin1, active.country].filter(Boolean).join(' · ');
-  if (active.loading && !active.current) {
-    return heading(t('weather'), escapeHtml(title)) + search + results + '<div class="weather-card-list">' + cards + '</div>';
+  if ((active.loading || active.loadError) && !active.current) {
+    const failure = active.loadError ? '<div class="inline-alert">' + escapeHtml(t('weatherLoadFailed')) + '</div>' : '';
+    return heading(t('weather'), escapeHtml(title)) + search + results + failure + '<div class="weather-card-list">' + cards + '</div>';
   }
   const hourlyTimes = active.hourly?.time || [];
   const selectedHour = currentHourIndex(active);
@@ -4687,6 +4710,7 @@ function githubBrowserError(error) {
   return message;
 }
 async function githubLogin() {
+  if (state.github.deviceCode) return;
   const clientId = GITHUB_CLIENT_ID;
   state.github.clientId = clientId; saveGithub();
   const authWindow = window.open('about:blank', '_blank', 'noopener,noreferrer');
@@ -4718,11 +4742,17 @@ async function pollGithubLogin() {
         state.github.user = await userResponse.json(); saveGithub(); renderGithubDialog();
         toast(state.language === 'en' ? 'GitHub connected' : 'GitHub 已连接'); return;
       }
-      if (data.error === 'slow_down') state.github.interval += 5;
+      if (data.error === 'slow_down') state.github.interval = Math.max(state.github.interval + 5, Number(data.interval || 0));
       if (['access_denied', 'expired_token', 'unsupported_grant_type', 'incorrect_client_credentials'].includes(data.error)) throw Error(data.error_description || data.error);
     } catch (error) { state.github.deviceCode = ''; const message = githubBrowserError(error); renderGithubDialog(); toast(message || (state.language === 'en' ? 'GitHub login failed' : 'GitHub 登录失败'), 'error'); return; }
   }
   state.github.deviceCode = ''; state.github.verificationUriComplete = ''; renderGithubDialog(); toast(state.language === 'en' ? 'GitHub verification expired' : 'GitHub 验证已过期', 'error');
+}
+function cancelGithubLogin() {
+  if (!state.github.deviceCode) return;
+  state.github.deviceCode = ''; state.github.userCode = ''; state.github.verificationUri = ''; state.github.verificationUriComplete = '';
+  renderGithubDialog();
+  toast(state.language === 'en' ? 'GitHub authorization cancelled' : '已取消 GitHub 授权');
 }
 async function githubUseAccessToken() {
   const token = ($('#githubAccessToken')?.value || '').trim();
@@ -4840,11 +4870,12 @@ function renderGithubDialog() {
   const account = connected
     ? '<div class="github-status-card is-connected"><span class="github-status-icon github-avatar"><img src="' + escapeHtml(state.github.user.avatar_url || '') + '" alt="" onerror="this.hidden=true;this.parentElement.classList.add(\'is-fallback\')"></span><span class="github-status-copy"><strong>' + escapeHtml(state.github.user.login || 'GitHub') + '</strong><small>' + t('githubConnected') + '</small></span><span class="github-status-badge">✓</span></div>'
     : '<div class="github-status-card"><span class="github-status-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 18h10a3.5 3.5 0 0 0 .5-6.96A5.5 5.5 0 0 0 7 9.5a4.25 4.25 0 0 0 0 8.5Z"/><path d="m12 12 2-2m-2 2-2-2m2 2v4"/></svg></span><span class="github-status-copy"><strong>' + t('githubNotConnected') + '</strong><small>' + t('githubNotConnectedHint') + '</small></span></div>';
-  const code = state.github.userCode ? '<div class="device-code"><div><small>' + (state.language === 'en' ? 'Authorize OneBox in GitHub' : '请在 GitHub 中授权 OneBox') + '</small><strong>' + escapeHtml(state.github.userCode) + '</strong></div><a class="secondary github-device-link" href="' + escapeHtml(state.github.verificationUriComplete || state.github.verificationUri || 'https://github.com/login/device') + '" target="_blank" rel="noreferrer">' + t('openDevice') + '</a></div>' : '';
+  const waiting = Boolean(state.github.deviceCode);
+  const code = state.github.userCode ? '<div class="device-code"><div><small>' + (state.language === 'en' ? 'Authorize OneBox in GitHub' : '请在 GitHub 中授权 OneBox') + '</small><strong>' + escapeHtml(state.github.userCode) + '</strong><small>' + escapeHtml(t('githubWaiting')) + '</small></div><a class="secondary github-device-link" href="' + escapeHtml(state.github.verificationUriComplete || state.github.verificationUri || 'https://github.com/login/device') + '" target="_blank" rel="noreferrer">' + t('openDevice') + '</a></div>' : '';
   const manualToken = state.github.manualTokenOpen && !connected ? '<section class="github-manual-token"><label for="githubAccessToken">' + t('githubAccessToken') + '</label><input id="githubAccessToken" type="password" placeholder="github_pat_…" autocomplete="off"><p>' + t('githubTokenHint') + '</p><button class="secondary" data-github-token>' + t('githubUseToken') + '</button></section>' : '';
   const actions = connected
     ? '<div class="github-action-grid"><button class="primary" data-github-upload>' + t('upload') + '</button><button class="secondary" data-github-download>' + t('download') + '</button></div><button class="text-btn github-disconnect" data-github-logout>' + t('githubLogout') + '</button>'
-    : '<button class="primary github-connect" data-github-login>' + t('githubLogin') + '</button>';
+    : (waiting ? '<button class="secondary github-connect" disabled>' + t('githubWaiting') + '</button><button class="text-btn github-cancel" data-github-cancel>' + t('githubCancel') + '</button>' : '<button class="primary github-connect" data-github-login>' + t('githubLogin') + '</button>');
   dialog.innerHTML = '<div class="dialog-card github-dialog-card" role="dialog" aria-modal="true"><div class="dialog-head github-dialog-head"><div><h2>GitHub</h2></div><button class="icon-btn small github-dialog-close" data-close-github aria-label="' + t('close') + '">×</button></div><div class="github-dialog-body"><section class="github-status-section"><div class="github-section-label"><h3>' + t('githubSync') + '</h3></div>' + account + '</section><p class="github-dialog-note">' + escapeHtml(t('githubDescription')) + '</p><section class="github-sync-scope"><strong>' + t('githubSyncScopeTitle') + '</strong><p>' + escapeHtml(t('githubSyncScope')) + '</p><small>' + escapeHtml(t('githubSyncPrivacy')) + '</small></section><p class="github-dialog-note github-auth-hint">' + escapeHtml(t('githubAuthHint')) + '</p>' + code + manualToken + '<section class="github-actions">' + actions + '</section></div></div>';
   dialog.hidden = false; state.githubDialogOpen = true;
 }
@@ -5881,7 +5912,7 @@ homeSourceNav.addEventListener('dragstart', (event) => { const source = event.ta
 homeSourceNav.addEventListener('dragover', (event) => { if (event.target.closest('[data-feed-source]')) event.preventDefault(); });
 homeSourceNav.addEventListener('drop', (event) => { event.preventDefault(); const source = event.target.closest('[data-feed-source]'); if (source) swapHomeFeedSources(Number(event.dataTransfer.getData('text/plain')), Number(source.dataset.feedSourceIndex)); });
 
-workspace.addEventListener('pointerdown', (event) => { const card = event.target.closest('[data-weather-card]'); if (card) startLongPress(card, 'weather', Number(card.dataset.weatherIndex), event); });
+workspace.addEventListener('pointerdown', (event) => { const card = event.target.closest('[data-weather-card]'); if (card && !event.target.closest('[data-delete-weather]')) startLongPress(card, 'weather', Number(card.dataset.weatherIndex), event); });
 workspace.addEventListener('pointerdown', (event) => { const source = event.target.closest('[data-feed-source]'); if (source?.dataset.feedSourceIndex != null) startLongPress(source, 'feed', Number(source.dataset.feedSourceIndex), event); });
 workspace.addEventListener('pointerdown', (event) => {
   const navigationVisible = state.section === 'navigation' || (state.section === 'tools' && state.tool === 'navigation');
@@ -6401,7 +6432,10 @@ workspace.addEventListener('click', async (event) => {
   const weatherCard = event.target.closest('[data-weather-card]');
   if (weatherCard) {
     if (handleReorderClick(weatherCard, 'weather', Number(weatherCard.dataset.weatherIndex))) { event.preventDefault(); return; }
-    state.activeWeatherId = weatherCard.dataset.weatherCard; return render();
+    state.activeWeatherId = weatherCard.dataset.weatherCard;
+    const selectedCard = state.weatherCards.find((card) => card.id === state.activeWeatherId);
+    if (selectedCard?.loadError && !selectedCard.current) return refreshWeatherCard(selectedCard);
+    return render();
   }
   if (event.target.closest('[data-add-weather-card]')) { $('#cityInput')?.focus(); return toast(state.language === 'en' ? 'Search a city or district to add a card' : '搜索城市或区县即可添加天气卡片'); }
   if (event.target.closest('[data-locate]')) {
@@ -6688,6 +6722,7 @@ $('#settingsDialog').addEventListener('click', (event) => {
   if (event.target.closest('[data-apply-update]')) return applyUpdate();
   if (event.target.closest('[data-request-notifications]')) return requestNotifications();
   if (event.target.closest('[data-github-login]')) return githubLogin();
+  if (event.target.closest('[data-github-cancel]')) return cancelGithubLogin();
   if (event.target.closest('[data-github-upload]')) return githubUpload();
   if (event.target.closest('[data-github-download]')) return githubDownload();
   if (event.target.closest('[data-github-logout]')) return disconnectGithub();
@@ -6786,6 +6821,7 @@ $('#recentReadingDialog').addEventListener('click', (event) => {
 $('#githubDialog').addEventListener('click', (event) => {
   if (event.target === $('#githubDialog') || event.target.closest('[data-close-github]')) return closeGithubDialog();
   if (event.target.closest('[data-github-login]')) return githubLogin();
+  if (event.target.closest('[data-github-cancel]')) return cancelGithubLogin();
   if (event.target.closest('[data-github-token]')) return githubUseAccessToken();
   if (event.target.closest('[data-github-upload]')) return githubUpload();
   if (event.target.closest('[data-github-download]')) return githubDownload();
