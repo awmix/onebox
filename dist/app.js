@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.236';
+const APP_VERSION = '2.18.237';
 // Public OAuth identifiers are safe to ship in a browser client. The secret
 // is intentionally not used: OneBox uses GitHub's device authorization grant
 // so a static GitHub Pages deployment can authenticate without asking users to
@@ -41,6 +41,7 @@ const STORAGE = {
   navigationLocation: 'onebox.navigation-location',
   mascotPosition: 'onebox.mascot-position',
   mascotVisible: 'onebox.mascot-visible',
+  mascotDisplayMode: 'onebox.mascot-display-mode',
 };
 const TOOL_DEFS = {
   calculator: { icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="3"/><path d="M8 7h8M8 11h.01M12 11h.01M16 11h.01M8 15h.01M12 15h.01M16 15h.01M8 18h8"/></svg>', key: 'calculator' },
@@ -220,7 +221,7 @@ const DICT = {
     userAgreement: '用户协议', viewAgreement: '查看协议', agreementTitle: 'OneBox 用户协议', agreementIntro: 'OneBox 是一款本地优先的日常工具应用，主要功能在当前设备上运行。', agreementLocal: '本地数据：计算历史、日程、天气卡片、翻译历史、通知记录、阅读书架、阅读进度和笔记等，默认保存在当前设备。你可以在应用内删除对应记录或文档。', agreementNetwork: '网络服务：首页订阅源、天气和翻译会请求对应的第三方或开源服务；首页文章来自公开订阅源，内容、时效和可用性由来源网站决定。点击文章会打开来源网站，OneBox 不控制第三方页面的登录、广告或隐私规则。', agreementGithub: 'GitHub 云同步：点击 GitHub 授权并完成登录后启用，无需填写 OAuth Client ID。同步内容写入你自己的私有 Gist，访问令牌保存在当前设备；你可以随时退出连接或删除该 Gist。', agreementPermissions: '权限说明：定位仅用于查找当前位置天气；通知仅用于提醒日程和消息；文件选择仅用于导入本地阅读文档。未授权时，相应功能不会正常工作，但不影响其他功能。', agreementDisclaimer: '使用提示：天气、翻译、订阅源和第三方网页可能因网络、服务策略或接口变化而暂时不可用。请不要在同步数据、日程或笔记中保存不适合上传到个人 GitHub Gist 的敏感信息。', agreementUpdated: '最后更新',
     addReminder: '添加提醒', reminderText: '提醒内容', remindAt: '提醒时间', noNotifications: '还没有提醒。', once: '指定时间', everyDay: '每天', workdays: '工作日', restdays: '非工作日', weekly: '每周', weekdays: '重复星期',
     markRead: '全部已读', close: '关闭', system: '跟随系统', light: '浅色', dark: '深色', darkGray: '黑灰',
-    layout: '布局', classicLayout: '经典布局', simpleLayout: '简约布局', navigationLocation: '导航位置', navigationLocationMain: '主导航', navigationLocationTools: '工具 Tab', openMode: '打开方式', openCurrent: '当前页打开', openNewTab: '新标签页打开', language: '语言', theme: '主题', color: '颜色', blackWhite: '黑白配', noblePurple: '贵族紫', skyBlue: '天空蓝', notBananaGreen: '不蕉绿', meituanYellow: '美团黄', topDisplay: '顶部显示', footprint: '足迹', showFootprint: '在首页显示', hideFootprint: '不在首页显示', mascot: '宠物', showMascot: '显示宠物', hideMascot: '隐藏宠物', reorderHint: '长按工具标签可以调整顺序',
+    layout: '布局', classicLayout: '经典布局', simpleLayout: '简约布局', navigationLocation: '导航位置', navigationLocationMain: '主导航', navigationLocationTools: '工具 Tab', openMode: '打开方式', openCurrent: '当前页打开', openNewTab: '新标签页打开', language: '语言', theme: '主题', color: '颜色', blackWhite: '黑白配', noblePurple: '贵族紫', skyBlue: '天空蓝', notBananaGreen: '不蕉绿', meituanYellow: '美团黄', topDisplay: '顶部显示', footprint: '足迹', showFootprint: '在首页显示', hideFootprint: '不在首页显示', mascot: '宠物', showMascot: '显示宠物', hideMascot: '隐藏宠物', mascotDisplay: '宠物显示', mascotFullBody: '显示全身', mascotHalfBody: '显示半身', reorderHint: '长按工具标签可以调整顺序',
     languagePending: '日语、韩语语言包已预留，当前版本先提供中文和英文。',
     bookshelf: '书架', addBook: '添加文档', noBooks: '还没有本地文档。', readerHint: '支持 Markdown、TXT、PDF、EPUB；文档仅保存在当前设备。', openBook: '打开阅读', deleteBook: '删除文档', annotations: '笔记', readerComments: '笔记', readerNotesHint: '已保存的阅读笔记', addAnnotation: '笔记', annotationPlaceholder: '添加你的感受…', saveAnnotation: '保存', annotationHint: '选择文字后长按或点击笔记按钮。', noAnnotations: '还没有笔记。', reading: '正在阅读', closeReader: '关闭阅读', unsupportedFile: '请选择 .md、.markdown、.txt、.pdf 或 .epub 文件。', importFailed: '文档读取失败，请重试。', deleteConfirm: '确定删除这本文档吗？', pdfHint: 'PDF 使用浏览器原生阅读器打开。', epubHint: 'EPUB 已转换为适合 OneBox 的阅读视图。', readerContents: '目录', readerSettings: '阅读设置', readerReadingMethod: '阅读方式', readerTheme: '阅读背景', readerThemePaper: '纸张', readerThemeSepia: '墨水屏', readerThemeGreen: '护眼绿', readerThemeDark: '夜间', readerFontSize: '字号', readerFontFamily: '字体', readerLineHeight: '行距', readerParagraphSpacing: '段落间距', readerLetterSpacing: '字间距', readerAnimation: '翻页动画', readerAnimationSlide: '滑动', readerAnimationCover: '覆盖', readerAnimationNone: '无', readerScroll: '上下滚动', readerPages: '模拟翻页', readerProgress: '进度', readerFullscreen: '全屏', readerExitFullscreen: '退出全屏', readerFullscreenOnOpen: '是否全屏', readerFullscreenOnOpenHint: '下次打开文档时按此设置进入', readerNoContents: '暂无章节目录。', readerSettingsHint: '设置仅作用于当前设备上的阅读内容。', readerTocHint: '选择章节后跳转到对应位置。',
   },
@@ -264,7 +265,7 @@ const DICT = {
     userAgreement: 'User agreement', viewAgreement: 'View agreement', agreementTitle: 'OneBox user agreement', agreementIntro: 'OneBox is a local-first daily tools app. Most features run on this device.', agreementLocal: 'Local data: calculator history, events, weather cards, translation history, notifications, the reading shelf, reading progress and notes stay on this device by default. You can delete the related records or documents in the app.', agreementNetwork: 'Network services: Home subscriptions, weather and translation may request third-party or open-source services. Home articles come from public feeds; their freshness and availability depend on the source site. Opening an article takes you to that site, whose login, advertising and privacy rules are outside OneBox.', agreementGithub: 'GitHub cloud sync: click GitHub authorization and complete sign-in; no OAuth Client ID needs to be entered. Synced data is written to your own private Gist, while the access token stays on this device. You can disconnect at any time or delete the Gist.', agreementPermissions: 'Permissions: location is used only to find weather for your current place; notifications are used for event and message reminders; file access is used to import local reading documents. Other features remain available when these permissions are denied.', agreementDisclaimer: 'Use note: weather, translation, feeds and third-party pages may be temporarily unavailable because of network conditions, service policies or API changes. Do not put sensitive information that should not be uploaded to a personal GitHub Gist into synced settings, events or notes.', agreementUpdated: 'Last updated',
     addReminder: 'Add reminder', reminderText: 'Reminder', remindAt: 'When', noNotifications: 'No reminders yet.', once: 'Once', everyDay: 'Every day', workdays: 'Workdays', restdays: 'Rest days', weekly: 'Weekly', weekdays: 'Weekdays',
     markRead: 'Mark all read', close: 'Close', system: 'System', light: 'Light', dark: 'Dark', darkGray: 'Black gray',
-    layout: 'Layout', classicLayout: 'Classic layout', simpleLayout: 'Simple layout', openMode: 'Open links', openCurrent: 'Current page', openNewTab: 'New tab', theme: 'Theme', language: 'Language', color: 'Color', blackWhite: 'Black and white', noblePurple: 'Noble purple', skyBlue: 'Sky blue', notBananaGreen: 'WeChat green', meituanYellow: 'Meituan yellow', topDisplay: 'Show at top', footprint: 'Footprints', showFootprint: 'Show on Home', hideFootprint: 'Hide from Home', mascot: 'Pet', showMascot: 'Show pet', hideMascot: 'Hide pet', homeSourceManage: 'Home sources', homeSourceManageHint: 'Choose sources to show in the home navigation', homeSourceAdd: 'Add', homeSourceRemove: 'Remove', homeSourceEmpty: 'No other sources available', reorderHint: 'Long-press a tool tab to reorder',
+    layout: 'Layout', classicLayout: 'Classic layout', simpleLayout: 'Simple layout', openMode: 'Open links', openCurrent: 'Current page', openNewTab: 'New tab', theme: 'Theme', language: 'Language', color: 'Color', blackWhite: 'Black and white', noblePurple: 'Noble purple', skyBlue: 'Sky blue', notBananaGreen: 'WeChat green', meituanYellow: 'Meituan yellow', topDisplay: 'Show at top', footprint: 'Footprints', showFootprint: 'Show on Home', hideFootprint: 'Hide from Home', mascot: 'Pet', showMascot: 'Show pet', hideMascot: 'Hide pet', mascotDisplay: 'Pet display', mascotFullBody: 'Full body', mascotHalfBody: 'Upper body', homeSourceManage: 'Home sources', homeSourceManageHint: 'Choose sources to show in the home navigation', homeSourceAdd: 'Add', homeSourceRemove: 'Remove', homeSourceEmpty: 'No other sources available', reorderHint: 'Long-press a tool tab to reorder',
     navigationLocation: 'Navigation location', navigationLocationMain: 'Main navigation', navigationLocationTools: 'Tool tabs',
     languagePending: 'Japanese and Korean are reserved for a future language pack. Chinese and English are available now.',
     bookshelf: 'Bookshelf', addBook: 'Add document', noBooks: 'No local documents yet.', readerHint: 'Supports Markdown, TXT, PDF and EPUB. Files stay on this device.', openBook: 'Open', deleteBook: 'Delete', annotations: 'Notes', readerComments: 'Notes', readerNotesHint: 'Saved reading notes', addAnnotation: 'Note', annotationPlaceholder: 'Add your thoughts…', saveAnnotation: 'Save', annotationHint: 'Select text, long-press or use the notes button.', noAnnotations: 'No notes yet.', reading: 'Reading', closeReader: 'Close reader', unsupportedFile: 'Choose a .md, .markdown, .txt, .pdf or .epub file.', importFailed: 'Could not read this document.', deleteConfirm: 'Delete this document?', pdfHint: 'PDF opens in the browser native reader.', epubHint: 'EPUB is converted into an adaptive OneBox reading view.', readerContents: 'Contents', readerSettings: 'Reading settings', readerReadingMethod: 'Reading mode', readerTheme: 'Reading background', readerThemePaper: 'Paper', readerThemeSepia: 'E-ink', readerThemeGreen: 'Green', readerThemeDark: 'Night', readerFontSize: 'Font size', readerFontFamily: 'Font', readerLineHeight: 'Line height', readerParagraphSpacing: 'Paragraph spacing', readerLetterSpacing: 'Letter spacing', readerAnimation: 'Page animation', readerAnimationSlide: 'Slide', readerAnimationCover: 'Cover', readerAnimationNone: 'None', readerScroll: 'Vertical scroll', readerPages: 'Page turn', readerProgress: 'Progress', readerFullscreen: 'Fullscreen', readerExitFullscreen: 'Exit fullscreen', readerFullscreenOnOpen: 'Open in fullscreen', readerFullscreenOnOpenHint: 'Apply this choice the next time a document opens', readerNoContents: 'No chapter contents.', readerSettingsHint: 'These settings apply only to reading on this device.', readerTocHint: 'Choose a chapter to jump to it.',
@@ -296,6 +297,7 @@ const storedTopDisplay = parseStored(STORAGE.topDisplay, {}) || {};
 const storedFootprint = parseStored(STORAGE.footprint, false) === true;
 const storedOpenMode = localStorage.getItem(STORAGE.openMode) || 'current';
 const storedMascotVisible = localStorage.getItem(STORAGE.mascotVisible) !== 'false';
+const storedMascotDisplayMode = localStorage.getItem(STORAGE.mascotDisplayMode) === 'full' ? 'full' : 'half';
 const rawWeatherCards = parseStored(STORAGE.weatherCards, []);
 const legacyWeather = parseStored(STORAGE.legacyWeather, null);
 const normalizeToolOrder = (value, includeNavigation = false, navigationFirst = false) => {
@@ -482,6 +484,7 @@ const state = {
   homeSourceDialogOpen: false,
   openMode: storedOpenMode === 'new-tab' ? 'new-tab' : 'current',
   mascotVisible: storedMascotVisible,
+  mascotDisplayMode: storedMascotDisplayMode,
   swRegistration: null, updateAvailable: false, updateChecking: false, updateApplying: false, updateReloading: false, updateError: false,
   github: (() => { const value = parseStored(STORAGE.github, {}) || {}; return { clientId: GITHUB_CLIENT_ID, token: value.token || '', user: value.user || null, gistId: value.gistId || '', deviceCode: '', userCode: '', verificationUri: '', verificationUriComplete: '', expiresAt: 0, interval: 5, manualTokenOpen: false }; })(),
 };
@@ -559,6 +562,7 @@ function saveColorPreference() { localStorage.setItem(STORAGE.color, state.color
 function saveTopDisplay() { saveStored(STORAGE.topDisplay, state.topDisplay); }
 function saveFootprintPreference() { saveStored(STORAGE.footprint, state.footprint); }
 function saveMascotVisibility() { localStorage.setItem(STORAGE.mascotVisible, state.mascotVisible ? 'true' : 'false'); queuePersistentSnapshot(); }
+function saveMascotDisplayMode() { localStorage.setItem(STORAGE.mascotDisplayMode, state.mascotDisplayMode === 'full' ? 'full' : 'half'); queuePersistentSnapshot(); }
 function saveLayoutPreference() { localStorage.setItem(STORAGE.layout, state.layoutMode); queuePersistentSnapshot(); }
 function cycleTheme() {
   state.theme = state.theme === 'system' ? 'light' : state.theme === 'light' ? 'dark' : state.theme === 'dark' ? 'dark-gray' : 'system';
@@ -1156,6 +1160,7 @@ const MASCOT_ASSETS = {
 };
 const MASCOT_DIRECTIONS = ['up-left', 'up', 'up-right', 'left', 'center', 'right', 'down-left', 'down', 'down-right'];
 const MASCOT_REACTIONS = ['blink', 'heart', 'sparkle', 'surprised', 'wink', 'bashful', 'sleepy', 'dizzy', 'delighted'];
+const MASCOT_FULL_BODY_MARKUP = `<svg class="onebox-mascot-fullbody" viewBox="0 0 82 112" aria-hidden="true"><g stroke="#4b271d" stroke-linecap="round" stroke-linejoin="round"><path d="M27 77C10 76 7 62 15 52c7-8 17-5 19 3 2 7-3 12-9 12-3 0-6-2-7-5 1 9 10 13 20 10Z" fill="#f47b2b" stroke-width="2.1"/><path d="M15 54c3-4 8-5 12-2" fill="none" stroke="#ffd9aa" stroke-width="4" opacity=".9"/><path d="M28 59c-3 8-3 17 0 27 2 7 8 12 13 12s11-5 13-12c3-10 3-19 0-27Z" fill="#f47b2b" stroke-width="2.2"/><path d="M33 65c0 8 2 17 8 27 6-10 8-19 8-27-4-3-12-3-16 0Z" fill="#fff0d2" stroke-width="1.5"/><path d="M31 83c-3 9-4 17-1 22 3 4 10 4 14 0 2-3 2-8 0-14Z" fill="#f47b2b" stroke-width="2"/><path d="M51 83c3 9 4 17 1 22-3 4-10 4-14 0-2-3-2-8 0-14Z" fill="#f47b2b" stroke-width="2"/><path d="M30 101c-1 5 1 8 7 8h5c3 0 4-2 2-5l-3-5Z" fill="#6d3927" stroke-width="1.8"/><path d="M52 101c1 5-1 8-7 8h-5c-3 0-4-2-2-5l3-5Z" fill="#6d3927" stroke-width="1.8"/><path d="M26 67c-6 2-8 7-6 11 2 3 7 3 11 0l4-5Z" fill="#f47b2b" stroke-width="2"/><path d="M56 67c6 2 8 7 6 11-2 3-7 3-11 0l-4-5Z" fill="#f47b2b" stroke-width="2"/><path d="M18 31 17 7c0-3 3-4 5-1l13 17Z" fill="#f47b2b" stroke-width="2.2"/><path d="M64 31 65 7c0-3-3-4-5-1L47 23Z" fill="#f47b2b" stroke-width="2.2"/><path d="m21 11 2 14 8-6Z" fill="#ffe2c0" stroke-width="1.2"/><path d="m61 11-2 14-8-6Z" fill="#ffe2c0" stroke-width="1.2"/><path d="M18 28c0-12 10-21 23-21s23 9 23 21v13c0 13-10 23-23 23S18 54 18 41Z" fill="#f47b2b" stroke-width="2.2"/><path d="M27 45c4 7 9 10 14 10s10-3 14-10c-4-3-9-4-14-4s-10 1-14 4Z" fill="#fff0d2" stroke-width="1.4"/><ellipse cx="32" cy="34" rx="5.2" ry="6.4" fill="#fff" stroke-width="1.5"/><ellipse cx="50" cy="34" rx="5.2" ry="6.4" fill="#fff" stroke-width="1.5"/><circle cx="33" cy="35" r="2.7" fill="#2c1916" stroke="none"/><circle cx="49" cy="35" r="2.7" fill="#2c1916" stroke="none"/><circle cx="34" cy="34" r=".9" fill="#fff" stroke="none"/><circle cx="50" cy="34" r=".9" fill="#fff" stroke="none"/><path d="M39 43c2-2 5-2 7 0-1 3-2 4-4 4s-3-1-3-4Z" fill="#4b271d" stroke-width="1"/><path d="M42 46c-1 4-4 5-7 4M42 46c1 4 4 5 7 4" fill="none" stroke-width="1.5"/><circle cx="25" cy="45" r="3" fill="#ffb88f" stroke="none" opacity=".8"/><circle cx="57" cy="45" r="3" fill="#ffb88f" stroke="none" opacity=".8"/></g></svg>`;
 const MASCOT_CLOCKWISE = ['right', 'down-right', 'down', 'down-left', 'left', 'up-left', 'up', 'up-right'];
 const MASCOT_SECTOR = (Math.PI * 2) / MASCOT_CLOCKWISE.length;
 const MASCOT_HYSTERESIS = 0.12;
@@ -1170,6 +1175,18 @@ const MASCOT_EDGE_MESSAGES = ['我先躲到边边～', '边边的位置刚刚好
 const mascotRuntime = { root: null, button: null, panel: null, speech: null, directionLayer: null, reactionLayer: null, drag: null, dockTimer: 0, reactionTimer: 0, actionTimer: 0, idleTimer: 0, speechTimer: 0, singleClickTimer: 0, tapAt: 0, boopAt: 0, boops: 0, suppressClickUntil: 0, sector: -1, position: null, lastReaction: '', lastSpeech: '', topActionAnnounced: false, launchTimer: 0, ballTimer: 0, sceneTimer: 0 };
 function mascotCellStyle(index) {
   return { backgroundPosition: (index % 3) * 50 + '% ' + Math.floor(index / 3) * 50 + '%' };
+}
+function syncMascotDisplayMode(adjustPosition = false) {
+  const root = mascotRuntime.root;
+  if (!root) return;
+  const previousHeight = root.offsetHeight || 0;
+  const mode = state.mascotDisplayMode === 'full' ? 'full' : 'half';
+  root.dataset.mascotDisplay = mode;
+  const nextHeight = root.offsetHeight || previousHeight;
+  if (adjustPosition && mascotRuntime.position && nextHeight !== previousHeight) {
+    mascotSetPosition(mascotRuntime.position.left, mascotRuntime.position.top - (nextHeight - previousHeight) / 2);
+  }
+  mascotSyncPanelSide();
 }
 function mascotWrapAngle(angle) { return Math.atan2(Math.sin(angle), Math.cos(angle)); }
 function mascotPositionValue() {
@@ -1615,11 +1632,12 @@ function mountMascot() {
   if (mascotRuntime.root) return;
   const root = document.createElement('aside');
   root.id = 'oneboxMascotRoot'; root.className = 'onebox-mascot-root'; root.dataset.edge = 'right'; root.dataset.panelSide = 'right';
-  root.innerHTML = '<span class="onebox-mascot-propeller" aria-hidden="true"><i></i><i></i><b></b></span><span class="onebox-mascot-rocket" aria-hidden="true">🚀</span><span class="onebox-mascot-ball" aria-hidden="true">⚽</span><span class="onebox-mascot-snack" aria-hidden="true">🍪</span><span class="onebox-mascot-highfive" aria-hidden="true">🖐️</span><span class="onebox-mascot-nap" aria-hidden="true">💤</span><div class="onebox-mascot-speech" role="status" aria-live="polite" hidden></div><div class="onebox-mascot-panel" hidden></div><button type="button" class="onebox-mascot-button" aria-label="查看今日速览"><span class="onebox-mascot-visual" aria-hidden="true"><span class="onebox-mascot-layer onebox-mascot-direction"></span><span class="onebox-mascot-layer onebox-mascot-reaction"></span><span class="onebox-mascot-fallback">🦊</span></span></button>';
+  root.innerHTML = '<span class="onebox-mascot-propeller" aria-hidden="true"><i></i><i></i><b></b></span><span class="onebox-mascot-rocket" aria-hidden="true">🚀</span><span class="onebox-mascot-ball" aria-hidden="true">⚽</span><span class="onebox-mascot-snack" aria-hidden="true">🍪</span><span class="onebox-mascot-highfive" aria-hidden="true">🖐️</span><span class="onebox-mascot-nap" aria-hidden="true">💤</span><div class="onebox-mascot-speech" role="status" aria-live="polite" hidden></div><div class="onebox-mascot-panel" hidden></div><button type="button" class="onebox-mascot-button" aria-label="查看今日速览"><span class="onebox-mascot-visual" aria-hidden="true">' + MASCOT_FULL_BODY_MARKUP + '<span class="onebox-mascot-layer onebox-mascot-direction"></span><span class="onebox-mascot-layer onebox-mascot-reaction"></span><span class="onebox-mascot-fallback">🦊</span></span></button>';
   document.body.appendChild(root);
   mascotRuntime.root = root; mascotRuntime.button = $('.onebox-mascot-button', root); mascotRuntime.panel = $('.onebox-mascot-panel', root); mascotRuntime.speech = $('.onebox-mascot-speech', root); mascotRuntime.directionLayer = $('.onebox-mascot-direction', root); mascotRuntime.reactionLayer = $('.onebox-mascot-reaction', root);
   mascotRuntime.directionLayer.style.backgroundImage = 'url("' + MASCOT_ASSETS.directions + '")';
   mascotRuntime.reactionLayer.style.backgroundImage = 'url("' + MASCOT_ASSETS.reactions + '")';
+  syncMascotDisplayMode();
   const saved = mascotPositionValue();
   if (saved) mascotSetPosition(saved.left, saved.top, false);
   else mascotSyncPanelSide();
@@ -4700,7 +4718,7 @@ function syncPayload(readerFiles = null) {
     weatherCards: state.weatherCards, translationHistory: state.translationHistory, notifications: state.notifications, library: state.library,
     readerPreferences: state.readerPreferences, readerLayout: state.readerLayout, translationHistoryOpen: state.translationHistoryOpen,
     homeFeedRead: state.homeFeedRead, layoutMode: state.layoutMode, topDisplay: state.topDisplay, footprint: state.footprint,
-    mascotVisible: state.mascotVisible, mascotPosition: parseStored(STORAGE.mascotPosition, null), homeFeedOrder: state.homeFeed.order,
+    mascotVisible: state.mascotVisible, mascotDisplayMode: state.mascotDisplayMode, mascotPosition: parseStored(STORAGE.mascotPosition, null), homeFeedOrder: state.homeFeed.order,
     homeFeedVisibility: state.homeFeed.visible, navigation: state.navigation, navigationLocation: state.navigationLocation, openMode: state.openMode,
     notificationPreference: state.notificationPreference, readerFiles,
   };
@@ -4890,10 +4908,11 @@ async function githubDownload() {
     }
     if (typeof remote.footprint === 'boolean') { state.footprint = remote.footprint; saveFootprintPreference(); }
     if (typeof remote.mascotVisible === 'boolean') { state.mascotVisible = remote.mascotVisible; saveMascotVisibility(); }
+    if (remote.mascotDisplayMode === 'full' || remote.mascotDisplayMode === 'half') { state.mascotDisplayMode = remote.mascotDisplayMode; saveMascotDisplayMode(); }
     if (remote.mascotPosition && Number.isFinite(Number(remote.mascotPosition.left)) && Number.isFinite(Number(remote.mascotPosition.top))) saveStored(STORAGE.mascotPosition, { left: Number(remote.mascotPosition.left), top: Number(remote.mascotPosition.top) });
     if (remote.notificationPreference === 'deny' || remote.notificationPreference === 'allow') { state.notificationPreference = remote.notificationPreference; saveStored(STORAGE.notificationPreference, state.notificationPreference); }
     if (remote.openMode === 'new-tab' || remote.openMode === 'current') { state.openMode = remote.openMode; saveStored(STORAGE.openMode, state.openMode); }
-    state.github.gistId = id; saveGithub(); applyLanguage(); renderNav(); render(); renderGithubDialog();
+    state.github.gistId = id; saveGithub(); applyLanguage(); syncMascotDisplayMode(true); renderNav(); render(); renderGithubDialog();
     toast(state.language === 'en' ? 'Settings restored from GitHub' : '已从 GitHub 恢复设置');
   } catch { toast(state.language === 'en' ? 'GitHub restore failed' : 'GitHub 恢复失败', 'error'); }
 }
@@ -4940,6 +4959,11 @@ function renderSettings() {
   mascotRow.innerHTML = '<h3>' + t('mascot') + '</h3><div class="settings-preference-control"><select id="settingsMascotVisibility"><option value="show">' + t('showMascot') + '</option><option value="hide">' + t('hideMascot') + '</option></select></div>';
   mascotRow.querySelector('select').value = state.mascotVisible ? 'show' : 'hide';
   dialog.querySelector('#settingsFootprint')?.closest('.settings-preference-row')?.after(mascotRow);
+  const mascotDisplayRow = document.createElement('div');
+  mascotDisplayRow.className = 'settings-preference-row';
+  mascotDisplayRow.innerHTML = '<h3>' + t('mascotDisplay') + '</h3><div class="settings-preference-control"><select id="settingsMascotDisplay"><option value="half">' + t('mascotHalfBody') + '</option><option value="full">' + t('mascotFullBody') + '</option></select></div>';
+  mascotDisplayRow.querySelector('select').value = state.mascotDisplayMode === 'full' ? 'full' : 'half';
+  mascotRow.after(mascotDisplayRow);
   const layoutRow = dialog.querySelector('#settingsLayout')?.closest('.settings-preference-row');
   if (layoutRow) {
     const navigationRow = document.createElement('div');
@@ -6852,6 +6876,7 @@ $('#settingsDialog').addEventListener('change', (event) => {
   if (event.target.id === 'settingsNotifications') { state.notificationPreference = event.target.value; saveStored(STORAGE.notificationPreference, state.notificationPreference); if (state.notificationPreference === 'allow') requestNotifications(); }
   if (event.target.id === 'settingsOpenMode') { state.openMode = event.target.value === 'new-tab' ? 'new-tab' : 'current'; saveStored(STORAGE.openMode, state.openMode); }
   if (event.target.id === 'settingsMascotVisibility') { state.mascotVisible = event.target.value !== 'hide'; saveMascotVisibility(); syncMascotVisibility(); renderSettings(); }
+  if (event.target.id === 'settingsMascotDisplay') { state.mascotDisplayMode = event.target.value === 'full' ? 'full' : 'half'; saveMascotDisplayMode(); syncMascotDisplayMode(true); renderSettings(); }
   if (event.target.dataset.topDisplay) { state.topDisplay[event.target.dataset.topDisplay] = event.target.checked; saveTopDisplay(); renderHeaderControls(); renderSettings(); }
 });
 $('#settingsDialog').addEventListener('input', () => {});
