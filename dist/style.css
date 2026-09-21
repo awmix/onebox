@@ -8450,52 +8450,113 @@ html.ios-safari-browser.reader-focus.reader-safari-surface .reader-reference-she
 .onebox-mascot-root.assets-loaded .onebox-mascot-fallback { display: none; }
 #oneboxMascotRoot.assets-fallback .onebox-mascot-layer { opacity: 0; }
 #oneboxMascotRoot.assets-fallback .onebox-mascot-fallback { display: grid; }
+.onebox-mascot-speech {
+  position: absolute;
+  right: -2px;
+  bottom: calc(100% + 11px);
+  width: max-content;
+  max-width: min(228px, calc(100vw - 28px));
+  padding: 11px 15px 12px;
+  border: 1px solid color-mix(in srgb, var(--primary) 44%, var(--line));
+  border-radius: 24px 25px 25px 10px;
+  background: color-mix(in srgb, var(--panel) 96%, transparent);
+  color: var(--ink);
+  box-shadow: 0 14px 32px color-mix(in srgb, var(--ink) 22%, transparent), 0 0 22px color-mix(in srgb, var(--primary) 10%, transparent);
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1.4;
+  white-space: normal;
+  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(18px);
+  transform-origin: 88% 100%;
+}
+.onebox-mascot-speech::before,
+.onebox-mascot-speech::after { content: ''; position: absolute; border-radius: 50%; background: inherit; border: inherit; }
+.onebox-mascot-speech::before { right: 20px; bottom: -8px; width: 14px; height: 14px; border-top: 0; border-left: 0; transform: rotate(45deg); }
+.onebox-mascot-speech::after { right: 5px; bottom: -15px; width: 7px; height: 7px; border: 0; }
+#oneboxMascotRoot[data-panel-side="left"] .onebox-mascot-speech { right: auto; left: -2px; border-radius: 25px 24px 10px 25px; transform-origin: 12% 100%; }
+#oneboxMascotRoot[data-speech-mood="dizzy"] .onebox-mascot-speech { border-color: color-mix(in srgb, #9a86ff 65%, var(--line)); }
+#oneboxMascotRoot[data-speech-mood="pat"] .onebox-mascot-speech { border-color: color-mix(in srgb, #ff91bd 58%, var(--line)); }
+#oneboxMascotRoot[data-speech-mood="weather"] .onebox-mascot-speech { border-color: color-mix(in srgb, #78c9ff 58%, var(--line)); }
+#oneboxMascotRoot.has-speech .onebox-mascot-speech { animation: mascot-speech-in .24s cubic-bezier(.2,.85,.25,1) both; }
 .onebox-mascot-panel {
   position: absolute;
-  right: -6px;
-  bottom: calc(100% + 12px);
+  right: -5px;
+  bottom: calc(100% + 11px);
   box-sizing: border-box;
-  width: min(318px, calc(100vw - 28px));
+  width: min(294px, calc(100vw - 28px));
   max-height: min(440px, calc(100vh - 34px));
   overflow: visible;
-  padding: 14px;
-  border: 1px solid color-mix(in srgb, var(--line) 88%, transparent);
-  border-radius: 30px 30px 26px 30px;
-  background: color-mix(in srgb, var(--panel) 94%, transparent);
+  padding: 0;
+  border: 0;
+  background: transparent;
   color: var(--ink);
-  box-shadow: 0 24px 60px color-mix(in srgb, var(--ink) 26%, transparent), 0 0 0 1px color-mix(in srgb, var(--line) 28%, transparent);
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+#oneboxMascotRoot[data-panel-side="left"] .onebox-mascot-panel { right: auto; left: -5px; }
+.onebox-mascot-cloud {
+  position: relative;
+  overflow: visible;
+  padding: 17px 17px 14px;
+  border: 1px solid color-mix(in srgb, var(--primary) 34%, var(--line));
+  border-radius: 34px 34px 28px 40px;
+  background: linear-gradient(145deg, color-mix(in srgb, var(--panel) 98%, transparent), color-mix(in srgb, var(--primary) 8%, var(--panel)));
+  box-shadow: 0 24px 52px color-mix(in srgb, var(--ink) 26%, transparent), 0 0 28px color-mix(in srgb, var(--primary) 12%, transparent);
   -webkit-backdrop-filter: blur(22px);
   backdrop-filter: blur(22px);
 }
-.onebox-mascot-panel::after {
-  content: '';
-  position: absolute;
-  right: 24px;
-  bottom: -8px;
-  width: 17px;
-  height: 17px;
-  border-right: 1px solid color-mix(in srgb, var(--line) 88%, transparent);
-  border-bottom: 1px solid color-mix(in srgb, var(--line) 88%, transparent);
-  background: color-mix(in srgb, var(--panel) 94%, transparent);
-  transform: rotate(45deg);
-  z-index: 0;
+.onebox-mascot-cloud::before,
+.onebox-mascot-cloud::after { content: ''; position: absolute; pointer-events: none; }
+.onebox-mascot-cloud::before {
+  top: -7px;
+  left: 21px;
+  width: 22px;
+  height: 14px;
+  border: 1px solid color-mix(in srgb, var(--primary) 34%, var(--line));
+  border-bottom: 0;
+  border-radius: 50% 50% 0 0;
+  background: color-mix(in srgb, var(--panel) 98%, transparent);
 }
-#oneboxMascotRoot .onebox-mascot-panel > * { position: relative; z-index: 1; }
-#oneboxMascotRoot[data-panel-side="left"] .onebox-mascot-panel { right: auto; left: -6px; }
-.onebox-mascot-cloud-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding-bottom: 12px; border-bottom: 1px solid color-mix(in srgb, var(--line) 72%, transparent); }
+.onebox-mascot-cloud::after {
+  right: 25px;
+  bottom: -9px;
+  width: 18px;
+  height: 18px;
+  border-right: 1px solid color-mix(in srgb, var(--primary) 34%, var(--line));
+  border-bottom: 1px solid color-mix(in srgb, var(--primary) 34%, var(--line));
+  border-radius: 0 0 7px 0;
+  background: color-mix(in srgb, var(--panel) 98%, transparent);
+  transform: rotate(45deg);
+}
+#oneboxMascotRoot .onebox-mascot-cloud > * { position: relative; z-index: 1; }
+.onebox-mascot-cloud-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
 .onebox-mascot-date { display: flex; min-width: 0; align-items: center; gap: 9px; }
-.onebox-mascot-date-icon { display: grid; width: 30px; height: 30px; flex: 0 0 30px; place-items: center; border-radius: 50%; background: color-mix(in srgb, var(--primary) 16%, transparent); color: var(--primary); font-size: 16px; }
+.onebox-mascot-date-icon { display: grid; width: 34px; height: 34px; flex: 0 0 34px; place-items: center; border: 1px solid color-mix(in srgb, var(--primary) 30%, transparent); border-radius: 14px 16px 12px 15px; background: color-mix(in srgb, var(--primary) 15%, transparent); color: var(--primary); font-size: 17px; }
 .onebox-mascot-date strong, .onebox-mascot-date small { display: block; }
-.onebox-mascot-date strong { font-size: 17px; }
+.onebox-mascot-date strong { font-size: 17px; letter-spacing: -.02em; }
 .onebox-mascot-date small { margin-top: 3px; color: var(--muted); font-size: 11px; white-space: nowrap; }
-.onebox-mascot-weather-card { padding-top: 12px; }
-.onebox-mascot-weather-label { margin-bottom: 6px; color: var(--muted); font-size: 11px; }
+.onebox-mascot-cloud-close { display: grid; width: 28px; height: 28px; padding: 0; place-items: center; border: 1px solid color-mix(in srgb, var(--line) 86%, transparent); border-radius: 50%; background: color-mix(in srgb, var(--panel) 55%, transparent); color: var(--muted); cursor: pointer; font-size: 17px; line-height: 1; }
+.onebox-mascot-cloud-close:hover { color: var(--ink); border-color: color-mix(in srgb, var(--primary) 48%, var(--line)); }
+.onebox-mascot-weather-card { margin-top: 16px; padding: 13px 14px 12px; border: 1px solid color-mix(in srgb, var(--line) 72%, transparent); border-radius: 22px 18px 22px 16px; background: color-mix(in srgb, var(--panel) 58%, transparent); }
+.onebox-mascot-weather-label { margin-bottom: 7px; color: var(--muted); font-size: 11px; }
 .onebox-mascot-empty { margin: 0; color: var(--muted); font-size: 12px; }
 .onebox-mascot-weather-main { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 3px 10px; align-items: baseline; }
-.onebox-mascot-weather-main strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; }
-.onebox-mascot-weather-main span { font-size: 22px; font-weight: 800; }
+.onebox-mascot-weather-main strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; }
+.onebox-mascot-weather-main span { font-size: 24px; font-weight: 850; letter-spacing: -.04em; }
 .onebox-mascot-weather-main small { color: var(--muted); font-size: 11px; }
-.onebox-mascot-weather-meta { display: flex; flex-wrap: wrap; gap: 6px 10px; margin-top: 9px; color: var(--muted); font-size: 11px; }
+.onebox-mascot-weather-meta { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; color: var(--muted); font-size: 11px; }
+.onebox-mascot-weather-meta span { padding: 4px 7px; border-radius: 10px; background: color-mix(in srgb, var(--primary) 9%, transparent); }
+.onebox-mascot-cloud-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.onebox-mascot-cloud-actions button { padding: 7px 10px; border: 1px solid color-mix(in srgb, var(--primary) 28%, var(--line)); border-radius: 999px; background: color-mix(in srgb, var(--primary) 10%, transparent); color: var(--ink); cursor: pointer; font: inherit; font-size: 11px; }
+.onebox-mascot-cloud-actions button:hover { border-color: color-mix(in srgb, var(--primary) 62%, var(--line)); background: color-mix(in srgb, var(--primary) 18%, transparent); }
+.onebox-mascot-cloud-hint { margin: 10px 1px 0; color: var(--muted); font-size: 10px; }
+@keyframes mascot-speech-in {
+  0% { opacity: 0; transform: translateY(7px) scale(.86) rotate(2deg); }
+  70% { opacity: 1; transform: translateY(-2px) scale(1.03) rotate(-1deg); }
+  100% { opacity: 1; transform: translateY(0) scale(1) rotate(0); }
+}
 @keyframes mascot-breathe {
   0%, 100% { transform: translateY(0) rotate(0deg) scale(1); }
   50% { transform: translateY(-2px) rotate(-1deg) scale(1.015); }
@@ -8551,10 +8612,12 @@ html.ios-safari-browser.reader-focus.reader-safari-surface .reader-reference-she
   75% { transform: rotate(-5deg) scale(1.02); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .onebox-mascot-visual { animation: none !important; }
+  .onebox-mascot-visual, .onebox-mascot-speech { animation: none !important; }
 }
 @media (max-width: 600px) {
   #oneboxMascotRoot { width: 70px; height: 70px; top: calc(75vh - 35px); }
   .onebox-mascot-button { width: 70px; height: 70px; border-radius: 22px; }
-  .onebox-mascot-panel { bottom: calc(100% + 9px); width: min(300px, calc(100vw - 20px)); padding: 12px; }
+  .onebox-mascot-panel { bottom: calc(100% + 9px); width: min(278px, calc(100vw - 20px)); }
+  .onebox-mascot-cloud { padding: 15px 14px 13px; }
+  .onebox-mascot-speech { bottom: calc(100% + 8px); max-width: min(210px, calc(100vw - 20px)); }
 }

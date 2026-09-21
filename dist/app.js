@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.216';
+const APP_VERSION = '2.18.217';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -1148,7 +1148,10 @@ const MASCOT_DOCK_DELAY = 3000;
 const MASCOT_EDGE_SWIPE_DISTANCE = 34;
 const MASCOT_IDLE_MIN = 5200;
 const MASCOT_IDLE_MAX = 9800;
-const mascotRuntime = { root: null, button: null, panel: null, directionLayer: null, reactionLayer: null, drag: null, dockTimer: 0, reactionTimer: 0, actionTimer: 0, idleTimer: 0, singleClickTimer: 0, tapAt: 0, boopAt: 0, boops: 0, suppressClickUntil: 0, sector: -1, position: null, lastReaction: '' };
+const MASCOT_IDLE_MESSAGES = ['今天也要轻轻松松哦', '我在这里陪你', '风吹过来啦', '摸摸我会有好运', '要不要看看今天的天气？'];
+const MASCOT_DRAG_MESSAGES = ['抓到我啦', '轻一点，我会晃晕的', '放这里刚刚好', '我也想换个位置'];
+const MASCOT_EDGE_MESSAGES = ['我先躲到边边～', '边边的位置刚刚好', '需要我时再叫我哦'];
+const mascotRuntime = { root: null, button: null, panel: null, speech: null, directionLayer: null, reactionLayer: null, drag: null, dockTimer: 0, reactionTimer: 0, actionTimer: 0, idleTimer: 0, speechTimer: 0, singleClickTimer: 0, tapAt: 0, boopAt: 0, boops: 0, suppressClickUntil: 0, sector: -1, position: null, lastReaction: '', lastSpeech: '' };
 function mascotCellStyle(index) {
   return { backgroundPosition: (index % 3) * 50 + '% ' + Math.floor(index / 3) * 50 + '%' };
 }
@@ -1225,6 +1228,32 @@ function mascotSetReaction(reaction = null, duration = null) {
   const visibleFor = duration ?? (reaction === 'dizzy' ? 1100 : reaction === 'sleepy' ? 1500 : 760);
   mascotRuntime.reactionTimer = window.setTimeout(() => { root.dataset.reaction = ''; }, visibleFor);
 }
+function mascotRandomMessage(messages) {
+  const pool = messages.filter((message) => message !== mascotRuntime.lastSpeech);
+  return pool[Math.floor(Math.random() * pool.length)] || messages[0];
+}
+function mascotShowSpeech(message, duration = 2200, mood = '') {
+  const root = mascotRuntime.root;
+  const speech = mascotRuntime.speech;
+  if (!root || !speech || !message) return;
+  clearTimeout(mascotRuntime.speechTimer);
+  mascotRuntime.lastSpeech = message;
+  speech.textContent = message;
+  root.dataset.speechMood = mood;
+  speech.hidden = false;
+  root.classList.add('has-speech');
+  mascotRuntime.speechTimer = window.setTimeout(() => {
+    speech.hidden = true;
+    root.classList.remove('has-speech');
+    delete root.dataset.speechMood;
+  }, duration);
+}
+function mascotHideSpeech() {
+  clearTimeout(mascotRuntime.speechTimer);
+  if (mascotRuntime.speech) mascotRuntime.speech.hidden = true;
+  mascotRuntime.root?.classList.remove('has-speech');
+  if (mascotRuntime.root) delete mascotRuntime.root.dataset.speechMood;
+}
 function mascotPlayReaction(preferred = null) {
   const now = Date.now();
   const count = now - (mascotRuntime.boopAt || 0) < 1600 ? Number(mascotRuntime.boops || 0) + 1 : 1;
@@ -1243,7 +1272,10 @@ function mascotScheduleIdle() {
   if (!mascotRuntime.root) return;
   const delay = MASCOT_IDLE_MIN + Math.random() * (MASCOT_IDLE_MAX - MASCOT_IDLE_MIN);
   mascotRuntime.idleTimer = window.setTimeout(() => {
-    if (!mascotRuntime.drag && mascotRuntime.panel?.hidden && !mascotTopActionActive()) mascotPlayReaction();
+    if (!mascotRuntime.drag && mascotRuntime.panel?.hidden && !mascotRuntime.root.classList.contains('is-docked') && !mascotTopActionActive()) {
+      mascotPlayReaction();
+      mascotShowSpeech(mascotRandomMessage(MASCOT_IDLE_MESSAGES), 2200, 'idle');
+    }
     mascotScheduleIdle();
   }, delay);
 }
@@ -1265,29 +1297,35 @@ function mascotWeatherMarkup() {
 }
 function mascotBriefingMarkup() {
   const todayLabel = new Intl.DateTimeFormat(state.language === 'en' ? 'en-US' : 'zh-CN', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' }).format(new Date());
-  return '<div class="onebox-mascot-cloud-head"><div class="onebox-mascot-date"><span class="onebox-mascot-date-icon" aria-hidden="true">☀</span><div><strong>' + escapeHtml(state.language === 'en' ? 'Today' : '今天') + '</strong><small>' + escapeHtml(todayLabel) + '</small></div></div><button type="button" class="icon-btn small" data-close-mascot aria-label="' + escapeHtml(t('close')) + '">×</button></div><section class="onebox-mascot-weather-card"><div class="onebox-mascot-weather-label">' + escapeHtml(state.language === 'en' ? 'Current weather' : '当前天气') + '</div>' + mascotWeatherMarkup() + '</section>';
+  const language = state.language === 'en';
+  const hello = language ? 'Today feels good' : '今天感觉不错';
+  const hint = language ? 'Tap me again for a little surprise' : '再点我一下，会有小惊喜';
+  return '<div class="onebox-mascot-cloud"><div class="onebox-mascot-cloud-head"><div class="onebox-mascot-date"><span class="onebox-mascot-date-icon" aria-hidden="true">☀</span><div><strong>' + escapeHtml(hello) + '</strong><small>' + escapeHtml(todayLabel) + '</small></div></div><button type="button" class="onebox-mascot-cloud-close" data-close-mascot aria-label="' + escapeHtml(t('close')) + '">×</button></div><section class="onebox-mascot-weather-card"><div class="onebox-mascot-weather-label">' + escapeHtml(language ? 'A tiny weather note' : '给你的一条天气小纸条') + '</div>' + mascotWeatherMarkup() + '</section><div class="onebox-mascot-cloud-actions"><button type="button" data-mascot-action="pat">♡ ' + escapeHtml(language ? 'Pat me' : '摸摸头') + '</button><button type="button" data-mascot-action="weather">↗ ' + escapeHtml(language ? 'More weather' : '天气详情') + '</button></div><p class="onebox-mascot-cloud-hint">' + escapeHtml(hint) + '</p></div>';
 }
 function closeMascotBriefing() {
   if (!mascotRuntime.panel) return;
   const wasOpen = !mascotRuntime.panel.hidden;
   mascotRuntime.panel.hidden = true;
   mascotRuntime.root?.classList.remove('has-briefing');
+  mascotHideSpeech();
   if (wasOpen) mascotSetAction('peek', 480);
   mascotScheduleDock();
 }
 function openMascotBriefing() {
   if (!mascotRuntime.panel) return;
   mascotReveal();
+  mascotHideSpeech();
   mascotRuntime.panel.innerHTML = mascotBriefingMarkup();
   mascotRuntime.panel.hidden = false;
   mascotRuntime.root.classList.add('has-briefing');
   mascotPlayReaction('delighted');
 }
-function mascotRefreshPage() {
+function mascotPlayTrick() {
+  closeMascotBriefing();
   mascotClearDockTimer();
   mascotSetReaction('dizzy');
   mascotSetAction('dizzy', 1100);
-  window.setTimeout(() => window.location.reload(), 150);
+  mascotShowSpeech(state.language === 'en' ? 'Whoa, too fast!' : '哎呀，转晕啦！', 1800, 'dizzy');
 }
 function mascotTopActionActive() {
   return state.section === 'home' && appScrollTop() > 84;
@@ -1352,6 +1390,7 @@ function mascotFinishDrag(event) {
       mascotClearDockTimer();
       mascotSetReaction('wink', 760);
       mascotSetAction('dock', 760);
+      mascotShowSpeech(mascotRandomMessage(MASCOT_EDGE_MESSAGES), 1800, 'edge');
       return;
     }
     const position = mascotRuntime.position || { left: drag.left, top: drag.top };
@@ -1360,6 +1399,7 @@ function mascotFinishDrag(event) {
     mascotScheduleDock();
     mascotSetReaction('delighted', 760);
     mascotSetAction('land', 760);
+    mascotShowSpeech(mascotRandomMessage(MASCOT_DRAG_MESSAGES), 1800, 'land');
     return;
   }
   if (!cancelled) {
@@ -1385,8 +1425,7 @@ function mascotHandleTap() {
   clearTimeout(mascotRuntime.singleClickTimer);
   if (now - mascotRuntime.tapAt < 340) {
     mascotRuntime.tapAt = 0;
-    closeMascotBriefing();
-    mascotRefreshPage();
+    mascotPlayTrick();
     return;
   }
   mascotRuntime.tapAt = now;
@@ -1399,9 +1438,9 @@ function mountMascot() {
   if (mascotRuntime.root) return;
   const root = document.createElement('aside');
   root.id = 'oneboxMascotRoot'; root.className = 'onebox-mascot-root'; root.dataset.edge = 'right'; root.dataset.panelSide = 'right';
-  root.innerHTML = '<div class="onebox-mascot-panel" hidden></div><button type="button" class="onebox-mascot-button" aria-label="查看今日速览"><span class="onebox-mascot-visual" aria-hidden="true"><span class="onebox-mascot-layer onebox-mascot-direction"></span><span class="onebox-mascot-layer onebox-mascot-reaction"></span><span class="onebox-mascot-fallback">🦊</span></span></button>';
+  root.innerHTML = '<div class="onebox-mascot-speech" role="status" aria-live="polite" hidden></div><div class="onebox-mascot-panel" hidden></div><button type="button" class="onebox-mascot-button" aria-label="查看今日速览"><span class="onebox-mascot-visual" aria-hidden="true"><span class="onebox-mascot-layer onebox-mascot-direction"></span><span class="onebox-mascot-layer onebox-mascot-reaction"></span><span class="onebox-mascot-fallback">🦊</span></span></button>';
   document.body.appendChild(root);
-  mascotRuntime.root = root; mascotRuntime.button = $('.onebox-mascot-button', root); mascotRuntime.panel = $('.onebox-mascot-panel', root); mascotRuntime.directionLayer = $('.onebox-mascot-direction', root); mascotRuntime.reactionLayer = $('.onebox-mascot-reaction', root);
+  mascotRuntime.root = root; mascotRuntime.button = $('.onebox-mascot-button', root); mascotRuntime.panel = $('.onebox-mascot-panel', root); mascotRuntime.speech = $('.onebox-mascot-speech', root); mascotRuntime.directionLayer = $('.onebox-mascot-direction', root); mascotRuntime.reactionLayer = $('.onebox-mascot-reaction', root);
   mascotRuntime.directionLayer.style.backgroundImage = 'url("' + MASCOT_ASSETS.directions + '")';
   mascotRuntime.reactionLayer.style.backgroundImage = 'url("' + MASCOT_ASSETS.reactions + '")';
   const saved = mascotPositionValue();
@@ -1415,6 +1454,7 @@ function mountMascot() {
     if (!event.target.closest?.('.onebox-mascot-button')) return;
     if (event.button != null && event.button !== 0) return;
     mascotReveal(); closeMascotBriefing();
+    mascotHideSpeech();
     mascotSetAction('grab');
     const rect = root.getBoundingClientRect();
     mascotRuntime.drag = { pointerId: event.pointerId, startX: event.clientX, startY: event.clientY, left: rect.left, top: rect.top, moved: false };
@@ -1424,7 +1464,20 @@ function mountMascot() {
   mascotRuntime.button.addEventListener('pointerup', mascotFinishDrag, { passive: false });
   mascotRuntime.button.addEventListener('pointercancel', mascotFinishDrag, { passive: false });
   mascotRuntime.button.addEventListener('keydown', (event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); mascotHandleTap(); } });
-  mascotRuntime.panel.addEventListener('click', (event) => { if (event.target.closest('[data-close-mascot]')) closeMascotBriefing(); });
+  mascotRuntime.panel.addEventListener('click', (event) => {
+    if (event.target.closest('[data-close-mascot]')) { closeMascotBriefing(); return; }
+    const action = event.target.closest('[data-mascot-action]')?.dataset.mascotAction;
+    if (action === 'pat') {
+      closeMascotBriefing();
+      mascotPlayReaction('heart');
+      mascotShowSpeech(state.language === 'en' ? 'That tickles!' : '嘿嘿，好痒呀！', 1800, 'pat');
+    }
+    if (action === 'weather') {
+      closeMascotBriefing();
+      mascotPlayReaction('sparkle');
+      mascotShowSpeech(state.language === 'en' ? 'The full forecast is in Weather.' : '完整天气信息在天气工具里哦', 2200, 'weather');
+    }
+  });
   document.addEventListener('pointerdown', (event) => { if (mascotRuntime.panel && mascotRuntime.root && !mascotRuntime.root.contains(event.target)) closeMascotBriefing(); }, true);
   if (window.matchMedia?.('(hover: hover) and (pointer: fine)').matches) window.addEventListener('pointermove', (event) => mascotAim({ x: event.clientX, y: event.clientY }), { passive: true });
   window.addEventListener('resize', () => { if (mascotRuntime.position) mascotSetPosition(mascotRuntime.position.left, mascotRuntime.position.top, false); mascotSyncPanelSide(); }, { passive: true });
