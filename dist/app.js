@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.238';
+const APP_VERSION = '2.18.239';
 // Public OAuth identifiers are safe to ship in a browser client. The secret
 // is intentionally not used: OneBox uses GitHub's device authorization grant
 // so a static GitHub Pages deployment can authenticate without asking users to
@@ -1160,7 +1160,8 @@ const MASCOT_ASSETS = {
 };
 const MASCOT_DIRECTIONS = ['up-left', 'up', 'up-right', 'left', 'center', 'right', 'down-left', 'down', 'down-right'];
 const MASCOT_REACTIONS = ['blink', 'heart', 'sparkle', 'surprised', 'wink', 'bashful', 'sleepy', 'dizzy', 'delighted'];
-const MASCOT_FULL_BODY_MARKUP = '<img class="onebox-mascot-fullbody" src="icons/mascot-fox-full.png?v=2.18.238" alt="" draggable="false">';
+const MASCOT_FULL_BODY_MARKUP = '<img class="onebox-mascot-fullbody" src="icons/mascot-fox-full.png?v=2.18.239" alt="" draggable="false">';
+const MASCOT_FULL_BODY_REACTIONS = 'icons/mascot-fox-full-reactions.png?v=2.18.239';
 const MASCOT_CLOCKWISE = ['right', 'down-right', 'down', 'down-left', 'left', 'up-left', 'up', 'up-right'];
 const MASCOT_SECTOR = (Math.PI * 2) / MASCOT_CLOCKWISE.length;
 const MASCOT_HYSTERESIS = 0.12;
@@ -1182,6 +1183,10 @@ function syncMascotDisplayMode(adjustPosition = false) {
   const previousHeight = root.offsetHeight || 0;
   const mode = state.mascotDisplayMode === 'full' ? 'full' : 'half';
   root.dataset.mascotDisplay = mode;
+  if (mascotRuntime.reactionLayer) {
+    const reactionAsset = mode === 'full' ? MASCOT_FULL_BODY_REACTIONS : MASCOT_ASSETS.reactions;
+    mascotRuntime.reactionLayer.style.backgroundImage = 'url("' + reactionAsset + '")';
+  }
   const nextHeight = root.offsetHeight || previousHeight;
   if (adjustPosition && mascotRuntime.position && nextHeight !== previousHeight) {
     mascotSetPosition(mascotRuntime.position.left, mascotRuntime.position.top - (nextHeight - previousHeight) / 2);

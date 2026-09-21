@@ -8466,6 +8466,7 @@ html.ios-safari-browser.reader-focus.reader-safari-surface .reader-reference-she
 #oneboxMascotRoot[data-mascot-display="full"] .onebox-mascot-layer,
 #oneboxMascotRoot[data-mascot-display="full"] .onebox-mascot-fallback { display: none; }
 #oneboxMascotRoot[data-mascot-display="full"] .onebox-mascot-fullbody { display: block; }
+#oneboxMascotRoot[data-mascot-display="full"] .onebox-mascot-reaction { inset: auto 0 0; display: block; width: 100%; height: 82px; }
 #oneboxMascotRoot[data-mascot-display="full"][data-action="tap"] .onebox-mascot-fullbody { animation: mascot-fullbody-tap .52s cubic-bezier(.2,.9,.28,1); }
 #oneboxMascotRoot[data-mascot-display="full"][data-action="happy"] .onebox-mascot-fullbody { animation: mascot-fullbody-happy .82s cubic-bezier(.2,.86,.3,1); }
 #oneboxMascotRoot[data-mascot-display="full"][data-action="hop"] .onebox-mascot-fullbody { animation: mascot-fullbody-hop .72s cubic-bezier(.2,.86,.3,1); }
