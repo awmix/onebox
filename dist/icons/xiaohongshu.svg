@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" role="img" aria-label="红书">
+  <rect width="48" height="48" rx="14" fill="#f04b67"/>
+  <path d="M11 17.5c0-2.2 1.8-4 4-4h18c2.2 0 4 1.8 4 4v13c0 2.2-1.8 4-4 4H15c-2.2 0-4-1.8-4-4v-13Z" fill="#fff" opacity=".96"/>
+  <path d="M17 20h14M17 24h11M17 28h7" stroke="#f04b67" stroke-width="2.4" stroke-linecap="round"/>
+  <path d="m31.5 31.5 3.6 3.6" stroke="#f04b67" stroke-width="2.4" stroke-linecap="round"/>
+</svg>

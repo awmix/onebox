@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.244';
+const APP_VERSION = '2.18.245';
 // The OAuth secret stays in the Cloudflare Worker. The browser only knows the
 // public client id and receives the authorization result in the URL fragment,
 // which is consumed immediately and never sent to a server.
@@ -29,6 +29,7 @@ const STORAGE = {
   homeFeedRead: 'onebox.home-feed-read',
   homeFeedOrder: 'onebox.home-feed-order',
   homeFeedVisibility: 'onebox.home-feed-visibility',
+  homeFeedVisibilityMigration: 'onebox.home-feed-visibility-migration',
   layout: 'onebox.layout',
   notificationPreference: 'onebox.notification-preference',
   color: 'onebox.color',
@@ -64,6 +65,7 @@ const FEED_SOURCE_REGISTRY = [
   { id: 'bilibili', name: 'B站', badge: 'B', icon: 'icons/bilibili.ico?v=2.18.124', className: 'bilibili', mobileHost: 'm.bilibili.com', visibleByDefault: false, siteUrl: 'https://search.bilibili.com/all', fetchers: [{ kind: 'bilibili-hot', url: 'https://api.bilibili.com/x/web-interface/search/square?limit=30&platform=web' }, { kind: 'bilibili-hotword', url: 'https://s.search.bilibili.com/main/hotword' }] },
   { id: 'guancha', name: '风闻', badge: '风', icon: 'icons/guancha.png?v=2.18.124', className: 'guancha', mobileHost: 'user.guancha.cn', visibleByDefault: true, siteUrl: 'https://user.guancha.cn/main/index?s=fwdhsy', fetchers: [{ kind: 'guancha-fengwen', url: 'https://user.guancha.cn/main/index-list.json?page=1&order=1' }, { kind: 'guancha-fengwen', url: 'https://rsshub.app/guancha/topic/0/1' }] },
   { id: 'hupu', name: '虎扑', badge: '虎', icon: 'icons/hupu.ico?v=2.18.124', className: 'hupu', mobileHost: 'm.hupu.com', visibleByDefault: true, siteUrl: 'https://bbs.hupu.com/bxj', fetchers: [{ kind: 'hupu-bbs', url: 'https://bbs.hupu.com/bxj' }, { kind: 'hupu-bbs', url: 'https://bbs.hupu.com/topic-daily' }] },
+  { id: 'xiaohongshu', name: '红书', badge: '红', icon: 'icons/xiaohongshu.svg?v=2.18.245', className: 'xiaohongshu', visibleByDefault: true, siteUrl: 'https://www.xiaohongshu.com/explore', fetchers: [{ kind: 'xiaohongshu-explore', url: 'https://www.xiaohongshu.com/explore' }, { kind: 'xiaohongshu-hotboard', url: 'https://uapis.cn/api/v1/misc/hotboard?type=xiaohongshu&limit=30', direct: true }] },
 ];
 const RSS_SOURCES = FEED_SOURCE_REGISTRY.filter((source) => source.enabled !== false);
 const RSS_REFRESH_INTERVAL = 2 * 60 * 1000;
@@ -308,6 +310,8 @@ const normalizeToolOrder = (value, includeNavigation = false, navigationFirst = 
   return (includeNavigation ? normalized : normalized.filter((id) => id !== 'navigation')).slice(0, allowed.length);
 };
 const LEGACY_DEFAULT_HOME_FEED_VISIBLE = ['ithome', 'huxiu', 'zhihu', 'v2ex', 'weibo', 'bilibili'];
+const HOME_FEED_VISIBILITY_MIGRATION = 1;
+const storedHomeFeedVisibilityMigration = Number(localStorage.getItem(STORAGE.homeFeedVisibilityMigration) || 0);
 const normalizeHomeFeedOrder = (value) => {
   const order = Array.isArray(value) ? value.filter((id) => DEFAULT_HOME_FEED_ORDER.includes(id)) : [];
   return [...new Set(order.concat(DEFAULT_HOME_FEED_ORDER))].slice(0, DEFAULT_HOME_FEED_ORDER.length);
@@ -317,6 +321,7 @@ const normalizeHomeFeedVisibility = (value) => {
   const normalized = [...new Set(visible.filter((id) => DEFAULT_HOME_FEED_ORDER.includes(id)))];
   const isLegacyDefault = normalized.length === LEGACY_DEFAULT_HOME_FEED_VISIBLE.length && LEGACY_DEFAULT_HOME_FEED_VISIBLE.every((id) => normalized.includes(id));
   if (isLegacyDefault) return [...DEFAULT_HOME_FEED_VISIBLE];
+  if (Array.isArray(value) && storedHomeFeedVisibilityMigration < HOME_FEED_VISIBILITY_MIGRATION && !normalized.includes('xiaohongshu')) normalized.push('xiaohongshu');
   return normalized;
 };
 function navigationSafeUrl(value) {
@@ -492,6 +497,10 @@ const state = {
   github: (() => { const value = parseStored(STORAGE.github, {}) || {}; return { clientId: GITHUB_CLIENT_ID, token: value.token || '', user: value.user || null, gistId: value.gistId || '', deviceCode: '', userCode: '', verificationUri: '', verificationUriComplete: '', expiresAt: 0, interval: 5, manualTokenOpen: false }; })(),
   githubSync: { active: false, mode: '', progress: 0, message: '', error: '' },
 };
+if (storedHomeFeedVisibilityMigration < HOME_FEED_VISIBILITY_MIGRATION) {
+  localStorage.setItem(STORAGE.homeFeedVisibilityMigration, String(HOME_FEED_VISIBILITY_MIGRATION));
+  if (Array.isArray(storedHomeFeedVisibility)) saveStored(STORAGE.homeFeedVisibility, state.homeFeed.visible);
+}
 function formatNumber(value) {
   if (!Number.isFinite(value)) return '—';
   if (Math.abs(value) >= 1e12 || (Math.abs(value) > 0 && Math.abs(value) < 1e-8)) return value.toExponential(8).replace(/\.0+e/, 'e');
@@ -879,6 +888,36 @@ function jinaJson(value) {
   }
 }
 function syntheticFeedTime(index) { return Date.now() - index * 60 * 1000; }
+function homeFeedLocalCity() {
+  const cards = Array.isArray(state?.weatherCards) ? state.weatherCards : [];
+  const place = cards.find((card) => card?.isCurrentLocation && card?.name) || cards.find((card) => card?.name) || cards[0];
+  const value = feedText(place?.name || place?.admin2 || place?.admin1 || '').replace(/(市|区|县|镇|街道|地区|自治州)$/u, '');
+  return /^(当前位置|当前地点|Current location|Weather)$/i.test(value) ? '' : value;
+}
+function xiaohongshuLocalSearchUrl(city) {
+  const keyword = String(city || '').trim();
+  return keyword ? 'https://www.xiaohongshu.com/search_result?keyword=' + encodeURIComponent(keyword) + '&type=51' : 'https://www.xiaohongshu.com/explore';
+}
+function xiaohongshuExploreItems(value, source) {
+  const content = jinaContent(value);
+  const city = homeFeedLocalCity();
+  const localItem = city ? normalizeFeedItem({
+    title: city + (state.language === 'en' ? ' local picks' : '本地热门'),
+    link: xiaohongshuLocalSearchUrl(city),
+    description: state.language === 'en' ? 'Open Xiaohongshu to browse local recommendations.' : '进入小红书查看本地热门推荐。',
+  }, source, { approximate: true, publishedMs: Date.now() + 1000 }) : null;
+  const matches = [...content.matchAll(/(?:^|\n)\[([^\]\n]{2,160})\]\((https?:\/\/www\.xiaohongshu\.com\/explore\/[^)\s]+)\)/gm)];
+  const items = matches.map((match, index) => {
+    const start = match.index || 0;
+    const nearby = content.slice(Math.max(0, start - 520), start);
+    const imageMatches = [...nearby.matchAll(/!\[[^\]]*\]\((https?:\/\/[^)\s]+)/g)];
+    const image = imageMatches.length ? imageMatches[imageMatches.length - 1][1] : '';
+    const nextStart = matches[index + 1]?.index ?? content.length;
+    const description = feedText(content.slice(start + match[0].length, nextStart)).replace(/\s+/g, ' ').slice(0, 180);
+    return normalizeFeedItem({ title: match[1], link: match[2], description, image }, source, { approximate: true, publishedMs: syntheticFeedTime(index + (localItem ? 1 : 0)) });
+  }).filter(Boolean);
+  return [...(localItem ? [localItem] : []), ...items];
+}
 function hupuTimestamp(value, index) {
   const match = String(value || '').match(/(?:^|\s)(\d{1,2})-(\d{1,2})\s+(\d{1,2}):(\d{2})(?:\s|$)/);
   if (!match) return syntheticFeedTime(index);
@@ -976,6 +1015,15 @@ function structuredHotItems(payload, source, kind) {
       publishedAt: item.last_modified || item.created ? new Date(Number(item.last_modified || item.created) * 1000).toISOString() : '',
     }, source, { publishedMs: parseFeedTimestamp(item.last_modified || item.created ? new Date(Number(item.last_modified || item.created) * 1000).toISOString() : '') || syntheticFeedTime(index) })).filter(Boolean);
   }
+  if (kind === 'xiaohongshu-hotboard') {
+    const values = Array.isArray(payload.list) ? payload.list : Array.isArray(payload.items) ? payload.items : [];
+    return values.map((item, index) => {
+      const title = feedText(item.title || item.name);
+      if (!title) return null;
+      const link = safeExternalUrl(item.url) || xiaohongshuLocalSearchUrl(title);
+      return normalizeFeedItem({ title, link, description: item.hot_value ? '热度 ' + item.hot_value : '', image: item.cover || item.extra?.cover }, source, { approximate: true, publishedMs: syntheticFeedTime(index) });
+    }).filter(Boolean);
+  }
   return [];
 }
 function guanchaRelativeTimestamp(value, index) {
@@ -1033,7 +1081,7 @@ async function fetchFeedSource(source) {
       if (!response.ok) throw Error('HTTP ' + response.status);
       const text = await response.text();
       const payload = fetcher.kind === 'rss' || fetcher.kind === 'guancha-fengwen' ? null : jinaJson(text);
-      const items = fetcher.kind === 'rss' ? rssMarkdownItems(text, source) : fetcher.kind === 'hupu-bbs' ? hupuBbsItems(text, source) : fetcher.kind === 'guancha-fengwen' ? guanchaFengwenItems(text, source) : structuredHotItems(payload, source, fetcher.kind);
+      const items = fetcher.kind === 'rss' ? rssMarkdownItems(text, source) : fetcher.kind === 'hupu-bbs' ? hupuBbsItems(text, source) : fetcher.kind === 'guancha-fengwen' ? guanchaFengwenItems(text, source) : fetcher.kind === 'xiaohongshu-explore' ? xiaohongshuExploreItems(text, source) : structuredHotItems(payload, source, fetcher.kind);
       if (items.length) { successful.push({ items, feedUrl: fetcher.url }); break; }
     } catch { /* try the next source-specific fallback */ }
   }
@@ -1164,8 +1212,8 @@ const MASCOT_ASSETS = {
 };
 const MASCOT_DIRECTIONS = ['up-left', 'up', 'up-right', 'left', 'center', 'right', 'down-left', 'down', 'down-right'];
 const MASCOT_REACTIONS = ['blink', 'heart', 'sparkle', 'surprised', 'wink', 'bashful', 'sleepy', 'dizzy', 'delighted'];
-const MASCOT_FULL_BODY_MARKUP = '<img class="onebox-mascot-fullbody" src="icons/mascot-fox-full.png?v=2.18.244" alt="" draggable="false">';
-const MASCOT_FULL_BODY_REACTIONS = 'icons/mascot-fox-full-reactions.png?v=2.18.244';
+const MASCOT_FULL_BODY_MARKUP = '<img class="onebox-mascot-fullbody" src="icons/mascot-fox-full.png?v=2.18.245" alt="" draggable="false">';
+const MASCOT_FULL_BODY_REACTIONS = 'icons/mascot-fox-full-reactions.png?v=2.18.245';
 const MASCOT_CLOCKWISE = ['right', 'down-right', 'down', 'down-left', 'left', 'up-left', 'up', 'up-right'];
 const MASCOT_SECTOR = (Math.PI * 2) / MASCOT_CLOCKWISE.length;
 const MASCOT_HYSTERESIS = 0.12;
