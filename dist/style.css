@@ -8459,7 +8459,7 @@ html.ios-safari-browser.reader-focus.reader-safari-surface .reader-reference-she
 .onebox-mascot-button:active { cursor: grabbing; }
 .onebox-mascot-button:focus-visible { outline: 2px solid var(--primary); outline-offset: 4px; }
 .onebox-mascot-visual { position: relative; display: block; width: 100%; height: 100%; transform-origin: 50% 78%; animation: mascot-breathe 5.4s ease-in-out infinite; will-change: transform; }
-.onebox-mascot-fullbody { display: none; width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 7px 7px color-mix(in srgb, var(--ink) 22%, transparent)); transform-origin: 50% 96%; }
+.onebox-mascot-fullbody { display: none; width: 100%; height: 100%; object-fit: contain; object-position: 50% 100%; overflow: visible; pointer-events: none; user-select: none; filter: drop-shadow(0 5px 6px color-mix(in srgb, var(--ink) 18%, transparent)); transform: scale(1.12); transform-origin: 50% 100%; will-change: transform; }
 #oneboxMascotRoot[data-mascot-display="full"] { height: 108px; top: calc(75vh - 54px); }
 #oneboxMascotRoot[data-mascot-display="full"] .onebox-mascot-button,
 #oneboxMascotRoot[data-mascot-display="full"] .onebox-mascot-visual { height: 108px; }
@@ -8718,25 +8718,25 @@ html.ios-safari-browser.reader-focus.reader-safari-surface .reader-reference-she
   75% { transform: rotate(-5deg) scale(1.02); }
 }
 @keyframes mascot-fullbody-tap {
-  0%, 100% { transform: scale(1); }
-  38% { transform: translateY(-4px) scale(1.06, .95); }
-  70% { transform: translateY(1px) scale(.98, 1.03); }
+  0%, 100% { transform: scale(1.12); }
+  38% { transform: translateY(-4px) scale(1.18, 1.06); }
+  70% { transform: translateY(1px) scale(1.10, 1.15); }
 }
 @keyframes mascot-fullbody-happy {
-  0% { transform: translateY(2px) scale(.97); }
-  38% { transform: translateY(-7px) rotate(-3deg) scale(1.04); }
-  70% { transform: translateY(1px) rotate(3deg) scale(.99); }
-  100% { transform: translateY(0) rotate(0) scale(1); }
+  0% { transform: translateY(2px) scale(1.08); }
+  38% { transform: translateY(-7px) rotate(-3deg) scale(1.17); }
+  70% { transform: translateY(1px) rotate(3deg) scale(1.10); }
+  100% { transform: translateY(0) rotate(0) scale(1.12); }
 }
 @keyframes mascot-fullbody-hop {
-  0%, 100% { transform: translateY(0) scale(1); }
-  42% { transform: translateY(-11px) scale(1.03); }
-  68% { transform: translateY(0) scale(.97, 1.03); }
+  0%, 100% { transform: translateY(0) scale(1.12); }
+  42% { transform: translateY(-11px) scale(1.16); }
+  68% { transform: translateY(0) scale(1.08, 1.16); }
 }
 @keyframes mascot-fullbody-land {
-  0% { transform: translateY(-5px) scale(1.03); }
-  55% { transform: translateY(2px) scale(1.04, .94); }
-  100% { transform: translateY(0) scale(1); }
+  0% { transform: translateY(-5px) scale(1.16); }
+  55% { transform: translateY(2px) scale(1.17, 1.05); }
+  100% { transform: translateY(0) scale(1.12); }
 }
 @media (prefers-reduced-motion: reduce) {
   .onebox-mascot-visual, .onebox-mascot-speech { animation: none !important; }
