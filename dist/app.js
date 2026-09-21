@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.245';
+const APP_VERSION = '2.18.246';
 // The OAuth secret stays in the Cloudflare Worker. The browser only knows the
 // public client id and receives the authorization result in the URL fragment,
 // which is consumed immediately and never sent to a server.
@@ -65,7 +65,7 @@ const FEED_SOURCE_REGISTRY = [
   { id: 'bilibili', name: 'B站', badge: 'B', icon: 'icons/bilibili.ico?v=2.18.124', className: 'bilibili', mobileHost: 'm.bilibili.com', visibleByDefault: false, siteUrl: 'https://search.bilibili.com/all', fetchers: [{ kind: 'bilibili-hot', url: 'https://api.bilibili.com/x/web-interface/search/square?limit=30&platform=web' }, { kind: 'bilibili-hotword', url: 'https://s.search.bilibili.com/main/hotword' }] },
   { id: 'guancha', name: '风闻', badge: '风', icon: 'icons/guancha.png?v=2.18.124', className: 'guancha', mobileHost: 'user.guancha.cn', visibleByDefault: true, siteUrl: 'https://user.guancha.cn/main/index?s=fwdhsy', fetchers: [{ kind: 'guancha-fengwen', url: 'https://user.guancha.cn/main/index-list.json?page=1&order=1' }, { kind: 'guancha-fengwen', url: 'https://rsshub.app/guancha/topic/0/1' }] },
   { id: 'hupu', name: '虎扑', badge: '虎', icon: 'icons/hupu.ico?v=2.18.124', className: 'hupu', mobileHost: 'm.hupu.com', visibleByDefault: true, siteUrl: 'https://bbs.hupu.com/bxj', fetchers: [{ kind: 'hupu-bbs', url: 'https://bbs.hupu.com/bxj' }, { kind: 'hupu-bbs', url: 'https://bbs.hupu.com/topic-daily' }] },
-  { id: 'xiaohongshu', name: '红书', badge: '红', icon: 'icons/xiaohongshu.svg?v=2.18.245', className: 'xiaohongshu', visibleByDefault: true, siteUrl: 'https://www.xiaohongshu.com/explore', fetchers: [{ kind: 'xiaohongshu-explore', url: 'https://www.xiaohongshu.com/explore' }, { kind: 'xiaohongshu-hotboard', url: 'https://uapis.cn/api/v1/misc/hotboard?type=xiaohongshu&limit=30', direct: true }] },
+  { id: 'xiaohongshu', name: '红书', badge: '红', icon: 'https://www.xiaohongshu.com/favicon.ico?v=2.18.246', className: 'xiaohongshu', visibleByDefault: true, siteUrl: 'https://www.xiaohongshu.com/explore', fetchers: [{ kind: 'xiaohongshu-explore', url: 'https://www.xiaohongshu.com/explore' }, { kind: 'xiaohongshu-hotboard', url: 'https://uapis.cn/api/v1/misc/hotboard?type=xiaohongshu&limit=30', direct: true }] },
 ];
 const RSS_SOURCES = FEED_SOURCE_REGISTRY.filter((source) => source.enabled !== false);
 const RSS_REFRESH_INTERVAL = 2 * 60 * 1000;
@@ -901,11 +901,15 @@ function xiaohongshuLocalSearchUrl(city) {
 function xiaohongshuExploreItems(value, source) {
   const content = jinaContent(value);
   const city = homeFeedLocalCity();
-  const localItem = city ? normalizeFeedItem({
-    title: city + (state.language === 'en' ? ' local picks' : '本地热门'),
-    link: xiaohongshuLocalSearchUrl(city),
-    description: state.language === 'en' ? 'Open Xiaohongshu to browse local recommendations.' : '进入小红书查看本地热门推荐。',
-  }, source, { approximate: true, publishedMs: Date.now() + 1000 }) : null;
+  const localItems = city ? [
+    { label: state.language === 'en' ? 'local picks' : '本地热门', keyword: city },
+    { label: state.language === 'en' ? 'local food' : '本地美食', keyword: city + (state.language === 'en' ? ' food' : ' 美食') },
+    { label: state.language === 'en' ? 'weekend nearby' : '周末附近', keyword: city + (state.language === 'en' ? ' weekend' : ' 周末') },
+  ].map((entry, index) => normalizeFeedItem({
+    title: city + entry.label,
+    link: xiaohongshuLocalSearchUrl(entry.keyword),
+    description: state.language === 'en' ? 'Browse local recommendations on Xiaohongshu.' : '进入小红书查看本地热门推荐。',
+  }, source, { approximate: true, publishedMs: Date.now() - (6 + index * 7) * 60 * 1000 })).filter(Boolean) : [];
   const matches = [...content.matchAll(/(?:^|\n)\[([^\]\n]{2,160})\]\((https?:\/\/www\.xiaohongshu\.com\/explore\/[^)\s]+)\)/gm)];
   const items = matches.map((match, index) => {
     const start = match.index || 0;
@@ -914,9 +918,14 @@ function xiaohongshuExploreItems(value, source) {
     const image = imageMatches.length ? imageMatches[imageMatches.length - 1][1] : '';
     const nextStart = matches[index + 1]?.index ?? content.length;
     const description = feedText(content.slice(start + match[0].length, nextStart)).replace(/\s+/g, ' ').slice(0, 180);
-    return normalizeFeedItem({ title: match[1], link: match[2], description, image }, source, { approximate: true, publishedMs: syntheticFeedTime(index + (localItem ? 1 : 0)) });
+    return normalizeFeedItem({ title: match[1], link: match[2], description, image }, source, { approximate: true, publishedMs: syntheticFeedTime(index) });
   }).filter(Boolean);
-  return [...(localItem ? [localItem] : []), ...items];
+  return items.reduce((result, item, index) => {
+    result.push(item);
+    const localIndex = Math.floor((index + 1) / 6) - 1;
+    if (localItems[localIndex]) result.push(localItems[localIndex]);
+    return result;
+  }, []).concat(localItems.slice(Math.floor(items.length / 6)));
 }
 function hupuTimestamp(value, index) {
   const match = String(value || '').match(/(?:^|\s)(\d{1,2})-(\d{1,2})\s+(\d{1,2}):(\d{2})(?:\s|$)/);
@@ -1212,8 +1221,8 @@ const MASCOT_ASSETS = {
 };
 const MASCOT_DIRECTIONS = ['up-left', 'up', 'up-right', 'left', 'center', 'right', 'down-left', 'down', 'down-right'];
 const MASCOT_REACTIONS = ['blink', 'heart', 'sparkle', 'surprised', 'wink', 'bashful', 'sleepy', 'dizzy', 'delighted'];
-const MASCOT_FULL_BODY_MARKUP = '<img class="onebox-mascot-fullbody" src="icons/mascot-fox-full.png?v=2.18.245" alt="" draggable="false">';
-const MASCOT_FULL_BODY_REACTIONS = 'icons/mascot-fox-full-reactions.png?v=2.18.245';
+const MASCOT_FULL_BODY_MARKUP = '<img class="onebox-mascot-fullbody" src="icons/mascot-fox-full.png?v=2.18.246" alt="" draggable="false">';
+const MASCOT_FULL_BODY_REACTIONS = 'icons/mascot-fox-full-reactions.png?v=2.18.246';
 const MASCOT_CLOCKWISE = ['right', 'down-right', 'down', 'down-left', 'left', 'up-left', 'up', 'up-right'];
 const MASCOT_SECTOR = (Math.PI * 2) / MASCOT_CLOCKWISE.length;
 const MASCOT_HYSTERESIS = 0.12;
