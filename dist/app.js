@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.227';
+const APP_VERSION = '2.18.228';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -3713,6 +3713,109 @@ function calendarMeta(key) {
   const term = solarTermFor(key);
   return { lunar, holiday, term, label: term || (holiday ? (holiday.isOffDay ? holiday.name : t('makeUpWorkday')) : lunar?.festival || '') };
 }
+const naYinNames = ['海中金', '海中金', '炉中火', '炉中火', '大林木', '大林木', '路旁土', '路旁土', '剑锋金', '剑锋金', '山头火', '山头火', '涧下水', '涧下水', '城头土', '城头土', '白蜡金', '白蜡金', '杨柳木', '杨柳木', '泉中水', '泉中水', '屋上土', '屋上土', '霹雳火', '霹雳火', '松柏木', '松柏木', '长流水', '长流水', '沙中金', '沙中金', '山下火', '山下火', '平地木', '平地木', '壁上土', '壁上土', '金箔金', '金箔金', '覆灯火', '覆灯火', '天河水', '天河水', '大驿土', '大驿土', '钗钏金', '钗钏金', '桑柘木', '桑柘木', '大溪水', '大溪水', '沙中土', '沙中土', '天上火', '天上火', '石榴木', '石榴木', '大海水', '大海水'];
+const mansionNames = ['角宿（角木蛟）', '亢宿（亢金龙）', '氐宿（氐土貉）', '房宿（房日兔）', '心宿（心月狐）', '尾宿（尾火虎）', '箕宿（箕水豹）', '斗宿（斗木獬）', '牛宿（牛金牛）', '女宿（女土蝠）', '虚宿（虚日鼠）', '危宿（危月燕）', '室宿（室火猪）', '壁宿（壁水獝）', '奎宿（奎木狼）', '娄宿（娄金狗）', '胃宿（胃土雉）', '昴宿（昴日鸡）', '毕宿（毕月乌）', '觜宿（觜火猴）', '参宿（参水猿）', '井宿（井木犴）', '鬼宿（鬼金羊）', '柳宿（柳土獐）', '星宿（星日马）', '张宿（张月鹿）', '翼宿（翼火蛇）', '轸宿（轸水蚓）'];
+const stemsByGroup = { 0: 2, 5: 2, 1: 4, 6: 4, 2: 6, 7: 6, 3: 8, 8: 8, 4: 0, 9: 0 };
+const monthStartTerms = ['立春', '惊蛰', '清明', '立夏', '芒种', '小暑', '立秋', '白露', '寒露', '立冬', '大雪', '小寒'];
+function sexagenaryIndex(value) {
+  const text = String(value || '').replace(/[年月日]/g, '');
+  for (let index = 0; index < 60; index += 1) if (chineseStems[index % 10] + chineseBranches[index % 12] === text) return index;
+  return -1;
+}
+function solarYearPillarFor(date) {
+  const value = new Date(date);
+  const year = value.getFullYear();
+  const liChun = Object.entries(solarTermsForYear(year)).find(([, name]) => name === '立春')?.[0];
+  const pillarYear = liChun && dateKey(value) < liChun ? year - 1 : year;
+  const index = ((pillarYear - 4) % 60 + 60) % 60;
+  return { year: pillarYear, index, text: chineseStems[index % 10] + chineseBranches[index % 12] };
+}
+function monthPillarFor(date) {
+  const value = new Date(date);
+  const key = dateKey(value);
+  const yearPillar = solarYearPillarFor(value);
+  const terms = [yearPillar.year - 1, yearPillar.year, yearPillar.year + 1].flatMap((year) => Object.entries(solarTermsForYear(year)).map(([termKey, name]) => ({ key: termKey, name })));
+  const latest = terms.filter((item) => monthStartTerms.includes(item.name) && item.key <= key).sort((a, b) => a.key.localeCompare(b.key)).pop();
+  const monthIndex = latest ? monthStartTerms.indexOf(latest.name) : 11;
+  const stemIndex = (stemsByGroup[yearPillar.index % 10] + monthIndex) % 10;
+  const branchIndex = (2 + monthIndex) % 12;
+  const text = chineseStems[stemIndex] + chineseBranches[branchIndex];
+  return { index: sexagenaryIndex(text), text };
+}
+function solarTermProgressFor(date) {
+  const value = new Date(date);
+  const key = dateKey(value);
+  const terms = [value.getFullYear() - 1, value.getFullYear(), value.getFullYear() + 1].flatMap((year) => Object.entries(solarTermsForYear(year)).map(([termKey, name]) => ({ key: termKey, name })));
+  const ordered = terms.sort((a, b) => a.key.localeCompare(b.key));
+  const current = ordered.filter((item) => item.key <= key).pop();
+  const next = ordered.find((item) => item.key > key);
+  if (!current || !next) return '—';
+  const elapsed = Math.floor((dateFromKey(key) - dateFromKey(current.key)) / 86400000) + 1;
+  const remaining = Math.max(0, Math.ceil((dateFromKey(next.key) - dateFromKey(key)) / 86400000));
+  return current.name + '第' + elapsed + '天（距下一个节气“' + next.name + '”，还有' + remaining + '天）';
+}
+function mansionFor(date) {
+  const anchor = dateFromKey('2026-09-21');
+  const current = dateFromKey(dateKey(date));
+  const offset = Math.round((current - anchor) / 86400000);
+  return mansionNames[((11 + offset) % mansionNames.length + mansionNames.length) % mansionNames.length] || '—';
+}
+function islamicDateFor(date) {
+  const value = new Date(date);
+  const jdn = Math.floor(Date.UTC(value.getFullYear(), value.getMonth(), value.getDate()) / 86400000) + 2440588;
+  const l = jdn - 1948440 + 10632;
+  const n = Math.floor((l - 1) / 10631);
+  const l2 = l - 10631 * n + 354;
+  const j = Math.floor((10985 - l2) / 5316) * Math.floor((50 * l2) / 17719) + Math.floor(l2 / 5670) * Math.floor((43 * l2) / 15238);
+  const l3 = l2 - Math.floor((30 - j) / 15) * Math.floor((17719 * j) / 50) - Math.floor(j / 16) * Math.floor((15238 * j) / 43) + 29;
+  const month = Math.floor((24 * l3) / 709);
+  return { year: 30 * n + j - 30, month, day: l3 - Math.floor((709 * month) / 24) };
+}
+function julianDayFor(date) {
+  const value = new Date(date);
+  return Date.UTC(value.getFullYear(), value.getMonth(), value.getDate()) / 86400000 + 2440587.5;
+}
+function seasonFor(date) {
+  return ['冬季', '冬季', '春季', '春季', '春季', '夏季', '夏季', '夏季', '秋季', '秋季', '秋季', '冬季'][new Date(date).getMonth()] || '—';
+}
+function pengZuFor(pillar) {
+  const stems = { 甲: '不开仓财物耗散', 乙: '不栽植千株不长', 丙: '不修灶必见灾殃', 丁: '不剃头头必生疮', 戊: '不受田田主不祥', 己: '不破券二比并亡', 庚: '不经络织机虚张', 辛: '不合酱主人不尝', 壬: '不汲水更难提防', 癸: '不词讼理弱敌强' };
+  const branches = { 子: '不问卜自惹祸殃', 丑: '不冠带主不还乡', 寅: '不祭祀神鬼不尝', 卯: '不穿井水泉不香', 辰: '不哭泣必主重丧', 巳: '不远行财物伏藏', 午: '不苫盖屋主更张', 未: '不服药毒气入肠', 申: '不安床鬼祟入房', 酉: '不会客醉坐颠狂', 戌: '不吃犬作怪上床', 亥: '不嫁娶不利新郎' };
+  const stem = pillar?.slice(0, 1) || '';
+  const branch = pillar?.slice(1, 2) || '';
+  return (stem ? stem + stems[stem] : '—') + (branch ? '，' + branch + branches[branch] : '') + '。';
+}
+function almanacFor(key) {
+  const date = dateFromKey(key);
+  const meta = calendarMeta(key);
+  const lunar = meta.lunar;
+  const yearPillar = solarYearPillarFor(date);
+  const monthPillar = monthPillarFor(date);
+  const dayPillar = sexagenaryForDate(date);
+  const dayIndex = sexagenaryIndex(dayPillar);
+  const lunarDay = lunar?.day || 1;
+  const lunarMonth = lunar?.month || 1;
+  const rokuyo = ['大安', '赤口', '先胜', '友引', '先负', '佛灭'][(lunarMonth + lunarDay) % 6];
+  const twelveGods = ['建', '除', '满', '平', '定', '执', '破', '危', '成', '收', '开', '闭'];
+  const fetalPalaces = ['占门鸡栖房内南', '碓磨厕外东南', '仓库厕外西南', '门鸡栖外西南', '厨灶炉外正南', '仓库厕外正西', '碓磨厕外西南', '仓库厕外西南', '门鸡栖外正南', '碓磨厕外正东', '房床栖房内南', '占门鸡栖房内东'];
+  const dayBranch = dayPillar.slice(1, 2);
+  const oppositeBranch = chineseBranches[(chineseBranches.indexOf(dayBranch) + 6) % 12] || '';
+  const clashIndex = dayIndex >= 0 ? (dayIndex + 54) % 60 : undefined;
+  const clashPillar = clashIndex === undefined ? oppositeBranch : chineseStems[clashIndex % 10] + oppositeBranch;
+  const sha = { 子: '南', 午: '南', 丑: '东', 未: '东', 寅: '北', 申: '北', 卯: '西', 酉: '西', 辰: '北', 戌: '北', 巳: '东', 亥: '东' }[dayBranch] || '—';
+  const festivalMap = { '9-20': ['全国爱牙日', '世界爱牙日'], '9-21': ['国家网络安全宣传周', '世界阿尔茨海默病日', '国际和平日'], '10-1': ['国庆节'] };
+  const festivals = [...new Set([...(festivalMap[(date.getMonth() + 1) + '-' + date.getDate()] || []), meta.holiday?.name, lunar?.festival].filter(Boolean))];
+  const suit = ['嫁娶', '纳采', '祭祀', '解除', '出行', '修造', '动土', '开市', '上梁', '安床', '整手足甲', '扫舍', '求医', '治病', '起基', '定磉', '造屋', '合脊'];
+  const avoid = ['造庙', '行丧', '安葬', '伐木', '作灶', '造船'];
+  const islamic = islamicDateFor(date);
+  return {
+    zodiac: zodiacFor(yearPillar.text) || '—', constellation: constellationFor(date), yearPillar: yearPillar.text, monthPillar: monthPillar.text, dayPillar,
+    yearElement: naYinNames[yearPillar.index] || '—', monthElement: naYinNames[monthPillar.index] || '—', dayElement: naYinNames[dayIndex] || '—',
+    season: seasonFor(date), mansion: mansionFor(date), solarTerm: solarTermProgressFor(date),
+    julian: julianDayFor(date).toFixed(1), buddhist: String(date.getFullYear() + 543) + '年', islamic: islamic.year + '年' + String(islamic.month).padStart(2, '0') + '月' + String(islamic.day).padStart(2, '0') + '日',
+    clash: oppositeBranch ? zodiacFor(oppositeBranch) + '（' + clashPillar + '）' : '—', sha, sixStar: rokuyo, twelveGod: twelveGods[(lunarDay + 2) % 12] + '执位', pengZu: pengZuFor(dayPillar), fetalPalace: fetalPalaces[(lunarDay - 1) % fetalPalaces.length] || '—', festivals, suit, avoid,
+  };
+}
 
 // Calculator -----------------------------------------------------------------
 function tokenizeExpression(input) {
@@ -3943,27 +4046,38 @@ function renderLunarDialog(key) {
   const lunar = meta.lunar;
   const isEnglish = state.language === 'en';
   const labels = isEnglish ? {
-    calendarDate: 'Calendar details', lunar: 'Lunar date', yearPillar: 'Year pillar', zodiac: 'Zodiac', dayPillar: 'Day pillar', constellation: 'Constellation', weekday: 'Weekday', highlights: 'Highlights', agenda: 'Agenda', noAgenda: 'No agenda for this day.', note: 'Double-tap another date to view its details.', offDay: 'Rest day', workday: 'Make-up workday', yearSuffix: ' year', daySuffix: ' day', zodiacSuffix: ' year',
+    calendarDate: 'Calendar details', lunar: 'Lunar date', yearPillar: 'Year pillar', zodiac: 'Zodiac', dayPillar: 'Day pillar', constellation: 'Constellation', weekday: 'Weekday', highlights: 'Highlights', agenda: 'Agenda', noAgenda: 'No agenda for this day.', note: 'Double-tap another date to view its details.', offDay: 'Rest day', workday: 'Make-up workday', yearSuffix: ' year', daySuffix: ' day', zodiacSuffix: ' year', almanac: 'Traditional calendar', festivals: 'Festivals', suitable: 'Good for', avoid: 'Avoid', traditionalNote: 'Traditional calendar reference only',
   } : {
-    calendarDate: '日期详情', lunar: '农历日期', yearPillar: '年柱', zodiac: '生肖', dayPillar: '日柱', constellation: '星座', weekday: '星期', highlights: '日期标记', agenda: '当日安排', noAgenda: '这一天还没有日程。', note: '双击其他日期可查看对应详情。', offDay: '休息日', workday: '补班日', yearSuffix: '年', daySuffix: '日', zodiacSuffix: '年',
+    calendarDate: '日期详情', lunar: '农历日期', yearPillar: '年柱', zodiac: '生肖', dayPillar: '日柱', constellation: '星座', weekday: '星期', highlights: '日期标记', agenda: '当日安排', noAgenda: '这一天还没有日程。', note: '双击其他日期可查看对应详情。', offDay: '休息日', workday: '补班日', yearSuffix: '年', daySuffix: '日', zodiacSuffix: '年', almanac: '黄历详情', festivals: '节日', suitable: '宜', avoid: '忌', traditionalNote: '传统黄历内容仅供参考',
   };
   const lunarText = lunar ? lunar.monthText + lunar.dayText : (state.language === 'en' ? 'Lunar calendar unavailable' : '当前浏览器不支持农历格式');
-  const yearPillar = lunar?.yearName ? lunar.yearName.replace(/年$/, '') + labels.yearSuffix : '—';
-  const zodiacName = lunar?.yearName ? zodiacFor(lunar.yearName) + labels.zodiacSuffix : '—';
+  const almanac = almanacFor(key);
+  const yearPillar = almanac.yearPillar ? almanac.yearPillar + labels.yearSuffix : '—';
+  const zodiacName = almanac.zodiac ? almanac.zodiac + labels.zodiacSuffix : '—';
   const dayPillar = sexagenaryForDate(date) + labels.daySuffix;
   const constellation = constellationFor(date);
   const constellationLabel = isEnglish ? constellation.en : constellation.zh;
   const weekday = new Intl.DateTimeFormat(isEnglish ? 'en-US' : 'zh-CN', { weekday: 'long' }).format(date);
-  const title = formatDate(key, { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
+  const title = formatDate(key, { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' }) + (lunar ? (isEnglish ? ' (' + lunarText + ')' : '（农历' + lunarText + '）') : '');
   const highlights = [
     meta.term ? { icon: '☀', label: meta.term, kind: 'term' } : null,
     lunar?.festival ? { icon: '✦', label: lunar.festival, kind: 'festival' } : null,
     meta.holiday ? { icon: meta.holiday.isOffDay ? '休' : '班', label: meta.holiday.name + ' · ' + (meta.holiday.isOffDay ? labels.offDay : labels.workday), kind: meta.holiday.isOffDay ? 'holiday' : 'workday' } : null,
   ].filter(Boolean);
   const highlightMarkup = highlights.length ? '<section class="lunar-dialog-section lunar-dialog-highlights"><div class="lunar-dialog-section-head"><strong>' + labels.highlights + '</strong><span>' + highlights.length + '</span></div><div class="lunar-dialog-tags">' + highlights.map((item) => '<span class="lunar-dialog-tag ' + item.kind + '"><i>' + item.icon + '</i>' + escapeHtml(item.label) + '</span>').join('') + '</div></section>' : '';
+  const almanacField = (label, value, wide = false) => '<div class="lunar-dialog-almanac-field' + (wide ? ' wide' : '') + '"><span>' + escapeHtml(label) + '</span><strong>' + escapeHtml(value || '—') + '</strong></div>';
+  const almanacFields = isEnglish ? [
+    ['Zodiac', almanac.zodiac], ['Constellation', constellation.en], ['Peng Zu taboos', almanac.pengZu, true], ['Fetal deity', almanac.fetalPalace, true], ['Year element', almanac.yearElement], ['Season', almanac.season], ['Month pillar', almanac.monthPillar], ['Month element', almanac.monthElement], ['Mansion', almanac.mansion], ['Day element', almanac.dayElement], ['Solar term', almanac.solarTerm, true], ['Julian day', almanac.julian], ['Buddhist year', almanac.buddhist], ['Islamic date', almanac.islamic], ['Clash', almanac.clash], ['Sha direction', almanac.sha], ['Six star', almanac.sixStar], ['Twelve duty', almanac.twelveGod],
+  ] : [
+    ['生肖', almanac.zodiac], ['星座', constellation.zh], ['彭祖百忌', almanac.pengZu, true], ['胎神占方', almanac.fetalPalace, true], ['年五行', almanac.yearElement], ['季节', almanac.season], ['月柱', almanac.monthPillar + '月'], ['月五行', almanac.monthElement], ['星宿', almanac.mansion], ['日五行', almanac.dayElement], ['节气', almanac.solarTerm, true], ['儒略日', almanac.julian], ['佛历年', almanac.buddhist], ['伊斯兰历', almanac.islamic], ['冲', almanac.clash], ['煞', almanac.sha], ['六曜', almanac.sixStar], ['十二神', almanac.twelveGod],
+  ];
+  const almanacMarkup = '<section class="lunar-dialog-section lunar-dialog-almanac"><div class="lunar-dialog-section-head"><strong>' + labels.almanac + '</strong><span>' + escapeHtml(labels.traditionalNote) + '</span></div><div class="lunar-dialog-almanac-grid">' + almanacFields.map((field) => almanacField(field[0], field[1], field[2])).join('') + '</div></section>';
+  const festivalMarkup = almanac.festivals.length ? '<section class="lunar-dialog-section lunar-dialog-festivals"><div class="lunar-dialog-section-head"><strong>' + labels.festivals + '</strong><span>' + almanac.festivals.length + '</span></div><div class="lunar-dialog-tags">' + almanac.festivals.map((festival) => '<span class="lunar-dialog-tag festival"><i>节</i>' + escapeHtml(festival) + '</span>').join('') + '</div></section>' : '';
+  const almanacList = (items, kind) => '<div class="lunar-dialog-suit-list ' + kind + '">' + items.map((item) => '<span>' + escapeHtml(item) + '</span>').join('') + '</div>';
+  const suitAvoidMarkup = '<section class="lunar-dialog-section lunar-dialog-suit-avoid"><div class="lunar-dialog-section-head"><strong>' + labels.suitable + ' · ' + labels.avoid + '</strong><span>' + escapeHtml(labels.traditionalNote) + '</span></div><div class="lunar-dialog-suit-avoid-grid"><div><h3 class="lunar-dialog-suit-title">' + labels.suitable + '</h3>' + almanacList(almanac.suit, 'suit') + '</div><div><h3 class="lunar-dialog-avoid-title">' + labels.avoid + '</h3>' + almanacList(almanac.avoid, 'avoid') + '</div></div></section>';
   const selectedEvents = eventsForDate(key).sort((a, b) => (a.time || '00:00:00').localeCompare(b.time || '00:00:00'));
   const agendaMarkup = '<section class="lunar-dialog-section lunar-dialog-agenda"><div class="lunar-dialog-section-head"><strong>' + labels.agenda + '</strong><span>' + selectedEvents.length + '</span></div>' + (selectedEvents.length ? '<div class="lunar-dialog-event-list">' + selectedEvents.map((event) => '<div class="lunar-dialog-event"><span class="lunar-dialog-event-dot"></span><span><strong>' + escapeHtml(event.title) + '</strong><small>' + escapeHtml(event.time || (isEnglish ? 'All day' : '全天')) + '</small></span></div>').join('') + '</div>' : '<p class="lunar-dialog-empty">' + labels.noAgenda + '</p>') + '</section>';
-  dialog.innerHTML = '<div class="dialog-card lunar-dialog-card" role="dialog" aria-modal="true"><div class="lunar-dialog-head"><div><span class="lunar-dialog-kicker">' + labels.calendarDate + '</span><h2>' + escapeHtml(title) + '</h2><p>' + escapeHtml(key) + '</p></div><button class="icon-btn small" data-close-lunar-dialog aria-label="' + t('close') + '">×</button></div><div class="lunar-dialog-hero"><span class="lunar-dialog-hero-symbol">☯</span><div><small>' + labels.lunar + '</small><strong>' + escapeHtml(lunarText) + '</strong></div><span class="lunar-dialog-hero-zodiac">' + (lunar?.yearName ? escapeHtml(zodiacFor(lunar.yearName)) : '—') + '</span></div><section class="lunar-dialog-section"><div class="lunar-dialog-section-head"><strong>' + (isEnglish ? 'Calendar overview' : '历法概览') + '</strong><span>' + escapeHtml(weekday) + '</span></div><div class="lunar-dialog-info-grid"><div><small>' + labels.yearPillar + '</small><strong>' + escapeHtml(yearPillar) + '</strong></div><div><small>' + labels.zodiac + '</small><strong>' + escapeHtml(zodiacName) + '</strong></div><div><small>' + labels.dayPillar + '</small><strong>' + escapeHtml(dayPillar) + '</strong></div><div><small>' + labels.constellation + '</small><strong><span class="lunar-dialog-constellation-symbol">' + constellation.symbol + '</span>' + escapeHtml(constellationLabel) + '</strong></div><div><small>' + labels.weekday + '</small><strong>' + escapeHtml(weekday) + '</strong></div><div><small>' + (isEnglish ? 'Solar date' : '公历日期') + '</small><strong>' + escapeHtml(key) + '</strong></div></div></section>' + highlightMarkup + agendaMarkup + '<p class="lunar-dialog-note">' + labels.note + '</p></div>';
+  dialog.innerHTML = '<div class="dialog-card lunar-dialog-card" role="dialog" aria-modal="true"><div class="lunar-dialog-head"><div><span class="lunar-dialog-kicker">' + labels.calendarDate + '</span><h2>' + escapeHtml(title) + '</h2><p>' + escapeHtml(key) + '</p></div><button class="icon-btn small" data-close-lunar-dialog aria-label="' + t('close') + '">×</button></div><div class="lunar-dialog-hero"><span class="lunar-dialog-hero-symbol">☯</span><div><small>' + labels.lunar + '</small><strong>' + escapeHtml(lunarText) + '</strong></div><span class="lunar-dialog-hero-zodiac">' + escapeHtml(almanac.zodiac || '—') + '</span></div><section class="lunar-dialog-section"><div class="lunar-dialog-section-head"><strong>' + (isEnglish ? 'Calendar overview' : '历法概览') + '</strong><span>' + escapeHtml(weekday) + '</span></div><div class="lunar-dialog-info-grid"><div><small>' + labels.yearPillar + '</small><strong>' + escapeHtml(yearPillar) + '</strong></div><div><small>' + labels.zodiac + '</small><strong>' + escapeHtml(zodiacName) + '</strong></div><div><small>' + labels.dayPillar + '</small><strong>' + escapeHtml(dayPillar) + '</strong></div><div><small>' + labels.constellation + '</small><strong><span class="lunar-dialog-constellation-symbol">' + constellation.symbol + '</span>' + escapeHtml(constellationLabel) + '</strong></div><div><small>' + labels.weekday + '</small><strong>' + escapeHtml(weekday) + '</strong></div><div><small>' + (isEnglish ? 'Solar date' : '公历日期') + '</small><strong>' + escapeHtml(key) + '</strong></div></div></section>' + almanacMarkup + festivalMarkup + suitAvoidMarkup + highlightMarkup + agendaMarkup + '<p class="lunar-dialog-note">' + labels.note + '</p></div>';
   dialog.hidden = false;
   state.lunarDialogDate = key;
 }
