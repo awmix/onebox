@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.246';
+const APP_VERSION = '2.18.247';
 // The OAuth secret stays in the Cloudflare Worker. The browser only knows the
 // public client id and receives the authorization result in the URL fragment,
 // which is consumed immediately and never sent to a server.
@@ -65,7 +65,8 @@ const FEED_SOURCE_REGISTRY = [
   { id: 'bilibili', name: 'B站', badge: 'B', icon: 'icons/bilibili.ico?v=2.18.124', className: 'bilibili', mobileHost: 'm.bilibili.com', visibleByDefault: false, siteUrl: 'https://search.bilibili.com/all', fetchers: [{ kind: 'bilibili-hot', url: 'https://api.bilibili.com/x/web-interface/search/square?limit=30&platform=web' }, { kind: 'bilibili-hotword', url: 'https://s.search.bilibili.com/main/hotword' }] },
   { id: 'guancha', name: '风闻', badge: '风', icon: 'icons/guancha.png?v=2.18.124', className: 'guancha', mobileHost: 'user.guancha.cn', visibleByDefault: true, siteUrl: 'https://user.guancha.cn/main/index?s=fwdhsy', fetchers: [{ kind: 'guancha-fengwen', url: 'https://user.guancha.cn/main/index-list.json?page=1&order=1' }, { kind: 'guancha-fengwen', url: 'https://rsshub.app/guancha/topic/0/1' }] },
   { id: 'hupu', name: '虎扑', badge: '虎', icon: 'icons/hupu.ico?v=2.18.124', className: 'hupu', mobileHost: 'm.hupu.com', visibleByDefault: true, siteUrl: 'https://bbs.hupu.com/bxj', fetchers: [{ kind: 'hupu-bbs', url: 'https://bbs.hupu.com/bxj' }, { kind: 'hupu-bbs', url: 'https://bbs.hupu.com/topic-daily' }] },
-  { id: 'xiaohongshu', name: '红书', badge: '红', icon: 'https://www.xiaohongshu.com/favicon.ico?v=2.18.246', className: 'xiaohongshu', visibleByDefault: true, siteUrl: 'https://www.xiaohongshu.com/explore', fetchers: [{ kind: 'xiaohongshu-explore', url: 'https://www.xiaohongshu.com/explore' }, { kind: 'xiaohongshu-hotboard', url: 'https://uapis.cn/api/v1/misc/hotboard?type=xiaohongshu&limit=30', direct: true }] },
+  { id: 'xiaohongshu', name: '红书', badge: '红', icon: 'https://www.xiaohongshu.com/favicon.ico?v=2.18.247', className: 'xiaohongshu', visibleByDefault: true, siteUrl: 'https://www.xiaohongshu.com/explore', fetchers: [{ kind: 'xiaohongshu-explore', url: 'https://www.xiaohongshu.com/explore' }, { kind: 'xiaohongshu-hotboard', url: 'https://uapis.cn/api/v1/misc/hotboard?type=xiaohongshu&limit=30', direct: true }] },
+  { id: 'douyin', name: '抖音', badge: '音', icon: 'https://www.douyin.com/favicon.ico?v=2.18.247', className: 'douyin', visibleByDefault: true, siteUrl: 'https://www.douyin.com/jingxuan', fetchers: [{ kind: 'douyin-hotboard', url: 'https://uapis.cn/api/v1/misc/hotboard?type=douyin&limit=30', direct: true }, { kind: 'douyin-jingxuan', url: 'https://www.douyin.com/jingxuan' }] },
 ];
 const RSS_SOURCES = FEED_SOURCE_REGISTRY.filter((source) => source.enabled !== false);
 const RSS_REFRESH_INTERVAL = 2 * 60 * 1000;
@@ -310,7 +311,7 @@ const normalizeToolOrder = (value, includeNavigation = false, navigationFirst = 
   return (includeNavigation ? normalized : normalized.filter((id) => id !== 'navigation')).slice(0, allowed.length);
 };
 const LEGACY_DEFAULT_HOME_FEED_VISIBLE = ['ithome', 'huxiu', 'zhihu', 'v2ex', 'weibo', 'bilibili'];
-const HOME_FEED_VISIBILITY_MIGRATION = 1;
+const HOME_FEED_VISIBILITY_MIGRATION = 2;
 const storedHomeFeedVisibilityMigration = Number(localStorage.getItem(STORAGE.homeFeedVisibilityMigration) || 0);
 const normalizeHomeFeedOrder = (value) => {
   const order = Array.isArray(value) ? value.filter((id) => DEFAULT_HOME_FEED_ORDER.includes(id)) : [];
@@ -321,7 +322,8 @@ const normalizeHomeFeedVisibility = (value) => {
   const normalized = [...new Set(visible.filter((id) => DEFAULT_HOME_FEED_ORDER.includes(id)))];
   const isLegacyDefault = normalized.length === LEGACY_DEFAULT_HOME_FEED_VISIBLE.length && LEGACY_DEFAULT_HOME_FEED_VISIBLE.every((id) => normalized.includes(id));
   if (isLegacyDefault) return [...DEFAULT_HOME_FEED_VISIBLE];
-  if (Array.isArray(value) && storedHomeFeedVisibilityMigration < HOME_FEED_VISIBILITY_MIGRATION && !normalized.includes('xiaohongshu')) normalized.push('xiaohongshu');
+  if (Array.isArray(value) && storedHomeFeedVisibilityMigration < 1 && !normalized.includes('xiaohongshu')) normalized.push('xiaohongshu');
+  if (Array.isArray(value) && storedHomeFeedVisibilityMigration < 2 && !normalized.includes('douyin')) normalized.push('douyin');
   return normalized;
 };
 function navigationSafeUrl(value) {
@@ -898,6 +900,19 @@ function xiaohongshuLocalSearchUrl(city) {
   const keyword = String(city || '').trim();
   return keyword ? 'https://www.xiaohongshu.com/search_result?keyword=' + encodeURIComponent(keyword) + '&type=51' : 'https://www.xiaohongshu.com/explore';
 }
+function douyinLocalSearchUrl(city) {
+  const keyword = String(city || '').trim();
+  return keyword ? 'https://www.douyin.com/search/' + encodeURIComponent(keyword) + '?type=general' : 'https://www.douyin.com/jingxuan';
+}
+function interleaveFeedItems(items, supplemental, gap = 6) {
+  if (!supplemental.length) return items;
+  return items.reduce((result, item, index) => {
+    result.push(item);
+    const supplementalIndex = Math.floor((index + 1) / gap) - 1;
+    if (supplemental[supplementalIndex]) result.push(supplemental[supplementalIndex]);
+    return result;
+  }, []).concat(supplemental.slice(Math.floor(items.length / gap)));
+}
 function xiaohongshuExploreItems(value, source) {
   const content = jinaContent(value);
   const city = homeFeedLocalCity();
@@ -920,13 +935,18 @@ function xiaohongshuExploreItems(value, source) {
     const description = feedText(content.slice(start + match[0].length, nextStart)).replace(/\s+/g, ' ').slice(0, 180);
     return normalizeFeedItem({ title: match[1], link: match[2], description, image }, source, { approximate: true, publishedMs: syntheticFeedTime(index) });
   }).filter(Boolean);
-  return items.reduce((result, item, index) => {
-    result.push(item);
-    const localIndex = Math.floor((index + 1) / 6) - 1;
-    if (localItems[localIndex]) result.push(localItems[localIndex]);
-    return result;
-  }, []).concat(localItems.slice(Math.floor(items.length / 6)));
+  return interleaveFeedItems(items, localItems);
 }
+function douyinSupplementalItems(source) {
+  const city = homeFeedLocalCity();
+  const entries = [
+    { title: '抖音精选', link: 'https://www.douyin.com/jingxuan', description: '进入抖音官方精选页。' },
+    { title: '抖音热门', link: 'https://www.douyin.com/hot', description: '进入抖音官方热门页。' },
+    ...(city ? [{ title: city + '本地热门', link: douyinLocalSearchUrl(city), description: '进入抖音查看当前位置的本地热门。' }] : []),
+  ];
+  return entries.map((entry, index) => normalizeFeedItem(entry, source, { approximate: true, publishedMs: Date.now() - (6 + index * 7) * 60 * 1000 })).filter(Boolean);
+}
+function douyinJingxuanItems(source) { return douyinSupplementalItems(source); }
 function hupuTimestamp(value, index) {
   const match = String(value || '').match(/(?:^|\s)(\d{1,2})-(\d{1,2})\s+(\d{1,2}):(\d{2})(?:\s|$)/);
   if (!match) return syntheticFeedTime(index);
@@ -1033,6 +1053,16 @@ function structuredHotItems(payload, source, kind) {
       return normalizeFeedItem({ title, link, description: item.hot_value ? '热度 ' + item.hot_value : '', image: item.cover || item.extra?.cover }, source, { approximate: true, publishedMs: syntheticFeedTime(index) });
     }).filter(Boolean);
   }
+  if (kind === 'douyin-hotboard') {
+    const values = Array.isArray(payload.list) ? payload.list : Array.isArray(payload.items) ? payload.items : [];
+    const items = values.map((item, index) => {
+      const title = feedText(item.title || item.name);
+      if (!title) return null;
+      const link = safeExternalUrl(item.url) || 'https://www.douyin.com/search/' + encodeURIComponent(title) + '?type=general';
+      return normalizeFeedItem({ title, link, description: item.hot_value ? '热度 ' + item.hot_value : '', image: item.cover || item.extra?.cover }, source, { approximate: true, publishedMs: syntheticFeedTime(index) });
+    }).filter(Boolean);
+    return interleaveFeedItems(items, douyinSupplementalItems(source));
+  }
   return [];
 }
 function guanchaRelativeTimestamp(value, index) {
@@ -1090,7 +1120,7 @@ async function fetchFeedSource(source) {
       if (!response.ok) throw Error('HTTP ' + response.status);
       const text = await response.text();
       const payload = fetcher.kind === 'rss' || fetcher.kind === 'guancha-fengwen' ? null : jinaJson(text);
-      const items = fetcher.kind === 'rss' ? rssMarkdownItems(text, source) : fetcher.kind === 'hupu-bbs' ? hupuBbsItems(text, source) : fetcher.kind === 'guancha-fengwen' ? guanchaFengwenItems(text, source) : fetcher.kind === 'xiaohongshu-explore' ? xiaohongshuExploreItems(text, source) : structuredHotItems(payload, source, fetcher.kind);
+      const items = fetcher.kind === 'rss' ? rssMarkdownItems(text, source) : fetcher.kind === 'hupu-bbs' ? hupuBbsItems(text, source) : fetcher.kind === 'guancha-fengwen' ? guanchaFengwenItems(text, source) : fetcher.kind === 'xiaohongshu-explore' ? xiaohongshuExploreItems(text, source) : fetcher.kind === 'douyin-jingxuan' ? douyinJingxuanItems(source) : structuredHotItems(payload, source, fetcher.kind);
       if (items.length) { successful.push({ items, feedUrl: fetcher.url }); break; }
     } catch { /* try the next source-specific fallback */ }
   }
@@ -1221,8 +1251,8 @@ const MASCOT_ASSETS = {
 };
 const MASCOT_DIRECTIONS = ['up-left', 'up', 'up-right', 'left', 'center', 'right', 'down-left', 'down', 'down-right'];
 const MASCOT_REACTIONS = ['blink', 'heart', 'sparkle', 'surprised', 'wink', 'bashful', 'sleepy', 'dizzy', 'delighted'];
-const MASCOT_FULL_BODY_MARKUP = '<img class="onebox-mascot-fullbody" src="icons/mascot-fox-full.png?v=2.18.246" alt="" draggable="false">';
-const MASCOT_FULL_BODY_REACTIONS = 'icons/mascot-fox-full-reactions.png?v=2.18.246';
+const MASCOT_FULL_BODY_MARKUP = '<img class="onebox-mascot-fullbody" src="icons/mascot-fox-full.png?v=2.18.247" alt="" draggable="false">';
+const MASCOT_FULL_BODY_REACTIONS = 'icons/mascot-fox-full-reactions.png?v=2.18.247';
 const MASCOT_CLOCKWISE = ['right', 'down-right', 'down', 'down-left', 'left', 'up-left', 'up', 'up-right'];
 const MASCOT_SECTOR = (Math.PI * 2) / MASCOT_CLOCKWISE.length;
 const MASCOT_HYSTERESIS = 0.12;
