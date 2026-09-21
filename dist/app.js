@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.243';
+const APP_VERSION = '2.18.244';
 // The OAuth secret stays in the Cloudflare Worker. The browser only knows the
 // public client id and receives the authorization result in the URL fragment,
 // which is consumed immediately and never sent to a server.
@@ -1164,8 +1164,8 @@ const MASCOT_ASSETS = {
 };
 const MASCOT_DIRECTIONS = ['up-left', 'up', 'up-right', 'left', 'center', 'right', 'down-left', 'down', 'down-right'];
 const MASCOT_REACTIONS = ['blink', 'heart', 'sparkle', 'surprised', 'wink', 'bashful', 'sleepy', 'dizzy', 'delighted'];
-const MASCOT_FULL_BODY_MARKUP = '<img class="onebox-mascot-fullbody" src="icons/mascot-fox-full.png?v=2.18.243" alt="" draggable="false">';
-const MASCOT_FULL_BODY_REACTIONS = 'icons/mascot-fox-full-reactions.png?v=2.18.243';
+const MASCOT_FULL_BODY_MARKUP = '<img class="onebox-mascot-fullbody" src="icons/mascot-fox-full.png?v=2.18.244" alt="" draggable="false">';
+const MASCOT_FULL_BODY_REACTIONS = 'icons/mascot-fox-full-reactions.png?v=2.18.244';
 const MASCOT_CLOCKWISE = ['right', 'down-right', 'down', 'down-left', 'left', 'up-left', 'up', 'up-right'];
 const MASCOT_SECTOR = (Math.PI * 2) / MASCOT_CLOCKWISE.length;
 const MASCOT_HYSTERESIS = 0.12;
@@ -2138,7 +2138,7 @@ function renderMine() {
     settings: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 12h2M10 12h10M4 17h10M18 17h2"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="12" r="2"/><circle cx="16" cy="17" r="2"/></svg>',
     github: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 18h10a3.5 3.5 0 0 0 .5-6.96A5.5 5.5 0 0 0 7 9.5a4.25 4.25 0 0 0 0 8.5Z"/><path d="m12 12 2-2m-2 2-2-2m2 2v4"/></svg>',
     reading: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4h8l3 3v5M14 4v4h4M9 12h3M9 16h3"/><circle cx="16.5" cy="16.5" r="3.5"/><path d="M16.5 14.8v1.9l1.2.7"/></svg>',
-    agreement: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3.5 7 2.6v5.1c0 4.7-3 8.1-7 9.3-4-1.2-7-4.6-7-9.3V6.1L12 3.5Z"/><path d="m8.7 12 2.2 2.2 4.5-4.5"/></svg>',
+    agreement: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3.5h8l4 4v13H6z"/><path d="M14 3.5v4h4M9 12h6M9 15h3M14 16.5l1.5 1.5 2.5-3"/></svg>',
   })[name];
   const row = (action, glyph, title, description) => '<button class="mine-row" ' + action + '><span class="mine-row-icon">' + icon(glyph) + '</span><span class="mine-row-copy"><strong>' + title + '</strong><small class="mine-row-description">' + description + '</small></span><span>›</span></button>';
   const updateBusy = state.updateChecking || state.updateApplying;
