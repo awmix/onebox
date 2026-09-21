@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.224';
+const APP_VERSION = '2.18.225';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -4722,18 +4722,23 @@ function waitForServiceWorkerActivation(registration, worker, timeoutMs = 15000)
     const finish = (activated) => {
       if (settled) return;
       settled = true;
-      if (timeout) clearTimeout(timeout);
-      worker.removeEventListener('statechange', onStateChange);
-      resolve(activated);
-    };
-    const onStateChange = () => {
-      if (worker.state === 'activated' || registration.active === worker) finish(true);
-      else if (worker.state === 'redundant') finish(false);
-    };
-    if (worker.state === 'activated' || registration.active === worker) return finish(true);
-    worker.addEventListener('statechange', onStateChange);
-    timeout = setTimeout(() => finish(worker.state === 'activated' || registration.active === worker), timeoutMs);
-  });
+    if (timeout) clearTimeout(timeout);
+    worker.removeEventListener('statechange', onStateChange);
+    navigator.serviceWorker.removeEventListener('controllerchange', onControllerChange);
+    resolve(activated);
+  };
+  const onStateChange = () => {
+    if (worker.state === 'activated' || registration.active === worker) finish(true);
+    else if (worker.state === 'redundant') finish(false);
+  };
+  const onControllerChange = () => {
+    if (worker.state === 'activated' || registration.active === worker) finish(true);
+  };
+  if (worker.state === 'activated' || registration.active === worker) return finish(true);
+  worker.addEventListener('statechange', onStateChange);
+  navigator.serviceWorker.addEventListener('controllerchange', onControllerChange);
+  timeout = setTimeout(() => finish(worker.state === 'activated' || registration.active === worker), timeoutMs);
+});
 }
 function requestAppReload() {
   if (state.updateReloading) return;
