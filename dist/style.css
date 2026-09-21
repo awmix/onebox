@@ -8556,18 +8556,19 @@ html.ios-safari-browser.reader-focus.reader-safari-surface .reader-reference-she
 .onebox-mascot-weather-now > span:last-child { min-width: 0; }
 .onebox-mascot-weather-now strong { display: block; }
 .onebox-mascot-weather-now strong { font-size: 16px; letter-spacing: -.02em; }
-.onebox-mascot-weather-condition { display: flex; min-width: 0; align-items: center; gap: 6px; margin-top: 3px; }
+.onebox-mascot-weather-condition { display: block; min-width: 0; margin-top: 3px; }
 .onebox-mascot-weather-now small { color: var(--muted); font-size: 11px; line-height: 1.3; white-space: nowrap; }
-.onebox-mascot-weather-meta { min-width: 0; overflow: hidden; text-overflow: ellipsis; font-size: 10px !important; }
+.onebox-mascot-weather-meta { display: block; min-width: 0; overflow: hidden; color: var(--muted); text-overflow: ellipsis; font-size: 11px; line-height: 1.3; white-space: normal; }
 .onebox-mascot-weather-insight { margin: 13px 0 0; color: var(--ink); font-size: 12px; line-height: 1.55; }
 .onebox-mascot-holiday-line { display: flex; align-items: flex-start; gap: 7px; margin: 13px 0 0; color: var(--primary); font-size: 12px; line-height: 1.5; }
 .onebox-mascot-holiday-line span { flex: 0 0 auto; }
 .onebox-mascot-reading-line { display: flex; width: 100%; align-items: center; gap: 8px; min-width: 0; margin-top: 13px; padding: 11px 0 0; border: 0; border-top: 1px solid var(--line); background: transparent; color: inherit; cursor: pointer; font: inherit; text-align: left; }
 .onebox-mascot-reading-line:hover { color: var(--ink); }
-.onebox-mascot-line-icon { display: grid; width: 26px; height: 26px; flex: 0 0 26px; place-items: center; color: var(--muted); }
-.onebox-mascot-line-icon svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.8; }
+.onebox-mascot-line-icon { display: grid; width: 18px; height: 18px; flex: 0 0 18px; place-items: center; color: var(--muted); }
+.onebox-mascot-line-icon svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.8; }
 .onebox-mascot-reading-content { min-width: 0; flex: 1; }
 .onebox-mascot-reading-label, .onebox-mascot-reading-book { display: flex; min-width: 0; align-items: center; }
+.onebox-mascot-reading-label { gap: 5px; }
 .onebox-mascot-reading-line small, .onebox-mascot-reading-line strong { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .onebox-mascot-reading-line small { color: var(--muted); font-size: 10px; }
 .onebox-mascot-reading-book { gap: 8px; margin-top: 2px; }

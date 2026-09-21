@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.225';
+const APP_VERSION = '2.18.226';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
@@ -1342,6 +1342,14 @@ function mascotHolidayMessage() {
   }
   return '';
 }
+function mascotDateLabel(date = new Date()) {
+  const dateText = new Intl.DateTimeFormat(state.language === 'en' ? 'en-US' : 'zh-CN', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' }).format(date);
+  if (state.language === 'en') return dateText;
+  const lunar = lunarFor(date);
+  if (!lunar) return dateText;
+  const lunarMonth = lunar.monthText.replace(/^十一月$/, '冬月').replace(/^十二月$/, '腊月');
+  return dateText + '（农历' + lunarMonth + lunar.dayText + '）';
+}
 function mascotReadingMarkup() {
   const book = [...(state.library || [])].filter((item) => Number(item.lastOpenedAt) > 0).sort((a, b) => Number(b.lastOpenedAt) - Number(a.lastOpenedAt))[0];
   if (!book) return '';
@@ -1349,7 +1357,7 @@ function mascotReadingMarkup() {
   const percent = Math.round(Math.min(1, Math.max(0, progress)) * 100);
   const readingLabel = state.language === 'en' ? 'Reading now' : '正在读';
   const bookName = book.name || (state.language === 'en' ? 'Untitled book' : '未命名文档');
-  return '<button type="button" class="onebox-mascot-reading-line" data-mascot-action="reader" aria-label="' + escapeHtml(readingLabel + ' ' + bookName) + '"><span class="onebox-mascot-line-icon" aria-hidden="true">' + TOOL_DEFS.reader.icon + '</span><span class="onebox-mascot-reading-content"><span class="onebox-mascot-reading-label"><small>' + escapeHtml(readingLabel) + '</small></span><span class="onebox-mascot-reading-book"><strong>' + escapeHtml(bookName) + '</strong><em>' + percent + '%</em></span></span></button>';
+  return '<button type="button" class="onebox-mascot-reading-line" data-mascot-action="reader" aria-label="' + escapeHtml(readingLabel + ' ' + bookName) + '"><span class="onebox-mascot-reading-content"><span class="onebox-mascot-reading-label"><span class="onebox-mascot-line-icon" aria-hidden="true">' + TOOL_DEFS.reader.icon + '</span><small>' + escapeHtml(readingLabel) + '</small></span><span class="onebox-mascot-reading-book"><strong>' + escapeHtml(bookName) + '</strong><em>' + percent + '%</em></span></span></button>';
 }
 function mascotWeatherMarkup() {
   const weather = state.weatherCards.find((item) => item.id === state.activeWeatherId) || state.weatherCards[0];
@@ -1359,14 +1367,14 @@ function mascotWeatherMarkup() {
   const condition = weatherCode(current.weather_code);
   const temp = Number.isFinite(Number(current.temperature_2m)) ? Math.round(Number(current.temperature_2m)) + '°' : '—';
   const place = weather.name || (state.language === 'en' ? 'Weather' : '天气');
-  const meta = [weatherWindLabel(current.wind_speed_10m), (state.language === 'en' ? 'Humidity ' : '湿度 ') + (current.relative_humidity_2m ?? '—') + '%', (state.language === 'en' ? 'Elevation ' : '海拔 ') + weatherElevationLabel(weather.elevation)].join(' · ');
-  return '<div class="onebox-mascot-weather-inline"><div class="onebox-mascot-weather-now"><span class="onebox-mascot-weather-symbol" aria-hidden="true">' + condition[0] + '</span><span><strong>' + escapeHtml(place) + ' ' + escapeHtml(temp) + '</strong><span class="onebox-mascot-weather-condition"><small>' + escapeHtml(condition[1]) + '</small><small class="onebox-mascot-weather-meta">' + escapeHtml(meta) + '</small></span></span></div><p class="onebox-mascot-weather-insight">' + escapeHtml(mascotFutureSixHours(weather)) + '</p></div>';
+  const meta = [condition[1], weatherWindLabel(current.wind_speed_10m), (state.language === 'en' ? 'Humidity ' : '湿度 ') + (current.relative_humidity_2m ?? '—') + '%', (state.language === 'en' ? 'Elevation ' : '海拔 ') + weatherElevationLabel(weather.elevation)].join(' · ');
+  return '<div class="onebox-mascot-weather-inline"><div class="onebox-mascot-weather-now"><span class="onebox-mascot-weather-symbol" aria-hidden="true">' + condition[0] + '</span><span><strong>' + escapeHtml(place) + ' ' + escapeHtml(temp) + '</strong><span class="onebox-mascot-weather-condition"><span class="onebox-mascot-weather-meta">' + escapeHtml(meta) + '</span></span></span></div><p class="onebox-mascot-weather-insight">' + escapeHtml(mascotFutureSixHours(weather)) + '</p></div>';
 }
 function mascotActionButton(action, label, icon) {
   return '<button type="button" data-mascot-action="' + action + '" aria-label="' + escapeHtml(label) + '"><span class="onebox-mascot-action-icon" aria-hidden="true">' + icon + '</span><span>' + escapeHtml(label) + '</span></button>';
 }
 function mascotBriefingMarkup() {
-  const todayLabel = new Intl.DateTimeFormat(state.language === 'en' ? 'en-US' : 'zh-CN', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' }).format(new Date());
+  const todayLabel = mascotDateLabel();
   const language = state.language === 'en';
   const hello = language ? 'Today feels good' : '今天感觉不错';
   const hint = language ? 'Tap a little button, or double-tap me to see a surprise' : '点一点下面的小按钮，或者双击我看看惊喜';
