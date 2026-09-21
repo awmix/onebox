@@ -6583,6 +6583,10 @@ html[data-theme="dark"] #homeSourceNav .feed-source-mark.bilibili { background: 
 .github-status-copy small { overflow: hidden; color: var(--muted); font-size: 11px; line-height: 1.35; text-overflow: ellipsis; white-space: nowrap; }
 .github-status-badge { display: grid; flex: 0 0 20px; place-items: center; width: 20px; height: 20px; margin-left: auto; border-radius: 50%; background: color-mix(in srgb, var(--success) 16%, transparent); color: var(--success); font-size: 12px; font-weight: 800; }
 .github-dialog-note { margin: -2px 0 0; color: var(--muted); font-size: 11px; line-height: 1.6; }
+.github-sync-scope { display: grid; gap: 5px; padding: 12px 13px; border: 1px solid var(--line); border-radius: 14px; background: var(--panel-2); }
+.github-sync-scope strong { color: var(--ink); font-size: 12px; }
+.github-sync-scope p, .github-sync-scope small { margin: 0; color: var(--muted); font-size: 11px; line-height: 1.55; }
+.github-sync-scope small { color: color-mix(in srgb, var(--muted) 86%, var(--primary)); }
 .github-credentials label { color: var(--ink); font-size: 13px; font-weight: 750; }
 .github-credentials input { width: 100%; }
 .github-credentials p { margin: 0; color: var(--muted); font-size: 11px; line-height: 1.55; }
@@ -8781,7 +8785,7 @@ html.ios-safari-browser.reader-focus.reader-safari-surface .reader-reference-she
 }
 
 /* Calendar detail refinement: three-column almanac rhythm and lighter advice cards */
-.lunar-dialog-almanac-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.lunar-dialog-almanac-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); grid-auto-flow: row; gap: 6px; }
 .lunar-dialog-almanac-field { display: flex; flex-direction: column; align-items: flex-start; gap: 5px; padding: 8px 8px; }
 .lunar-dialog-almanac-field.wide { display: grid; grid-template-columns: max-content minmax(0, 1fr); align-items: start; }
 .lunar-dialog-almanac-field > span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; }

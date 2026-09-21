@@ -10,7 +10,7 @@ OneBox 是一个无构建依赖的静态 PWA，把常用工具放进一个可离
 - 转换：长度、重量、面积、体积、速度、时间、数据和温度，支持交换单位和复制结果。
 - 翻译：多个公共 LibreTranslate 开源实例自动容错，翻译记录可本地保存；公共实例不可用时会明确提示，不伪造结果。
 - 设置：浅色、深色、跟随系统；中文、英文；日语/韩语入口已预留。
-- 数据：主题、工具顺序、日程、天气卡片、翻译记录、提醒都保存在当前设备；可选 GitHub Device Flow + 私有 Gist 同步。
+- 数据：主题、工具顺序、日程、天气卡片、翻译记录、提醒、导航、阅读书架/进度/笔记和已导入书籍文件都保存在当前设备；可选 GitHub 授权 + 私有 Gist 同步。
 - 通知：右上角提醒中心；浏览器允许通知时使用 Service Worker 通知。Safari 主屏幕 Web App 可以申请通知权限，但真正的关闭页面后台推送仍需要服务端 Push/VAPID。
 
 ## 本地运行
@@ -23,7 +23,9 @@ python3 -m http.server 4173 -d dist
 
 ## GitHub 同步
 
-GitHub Pages 是纯静态托管，OneBox 不把 OAuth Client Secret 放进前端。需要同步时，在 GitHub OAuth App 中开启 Device Flow，将 Client ID 填入 OneBox 设置；登录后会使用私有 Gist 保存设置数据。访问令牌只保存在当前设备，退出 GitHub 会清除本地令牌。
+GitHub Pages 是纯静态托管，OneBox 不把 OAuth Client Secret 放进前端。点击“GitHub”后会直接打开 GitHub 授权页面，授权完成后使用你的私有 Gist 保存设置、工具配置、导航、日程、天气卡片、翻译记录、通知、阅读书架/进度/笔记及本地导入的书籍文件。书籍二进制内容会拆分为多个 Gist 文件，访问令牌只保存在当前设备，退出 GitHub 会清除本地令牌。
+
+首页订阅内容、节假日和天气接口响应属于网络缓存，不参与同步；GitHub 登录令牌也不会上传到 Gist。
 
 ## 发布前检查
 
