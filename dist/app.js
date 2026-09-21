@@ -3660,6 +3660,33 @@ function lunarFor(date) {
   }
   return null;
 }
+const chineseStems = '甲乙丙丁戊己庚辛壬癸';
+const chineseBranches = '子丑寅卯辰巳午未申酉戌亥';
+function sexagenaryForDate(date) {
+  const value = new Date(date);
+  const jdn = Math.floor(Date.UTC(value.getFullYear(), value.getMonth(), value.getDate()) / 86400000) + 2440588;
+  const index = ((jdn + 49) % 60 + 60) % 60;
+  return chineseStems[index % 10] + chineseBranches[index % 12];
+}
+const westernZodiac = [
+  { limit: 119, zh: '摩羯座', en: 'Capricorn', symbol: '♑' },
+  { limit: 218, zh: '水瓶座', en: 'Aquarius', symbol: '♒' },
+  { limit: 320, zh: '双鱼座', en: 'Pisces', symbol: '♓' },
+  { limit: 419, zh: '白羊座', en: 'Aries', symbol: '♈' },
+  { limit: 520, zh: '金牛座', en: 'Taurus', symbol: '♉' },
+  { limit: 621, zh: '双子座', en: 'Gemini', symbol: '♊' },
+  { limit: 722, zh: '巨蟹座', en: 'Cancer', symbol: '♋' },
+  { limit: 822, zh: '狮子座', en: 'Leo', symbol: '♌' },
+  { limit: 922, zh: '处女座', en: 'Virgo', symbol: '♍' },
+  { limit: 1023, zh: '天秤座', en: 'Libra', symbol: '♎' },
+  { limit: 1122, zh: '天蝎座', en: 'Scorpio', symbol: '♏' },
+  { limit: 1221, zh: '射手座', en: 'Sagittarius', symbol: '♐' },
+];
+function constellationFor(date) {
+  const value = new Date(date);
+  const monthDay = (value.getMonth() + 1) * 100 + value.getDate();
+  return westernZodiac.find((item) => monthDay <= item.limit) || westernZodiac[0];
+}
 const solarTermNames = ['小寒', '大寒', '立春', '雨水', '惊蛰', '春分', '清明', '谷雨', '立夏', '小满', '芒种', '夏至', '小暑', '大暑', '立秋', '处暑', '白露', '秋分', '寒露', '霜降', '立冬', '小雪', '大雪', '冬至'];
 const solarTermConstants21 = [5.4055, 20.12, 3.87, 18.73, 5.63, 20.646, 4.81, 20.1, 5.52, 21.04, 5.678, 21.37, 7.108, 22.83, 7.5, 23.13, 7.646, 23.042, 8.318, 23.438, 7.438, 22.36, 7.18, 21.94];
 function solarTermsForYear(year) {
@@ -3911,12 +3938,32 @@ function closeEventDialog() { const dialog = $('#eventDialog'); if (dialog) dial
 function renderLunarDialog(key) {
   const dialog = $('#lunarDialog');
   if (!dialog) return;
+  const date = dateFromKey(key);
   const meta = calendarMeta(key);
   const lunar = meta.lunar;
+  const isEnglish = state.language === 'en';
+  const labels = isEnglish ? {
+    calendarDate: 'Calendar details', lunar: 'Lunar date', yearPillar: 'Year pillar', zodiac: 'Zodiac', dayPillar: 'Day pillar', constellation: 'Constellation', weekday: 'Weekday', highlights: 'Highlights', agenda: 'Agenda', noAgenda: 'No agenda for this day.', note: 'Double-tap another date to view its details.', offDay: 'Rest day', workday: 'Make-up workday', yearSuffix: ' year', daySuffix: ' day', zodiacSuffix: ' year',
+  } : {
+    calendarDate: '日期详情', lunar: '农历日期', yearPillar: '年柱', zodiac: '生肖', dayPillar: '日柱', constellation: '星座', weekday: '星期', highlights: '日期标记', agenda: '当日安排', noAgenda: '这一天还没有日程。', note: '双击其他日期可查看对应详情。', offDay: '休息日', workday: '补班日', yearSuffix: '年', daySuffix: '日', zodiacSuffix: '年',
+  };
   const lunarText = lunar ? lunar.monthText + lunar.dayText : (state.language === 'en' ? 'Lunar calendar unavailable' : '当前浏览器不支持农历格式');
-  const zodiac = lunar?.yearName ? (state.language === 'en' ? 'Lunar ' + zodiacFor(lunar.yearName) + ' year' : '农历' + zodiacFor(lunar.yearName) + '年') : '';
-  const extra = [zodiac, lunar?.festival, meta.term, meta.holiday ? (meta.holiday.isOffDay ? meta.holiday.name : t('makeUpWorkday')) : ''].filter(Boolean).join(' · ');
-  dialog.innerHTML = '<div class="dialog-card lunar-dialog-card" role="dialog" aria-modal="true"><div class="dialog-head"><h2>' + escapeHtml(formatDate(key)) + '</h2><button class="icon-btn small" data-close-lunar-dialog aria-label="' + t('close') + '">×</button></div><div class="lunar-dialog-value">' + escapeHtml(lunarText) + '</div>' + (extra ? '<p class="lunar-dialog-extra">' + escapeHtml(extra) + '</p>' : '') + '<p class="lunar-dialog-note">' + (state.language === 'en' ? 'Double-tap any date to view its lunar details.' : '连续点击任意日期即可查看农历详情。') + '</p></div>';
+  const yearPillar = lunar?.yearName ? lunar.yearName.replace(/年$/, '') + labels.yearSuffix : '—';
+  const zodiacName = lunar?.yearName ? zodiacFor(lunar.yearName) + labels.zodiacSuffix : '—';
+  const dayPillar = sexagenaryForDate(date) + labels.daySuffix;
+  const constellation = constellationFor(date);
+  const constellationLabel = isEnglish ? constellation.en : constellation.zh;
+  const weekday = new Intl.DateTimeFormat(isEnglish ? 'en-US' : 'zh-CN', { weekday: 'long' }).format(date);
+  const title = formatDate(key, { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
+  const highlights = [
+    meta.term ? { icon: '☀', label: meta.term, kind: 'term' } : null,
+    lunar?.festival ? { icon: '✦', label: lunar.festival, kind: 'festival' } : null,
+    meta.holiday ? { icon: meta.holiday.isOffDay ? '休' : '班', label: meta.holiday.name + ' · ' + (meta.holiday.isOffDay ? labels.offDay : labels.workday), kind: meta.holiday.isOffDay ? 'holiday' : 'workday' } : null,
+  ].filter(Boolean);
+  const highlightMarkup = highlights.length ? '<section class="lunar-dialog-section lunar-dialog-highlights"><div class="lunar-dialog-section-head"><strong>' + labels.highlights + '</strong><span>' + highlights.length + '</span></div><div class="lunar-dialog-tags">' + highlights.map((item) => '<span class="lunar-dialog-tag ' + item.kind + '"><i>' + item.icon + '</i>' + escapeHtml(item.label) + '</span>').join('') + '</div></section>' : '';
+  const selectedEvents = eventsForDate(key).sort((a, b) => (a.time || '00:00:00').localeCompare(b.time || '00:00:00'));
+  const agendaMarkup = '<section class="lunar-dialog-section lunar-dialog-agenda"><div class="lunar-dialog-section-head"><strong>' + labels.agenda + '</strong><span>' + selectedEvents.length + '</span></div>' + (selectedEvents.length ? '<div class="lunar-dialog-event-list">' + selectedEvents.map((event) => '<div class="lunar-dialog-event"><span class="lunar-dialog-event-dot"></span><span><strong>' + escapeHtml(event.title) + '</strong><small>' + escapeHtml(event.time || (isEnglish ? 'All day' : '全天')) + '</small></span></div>').join('') + '</div>' : '<p class="lunar-dialog-empty">' + labels.noAgenda + '</p>') + '</section>';
+  dialog.innerHTML = '<div class="dialog-card lunar-dialog-card" role="dialog" aria-modal="true"><div class="lunar-dialog-head"><div><span class="lunar-dialog-kicker">' + labels.calendarDate + '</span><h2>' + escapeHtml(title) + '</h2><p>' + escapeHtml(key) + '</p></div><button class="icon-btn small" data-close-lunar-dialog aria-label="' + t('close') + '">×</button></div><div class="lunar-dialog-hero"><span class="lunar-dialog-hero-symbol">☯</span><div><small>' + labels.lunar + '</small><strong>' + escapeHtml(lunarText) + '</strong></div><span class="lunar-dialog-hero-zodiac">' + (lunar?.yearName ? escapeHtml(zodiacFor(lunar.yearName)) : '—') + '</span></div><section class="lunar-dialog-section"><div class="lunar-dialog-section-head"><strong>' + (isEnglish ? 'Calendar overview' : '历法概览') + '</strong><span>' + escapeHtml(weekday) + '</span></div><div class="lunar-dialog-info-grid"><div><small>' + labels.yearPillar + '</small><strong>' + escapeHtml(yearPillar) + '</strong></div><div><small>' + labels.zodiac + '</small><strong>' + escapeHtml(zodiacName) + '</strong></div><div><small>' + labels.dayPillar + '</small><strong>' + escapeHtml(dayPillar) + '</strong></div><div><small>' + labels.constellation + '</small><strong><span class="lunar-dialog-constellation-symbol">' + constellation.symbol + '</span>' + escapeHtml(constellationLabel) + '</strong></div><div><small>' + labels.weekday + '</small><strong>' + escapeHtml(weekday) + '</strong></div><div><small>' + (isEnglish ? 'Solar date' : '公历日期') + '</small><strong>' + escapeHtml(key) + '</strong></div></div></section>' + highlightMarkup + agendaMarkup + '<p class="lunar-dialog-note">' + labels.note + '</p></div>';
   dialog.hidden = false;
   state.lunarDialogDate = key;
 }
