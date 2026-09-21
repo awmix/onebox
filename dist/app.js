@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.247';
+const APP_VERSION = '2.18.248';
 // The OAuth secret stays in the Cloudflare Worker. The browser only knows the
 // public client id and receives the authorization result in the URL fragment,
 // which is consumed immediately and never sent to a server.
@@ -65,8 +65,8 @@ const FEED_SOURCE_REGISTRY = [
   { id: 'bilibili', name: 'B站', badge: 'B', icon: 'icons/bilibili.ico?v=2.18.124', className: 'bilibili', mobileHost: 'm.bilibili.com', visibleByDefault: false, siteUrl: 'https://search.bilibili.com/all', fetchers: [{ kind: 'bilibili-hot', url: 'https://api.bilibili.com/x/web-interface/search/square?limit=30&platform=web' }, { kind: 'bilibili-hotword', url: 'https://s.search.bilibili.com/main/hotword' }] },
   { id: 'guancha', name: '风闻', badge: '风', icon: 'icons/guancha.png?v=2.18.124', className: 'guancha', mobileHost: 'user.guancha.cn', visibleByDefault: true, siteUrl: 'https://user.guancha.cn/main/index?s=fwdhsy', fetchers: [{ kind: 'guancha-fengwen', url: 'https://user.guancha.cn/main/index-list.json?page=1&order=1' }, { kind: 'guancha-fengwen', url: 'https://rsshub.app/guancha/topic/0/1' }] },
   { id: 'hupu', name: '虎扑', badge: '虎', icon: 'icons/hupu.ico?v=2.18.124', className: 'hupu', mobileHost: 'm.hupu.com', visibleByDefault: true, siteUrl: 'https://bbs.hupu.com/bxj', fetchers: [{ kind: 'hupu-bbs', url: 'https://bbs.hupu.com/bxj' }, { kind: 'hupu-bbs', url: 'https://bbs.hupu.com/topic-daily' }] },
-  { id: 'xiaohongshu', name: '红书', badge: '红', icon: 'https://www.xiaohongshu.com/favicon.ico?v=2.18.247', className: 'xiaohongshu', visibleByDefault: true, siteUrl: 'https://www.xiaohongshu.com/explore', fetchers: [{ kind: 'xiaohongshu-explore', url: 'https://www.xiaohongshu.com/explore' }, { kind: 'xiaohongshu-hotboard', url: 'https://uapis.cn/api/v1/misc/hotboard?type=xiaohongshu&limit=30', direct: true }] },
-  { id: 'douyin', name: '抖音', badge: '音', icon: 'https://www.douyin.com/favicon.ico?v=2.18.247', className: 'douyin', visibleByDefault: true, siteUrl: 'https://www.douyin.com/jingxuan', fetchers: [{ kind: 'douyin-hotboard', url: 'https://uapis.cn/api/v1/misc/hotboard?type=douyin&limit=30', direct: true }, { kind: 'douyin-jingxuan', url: 'https://www.douyin.com/jingxuan' }] },
+  { id: 'xiaohongshu', name: '红书', badge: '红', icon: 'https://www.xiaohongshu.com/favicon.ico?v=2.18.248', className: 'xiaohongshu', visibleByDefault: true, siteUrl: 'https://www.xiaohongshu.com/explore', fetchers: [{ kind: 'xiaohongshu-explore', url: 'https://www.xiaohongshu.com/explore' }, { kind: 'xiaohongshu-hotboard', url: 'https://uapis.cn/api/v1/misc/hotboard?type=xiaohongshu&limit=30', direct: true }] },
+  { id: 'douyin', name: '抖音', badge: '音', icon: 'https://www.douyin.com/favicon.ico?v=2.18.248', className: 'douyin', visibleByDefault: true, siteUrl: 'https://www.douyin.com/jingxuan', fetchers: [{ kind: 'douyin-hotboard', url: 'https://uapis.cn/api/v1/misc/hotboard?type=douyin&limit=30', direct: true }, { kind: 'douyin-jingxuan', url: 'https://www.douyin.com/jingxuan' }] },
 ];
 const RSS_SOURCES = FEED_SOURCE_REGISTRY.filter((source) => source.enabled !== false);
 const RSS_REFRESH_INTERVAL = 2 * 60 * 1000;
@@ -852,6 +852,21 @@ function feedImageUrl(value) {
   if (url.includes('images.weserv.nl/')) return url;
   return 'https://images.weserv.nl/?url=' + encodeURIComponent(url);
 }
+function feedImageExpired(value) {
+  const url = safeExternalUrl(value);
+  if (!url) return true;
+  try {
+    const expires = Number(new URL(url).searchParams.get('x-expires'));
+    return Number.isFinite(expires) && expires > 0 && expires * 1000 <= Date.now();
+  } catch { return false; }
+}
+function usableFeedImage(value, source) {
+  const url = safeExternalUrl(value);
+  if (!url) return '';
+  // Douyin hotboard cover URLs are signed CDN URLs. Once expired, keeping them
+  // in the cached feed only creates a broken-image box after a refresh.
+  return source?.id === 'douyin' && feedImageExpired(url) ? '' : url;
+}
 function feedImageSource(item = {}) {
   const html = String(item.content || item.description || '');
   const embedded = html.match(/<img[^>]+src=["']([^"']+)["']/i)?.[1] || html.match(/!\[[^\]]*\]\((https?:\/\/[^)\s]+)[^)]*\)/i)?.[1] || '';
@@ -861,7 +876,7 @@ function feedImageSource(item = {}) {
 function normalizeFeedItem(item, source, overrides = {}) {
   const title = feedText(item.title || item.name); const link = safeExternalUrl(item.link || item.guid);
   if (!title || !link) return null;
-  const thumbnail = feedImageSource(item);
+  const thumbnail = usableFeedImage(feedImageSource(item), source);
   const publishedAt = item.pubDate || item.published || item.isoDate || item.date || '';
   return { id: source.id + ':' + link, source: source.id, title, link, description: feedText(item.description || item.content || '').slice(0, 180), thumbnail, publishedAt, publishedMs: parseFeedTimestamp(publishedAt), ...overrides };
 }
@@ -893,7 +908,11 @@ function syntheticFeedTime(index) { return Date.now() - index * 60 * 1000; }
 function homeFeedLocalCity() {
   const cards = Array.isArray(state?.weatherCards) ? state.weatherCards : [];
   const place = cards.find((card) => card?.isCurrentLocation && card?.name) || cards.find((card) => card?.name) || cards[0];
-  const value = feedText(place?.name || place?.admin2 || place?.admin1 || '').replace(/(市|区|县|镇|街道|地区|自治州)$/u, '');
+  const candidates = [place?.city, place?.admin2, place?.name, place?.admin1].map((value) => feedText(value).trim()).filter(Boolean);
+  const cityCandidate = candidates.find((value) => /(市|自治州|地区|盟)$/u.test(value))
+    || candidates.find((value) => !/(省|自治区|特别行政区)$/u.test(value))
+    || '';
+  const value = cityCandidate.replace(/(市|自治州|地区|盟)$/u, '');
   return /^(当前位置|当前地点|Current location|Weather)$/i.test(value) ? '' : value;
 }
 function xiaohongshuLocalSearchUrl(city) {
@@ -913,18 +932,17 @@ function interleaveFeedItems(items, supplemental, gap = 6) {
     return result;
   }, []).concat(supplemental.slice(Math.floor(items.length / gap)));
 }
+function xiaohongshuLocalItems(source) {
+  const city = homeFeedLocalCity();
+  return city ? [normalizeFeedItem({
+    title: city + (state.language === 'en' ? ' local picks' : '本地热门'),
+    link: xiaohongshuLocalSearchUrl(city),
+    description: state.language === 'en' ? 'Open Xiaohongshu to browse local recommendations.' : '进入小红书查看本地热门推荐。',
+  }, source, { approximate: true, publishedMs: Date.now() + 1000 })].filter(Boolean) : [];
+}
 function xiaohongshuExploreItems(value, source) {
   const content = jinaContent(value);
-  const city = homeFeedLocalCity();
-  const localItems = city ? [
-    { label: state.language === 'en' ? 'local picks' : '本地热门', keyword: city },
-    { label: state.language === 'en' ? 'local food' : '本地美食', keyword: city + (state.language === 'en' ? ' food' : ' 美食') },
-    { label: state.language === 'en' ? 'weekend nearby' : '周末附近', keyword: city + (state.language === 'en' ? ' weekend' : ' 周末') },
-  ].map((entry, index) => normalizeFeedItem({
-    title: city + entry.label,
-    link: xiaohongshuLocalSearchUrl(entry.keyword),
-    description: state.language === 'en' ? 'Browse local recommendations on Xiaohongshu.' : '进入小红书查看本地热门推荐。',
-  }, source, { approximate: true, publishedMs: Date.now() - (6 + index * 7) * 60 * 1000 })).filter(Boolean) : [];
+  const localItems = xiaohongshuLocalItems(source);
   const matches = [...content.matchAll(/(?:^|\n)\[([^\]\n]{2,160})\]\((https?:\/\/www\.xiaohongshu\.com\/explore\/[^)\s]+)\)/gm)];
   const items = matches.map((match, index) => {
     const start = match.index || 0;
@@ -935,7 +953,10 @@ function xiaohongshuExploreItems(value, source) {
     const description = feedText(content.slice(start + match[0].length, nextStart)).replace(/\s+/g, ' ').slice(0, 180);
     return normalizeFeedItem({ title: match[1], link: match[2], description, image }, source, { approximate: true, publishedMs: syntheticFeedTime(index) });
   }).filter(Boolean);
-  return interleaveFeedItems(items, localItems);
+  // Keep the city-level local entry visible at the top. The timestamp is also
+  // intentionally newer than network items because the feed renderer sorts by
+  // recency after merging cached and fresh results.
+  return [...localItems, ...items];
 }
 function douyinSupplementalItems(source) {
   const city = homeFeedLocalCity();
@@ -1046,12 +1067,13 @@ function structuredHotItems(payload, source, kind) {
   }
   if (kind === 'xiaohongshu-hotboard') {
     const values = Array.isArray(payload.list) ? payload.list : Array.isArray(payload.items) ? payload.items : [];
-    return values.map((item, index) => {
+    const items = values.map((item, index) => {
       const title = feedText(item.title || item.name);
       if (!title) return null;
       const link = safeExternalUrl(item.url) || xiaohongshuLocalSearchUrl(title);
       return normalizeFeedItem({ title, link, description: item.hot_value ? '热度 ' + item.hot_value : '', image: item.cover || item.extra?.cover }, source, { approximate: true, publishedMs: syntheticFeedTime(index) });
     }).filter(Boolean);
+    return [...xiaohongshuLocalItems(source), ...items];
   }
   if (kind === 'douyin-hotboard') {
     const values = Array.isArray(payload.list) ? payload.list : Array.isArray(payload.items) ? payload.items : [];
@@ -1167,9 +1189,9 @@ async function loadHomeFeeds(force = false, sourceId = '') {
 }
 function renderFeedItem(item) {
   const source = feedSource(item);
-  const rawThumbnail = safeExternalUrl(item.thumbnail);
+  const rawThumbnail = usableFeedImage(item.thumbnail, source);
   const thumbnail = feedImageUrl(rawThumbnail) || rawThumbnail;
-  const image = rawThumbnail ? '<span class="feed-item-media"><img class="feed-item-image" src="' + escapeHtml(thumbnail) + '" data-fallback="' + escapeHtml(rawThumbnail) + '" alt="" loading="lazy" onerror="if(this.dataset.fallback && this.getAttribute(\'src\') !== this.dataset.fallback){this.src=this.dataset.fallback;return;}this.hidden=true"></span>' : '';
+  const image = rawThumbnail ? '<span class="feed-item-media"><img class="feed-item-image" src="' + escapeHtml(thumbnail) + '" data-fallback="' + escapeHtml(rawThumbnail) + '" alt="" loading="lazy" onerror="if(this.dataset.fallback&&this.getAttribute(\'src\')!==this.dataset.fallback){this.src=this.dataset.fallback;return;}var media=this.closest(\'.feed-item-media\');if(media)media.remove();var side=this.closest(\'.feed-item-side\');if(side&&!side.children.length)side.remove();"></span>' : '';
   const meta = '<div class="feed-item-meta"><span class="feed-source-tag ' + source.className + '"><b><img src="' + escapeHtml(source.icon) + '" alt="" loading="lazy" onerror="this.hidden=true;this.nextElementSibling.style.display=\'inline\'"><span class="feed-source-fallback">' + escapeHtml(source.badge) + '</span></b>' + escapeHtml(source.name) + '</span><time datetime="' + escapeHtml(new Date(feedItemTimestamp(item) || Date.now()).toISOString()) + '">' + escapeHtml(feedDate(item)) + '</time></div>';
   const read = Boolean(state.homeFeedRead[item.id]);
   return '<article class="feed-item ' + (thumbnail ? 'has-media ' : '') + (read ? 'is-read' : '') + '" data-feed-id="' + escapeHtml(item.id) + '" data-feed-link="' + escapeHtml(item.link) + '" tabindex="0" role="link"><div class="feed-item-body"><h2>' + escapeHtml(item.title) + '</h2>' + (item.description ? '<p>' + escapeHtml(item.description) + '</p>' : '') + meta + '</div>' + (image ? '<div class="feed-item-side">' + image + '</div>' : '') + '</article>';
@@ -1251,8 +1273,8 @@ const MASCOT_ASSETS = {
 };
 const MASCOT_DIRECTIONS = ['up-left', 'up', 'up-right', 'left', 'center', 'right', 'down-left', 'down', 'down-right'];
 const MASCOT_REACTIONS = ['blink', 'heart', 'sparkle', 'surprised', 'wink', 'bashful', 'sleepy', 'dizzy', 'delighted'];
-const MASCOT_FULL_BODY_MARKUP = '<img class="onebox-mascot-fullbody" src="icons/mascot-fox-full.png?v=2.18.247" alt="" draggable="false">';
-const MASCOT_FULL_BODY_REACTIONS = 'icons/mascot-fox-full-reactions.png?v=2.18.247';
+const MASCOT_FULL_BODY_MARKUP = '<img class="onebox-mascot-fullbody" src="icons/mascot-fox-full.png?v=2.18.248" alt="" draggable="false">';
+const MASCOT_FULL_BODY_REACTIONS = 'icons/mascot-fox-full-reactions.png?v=2.18.248';
 const MASCOT_CLOCKWISE = ['right', 'down-right', 'down', 'down-left', 'left', 'up-left', 'up', 'up-right'];
 const MASCOT_SECTOR = (Math.PI * 2) / MASCOT_CLOCKWISE.length;
 const MASCOT_HYSTERESIS = 0.12;
