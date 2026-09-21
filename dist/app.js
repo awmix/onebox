@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.242';
+const APP_VERSION = '2.18.243';
 // The OAuth secret stays in the Cloudflare Worker. The browser only knows the
 // public client id and receives the authorization result in the URL fragment,
 // which is consumed immediately and never sent to a server.
@@ -200,7 +200,7 @@ const DICT = {
     refresh: '刷新', searchPlace: '搜索城市或区县',
     noWeather: '天气需要联网，搜索一个城市或区县开始。', weatherLoading: '正在获取天气…', weatherLoadFailed: '天气获取失败，点击卡片重试。',
     weatherData: '数据来自 Open-Meteo，最近更新 {time}，离线可查看。',
-    sortWeather: '', hourly: '24 小时', daily: '前 3 天 · 今天 · 未来 15 天', advice: '天气建议',
+    sortWeather: '', hourly: '36 小时', daily: '前 3 天 · 今天 · 未来 15 天', advice: '天气建议',
     commute: '出行', sport: '运动', clothing: '穿衣', sunscreen: '防晒', hiking: '爬山', windAdvice: '风力建议', windLevel: '风力', elevation: '海拔',
     addCard: '添加', noResults: '没有找到匹配地点，请换个关键词。',
     home: '首页', tools: '工具', navigation: '导航', messages: '消息', mine: '我的', quickTools: '常用工具', openSettings: '打开设置', noMessages: '还没有消息。', homeTabs: '首页', homeTabsSelected: '已选择 {count} 项', homeSourceManage: '首页来源', homeSourceManageHint: '选择要显示在首页导航中的来源', homeSourceAdd: '添加', homeSourceRemove: '移除', homeSourceEmpty: '暂时没有其他来源',
@@ -244,7 +244,7 @@ const DICT = {
     refresh: 'Refresh', searchPlace: 'Search city or district',
     noWeather: 'Search a city or district to get weather.', weatherLoading: 'Loading weather…', weatherLoadFailed: 'Weather failed to load. Click the card to retry.',
     weatherData: 'Weather data from Open-Meteo · updated {time} · saved locally for offline viewing.',
-    sortWeather: '', hourly: '24 hours', daily: '3 days before · today · next 15 days', advice: 'Advice',
+    sortWeather: '', hourly: '36 hours', daily: '3 days before · today · next 15 days', advice: 'Advice',
     commute: 'Travel', sport: 'Sport', clothing: 'Clothing', sunscreen: 'Sun care', hiking: 'Hiking', windAdvice: 'Wind advice', windLevel: 'Wind', elevation: 'Elevation',
     addCard: 'Add', noResults: 'No matching place. Try another query.',
     home: 'Home', tools: 'Tools', navigation: 'Navigation', messages: 'Messages', mine: 'Me', quickTools: 'Quick tools', openSettings: 'Open settings', noMessages: 'No messages yet.', homeTabs: 'Home', homeTabsSelected: '{count} selected',
@@ -1164,8 +1164,8 @@ const MASCOT_ASSETS = {
 };
 const MASCOT_DIRECTIONS = ['up-left', 'up', 'up-right', 'left', 'center', 'right', 'down-left', 'down', 'down-right'];
 const MASCOT_REACTIONS = ['blink', 'heart', 'sparkle', 'surprised', 'wink', 'bashful', 'sleepy', 'dizzy', 'delighted'];
-const MASCOT_FULL_BODY_MARKUP = '<img class="onebox-mascot-fullbody" src="icons/mascot-fox-full.png?v=2.18.242" alt="" draggable="false">';
-const MASCOT_FULL_BODY_REACTIONS = 'icons/mascot-fox-full-reactions.png?v=2.18.242';
+const MASCOT_FULL_BODY_MARKUP = '<img class="onebox-mascot-fullbody" src="icons/mascot-fox-full.png?v=2.18.243" alt="" draggable="false">';
+const MASCOT_FULL_BODY_REACTIONS = 'icons/mascot-fox-full-reactions.png?v=2.18.243';
 const MASCOT_CLOCKWISE = ['right', 'down-right', 'down', 'down-left', 'left', 'up-left', 'up', 'up-right'];
 const MASCOT_SECTOR = (Math.PI * 2) / MASCOT_CLOCKWISE.length;
 const MASCOT_HYSTERESIS = 0.12;
@@ -4383,8 +4383,11 @@ function weather() {
   const hourlyTimes = active.hourly?.time || [];
   const selectedHour = currentHourIndex(active);
   const currentHour = selectedHour >= 0 ? selectedHour : 0;
-  const hourlyStart = Math.min(Math.max(0, currentHour - 12), Math.max(0, hourlyTimes.length - 24));
-  const hourlyEnd = Math.min(hourlyTimes.length, hourlyStart + 24);
+  const hourlyPastHours = 12;
+  const hourlyFutureHours = 24;
+  const hourlyWindowSize = hourlyPastHours + hourlyFutureHours;
+  const hourlyStart = Math.min(Math.max(0, currentHour - hourlyPastHours), Math.max(0, hourlyTimes.length - hourlyWindowSize));
+  const hourlyEnd = Math.min(hourlyTimes.length, hourlyStart + hourlyWindowSize);
   const hourly = hourlyTimes.slice(hourlyStart, hourlyEnd).map((time, offset) => {
     const index = hourlyStart + offset; const item = weatherCode(active.hourly.weather_code[index]); const date = new Date(time); const isCurrent = index === currentHour;
     const label = isCurrent ? (state.language === 'en' ? 'Now' : '现在') : new Intl.DateTimeFormat(state.language === 'en' ? 'en-US' : 'zh-CN', { hour: '2-digit', minute: '2-digit' }).format(date);
