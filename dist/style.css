@@ -9177,3 +9177,114 @@ body.dev-tools-fullscreen #workspace[data-tool="dev"] {
     border-radius: 0;
   }
 }
+
+/* 2.18.270: desktop tool pages are content-driven. The old shared 483px
+   frame was useful for the compact phone surface, but it made calendar and
+   weather scroll inside a scroll container on desktop. Let the document own
+   the vertical scroll and give each desktop tool the full available width. */
+@media (min-width: 761px) {
+  body:has(#workspace[data-tool="calendar"]),
+  body:has(#workspace[data-tool="weather"]),
+  body:has(#workspace[data-tool="navigation"]) {
+    overflow: auto;
+  }
+
+  main:has(#workspace[data-tool="calendar"]),
+  main:has(#workspace[data-tool="weather"]),
+  main:has(#workspace[data-tool="navigation"]) {
+    height: auto;
+    min-height: 100dvh;
+    max-height: none;
+    overflow: visible;
+    overflow-x: clip;
+    overflow-y: visible;
+  }
+
+  #pageSwipeStage:has(> #workspace[data-tool="calendar"]),
+  #pageSwipeStage:has(> #workspace[data-tool="weather"]),
+  #pageSwipeStage:has(> #workspace[data-tool="navigation"]) {
+    min-height: 0;
+    height: auto;
+  }
+
+  #workspace[data-tool="calendar"],
+  #workspace[data-tool="weather"],
+  #workspace[data-tool="navigation"] {
+    height: auto;
+    min-height: 0;
+    max-height: none;
+    overflow: visible;
+  }
+
+  #workspace[data-tool="calendar"] .calendar-layout {
+    grid-template-columns: minmax(0, 1.7fr) minmax(340px, .9fr);
+    gap: 28px;
+  }
+
+  #workspace[data-tool="calendar"] .calendar-card,
+  #workspace[data-tool="calendar"] .agenda-panel {
+    min-width: 0;
+  }
+
+  #workspace[data-tool="calendar"] .calendar-grid {
+    gap: 10px;
+  }
+
+  #workspace[data-tool="calendar"] .day {
+    min-height: 92px;
+    padding-top: 12px;
+    padding-bottom: 12px;
+    border-radius: 15px;
+  }
+
+  #workspace[data-tool="weather"] .weather-card-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px;
+    overflow: visible;
+    padding: 4px 0 12px;
+  }
+
+  #workspace[data-tool="weather"] .weather-card {
+    width: auto;
+    min-width: 0;
+    flex: initial;
+  }
+
+  #workspace[data-tool="weather"] .weather-days,
+  #workspace[data-tool="weather"] .hourly-strip,
+  #workspace[data-tool="weather"] .advice-strip {
+    overflow-y: hidden;
+  }
+
+  #workspace[data-tool="navigation"] .navigation-page {
+    width: 100%;
+    max-width: none;
+    min-height: 0;
+    padding: 18px 0 36px;
+  }
+
+  #workspace[data-tool="navigation"] .navigation-grid {
+    width: 100%;
+    max-width: none;
+    margin-inline: 0;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 22px 18px;
+    justify-content: stretch;
+  }
+
+  #workspace[data-tool="navigation"] .navigation-card,
+  #workspace[data-tool="navigation"] .navigation-card-main,
+  #workspace[data-tool="navigation"] .navigation-add-card,
+  #workspace[data-tool="navigation"] .navigation-empty-add-card {
+    min-height: 142px;
+  }
+
+  #workspace[data-tool="navigation"] .navigation-site-icon,
+  #workspace[data-tool="navigation"] .navigation-folder-preview,
+  #workspace[data-tool="navigation"] .navigation-add-glyph {
+    width: 64px;
+    height: 64px;
+    border-radius: 18px;
+  }
+}

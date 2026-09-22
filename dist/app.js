@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.269';
+const APP_VERSION = '2.18.270';
 // The OAuth secret stays in the Cloudflare Worker. The browser only knows the
 // public client id and receives the authorization result in the URL fragment,
 // which is consumed immediately and never sent to a server.
@@ -5038,7 +5038,7 @@ function devHistoryContent(kind) {
   return '<div class="dev-history-content" ' + (open ? '' : 'hidden') + '><div class="dev-history-head"><strong>' + t('recentCalculations') + '</strong><button class="text-btn" data-clear-dev-records data-dev-record-kind="' + kind + '" ' + (records.length ? '' : 'disabled') + '>' + t('clear') + '</button></div><div class="dev-record-list">' + list + '</div></div>';
 }
 function devOutputPaneHead(kind, title, actions = '') {
-  return '<div class="dev-pane-head dev-output-pane-head"><div class="dev-output-title"><div class="dev-history-anchor">' + devHistoryToggle(kind) + '</div><h3>' + escapeHtml(title) + '</h3></div><div class="dev-pane-actions">' + actions + '</div></div>';
+  return '<div class="dev-pane-head dev-output-pane-head"><div class="dev-output-title"><h3>' + escapeHtml(title) + '</h3><div class="dev-history-anchor">' + devHistoryToggle(kind) + '</div></div><div class="dev-pane-actions">' + actions + '</div></div>';
 }
 function renderDeveloperJsonFormat() {
   const dev = state.devTools; const result = dev.formatOutput || '';
