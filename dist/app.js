@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.276';
+const APP_VERSION = '2.18.277';
 // The OAuth secret stays in the Cloudflare Worker. The browser only knows the
 // public client id and receives the authorization result in the URL fragment,
 // which is consumed immediately and never sent to a server.
@@ -5519,12 +5519,50 @@ async function githubFileContent(file) {
     return raw.ok ? await raw.text() : null;
   } catch { return null; }
 }
-async function githubGistDetails(gist) {
+async function githubGistDetails(gist, version = '') {
   if (!gist?.id) return null;
-  const response = await fetch('https://api.github.com/gists/' + encodeURIComponent(gist.id), { headers: githubHeaders(), cache: 'no-store' });
+  const suffix = version ? '/' + encodeURIComponent(version) : '';
+  const response = await fetch('https://api.github.com/gists/' + encodeURIComponent(gist.id) + suffix, { headers: githubHeaders(), cache: 'no-store' });
   if (!response.ok) throw await githubApiError(response, state.language === 'en' ? 'Could not read the OneBox Gist' : '无法读取 OneBox Gist');
   const details = await response.json();
   return details?.id ? details : gist;
+}
+async function githubGistHistory(gist) {
+  if (!gist?.id) return [];
+  const response = await fetch('https://api.github.com/gists/' + encodeURIComponent(gist.id) + '/commits?per_page=12', { headers: githubHeaders(), cache: 'no-store' });
+  if (!response.ok) throw await githubApiError(response, state.language === 'en' ? 'Could not read the OneBox Gist history' : '无法读取 OneBox Gist 历史版本');
+  const history = await response.json();
+  return Array.isArray(history) ? history : [];
+}
+async function readGithubGistPayload(candidate) {
+  const latest = await githubGistDetails(candidate);
+  let lastError = null;
+  try {
+    const content = await githubFileContent(latest?.files?.['onebox-settings.json']);
+    return { gist: latest, remote: parseGithubSyncPayload(content) };
+  } catch (error) {
+    lastError = error;
+    if (error?.code === 'github-auth-expired') throw error;
+  }
+  let history = [];
+  try { history = await githubGistHistory(candidate); } catch (error) {
+    if (error?.code === 'github-auth-expired') throw error;
+    throw lastError || error;
+  }
+  const latestVersion = latest?.history?.[0]?.version || '';
+  for (const item of history) {
+    const version = item?.version || item?.sha || '';
+    if (!version || version === latestVersion) continue;
+    try {
+      const revision = await githubGistDetails(candidate, version);
+      const content = await githubFileContent(revision?.files?.['onebox-settings.json']);
+      return { gist: revision, remote: parseGithubSyncPayload(content) };
+    } catch (error) {
+      lastError = error;
+      if (error?.code === 'github-auth-expired') throw error;
+    }
+  }
+  throw lastError || Error(t('githubSyncInvalidData'));
 }
 function syncBase64Bytes(value) {
   const binary = atob(String(value || ''));
@@ -5796,10 +5834,9 @@ async function githubDownload() {
     let lastError = null;
     for (const candidate of candidates) {
       try {
-        const gistDetails = await githubGistDetails(candidate);
-        const content = await githubFileContent(gistDetails?.files?.['onebox-settings.json']);
-        remote = parseGithubSyncPayload(content);
-        gist = gistDetails;
+        const restored = await readGithubGistPayload(candidate);
+        remote = restored.remote;
+        gist = restored.gist;
         break;
       } catch (error) {
         lastError = error;
