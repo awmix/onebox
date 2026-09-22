@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.253';
+const APP_VERSION = '2.18.254';
 // The OAuth secret stays in the Cloudflare Worker. The browser only knows the
 // public client id and receives the authorization result in the URL fragment,
 // which is consumed immediately and never sent to a server.
@@ -65,11 +65,12 @@ const FEED_SOURCE_REGISTRY = [
   { id: 'bilibili', name: 'B站', badge: 'B', icon: 'icons/bilibili.ico?v=2.18.124', className: 'bilibili', mobileHost: 'm.bilibili.com', visibleByDefault: false, siteUrl: 'https://search.bilibili.com/all', fetchers: [{ kind: 'bilibili-hot', url: 'https://api.bilibili.com/x/web-interface/search/square?limit=30&platform=web' }, { kind: 'bilibili-hotword', url: 'https://s.search.bilibili.com/main/hotword' }] },
   { id: 'guancha', name: '风闻', badge: '风', icon: 'icons/guancha.png?v=2.18.124', className: 'guancha', mobileHost: 'user.guancha.cn', visibleByDefault: true, siteUrl: 'https://user.guancha.cn/main/index?s=fwdhsy', fetchers: [{ kind: 'guancha-fengwen', url: 'https://user.guancha.cn/main/index-list.json?page=1&order=1' }, { kind: 'guancha-fengwen', url: 'https://rsshub.app/guancha/topic/0/1' }] },
   { id: 'hupu', name: '虎扑', badge: '虎', icon: 'icons/hupu.ico?v=2.18.124', className: 'hupu', mobileHost: 'm.hupu.com', visibleByDefault: true, siteUrl: 'https://bbs.hupu.com/bxj', fetchers: [{ kind: 'hupu-bbs', url: 'https://bbs.hupu.com/bxj' }, { kind: 'hupu-bbs', url: 'https://bbs.hupu.com/topic-daily' }] },
-  { id: 'xiaohongshu', name: '红书', badge: '红', icon: 'https://www.xiaohongshu.com/favicon.ico?v=2.18.253', className: 'xiaohongshu', visibleByDefault: true, siteUrl: 'https://www.xiaohongshu.com/explore', fetchers: [{ kind: 'xiaohongshu-explore', url: 'https://www.xiaohongshu.com/explore' }, { kind: 'xiaohongshu-hotboard', url: 'https://uapis.cn/api/v1/misc/hotboard?type=xiaohongshu&limit=30', direct: true }] },
-  { id: 'douyin', name: '抖音', badge: '音', icon: 'https://www.douyin.com/favicon.ico?v=2.18.253', className: 'douyin', visibleByDefault: true, siteUrl: 'https://www.douyin.com/jingxuan', fetchers: [{ kind: 'douyin-hotboard', url: 'https://uapis.cn/api/v1/misc/hotboard?type=douyin&limit=30', direct: true }, { kind: 'douyin-jingxuan', url: 'https://www.douyin.com/jingxuan' }] },
+  { id: 'xiaohongshu', name: '红书', badge: '红', icon: 'https://www.xiaohongshu.com/favicon.ico?v=2.18.254', className: 'xiaohongshu', visibleByDefault: true, siteUrl: 'https://www.xiaohongshu.com/explore', fetchers: [{ kind: 'xiaohongshu-explore', url: 'https://www.xiaohongshu.com/explore' }, { kind: 'xiaohongshu-hotboard', url: 'https://uapis.cn/api/v1/misc/hotboard?type=xiaohongshu&limit=30', direct: true }] },
+  { id: 'douyin', name: '抖音', badge: '音', icon: 'https://www.douyin.com/favicon.ico?v=2.18.254', className: 'douyin', visibleByDefault: true, siteUrl: 'https://www.douyin.com/jingxuan', fetchers: [{ kind: 'douyin-hotboard', url: 'https://uapis.cn/api/v1/misc/hotboard?type=douyin&limit=30', direct: true }, { kind: 'douyin-jingxuan', url: 'https://www.douyin.com/jingxuan' }] },
 ];
 const RSS_SOURCES = FEED_SOURCE_REGISTRY.filter((source) => source.enabled !== false);
 const RSS_REFRESH_INTERVAL = 2 * 60 * 1000;
+const HOME_FEED_LOADING_GRACE_MS = 3500;
 const RSS_RETENTION_MS = 2 * 24 * 60 * 60 * 1000;
 const RSS_MAX_ITEMS_PER_SOURCE = 60;
 const DEFAULT_HOME_FEED_ORDER = RSS_SOURCES.map((source) => source.id);
@@ -499,6 +500,8 @@ const state = {
   github: (() => { const value = parseStored(STORAGE.github, {}) || {}; return { clientId: GITHUB_CLIENT_ID, token: value.token || '', user: value.user || null, gistId: value.gistId || '', deviceCode: '', userCode: '', verificationUri: '', verificationUriComplete: '', expiresAt: 0, interval: 5, manualTokenOpen: false }; })(),
   githubSync: { active: false, mode: '', progress: 0, message: '', error: '' },
 };
+let homeFeedRequesting = false;
+let homeFeedLoadingTimer = null;
 if (storedHomeFeedVisibilityMigration < HOME_FEED_VISIBILITY_MIGRATION) {
   localStorage.setItem(STORAGE.homeFeedVisibilityMigration, String(HOME_FEED_VISIBILITY_MIGRATION));
   if (Array.isArray(storedHomeFeedVisibility)) saveStored(STORAGE.homeFeedVisibility, state.homeFeed.visible);
@@ -1193,13 +1196,29 @@ async function fetchFeedSource(source) {
   return { items, updatedAt: Date.now(), feedUrl: successful.feedUrl };
 }
 async function loadHomeFeeds(force = false, sourceId = '') {
-  if (state.homeFeed.loading) return;
+  if (homeFeedRequesting) return;
   const visibleSources = homeFeedSources();
   const hasItems = visibleSources.some((source) => state.homeFeed.sources[source.id]?.items?.length);
   const cacheIsCurrent = state.homeFeed.cacheVersion === APP_VERSION;
   if (!force && cacheIsCurrent && hasItems && Date.now() - state.homeFeed.updatedAt < RSS_REFRESH_INTERVAL) return;
   const preservedPosition = captureHomeFeedPosition();
+  homeFeedRequesting = true;
   state.homeFeed.loading = true; state.homeFeed.errors = {}; state.homeFeed.stale = {}; const request = ++state.homeFeedRequest;
+  clearTimeout(homeFeedLoadingTimer);
+  homeFeedLoadingTimer = window.setTimeout(() => {
+    if (request !== state.homeFeedRequest || !homeFeedRequesting || !state.homeFeed.loading) return;
+    const activeSource = state.homeFeed.active === 'footprint' ? null : state.homeFeed.sources[state.homeFeed.active];
+    if (!activeSource?.items?.length) return;
+    // Keep the old feed usable while a slow source continues in the background.
+    // The spinner is only a short visual acknowledgement, never a full-page
+    // loading gate for already cached content.
+    state.homeFeed.loading = false;
+    if (state.section === 'home') {
+      const position = captureHomeFeedPosition();
+      render();
+      restoreHomeFeedPosition(position);
+    }
+  }, HOME_FEED_LOADING_GRACE_MS);
   if (state.section === 'home') { render(); restoreHomeFeedPosition(preservedPosition); }
   let discoveredNewItems = false;
   const sourcesToLoad = sourceId && sourceId !== 'footprint' ? visibleSources.filter((source) => source.id === sourceId) : visibleSources;
@@ -1221,6 +1240,9 @@ async function loadHomeFeeds(force = false, sourceId = '') {
   });
   const hasFreshResult = results.some(({ result }) => Boolean(result));
   if (hasFreshResult) state.homeFeed.updatedAt = Date.now();
+  clearTimeout(homeFeedLoadingTimer);
+  homeFeedLoadingTimer = null;
+  homeFeedRequesting = false;
   state.homeFeed.loading = false;
   state.homeFeed.hasNew = state.section === 'home' ? false : state.homeFeed.hasNew || discoveredNewItems;
   state.homeFeed.cacheVersion = hasFreshResult ? APP_VERSION : '';
@@ -1336,8 +1358,8 @@ const MASCOT_ASSETS = {
 };
 const MASCOT_DIRECTIONS = ['up-left', 'up', 'up-right', 'left', 'center', 'right', 'down-left', 'down', 'down-right'];
 const MASCOT_REACTIONS = ['blink', 'heart', 'sparkle', 'surprised', 'wink', 'bashful', 'sleepy', 'dizzy', 'delighted'];
-const MASCOT_FULL_BODY_MARKUP = '<img class="onebox-mascot-fullbody" src="icons/mascot-fox-full.png?v=2.18.253" alt="" draggable="false">';
-const MASCOT_FULL_BODY_REACTIONS = 'icons/mascot-fox-full-reactions.png?v=2.18.253';
+const MASCOT_FULL_BODY_MARKUP = '<img class="onebox-mascot-fullbody" src="icons/mascot-fox-full.png?v=2.18.254" alt="" draggable="false">';
+const MASCOT_FULL_BODY_REACTIONS = 'icons/mascot-fox-full-reactions.png?v=2.18.254';
 const MASCOT_CLOCKWISE = ['right', 'down-right', 'down', 'down-left', 'left', 'up-left', 'up', 'up-right'];
 const MASCOT_SECTOR = (Math.PI * 2) / MASCOT_CLOCKWISE.length;
 const MASCOT_HYSTERESIS = 0.12;
@@ -1938,7 +1960,7 @@ function recoverHomeLayoutAfterReturn() {
   // otherwise the extra loading render is visible as a flash/jump.
   const hasCachedItems = homeFeedSources().some((source) => state.homeFeed.sources[source.id]?.items?.length);
   if (!workspace.querySelector('.home-page') || !hasCachedItems) render();
-  else if (!state.homeFeed.loading) loadHomeFeeds();
+  else if (!homeFeedRequesting) loadHomeFeeds();
   const restore = () => {
     syncOneBoxViewportMetrics();
     syncHomeFeedSurface();
@@ -2063,7 +2085,7 @@ function renderHome() {
   }).join('');
   const feedBody = state.homeFeed.loading && !hasItems && !isFootprint ? '<div class="feed-loading"><span></span><span></span><span></span></div>' : hasItems ? '<div class="feed-list">' + feedList + '</div>' : '<p class="empty feed-empty">' + (isFootprint ? (state.language === 'en' ? 'No articles read yet.' : '还没有阅读过首页消息。') : t('feedEmpty')) + '</p>';
   const refreshState = state.homeFeed.loading ? '<div class="feed-refresh-state" role="status" aria-label="' + escapeHtml(t('feedLoading')) + '"><span></span></div>' : '';
-  const newContentAction = !state.homeFeed.loading && newCount ? '<div class="feed-new-content-action-wrap"><button class="feed-new-content-action" type="button" data-feed-only-new>' + escapeHtml(homeFeedNewActionLabel(newCount)) + '</button></div>' : '';
+  const newContentAction = !state.homeFeed.loading && !homeFeedRequesting && newCount ? '<div class="feed-new-content-action-wrap"><button class="feed-new-content-action" type="button" data-feed-only-new>' + escapeHtml(homeFeedNewActionLabel(newCount)) + '</button></div>' : '';
   return '<div class="home-page feed-home"><section class="feed-panel">' + refreshState + newContentAction + (errors ? '<p class="feed-warning">' + t('feedPartial') + '</p>' : '') + feedBody + '<p class="feed-hint">' + t('feedProxyHint') + (state.homeFeed.updatedAt ? ' · ' + t('feedLastRefresh') + ' ' + escapeHtml(feedDate(state.homeFeed.updatedAt)) : '') + '</p></section></div>';
 }
 function navigationIconMarkup(site, extraClass = '') {
@@ -6184,7 +6206,7 @@ function finishPageSwipe(event) {
 }
 
 function beginHomeFeedPull(event) {
-  if (state.section !== 'home' || event.pointerType === 'mouse' || state.homeFeed.loading || appScrollTop() > 1) return;
+  if (state.section !== 'home' || event.pointerType === 'mouse' || homeFeedRequesting || appScrollTop() > 1) return;
   if (!event.target.closest('#workspace[data-tool="home"]') || event.target.closest('button, a, input, select, textarea, [contenteditable="true"]')) return;
   homePullGesture = { pointerId: event.pointerId, startX: event.clientX, startY: event.clientY, distance: 0, cancelled: false };
 }
@@ -6204,7 +6226,7 @@ function finishHomeFeedPull(event) {
   const gesture = homePullGesture;
   homePullGesture = null;
   if (!gesture || (gesture.pointerId != null && event.pointerId !== gesture.pointerId)) return;
-  const shouldRefresh = !gesture.cancelled && gesture.distance >= 42 && state.section === 'home' && !state.homeFeed.loading;
+  const shouldRefresh = !gesture.cancelled && gesture.distance >= 42 && state.section === 'home' && !homeFeedRequesting;
   workspace.classList.remove('feed-pulling');
   workspace.style.removeProperty('--feed-pull-distance');
   if (shouldRefresh) loadHomeFeeds(true);
@@ -7229,6 +7251,9 @@ window.addEventListener('pagehide', () => {
   // Do not let a request that was in flight before the page was hidden keep
   // the cached homepage in an endless loading state when iOS restores it.
   state.homeFeedRequest += 1;
+  homeFeedRequesting = false;
+  clearTimeout(homeFeedLoadingTimer);
+  homeFeedLoadingTimer = null;
   state.homeFeed.loading = false;
   clearFeedNavigationPending();
   flushReaderProgress(); clearTimeout(persistenceTimer); writePersistentSnapshot();
