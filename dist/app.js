@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.268';
+const APP_VERSION = '2.18.269';
 // The OAuth secret stays in the Cloudflare Worker. The browser only knows the
 // public client id and receives the authorization result in the URL fragment,
 // which is consumed immediately and never sent to a server.
@@ -5026,17 +5026,25 @@ function devRecordDetail(kind, item) {
   if (kind === 'timestamp') return String(item.output || '');
   return '输入:\n' + String(item.input || '') + '\n\n输出:\n' + String(item.output || '');
 }
-function devRecordPanel(kind) {
+function devHistoryToggle(kind) {
+  const records = state.devTools.records[kind] || [];
+  const open = state.devTools.historyOpen === true;
+  return '<div class="dev-history-toggle-wrap"><button class="display-history-toggle dev-history-toggle" type="button" data-toggle-dev-history aria-expanded="' + String(open) + '" aria-label="' + escapeHtml(t('devRecords')) + '" title="' + escapeHtml(t('devRecords')) + '">' + devHistoryIcon() + '</button><span class="dev-history-count">' + records.length + '</span></div>';
+}
+function devHistoryContent(kind) {
   const records = state.devTools.records[kind] || [];
   const list = records.length ? records.map((item) => '<div class="swipe-row dev-history-swipe-row" data-swipe-row><button class="dev-record history-item swipe-content" type="button" data-dev-record-kind="' + kind + '" data-dev-record="' + escapeHtml(item.id) + '" title="' + escapeHtml(devRecordDetail(kind, item)) + '"><strong>' + escapeHtml(devRecordLabel(kind, item)) + '</strong><small>' + escapeHtml(devRecordPreview(kind, item)) + '</small></button><button class="swipe-delete" data-delete-dev-record-kind="' + kind + '" data-delete-dev-record="' + escapeHtml(item.id) + '">' + (state.language === 'en' ? 'Delete' : '删除') + '</button></div>').join('') : '<p class="dev-history-empty">' + t('devNoRecords') + '</p>';
   const open = state.devTools.historyOpen === true;
-  return '<aside class="dev-history-panel"><div class="dev-history-toggle-row"><button class="display-history-toggle dev-history-toggle" type="button" data-toggle-dev-history aria-expanded="' + String(open) + '" aria-label="' + escapeHtml(t('devRecords')) + '" title="' + escapeHtml(t('devRecords')) + '">' + devHistoryIcon() + '</button><div class="dev-history-summary"><strong>' + t('devRecords') + '</strong><small>' + t('devReuseHint') + '</small></div><span class="dev-history-count">' + records.length + '</span></div><div class="dev-history-content" ' + (open ? '' : 'hidden') + '><div class="dev-history-head"><strong>' + t('recentCalculations') + '</strong><button class="text-btn" data-clear-dev-records data-dev-record-kind="' + kind + '" ' + (records.length ? '' : 'disabled') + '>' + t('clear') + '</button></div><div class="dev-record-list">' + list + '</div></div></aside>';
+  return '<div class="dev-history-content" ' + (open ? '' : 'hidden') + '><div class="dev-history-head"><strong>' + t('recentCalculations') + '</strong><button class="text-btn" data-clear-dev-records data-dev-record-kind="' + kind + '" ' + (records.length ? '' : 'disabled') + '>' + t('clear') + '</button></div><div class="dev-record-list">' + list + '</div></div>';
+}
+function devOutputPaneHead(kind, title, actions = '') {
+  return '<div class="dev-pane-head dev-output-pane-head"><div class="dev-output-title"><div class="dev-history-anchor">' + devHistoryToggle(kind) + '</div><h3>' + escapeHtml(title) + '</h3></div><div class="dev-pane-actions">' + actions + '</div></div>';
 }
 function renderDeveloperJsonFormat() {
   const dev = state.devTools; const result = dev.formatOutput || '';
   return '<div class="dev-workbench dev-json-format"><div class="dev-editor-grid">' +
     '<section class="dev-pane">' + devPaneHead(t('devInput'), devActionButton('json-example', t('devExample')) + devActionButton('json-clear', t('devClear'))) + '<label class="dev-check"><input type="checkbox" data-dev-field="formatUnescape" ' + (dev.formatUnescape ? 'checked' : '') + '> ' + t('devUnescape') + '</label><textarea class="dev-code-editor" data-dev-field="formatInput" spellcheck="false" placeholder="{\n  &quot;name&quot;: &quot;OneBox&quot;\n}">' + escapeHtml(dev.formatInput) + '</textarea></section>' +
-    '<section class="dev-pane dev-output-pane">' + devPaneHead(t('devOutput'), devActionButton('json-format', t('devFormat')) + devActionButton('json-minify', t('devMinify')) + devActionButton('json-expand-all', t('devExpandAll')) + devActionButton('json-collapse-all', t('devCollapseAll')) + devActionButton('dev-copy-output', t('devCopy'))) + renderDeveloperJsonTree() + devStatus(dev.formatStatus, dev.formatStatus.startsWith(t('devInvalid'))) + '</section>' +
+    '<section class="dev-pane dev-output-pane">' + devOutputPaneHead('json-format', t('devOutput'), devActionButton('json-format', t('devFormat')) + devActionButton('json-minify', t('devMinify')) + devActionButton('json-expand-all', t('devExpandAll')) + devActionButton('json-collapse-all', t('devCollapseAll')) + devActionButton('dev-copy-output', t('devCopy'))) + devHistoryContent('json-format') + renderDeveloperJsonTree() + devStatus(dev.formatStatus, dev.formatStatus.startsWith(t('devInvalid'))) + '</section>' +
     '</div></div>';
 }
 function renderDeveloperCompare() {
@@ -5044,18 +5052,18 @@ function renderDeveloperCompare() {
   return '<div class="dev-workbench dev-json-compare"><div class="dev-compare-grid">' +
     '<section class="dev-pane">' + devPaneHead(t('devJsonA'), devActionButton('json-a-example', t('devExample')) + devActionButton('json-a-clear', t('devClear'))) + '<textarea class="dev-code-editor" data-dev-field="compareLeft" spellcheck="false" placeholder="{ &quot;version&quot;: 1 }">' + escapeHtml(dev.compareLeft) + '</textarea></section>' +
     '<section class="dev-pane">' + devPaneHead(t('devJsonB'), devActionButton('json-b-example', t('devExample')) + devActionButton('json-b-clear', t('devClear'))) + '<textarea class="dev-code-editor" data-dev-field="compareRight" spellcheck="false" placeholder="{ &quot;version&quot;: 2 }">' + escapeHtml(dev.compareRight) + '</textarea></section>' +
-    '</div><section class="dev-pane dev-compare-result">' + devPaneHead(t('devOutput'), devActionButton('json-compare', t('devCompare')) + devActionButton('dev-copy-output', t('devCopy'))) + '<pre class="dev-result-pre">' + escapeHtml(dev.compareOutput || t('devCompare')) + '</pre>' + devStatus(dev.compareStatus, dev.compareStatus.startsWith(t('devInvalid'))) + '</section></div>';
+    '</div><section class="dev-pane dev-compare-result">' + devOutputPaneHead('json-compare', t('devOutput'), devActionButton('json-compare', t('devCompare')) + devActionButton('dev-copy-output', t('devCopy'))) + devHistoryContent('json-compare') + '<pre class="dev-result-pre">' + escapeHtml(dev.compareOutput || t('devCompare')) + '</pre>' + devStatus(dev.compareStatus, dev.compareStatus.startsWith(t('devInvalid'))) + '</section></div>';
 }
 function renderDeveloperStats() {
   const dev = state.devTools; const stats = dev.textOutput || developerTextStats(dev.textInput);
   const cards = [['characters', t('devCharacters')], ['nonSpace', t('devNonSpace')], ['lines', t('devLines')], ['chinese', t('devChinese')], ['words', t('devWords')], ['paragraphs', t('devParagraphs')]].map(([key, label]) => '<div class="dev-stat-card"><strong>' + Number(stats[key] || 0).toLocaleString() + '</strong><span>' + label + '</span></div>').join('');
-  return '<div class="dev-workbench dev-text-stats"><div class="dev-editor-grid"><section class="dev-pane">' + devPaneHead(t('devInput'), devActionButton('text-clear', t('devClear'))) + '<textarea class="dev-text-editor" data-dev-field="textInput" spellcheck="true" placeholder="' + escapeHtml(state.language === 'en' ? 'Paste or type text here…' : '粘贴或输入文本…') + '">' + escapeHtml(dev.textInput) + '</textarea></section><section class="dev-pane dev-stats-pane">' + devPaneHead(t('devOutput'), devActionButton('text-analyze', t('devAnalyze'))) + '<div class="dev-stat-grid">' + cards + '</div></section></div></div>';
+  return '<div class="dev-workbench dev-text-stats"><div class="dev-editor-grid"><section class="dev-pane">' + devPaneHead(t('devInput'), devActionButton('text-clear', t('devClear'))) + '<textarea class="dev-text-editor" data-dev-field="textInput" spellcheck="true" placeholder="' + escapeHtml(state.language === 'en' ? 'Paste or type text here…' : '粘贴或输入文本…') + '">' + escapeHtml(dev.textInput) + '</textarea></section><section class="dev-pane dev-stats-pane">' + devOutputPaneHead('text-stats', t('devOutput'), devActionButton('text-analyze', t('devAnalyze'))) + '<div class="dev-stat-grid">' + cards + '</div>' + devHistoryContent('text-stats') + '</section></div></div>';
 }
 function renderDeveloperTimestamp() {
   const dev = state.devTools;
   const timestampMode = '<div class="dev-segmented"><button type="button" class="' + (dev.timestampMode === 'timestamp' ? 'active' : '') + '" data-dev-action="timestamp-mode" data-dev-value="timestamp">' + t('devTimestampToDate') + '</button><button type="button" class="' + (dev.timestampMode === 'date' ? 'active' : '') + '" data-dev-action="timestamp-mode" data-dev-value="date">' + t('devDateToTimestamp') + '</button></div>';
   const input = dev.timestampMode === 'timestamp' ? '<div class="dev-timestamp-input-row"><input class="dev-plain-input" data-dev-field="timestampValue" inputmode="decimal" value="' + escapeHtml(dev.timestampValue) + '" placeholder="例如 1726905600"><select class="dev-plain-input" data-dev-field="timestampUnit"><option value="s" ' + (dev.timestampUnit === 's' ? 'selected' : '') + '>' + t('devSeconds') + '</option><option value="ms" ' + (dev.timestampUnit === 'ms' ? 'selected' : '') + '>' + t('devMilliseconds') + '</option></select></div>' : '<input class="dev-plain-input dev-date-input" data-dev-field="timestampDate" type="datetime-local" value="' + escapeHtml(dev.timestampDate) + '">';
-  return '<div class="dev-workbench dev-timestamp"><section class="dev-pane dev-timestamp-card">' + devPaneHead(t('devInput'), devActionButton('timestamp-now', t('devNow')) + devActionButton('timestamp-clear', t('devClear'))) + timestampMode + input + '<div class="dev-timestamp-actions">' + devActionButton('timestamp-convert', t('devConvert')) + '</div></section><section class="dev-pane dev-output-pane">' + devPaneHead(t('devOutput'), devActionButton('dev-copy-output', t('devCopy'))) + '<pre class="dev-result-pre">' + escapeHtml(dev.timestampOutput || t('devOutput')) + '</pre>' + devStatus(dev.timestampStatus, dev.timestampStatus.includes(state.language === 'en' ? 'valid' : '有效')) + '</section></div>';
+  return '<div class="dev-workbench dev-timestamp"><section class="dev-pane dev-timestamp-card">' + devPaneHead(t('devInput'), devActionButton('timestamp-now', t('devNow')) + devActionButton('timestamp-clear', t('devClear'))) + timestampMode + input + '<div class="dev-timestamp-actions">' + devActionButton('timestamp-convert', t('devConvert')) + '</div></section><section class="dev-pane dev-output-pane">' + devOutputPaneHead('timestamp', t('devOutput'), devActionButton('dev-copy-output', t('devCopy'))) + '<pre class="dev-result-pre">' + escapeHtml(dev.timestampOutput || t('devOutput')) + '</pre>' + devHistoryContent('timestamp') + devStatus(dev.timestampStatus, dev.timestampStatus.includes(state.language === 'en' ? 'valid' : '有效')) + '</section></div>';
 }
 function developerTool() {
   const modes = DEV_TOOL_IDS.map((id) => '<button type="button" class="dev-mode-tab ' + (state.devTools.active === id ? 'active' : '') + '" data-dev-mode="' + id + '">' + devModeLabel(id) + '</button>').join('');
@@ -5063,7 +5071,7 @@ function developerTool() {
   const content = mode === 'json-format' ? renderDeveloperJsonFormat() : mode === 'json-compare' ? renderDeveloperCompare() : mode === 'text-stats' ? renderDeveloperStats() : renderDeveloperTimestamp();
   const isFullscreen = state.devTools.fullscreen === true;
   const fullscreen = '<button type="button" class="dev-fullscreen-button ' + (isFullscreen ? 'active' : '') + '" data-dev-fullscreen aria-pressed="' + String(isFullscreen) + '" aria-label="' + escapeHtml(t(isFullscreen ? 'devExitFullscreen' : 'devFullscreen')) + '" title="' + escapeHtml(t(isFullscreen ? 'devExitFullscreen' : 'devFullscreen')) + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="' + (isFullscreen ? 'M9 4H4v5M20 9V4h-5M15 20h5v-5M4 15v5h5' : 'M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5') + '"/></svg></button>';
-  return '<section class="dev-tools-page ' + (isFullscreen ? 'dev-is-fullscreen' : '') + '"><nav class="dev-mode-tabs" aria-label="' + escapeHtml(t('development')) + '">' + fullscreen + modes + '</nav><div class="dev-tools-body"><div class="dev-current-tool">' + content + '</div>' + devRecordPanel(mode) + '</div></section>';
+  return '<section class="dev-tools-page ' + (isFullscreen ? 'dev-is-fullscreen' : '') + '"><nav class="dev-mode-tabs" aria-label="' + escapeHtml(t('development')) + '">' + fullscreen + modes + '</nav><div class="dev-tools-body"><div class="dev-current-tool">' + content + '</div></div></section>';
 }
 function toggleDeveloperFullscreen(force) {
   const active = typeof force === 'boolean' ? force : !state.devTools.fullscreen;
@@ -5999,7 +6007,9 @@ function render() {
   const renderers = { calculator, dev: developerTool, calendar, weather, convert, translate: translateConvertView, reader, navigation: renderNavigation };
   workspace.dataset.tool = state.section === 'tools' ? state.tool : state.section;
   workspace.innerHTML = state.section === 'home' ? renderHome() : state.section === 'navigation' ? renderNavigation() : state.section === 'messages' ? renderMessages() : state.section === 'mine' ? renderMine() : (renderers[state.tool] || calculator)();
-  document.body.classList.toggle('dev-tools-fullscreen', state.section === 'tools' && state.tool === 'dev' && state.devTools.fullscreen === true);
+  const developerFullscreen = state.section === 'tools' && state.tool === 'dev' && state.devTools.fullscreen === true;
+  document.body.classList.toggle('dev-tools-fullscreen', developerFullscreen);
+  document.body.classList.toggle('dev-history-open', developerFullscreen && state.devTools.historyOpen === true);
   renderHomeSourceNav();
   document.documentElement.classList.toggle('reader-focus', state.section === 'tools' && state.tool === 'reader' && state.readerMode === 'reading' && state.readerImmersive);
   syncReaderSafariSurface();
