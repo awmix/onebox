@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.255';
+const APP_VERSION = '2.18.256';
 // The OAuth secret stays in the Cloudflare Worker. The browser only knows the
 // public client id and receives the authorization result in the URL fragment,
 // which is consumed immediately and never sent to a server.
@@ -65,14 +65,19 @@ const FEED_SOURCE_REGISTRY = [
   { id: 'bilibili', name: 'B站', badge: 'B', icon: 'icons/bilibili.ico?v=2.18.124', className: 'bilibili', mobileHost: 'm.bilibili.com', visibleByDefault: false, siteUrl: 'https://search.bilibili.com/all', fetchers: [{ kind: 'bilibili-hot', url: 'https://api.bilibili.com/x/web-interface/search/square?limit=30&platform=web' }, { kind: 'bilibili-hotword', url: 'https://s.search.bilibili.com/main/hotword' }] },
   { id: 'guancha', name: '风闻', badge: '风', icon: 'icons/guancha.png?v=2.18.124', className: 'guancha', mobileHost: 'user.guancha.cn', visibleByDefault: true, siteUrl: 'https://user.guancha.cn/main/index?s=fwdhsy', fetchers: [{ kind: 'guancha-fengwen', url: 'https://user.guancha.cn/main/index-list.json?page=1&order=1' }, { kind: 'guancha-fengwen', url: 'https://rsshub.app/guancha/topic/0/1' }] },
   { id: 'hupu', name: '虎扑', badge: '虎', icon: 'icons/hupu.ico?v=2.18.124', className: 'hupu', mobileHost: 'm.hupu.com', visibleByDefault: true, siteUrl: 'https://bbs.hupu.com/bxj', fetchers: [{ kind: 'hupu-bbs', url: 'https://bbs.hupu.com/bxj' }, { kind: 'hupu-bbs', url: 'https://bbs.hupu.com/topic-daily' }] },
-  { id: 'xiaohongshu', name: '红书', badge: '红', icon: 'https://www.xiaohongshu.com/favicon.ico?v=2.18.255', className: 'xiaohongshu', visibleByDefault: true, siteUrl: 'https://www.xiaohongshu.com/explore', fetchers: [{ kind: 'xiaohongshu-explore', url: 'https://www.xiaohongshu.com/explore' }, { kind: 'xiaohongshu-hotboard', url: 'https://uapis.cn/api/v1/misc/hotboard?type=xiaohongshu&limit=30', direct: true }] },
-  { id: 'douyin', name: '抖音', badge: '音', icon: 'https://www.douyin.com/favicon.ico?v=2.18.255', className: 'douyin', visibleByDefault: true, siteUrl: 'https://www.douyin.com/jingxuan', fetchers: [{ kind: 'douyin-hotboard', url: 'https://uapis.cn/api/v1/misc/hotboard?type=douyin&limit=30', direct: true }, { kind: 'douyin-jingxuan', url: 'https://www.douyin.com/jingxuan' }] },
+  { id: 'xiaohongshu', name: '红书', badge: '红', icon: 'https://www.xiaohongshu.com/favicon.ico?v=2.18.256', className: 'xiaohongshu', visibleByDefault: true, siteUrl: 'https://www.xiaohongshu.com/explore', fetchers: [{ kind: 'xiaohongshu-explore', url: 'https://www.xiaohongshu.com/explore' }, { kind: 'xiaohongshu-hotboard', url: 'https://uapis.cn/api/v1/misc/hotboard?type=xiaohongshu&limit=30', direct: true }] },
+  { id: 'douyin', name: '抖音', badge: '音', icon: 'https://www.douyin.com/favicon.ico?v=2.18.256', className: 'douyin', visibleByDefault: true, siteUrl: 'https://www.douyin.com/jingxuan', fetchers: [{ kind: 'douyin-hotboard', url: 'https://uapis.cn/api/v1/misc/hotboard?type=douyin&limit=30', direct: true }, { kind: 'douyin-jingxuan', url: 'https://www.douyin.com/jingxuan' }] },
 ];
 const RSS_SOURCES = FEED_SOURCE_REGISTRY.filter((source) => source.enabled !== false);
 const RSS_REFRESH_INTERVAL = 2 * 60 * 1000;
 const HOME_FEED_LOADING_GRACE_MS = 3500;
+const HOME_FEED_PENDING_LIMIT = 30;
 const RSS_RETENTION_MS = 2 * 24 * 60 * 60 * 1000;
 const RSS_MAX_ITEMS_PER_SOURCE = 60;
+function boundedHomeFeedIdMap(value, limit = HOME_FEED_PENDING_LIMIT) {
+  if (!value || typeof value !== 'object') return {};
+  return Object.fromEntries(Object.entries(value).map(([sourceId, ids]) => [sourceId, Array.isArray(ids) ? [...new Set(ids)].slice(-limit) : []]));
+}
 const DEFAULT_HOME_FEED_ORDER = RSS_SOURCES.map((source) => source.id);
 const DEFAULT_HOME_FEED_VISIBLE = RSS_SOURCES.filter((source) => source.visibleByDefault !== false).map((source) => source.id);
 const NAVIGATION_SESSION_KEY = 'onebox-navigation-position';
@@ -484,10 +489,9 @@ const state = {
   library: normalizeReaderLibrary(storedLibrary),
   readerBookId: null, readerUrl: '', readerAssetUrls: [], readerContent: '', readerHint: '', readerToc: [], readerDialog: '', readerChromeHidden: false, readerImmersive: false, readerMode: 'library', readerReadingMode: 'scroll', readerPage: 0, readerSelectedText: '', readerSelection: null, readerAnnotationDraft: null, readerSelectionInput: 'mouse', readerLayout: storedReaderLayout === 'list' ? 'list' : 'grid', annotationBookId: null,
   readerPreferences: { theme: ['paper', 'sepia', 'green', 'dark'].includes(storedReaderPreferences.theme) ? storedReaderPreferences.theme : 'paper', fontSize: Number.isFinite(Number(storedReaderPreferences.fontSize)) ? Math.min(26, Math.max(15, Number(storedReaderPreferences.fontSize))) : 18, fontFamily: ['system', 'serif', 'mono'].includes(storedReaderPreferences.fontFamily) ? storedReaderPreferences.fontFamily : 'system', lineHeight: Number.isFinite(Number(storedReaderPreferences.lineHeight)) ? Math.min(2.2, Math.max(1.35, Number(storedReaderPreferences.lineHeight))) : 1.8, paragraphSpacing: Number.isFinite(Number(storedReaderPreferences.paragraphSpacing)) ? Math.min(28, Math.max(6, Number(storedReaderPreferences.paragraphSpacing))) : 14, letterSpacing: Number.isFinite(Number(storedReaderPreferences.letterSpacing)) ? Math.min(2, Math.max(0, Number(storedReaderPreferences.letterSpacing))) : 0, pageAnimation: ['slide', 'none'].includes(storedReaderPreferences.pageAnimation) ? storedReaderPreferences.pageAnimation : 'slide', readingMode: storedReaderPreferences.readingMode === 'pages' ? 'pages' : 'scroll', fullscreenOnOpen: storedReaderPreferences.fullscreenOnOpen === true },
-  homeFeed: { active: storedFootprint ? 'footprint' : (DEFAULT_HOME_FEED_VISIBLE[0] || DEFAULT_HOME_FEED_ORDER[0]), order: normalizeHomeFeedOrder(storedHomeFeedOrder), visible: normalizeHomeFeedVisibility(storedHomeFeedVisibility), hasNew: false, loading: false, errors: {}, stale: {}, updatedAt: Number(storedHomeFeeds.updatedAt || 0), cacheVersion: storedHomeFeeds.cacheVersion || '', newItems: storedHomeFeeds.newItems && typeof storedHomeFeeds.newItems === 'object' ? storedHomeFeeds.newItems : {}, newItemsPending: storedHomeFeeds.newItemsPending && typeof storedHomeFeeds.newItemsPending === 'object' ? storedHomeFeeds.newItemsPending : (storedHomeFeeds.newItems && typeof storedHomeFeeds.newItems === 'object' ? storedHomeFeeds.newItems : {}), sources: storedHomeFeeds.sources && typeof storedHomeFeeds.sources === 'object' ? storedHomeFeeds.sources : {} },
+  homeFeed: { active: storedFootprint ? 'footprint' : (DEFAULT_HOME_FEED_VISIBLE[0] || DEFAULT_HOME_FEED_ORDER[0]), order: normalizeHomeFeedOrder(storedHomeFeedOrder), visible: normalizeHomeFeedVisibility(storedHomeFeedVisibility), hasNew: false, loading: false, errors: {}, stale: {}, updatedAt: Number(storedHomeFeeds.updatedAt || 0), cacheVersion: storedHomeFeeds.cacheVersion || '', newItems: boundedHomeFeedIdMap(storedHomeFeeds.newItems, RSS_MAX_ITEMS_PER_SOURCE), newItemsPending: boundedHomeFeedIdMap(storedHomeFeeds.newItemsPending && typeof storedHomeFeeds.newItemsPending === 'object' ? storedHomeFeeds.newItemsPending : storedHomeFeeds.newItems), sources: storedHomeFeeds.sources && typeof storedHomeFeeds.sources === 'object' ? storedHomeFeeds.sources : {} },
   navigation: normalizeNavigation(storedNavigation), navigationLocation: storedNavigationLocation, navigationDialog: null, navigationFolderDraft: null, navigationSettingsOpen: false,
   homeFeedRead: storedHomeFeedRead && typeof storedHomeFeedRead === 'object' ? storedHomeFeedRead : {},
-  homeFeedRequest: 0,
   notifications: parseStored(STORAGE.notifications, []), notificationOpen: false, settingsOpen: false, githubDialogOpen: false, recentReadingOpen: false,
   notificationPreference: storedNotificationPreference === 'deny' ? 'deny' : 'allow',
   topDisplay: { theme: storedTopDisplay.theme !== false, language: storedTopDisplay.language !== false, messages: storedTopDisplay.messages !== false },
@@ -500,8 +504,38 @@ const state = {
   github: (() => { const value = parseStored(STORAGE.github, {}) || {}; return { clientId: GITHUB_CLIENT_ID, token: value.token || '', user: value.user || null, gistId: value.gistId || '', deviceCode: '', userCode: '', verificationUri: '', verificationUriComplete: '', expiresAt: 0, interval: 5, manualTokenOpen: false }; })(),
   githubSync: { active: false, mode: '', progress: 0, message: '', error: '' },
 };
-let homeFeedRequesting = false;
-let homeFeedLoadingTimer = null;
+const homeFeedRequests = new Map();
+const homeFeedLoadingSuppressed = new Set();
+const homeFeedLoadingTimers = new Map();
+function homeFeedSourceRequesting(sourceId = state.homeFeed.active) {
+  return sourceId !== 'footprint' && homeFeedRequests.has(sourceId);
+}
+function homeFeedHasRequests() { return homeFeedRequests.size > 0; }
+function syncHomeFeedLoading() {
+  state.homeFeed.loading = homeFeedSourceRequesting() && !homeFeedLoadingSuppressed.has(state.homeFeed.active);
+}
+function clearHomeFeedLoadingTimer(sourceId) {
+  const timer = homeFeedLoadingTimers.get(sourceId);
+  if (timer) clearTimeout(timer);
+  homeFeedLoadingTimers.delete(sourceId);
+}
+function renderHomeFeedRequestState(position = null) {
+  syncHomeFeedLoading();
+  if (state.section === 'home') {
+    const restorePosition = position || captureHomeFeedPosition();
+    render();
+    restoreHomeFeedPosition(restorePosition);
+  } else renderBottomNav();
+}
+function scheduleHomeFeedLoadingGrace(sourceId, requestToken) {
+  clearHomeFeedLoadingTimer(sourceId);
+  const timer = window.setTimeout(() => {
+    if (homeFeedRequests.get(sourceId) !== requestToken || !state.homeFeed.sources[sourceId]?.items?.length) return;
+    homeFeedLoadingSuppressed.add(sourceId);
+    if (state.homeFeed.active === sourceId) renderHomeFeedRequestState();
+  }, HOME_FEED_LOADING_GRACE_MS);
+  homeFeedLoadingTimers.set(sourceId, timer);
+}
 if (storedHomeFeedVisibilityMigration < HOME_FEED_VISIBILITY_MIGRATION) {
   localStorage.setItem(STORAGE.homeFeedVisibilityMigration, String(HOME_FEED_VISIBILITY_MIGRATION));
   if (Array.isArray(storedHomeFeedVisibility)) saveStored(STORAGE.homeFeedVisibility, state.homeFeed.visible);
@@ -773,6 +807,7 @@ function swapHomeFeedSources(from, to) {
 function selectHomeFeedSource(sourceId) {
   if (!homeTabIds().includes(sourceId)) return;
   state.homeFeed.active = sourceId;
+  syncHomeFeedLoading();
   if (state.section === 'home') {
     render();
     requestAnimationFrame(() => focusActiveHomeFeedTab(true));
@@ -1195,63 +1230,79 @@ async function fetchFeedSource(source) {
     .slice(0, RSS_MAX_ITEMS_PER_SOURCE);
   return { items, updatedAt: Date.now(), feedUrl: successful.feedUrl };
 }
-async function loadHomeFeeds(force = false, sourceId = '') {
-  if (homeFeedRequesting) return;
-  const visibleSources = homeFeedSources();
-  const hasItems = visibleSources.some((source) => state.homeFeed.sources[source.id]?.items?.length);
-  const cacheIsCurrent = state.homeFeed.cacheVersion === APP_VERSION;
-  if (!force && cacheIsCurrent && hasItems && Date.now() - state.homeFeed.updatedAt < RSS_REFRESH_INTERVAL) return;
-  const preservedPosition = captureHomeFeedPosition();
-  homeFeedRequesting = true;
-  state.homeFeed.loading = true; state.homeFeed.errors = {}; state.homeFeed.stale = {}; const request = ++state.homeFeedRequest;
-  clearTimeout(homeFeedLoadingTimer);
-  homeFeedLoadingTimer = window.setTimeout(() => {
-    if (request !== state.homeFeedRequest || !homeFeedRequesting || !state.homeFeed.loading) return;
-    const activeSource = state.homeFeed.active === 'footprint' ? null : state.homeFeed.sources[state.homeFeed.active];
-    if (!activeSource?.items?.length) return;
-    // Keep the old feed usable while a slow source continues in the background.
-    // The spinner is only a short visual acknowledgement, never a full-page
-    // loading gate for already cached content.
-    state.homeFeed.loading = false;
-    if (state.section === 'home') {
-      const position = captureHomeFeedPosition();
-      render();
-      restoreHomeFeedPosition(position);
-    }
-  }, HOME_FEED_LOADING_GRACE_MS);
-  if (state.section === 'home') { render(); restoreHomeFeedPosition(preservedPosition); }
+async function refreshHomeFeedSource(source, requestToken) {
+  let result = null;
+  let error = '';
+  try { result = await fetchFeedSource(source); }
+  catch (reason) { error = reason?.message || 'RSS unavailable'; }
+  if (homeFeedRequests.get(source.id) !== requestToken) return;
+  const isActive = state.section === 'home' && state.homeFeed.active === source.id;
+  const preservedPosition = isActive ? captureHomeFeedPosition() : null;
   let discoveredNewItems = false;
-  const sourcesToLoad = sourceId && sourceId !== 'footprint' ? visibleSources.filter((source) => source.id === sourceId) : visibleSources;
-  const results = await Promise.all(sourcesToLoad.map(async (source) => {
-    try { return { source, result: await fetchFeedSource(source) }; }
-    catch (error) { return { source, error: error?.message || 'RSS unavailable' }; }
-  }));
-  if (request !== state.homeFeedRequest) return;
-  results.forEach(({ source, result, error }) => {
-    if (result) {
-      const previousIds = new Set((state.homeFeed.sources[source.id]?.items || []).map((item) => item.id));
-      const discoveredIds = previousIds.size ? result.items.filter((item) => !previousIds.has(item.id)).map((item) => item.id) : [];
-      if (discoveredIds.length) discoveredNewItems = true;
-      state.homeFeed.newItems[source.id] = discoveredIds;
-      state.homeFeed.newItemsPending[source.id] = discoveredIds;
-      state.homeFeed.sources[source.id] = { ...result, items: mergeFeedItems(source, result.items) };
-    } else if (state.homeFeed.sources[source.id]?.items?.length) state.homeFeed.stale[source.id] = true;
-    else state.homeFeed.errors[source.id] = error;
-  });
-  const hasFreshResult = results.some(({ result }) => Boolean(result));
-  if (hasFreshResult) state.homeFeed.updatedAt = Date.now();
-  clearTimeout(homeFeedLoadingTimer);
-  homeFeedLoadingTimer = null;
-  homeFeedRequesting = false;
-  state.homeFeed.loading = false;
+  if (result) {
+    const existingItems = state.homeFeed.sources[source.id]?.items || [];
+    const previousIds = new Set(existingItems.map((item) => item.id));
+    const discoveredIds = previousIds.size ? result.items.filter((item) => !previousIds.has(item.id)).map((item) => item.id) : [];
+    const pendingBefore = homeFeedPendingIds(source.id);
+    const mergedItems = mergeFeedItems(source, result.items);
+    const availableIds = new Set(mergedItems.map((item) => item.id));
+    const pendingIds = [...new Set([...pendingBefore, ...discoveredIds])]
+      .filter((id) => availableIds.has(id))
+      .slice(-HOME_FEED_PENDING_LIMIT);
+    const previousNewIds = homeFeedNewIds(source.id);
+    state.homeFeed.newItems[source.id] = discoveredIds.length
+      ? discoveredIds
+      : pendingBefore.size
+        ? previousNewIds.filter((id) => availableIds.has(id))
+        : [];
+    state.homeFeed.newItemsPending[source.id] = pendingIds;
+    state.homeFeed.sources[source.id] = { ...result, items: mergedItems };
+    state.homeFeed.updatedAt = Date.now();
+    state.homeFeed.cacheVersion = APP_VERSION;
+    discoveredNewItems = discoveredIds.length > 0;
+    delete state.homeFeed.errors[source.id];
+    delete state.homeFeed.stale[source.id];
+  } else if (state.homeFeed.sources[source.id]?.items?.length) {
+    state.homeFeed.stale[source.id] = true;
+  } else {
+    state.homeFeed.errors[source.id] = error;
+  }
+  homeFeedRequests.delete(source.id);
+  homeFeedLoadingSuppressed.delete(source.id);
+  clearHomeFeedLoadingTimer(source.id);
   state.homeFeed.hasNew = state.section === 'home' ? false : state.homeFeed.hasNew || discoveredNewItems;
-  state.homeFeed.cacheVersion = hasFreshResult ? APP_VERSION : '';
-  saveStored(STORAGE.homeFeeds, { cacheVersion: hasFreshResult ? APP_VERSION : '', updatedAt: state.homeFeed.updatedAt, newItems: state.homeFeed.newItems, newItemsPending: state.homeFeed.newItemsPending, sources: state.homeFeed.sources });
-  if (state.section === 'home') {
+  saveStored(STORAGE.homeFeeds, { cacheVersion: state.homeFeed.cacheVersion, updatedAt: state.homeFeed.updatedAt, newItems: state.homeFeed.newItems, newItemsPending: state.homeFeed.newItemsPending, sources: state.homeFeed.sources });
+  syncHomeFeedLoading();
+  if (isActive) {
     render();
     restoreHomeFeedPosition(preservedPosition);
     requestAnimationFrame(() => focusActiveHomeFeedTab(false));
-  } else renderBottomNav();
+  } else if (state.section !== 'home') renderBottomNav();
+}
+function loadHomeFeeds(force = false, sourceId = '') {
+  const visibleSources = homeFeedSources();
+  const candidates = sourceId && sourceId !== 'footprint' ? visibleSources.filter((source) => source.id === sourceId) : visibleSources;
+  const now = Date.now();
+  const sourcesToLoad = candidates.filter((source) => {
+    if (homeFeedRequests.has(source.id)) return false;
+    if (force) return true;
+    const cached = state.homeFeed.sources[source.id];
+    return !cached?.items?.length || state.homeFeed.cacheVersion !== APP_VERSION || now - Number(cached.updatedAt || 0) >= RSS_REFRESH_INTERVAL;
+  });
+  if (!sourcesToLoad.length) { syncHomeFeedLoading(); return; }
+  const preservedPosition = captureHomeFeedPosition();
+  sourcesToLoad.forEach((source) => {
+    const requestToken = Symbol(source.id);
+    homeFeedRequests.set(source.id, requestToken);
+    homeFeedLoadingSuppressed.delete(source.id);
+    delete state.homeFeed.errors[source.id];
+    delete state.homeFeed.stale[source.id];
+    if (state.homeFeed.sources[source.id]?.items?.length) scheduleHomeFeedLoadingGrace(source.id, requestToken);
+  });
+  syncHomeFeedLoading();
+  if (state.section === 'home') { render(); restoreHomeFeedPosition(preservedPosition); }
+  else renderBottomNav();
+  sourcesToLoad.forEach((source) => refreshHomeFeedSource(source, homeFeedRequests.get(source.id)));
 }
 function renderFeedItem(item) {
   const source = feedSource(item);
@@ -1358,8 +1409,8 @@ const MASCOT_ASSETS = {
 };
 const MASCOT_DIRECTIONS = ['up-left', 'up', 'up-right', 'left', 'center', 'right', 'down-left', 'down', 'down-right'];
 const MASCOT_REACTIONS = ['blink', 'heart', 'sparkle', 'surprised', 'wink', 'bashful', 'sleepy', 'dizzy', 'delighted'];
-const MASCOT_FULL_BODY_MARKUP = '<img class="onebox-mascot-fullbody" src="icons/mascot-fox-full.png?v=2.18.255" alt="" draggable="false">';
-const MASCOT_FULL_BODY_REACTIONS = 'icons/mascot-fox-full-reactions.png?v=2.18.255';
+const MASCOT_FULL_BODY_MARKUP = '<img class="onebox-mascot-fullbody" src="icons/mascot-fox-full.png?v=2.18.256" alt="" draggable="false">';
+const MASCOT_FULL_BODY_REACTIONS = 'icons/mascot-fox-full-reactions.png?v=2.18.256';
 const MASCOT_CLOCKWISE = ['right', 'down-right', 'down', 'down-left', 'left', 'up-left', 'up', 'up-right'];
 const MASCOT_SECTOR = (Math.PI * 2) / MASCOT_CLOCKWISE.length;
 const MASCOT_HYSTERESIS = 0.12;
@@ -1960,7 +2011,7 @@ function recoverHomeLayoutAfterReturn() {
   // otherwise the extra loading render is visible as a flash/jump.
   const hasCachedItems = homeFeedSources().some((source) => state.homeFeed.sources[source.id]?.items?.length);
   if (!workspace.querySelector('.home-page') || !hasCachedItems) render();
-  else if (!homeFeedRequesting) loadHomeFeeds();
+  else loadHomeFeeds();
   const restore = () => {
     syncOneBoxViewportMetrics();
     syncHomeFeedSurface();
@@ -2085,7 +2136,7 @@ function renderHome() {
   }).join('');
   const feedBody = state.homeFeed.loading && !hasItems && !isFootprint ? '<div class="feed-loading"><span></span><span></span><span></span></div>' : hasItems ? '<div class="feed-list">' + feedList + '</div>' : '<p class="empty feed-empty">' + (isFootprint ? (state.language === 'en' ? 'No articles read yet.' : '还没有阅读过首页消息。') : t('feedEmpty')) + '</p>';
   const refreshState = state.homeFeed.loading ? '<div class="feed-refresh-state" role="status" aria-label="' + escapeHtml(t('feedLoading')) + '"><span></span></div>' : '';
-  const newContentAction = !state.homeFeed.loading && !homeFeedRequesting && newCount ? '<div class="feed-new-content-action-wrap"><button class="feed-new-content-action" type="button" data-feed-only-new>' + escapeHtml(homeFeedNewActionLabel(newCount)) + '</button></div>' : '';
+  const newContentAction = !state.homeFeed.loading && !homeFeedSourceRequesting() && newCount ? '<div class="feed-new-content-action-wrap"><button class="feed-new-content-action" type="button" data-feed-only-new>' + escapeHtml(homeFeedNewActionLabel(newCount)) + '</button></div>' : '';
   return '<div class="home-page feed-home"><section class="feed-panel">' + refreshState + newContentAction + (errors ? '<p class="feed-warning">' + t('feedPartial') + '</p>' : '') + feedBody + '<p class="feed-hint">' + t('feedProxyHint') + (state.homeFeed.updatedAt ? ' · ' + t('feedLastRefresh') + ' ' + escapeHtml(feedDate(state.homeFeed.updatedAt)) : '') + '</p></section></div>';
 }
 function navigationIconMarkup(site, extraClass = '') {
@@ -5504,6 +5555,7 @@ function render() {
   // render so iOS Safari/PWA cannot retain the old 200% stage and expose an
   // empty lower half after returning from an external feed page.
   if (pageSwipeTrackState || pageSwipeStage.classList.contains('is-active')) clearPageSwipeTrack();
+  syncHomeFeedLoading();
   applyLanguage();
   if (state.section === 'home') loadHomeFeeds();
   nav.hidden = state.section !== 'tools';
@@ -6206,7 +6258,7 @@ function finishPageSwipe(event) {
 }
 
 function beginHomeFeedPull(event) {
-  if (state.section !== 'home' || event.pointerType === 'mouse' || homeFeedRequesting || appScrollTop() > 1) return;
+  if (state.section !== 'home' || event.pointerType === 'mouse' || homeFeedHasRequests() || appScrollTop() > 1) return;
   if (!event.target.closest('#workspace[data-tool="home"]') || event.target.closest('button, a, input, select, textarea, [contenteditable="true"]')) return;
   homePullGesture = { pointerId: event.pointerId, startX: event.clientX, startY: event.clientY, distance: 0, cancelled: false };
 }
@@ -6226,7 +6278,7 @@ function finishHomeFeedPull(event) {
   const gesture = homePullGesture;
   homePullGesture = null;
   if (!gesture || (gesture.pointerId != null && event.pointerId !== gesture.pointerId)) return;
-  const shouldRefresh = !gesture.cancelled && gesture.distance >= 42 && state.section === 'home' && !homeFeedRequesting;
+  const shouldRefresh = !gesture.cancelled && gesture.distance >= 42 && state.section === 'home' && !homeFeedHasRequests();
   workspace.classList.remove('feed-pulling');
   workspace.style.removeProperty('--feed-pull-distance');
   if (shouldRefresh) loadHomeFeeds(true);
@@ -7250,10 +7302,10 @@ window.addEventListener('pagehide', () => {
   if (!feedNavigationPending) saveNavigationPosition();
   // Do not let a request that was in flight before the page was hidden keep
   // the cached homepage in an endless loading state when iOS restores it.
-  state.homeFeedRequest += 1;
-  homeFeedRequesting = false;
-  clearTimeout(homeFeedLoadingTimer);
-  homeFeedLoadingTimer = null;
+  homeFeedRequests.clear();
+  homeFeedLoadingTimers.forEach((timer) => clearTimeout(timer));
+  homeFeedLoadingTimers.clear();
+  homeFeedLoadingSuppressed.clear();
   state.homeFeed.loading = false;
   clearFeedNavigationPending();
   flushReaderProgress(); clearTimeout(persistenceTimer); writePersistentSnapshot();
