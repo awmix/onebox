@@ -9059,3 +9059,66 @@ body.dev-tools-fullscreen { overflow: hidden; }
   .dev-record-list { grid-template-columns: minmax(0, 1fr); }
   .dev-timestamp-input-row { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* Developer history follows the calculator's compact, opt-in interaction. */
+.dev-history-toggle-row { display: flex; align-items: center; gap: 9px; min-width: 0; }
+.dev-history-toggle { flex: 0 0 30px; width: 30px; height: 30px; padding: 6px; }
+.dev-history-toggle svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.8; }
+.dev-history-summary { min-width: 0; flex: 1; }
+.dev-history-summary strong, .dev-history-summary small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dev-history-summary strong { font-size: 13px; }
+.dev-history-summary small { margin-top: 3px; color: var(--muted); font-size: 10px; }
+.dev-history-count { display: grid; min-width: 22px; height: 22px; place-items: center; border-radius: 8px; background: var(--soft); color: var(--primary); font-size: 10px; font-weight: 800; }
+.dev-history-content { margin-top: 10px; }
+.dev-history-content[hidden] { display: none !important; }
+.dev-history-content .dev-history-head { align-items: center; margin-bottom: 8px; }
+.dev-history-content .dev-history-head strong { font-size: 11px; }
+.dev-history-content .dev-history-head .text-btn { padding: 2px 0; }
+.dev-history-swipe-row { min-width: 0; }
+.dev-history-swipe-row .dev-record { width: 100%; min-height: 52px; border-color: var(--line); font: inherit; }
+.dev-history-swipe-row .dev-record:focus-visible { position: relative; z-index: 2; }
+.dev-history-swipe-row .swipe-delete { z-index: 0; }
+
+/* Keep the global header and Tools tab rail visible while Developer fills the remaining viewport. */
+.dev-tools-page.dev-is-fullscreen {
+  position: fixed;
+  inset: auto max(12px, calc((100vw - 1104px) / 2)) 0;
+  top: calc(var(--app-header-height) + 56px + 8px);
+  z-index: 45;
+  width: auto;
+  min-height: 0;
+  height: auto;
+  max-width: 1104px;
+  box-sizing: border-box;
+  overflow: auto;
+  padding: 12px 12px calc(18px + env(safe-area-inset-bottom));
+  border: 1px solid var(--line);
+  border-bottom: 0;
+  border-radius: 18px 18px 0 0;
+  background: var(--panel);
+}
+.dev-tools-page.dev-is-fullscreen .dev-code-editor,
+.dev-tools-page.dev-is-fullscreen .dev-text-editor,
+.dev-tools-page.dev-is-fullscreen .dev-json-tree,
+.dev-tools-page.dev-is-fullscreen .dev-json-empty {
+  height: clamp(280px, calc(100dvh - var(--app-header-height) - 285px), 760px);
+  max-height: none;
+}
+body.dev-tools-fullscreen { overflow: hidden; }
+@media (max-width: 760px) {
+  .dev-tools-page.dev-is-fullscreen {
+    inset-inline: 6px;
+    top: calc(var(--app-header-height) + 48px + 6px);
+    padding: 10px 10px calc(14px + env(safe-area-inset-bottom));
+    border-radius: 16px 16px 0 0;
+  }
+  .dev-tools-page.dev-is-fullscreen .dev-code-editor,
+  .dev-tools-page.dev-is-fullscreen .dev-text-editor,
+  .dev-tools-page.dev-is-fullscreen .dev-json-tree,
+  .dev-tools-page.dev-is-fullscreen .dev-json-empty {
+    height: clamp(250px, calc(100dvh - var(--app-header-height) - 300px), 620px);
+  }
+}
+@media (max-width: 600px) {
+  .dev-tools-page.dev-is-fullscreen { top: calc(var(--app-header-height) + 40px + 4px); }
+}

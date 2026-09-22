@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.267';
+const APP_VERSION = '2.18.268';
 // The OAuth secret stays in the Cloudflare Worker. The browser only knows the
 // public client id and receives the authorization result in the URL fragment,
 // which is consumed immediately and never sent to a server.
@@ -326,6 +326,7 @@ function normalizeDevTools(value) {
   return {
     active: DEV_TOOL_IDS.includes(source.active) ? source.active : DEV_TOOL_IDS[0],
     fullscreen: source.fullscreen === true, formatInput: String(source.formatInput || ''), formatOutput: String(source.formatOutput || ''), formatStatus: String(source.formatStatus || ''), formatCompact: source.formatCompact === true, formatUnescape: source.formatUnescape !== false, formatCollapsed: Array.isArray(source.formatCollapsed) ? [...new Set(source.formatCollapsed.map((item) => String(item)))] : [],
+    historyOpen: source.historyOpen === true,
     compareLeft: String(source.compareLeft || ''), compareRight: String(source.compareRight || ''), compareOutput: String(source.compareOutput || ''), compareStatus: String(source.compareStatus || ''),
     textInput: String(source.textInput || ''), textOutput: source.textOutput && typeof source.textOutput === 'object' ? source.textOutput : null,
     timestampMode: source.timestampMode === 'date' ? 'date' : 'timestamp', timestampUnit: source.timestampUnit === 'ms' ? 'ms' : 's', timestampValue: String(source.timestampValue || ''), timestampDate: String(source.timestampDate || ''), timestampOutput: String(source.timestampOutput || ''), timestampStatus: String(source.timestampStatus || ''),
@@ -5012,10 +5013,24 @@ function developerTimestampResult() {
 function devActionButton(action, label, extra = '') { return '<button class="secondary dev-action" type="button" data-dev-action="' + action + '" ' + extra + '>' + label + '</button>'; }
 function devPaneHead(title, actions = '') { return '<div class="dev-pane-head"><h3>' + escapeHtml(title) + '</h3><div class="dev-pane-actions">' + actions + '</div></div>'; }
 function devStatus(message, error = false) { return message ? '<p class="dev-status ' + (error ? 'is-error' : 'is-success') + '">' + escapeHtml(message) + '</p>' : ''; }
+function devHistoryIcon() { return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 12a8.5 8.5 0 1 0 2.5-6.4"/><path d="M3.5 4.5v5h5"/><path d="M12 7.5v4.8l3 1.8"/></svg>'; }
+function devRecordPreview(kind, item) {
+  if (kind === 'text-stats') return String(item.text || '').replace(/\s+/g, ' ').slice(0, 44);
+  if (kind === 'json-compare') return String(item.left || '').replace(/\s+/g, ' ').slice(0, 44);
+  if (kind === 'timestamp') return String(item.output || '').split('\n')[0].slice(0, 44);
+  return String(item.input || '').replace(/\s+/g, ' ').slice(0, 44);
+}
+function devRecordDetail(kind, item) {
+  if (kind === 'text-stats') return String(item.text || '');
+  if (kind === 'json-compare') return 'A:\n' + String(item.left || '') + '\n\nB:\n' + String(item.right || '');
+  if (kind === 'timestamp') return String(item.output || '');
+  return '输入:\n' + String(item.input || '') + '\n\n输出:\n' + String(item.output || '');
+}
 function devRecordPanel(kind) {
   const records = state.devTools.records[kind] || [];
-  const list = records.length ? records.map((item) => '<button class="dev-record" type="button" data-dev-record-kind="' + kind + '" data-dev-record="' + escapeHtml(item.id) + '"><strong>' + escapeHtml(devRecordLabel(kind, item)) + '</strong><small>' + escapeHtml(kind === 'text-stats' ? String(item.text || '').replace(/\s+/g, ' ').slice(0, 44) : kind === 'json-compare' ? String(item.left || '').replace(/\s+/g, ' ').slice(0, 44) : kind === 'timestamp' ? String(item.output || '').split('\n')[0].slice(0, 44) : String(item.input || '').replace(/\s+/g, ' ').slice(0, 44)) + '</small></button>').join('') : '<p class="dev-history-empty">' + t('devNoRecords') + '</p>';
-  return '<aside class="dev-history-panel"><div class="dev-history-head"><div><h3>' + t('devRecords') + '</h3><p>' + t('devReuseHint') + '</p></div><span>' + records.length + '</span></div><div class="dev-record-list">' + list + '</div></aside>';
+  const list = records.length ? records.map((item) => '<div class="swipe-row dev-history-swipe-row" data-swipe-row><button class="dev-record history-item swipe-content" type="button" data-dev-record-kind="' + kind + '" data-dev-record="' + escapeHtml(item.id) + '" title="' + escapeHtml(devRecordDetail(kind, item)) + '"><strong>' + escapeHtml(devRecordLabel(kind, item)) + '</strong><small>' + escapeHtml(devRecordPreview(kind, item)) + '</small></button><button class="swipe-delete" data-delete-dev-record-kind="' + kind + '" data-delete-dev-record="' + escapeHtml(item.id) + '">' + (state.language === 'en' ? 'Delete' : '删除') + '</button></div>').join('') : '<p class="dev-history-empty">' + t('devNoRecords') + '</p>';
+  const open = state.devTools.historyOpen === true;
+  return '<aside class="dev-history-panel"><div class="dev-history-toggle-row"><button class="display-history-toggle dev-history-toggle" type="button" data-toggle-dev-history aria-expanded="' + String(open) + '" aria-label="' + escapeHtml(t('devRecords')) + '" title="' + escapeHtml(t('devRecords')) + '">' + devHistoryIcon() + '</button><div class="dev-history-summary"><strong>' + t('devRecords') + '</strong><small>' + t('devReuseHint') + '</small></div><span class="dev-history-count">' + records.length + '</span></div><div class="dev-history-content" ' + (open ? '' : 'hidden') + '><div class="dev-history-head"><strong>' + t('recentCalculations') + '</strong><button class="text-btn" data-clear-dev-records data-dev-record-kind="' + kind + '" ' + (records.length ? '' : 'disabled') + '>' + t('clear') + '</button></div><div class="dev-record-list">' + list + '</div></div></aside>';
 }
 function renderDeveloperJsonFormat() {
   const dev = state.devTools; const result = dev.formatOutput || '';
@@ -7121,6 +7136,19 @@ workspace.addEventListener('click', async (event) => {
     state.devTools.formatCollapsed = [...collapsed]; saveDevTools(); return render();
   }
   if (event.target.closest('[data-dev-fullscreen]')) return toggleDeveloperFullscreen();
+  if (event.target.closest('[data-toggle-dev-history]')) { state.devTools.historyOpen = !state.devTools.historyOpen; saveDevTools(); return render(); }
+  const deleteDevRecord = event.target.closest('[data-delete-dev-record]');
+  if (deleteDevRecord) {
+    const kind = DEV_TOOL_IDS.includes(deleteDevRecord.dataset.deleteDevRecordKind) ? deleteDevRecord.dataset.deleteDevRecordKind : state.devTools.active;
+    state.devTools.records[kind] = (state.devTools.records[kind] || []).filter((item) => String(item.id) !== String(deleteDevRecord.dataset.deleteDevRecord));
+    saveDevTools(); return render();
+  }
+  const clearDevRecords = event.target.closest('[data-clear-dev-records]');
+  if (clearDevRecords) {
+    const kind = DEV_TOOL_IDS.includes(clearDevRecords.dataset.devRecordKind) ? clearDevRecords.dataset.devRecordKind : state.devTools.active;
+    state.devTools.records[kind] = [];
+    saveDevTools(); return render();
+  }
   const devMode = event.target.closest('[data-dev-mode]');
   if (devMode) { state.devTools.active = DEV_TOOL_IDS.includes(devMode.dataset.devMode) ? devMode.dataset.devMode : DEV_TOOL_IDS[0]; saveDevTools(); return render(); }
   const devRecord = event.target.closest('[data-dev-record]');
