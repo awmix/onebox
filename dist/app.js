@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.273';
+const APP_VERSION = '2.18.274';
 // The OAuth secret stays in the Cloudflare Worker. The browser only knows the
 // public client id and receives the authorization result in the URL fragment,
 // which is consumed immediately and never sent to a server.
@@ -231,7 +231,7 @@ const DICT = {
     githubClientId: 'GitHub OAuth Client ID', githubClientHint: 'OneBox 已内置公开的授权标识，不需要手动配置。', githubDeveloperSettings: '打开 OAuth Apps 设置',
     githubBrowserFlowError: '无法打开 GitHub 授权页，请检查网络后重试。', githubAccessToken: 'GitHub 访问令牌', githubTokenHint: '仅将令牌保存在当前设备，并通过 GitHub API 验证；建议使用只包含 gist 权限的令牌。', githubUseToken: '使用访问令牌连接', githubTokenMissing: '请先填写 GitHub 访问令牌。', githubTokenInvalid: '访问令牌无效或没有可用权限。', githubTokenConnected: 'GitHub 已连接', githubWaiting: '等待 GitHub 授权…', githubCancel: '取消授权',
     githubSyncScopeTitle: '同步范围', githubSyncScope: '设置、工具顺序、导航、首页来源、日程、天气卡片、翻译记录、通知、阅读书架、阅读进度、笔记和已导入的本地书籍文件。', githubSyncPrivacy: 'GitHub 令牌不会上传；首页订阅内容、节假日和天气接口缓存属于网络缓存，不参与同步。', githubAuthHint: '点击连接后会跳转到 GitHub，完成授权后自动返回 OneBox。',
-    githubLogin: '连接 GitHub', githubLogout: '退出 GitHub', upload: '上传到 GitHub', download: '从 GitHub 恢复', githubSyncNotFound: '当前 GitHub 账号中没有找到 OneBox 同步数据，请先在另一台设备上传。', githubSyncInvalidData: 'GitHub 中的 OneBox 同步数据格式错误或已损坏。',
+    githubLogin: '连接 GitHub', githubLogout: '退出 GitHub', upload: '上传到 GitHub', download: '从 GitHub 恢复', githubSyncNotFound: '当前 GitHub 账号中没有找到 OneBox 同步数据，请先在另一台设备上传。', githubSyncReadFailed: 'GitHub 中的 OneBox 同步文件无法读取，请检查 Gist 权限或内容。', githubSyncMalformed: 'GitHub 中的 OneBox 同步文件不是有效的 JSON。', githubSyncInvalidData: 'GitHub 中的 OneBox 同步数据格式错误或已损坏。',
     githubConnected: '已连接', githubNotConnected: '尚未连接', openDevice: '打开验证页面',
     appUpdate: '应用更新', checkUpdate: '更新', updateAvailable: '发现有新版本', upToDate: '已是最新版', updating: '检查中', updateApplying: '更新中', updateCheckFailed: '检查失败，可重试', applyUpdate: '更新',
     notificationsPermission: '消息通知', enableNotifications: '允许通知', disableNotifications: '不允许通知', notificationDescription: 'iPhone 需要先将 OneBox 添加到主屏幕并允许消息通知；应用关闭后的后台提醒仍需要 Push 服务端。',
@@ -276,7 +276,7 @@ const DICT = {
     githubClientId: 'GitHub OAuth Client ID', githubClientHint: 'OneBox includes its public authorization identifier; no manual setup is required.', githubDeveloperSettings: 'Open OAuth Apps settings',
     githubBrowserFlowError: 'GitHub authorization could not be opened. Check your network and try again.', githubAccessToken: 'GitHub access token', githubTokenHint: 'The token is stored only on this device and verified through GitHub API. A token with gist permission is recommended.', githubUseToken: 'Connect with access token', githubTokenMissing: 'Enter a GitHub access token first.', githubTokenInvalid: 'The access token is invalid or lacks the required permission.', githubTokenConnected: 'GitHub connected', githubWaiting: 'Waiting for GitHub authorization…', githubCancel: 'Cancel authorization',
     githubSyncScopeTitle: 'Sync scope', githubSyncScope: 'Settings, tool order, navigation, home sources, events, weather cards, translation history, notifications, the reading shelf, reading progress, notes and imported local book files.', githubSyncPrivacy: 'The GitHub token is never uploaded. Home feeds, holidays and weather API caches are network caches and are not synced.', githubAuthHint: 'Connect to jump to GitHub; after approval you will return to OneBox automatically.',
-    githubLogin: 'Connect GitHub', githubLogout: 'Disconnect GitHub', upload: 'Upload to GitHub', download: 'Restore from GitHub', githubSyncNotFound: 'No OneBox sync data was found in this GitHub account. Upload from another device first.', githubSyncInvalidData: 'The OneBox sync data in GitHub is malformed or damaged.',
+    githubLogin: 'Connect GitHub', githubLogout: 'Disconnect GitHub', upload: 'Upload to GitHub', download: 'Restore from GitHub', githubSyncNotFound: 'No OneBox sync data was found in this GitHub account. Upload from another device first.', githubSyncReadFailed: 'The OneBox sync file in GitHub could not be read. Check the Gist permission or content.', githubSyncMalformed: 'The OneBox sync file in GitHub is not valid JSON.', githubSyncInvalidData: 'The OneBox sync data in GitHub is malformed or damaged.',
     githubConnected: 'Connected', githubNotConnected: 'Not connected', openDevice: 'Open verification page',
     appUpdate: 'App update', checkUpdate: 'Update', updateAvailable: 'A new version is available', upToDate: 'Latest version', updating: 'Checking', updateApplying: 'Updating', updateCheckFailed: 'Check failed. Try again.', applyUpdate: 'Update',
     notificationsPermission: 'Message notifications', enableNotifications: 'Allow notifications', disableNotifications: 'Do not allow notifications', notificationDescription: 'On iPhone, add OneBox to the Home Screen and allow notifications first; background alerts after the app is closed still require a Push server.',
@@ -5499,7 +5499,8 @@ async function hydrateGithubUser() {
 }
 async function githubFileContent(file) {
   if (!file) return null;
-  if (!file.truncated || !file.raw_url) return file.content || '';
+  if (!file.truncated && typeof file.content === 'string' && file.content) return file.content;
+  if (!file.raw_url) return typeof file.content === 'string' ? file.content : '';
   try {
     const authorized = await fetch(file.raw_url, { headers: githubHeaders(), cache: 'no-store' });
     if (authorized.ok) return await authorized.text();
@@ -5514,6 +5515,31 @@ function syncBase64Bytes(value) {
   const bytes = new Uint8Array(binary.length);
   for (let index = 0; index < binary.length; index += 1) bytes[index] = binary.charCodeAt(index);
   return bytes;
+}
+function parseGithubSyncPayload(content) {
+  if (typeof content !== 'string' || !content.trim()) throw Error(t('githubSyncReadFailed'));
+  const source = content.replace(/^\uFEFF/, '').trim();
+  let remote = null;
+  try { remote = JSON.parse(source); } catch { /* try an encoded legacy payload below */ }
+  if (remote === null) {
+    try {
+      const bytes = syncBase64Bytes(source);
+      remote = JSON.parse(new TextDecoder().decode(bytes));
+    } catch { throw Error(t('githubSyncMalformed')); }
+  }
+  if (typeof remote === 'string') {
+    try { remote = JSON.parse(remote); } catch { throw Error(t('githubSyncMalformed')); }
+  }
+  if (remote?.payload && typeof remote.payload === 'object' && !Array.isArray(remote.payload)) remote = remote.payload;
+  if (remote?.data && typeof remote.data === 'object' && !Array.isArray(remote.data) && (remote.data.app === 'OneBox' || remote.data.storage || remote.data.theme || remote.data.toolOrder)) remote = remote.data;
+  if (remote?.storage && typeof remote.storage === 'string') {
+    try { remote.storage = JSON.parse(remote.storage); } catch { throw Error(t('githubSyncInvalidData')); }
+  }
+  const knownKeys = ['schema', 'version', 'theme', 'color', 'languageMode', 'language', 'toolOrder', 'calculator', 'events', 'weatherCards', 'translationHistory', 'notifications', 'library', 'readerPreferences', 'readerLayout', 'translationHistoryOpen', 'homeFeedRead', 'layoutMode', 'topDisplay', 'homeFeedOrder', 'homeFeedVisibility', 'navigation', 'footprint', 'mascotVisible', 'mascotDisplayMode', 'mascotPosition', 'petProfile', 'notificationPreference', 'openMode'];
+  const hasRecognizableData = remote && typeof remote === 'object' && !Array.isArray(remote) && (Object.prototype.hasOwnProperty.call(remote, 'storage') || knownKeys.some((key) => Object.prototype.hasOwnProperty.call(remote, key)));
+  const hasValidStorage = remote?.storage === undefined || remote?.storage === null || (typeof remote.storage === 'object' && !Array.isArray(remote.storage));
+  if (!hasRecognizableData || (remote.app !== undefined && remote.app !== 'OneBox') || !hasValidStorage) throw Error(t('githubSyncInvalidData'));
+  return remote;
 }
 async function restoreReaderSyncAssets(remote, gist) {
   const manifest = remote?.readerFiles?.books;
@@ -5645,31 +5671,42 @@ async function githubUseAccessToken() {
     toast(error.message || t('githubTokenInvalid'), 'error');
   }
 }
-async function findGithubGist() {
+async function findGithubGists() {
+  const candidates = [];
+  const seen = new Set();
+  const addCandidate = (gist) => {
+    if (!gist?.id || seen.has(gist.id) || gist.description !== 'OneBox settings sync' || !gist.files?.['onebox-settings.json']) return;
+    seen.add(gist.id);
+    candidates.push(gist);
+  };
   if (state.github.gistId) {
     const known = await fetch('https://api.github.com/gists/' + encodeURIComponent(state.github.gistId), { headers: githubHeaders(), cache: 'no-store' });
-    if (known.ok) {
-      const gist = await known.json();
-      if (gist.files?.['onebox-settings.json']) return gist;
-    } else if (![404, 410].includes(known.status)) {
+    if (known.ok) addCandidate(await known.json());
+    else if (![404, 410].includes(known.status)) {
       throw await githubApiError(known, state.language === 'en' ? 'Could not access the saved OneBox Gist' : '无法访问已保存的 OneBox Gist');
     }
-    state.github.gistId = '';
-    saveGithub();
+    if (!candidates.length) {
+      state.github.gistId = '';
+      saveGithub();
+    }
   }
   for (let page = 1; page <= 10; page += 1) {
     const response = await fetch('https://api.github.com/gists?per_page=100&page=' + page, { headers: githubHeaders(), cache: 'no-store' });
     if (!response.ok) throw await githubApiError(response);
     const gists = await response.json();
-    const found = gists.find((item) => item.description === 'OneBox settings sync' && item.files?.['onebox-settings.json']);
-    if (found) {
-      state.github.gistId = found.id;
-      saveGithub();
-      return found;
-    }
-    if (!Array.isArray(gists) || gists.length < 100) break;
+    if (!Array.isArray(gists)) throw Error(t('githubSyncReadFailed'));
+    gists.filter((item) => item.description === 'OneBox settings sync' && item.files?.['onebox-settings.json']).forEach(addCandidate);
+    if (gists.length < 100) break;
   }
-  return null;
+  return candidates;
+}
+async function findGithubGist() {
+  const [found] = await findGithubGists();
+  if (found?.id) {
+    state.github.gistId = found.id;
+    saveGithub();
+  }
+  return found || null;
 }
 async function findOrCreateGist(bundle = null, onProgress = null) {
   onProgress?.(42, githubSyncLabel('upload', 'gist'));
@@ -5718,16 +5755,24 @@ async function githubDownload() {
   updateGithubSync(mode, 5, githubSyncLabel(mode, 'preparing'));
   try {
     updateGithubSync(mode, 24, githubSyncLabel(mode, 'gist'));
-    const gist = await findGithubGist();
-    if (!gist?.id) throw Error(t('githubSyncNotFound'));
-    const id = gist.id;
+    const candidates = await findGithubGists();
+    if (!candidates.length) throw Error(t('githubSyncNotFound'));
     updateGithubSync(mode, 42, githubSyncLabel(mode, 'download'));
-    const content = await githubFileContent(gist.files?.['onebox-settings.json']);
-    if (!content) throw Error(t('githubSyncInvalidData'));
-    let remote;
-    try { remote = JSON.parse(content); } catch { throw Error(t('githubSyncInvalidData')); }
-    const hasStorageSnapshot = remote?.storage !== undefined && remote?.storage !== null;
-    if (!remote || remote.app !== 'OneBox' || (hasStorageSnapshot && (typeof remote.storage !== 'object' || Array.isArray(remote.storage)))) throw Error(t('githubSyncInvalidData'));
+    let gist = null;
+    let remote = null;
+    let lastError = null;
+    for (const candidate of candidates) {
+      try {
+        const content = await githubFileContent(candidate.files?.['onebox-settings.json']);
+        remote = parseGithubSyncPayload(content);
+        gist = candidate;
+        break;
+      } catch (error) {
+        lastError = error;
+      }
+    }
+    if (!gist?.id || !remote) throw lastError || Error(t('githubSyncInvalidData'));
+    const id = gist.id;
     updateGithubSync(mode, 67, githubSyncLabel(mode, 'restore'));
     applyRemoteStorageSnapshot(remote.storage);
     state.devTools = normalizeDevTools(parseStored(STORAGE.devTools, {}));
