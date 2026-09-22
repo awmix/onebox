@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.277';
+const APP_VERSION = '2.18.278';
 // The OAuth secret stays in the Cloudflare Worker. The browser only knows the
 // public client id and receives the authorization result in the URL fragment,
 // which is consumed immediately and never sent to a server.
@@ -5010,7 +5010,13 @@ function developerTimestampResult() {
   const formatted = new Intl.DateTimeFormat(state.language === 'en' ? 'en-US' : 'zh-CN', { dateStyle: 'medium', timeStyle: 'medium' }).format(date);
   return { ok: true, message: t('devTimestampToDate'), output: formatted + '\n' + localDateTimeValue(date) };
 }
-function devActionButton(action, label, extra = '') { return '<button class="secondary dev-action" type="button" data-dev-action="' + action + '" ' + extra + '>' + label + '</button>'; }
+function devActionButton(action, label, extra = '') {
+  const primary = ['json-format', 'json-compare', 'text-analyze', 'timestamp-convert'].includes(action);
+  return '<button class="' + (primary ? 'primary' : 'secondary') + ' dev-action" type="button" data-dev-action="' + action + '" aria-label="' + escapeHtml(label) + '" ' + extra + '>' + escapeHtml(label) + '</button>';
+}
+function devInlineToggle(field, label, checked) {
+  return '<label class="dev-inline-toggle"><input type="checkbox" data-dev-field="' + field + '" ' + (checked ? 'checked' : '') + '><span class="dev-toggle-track" aria-hidden="true"></span><span class="dev-toggle-label">' + escapeHtml(label) + '</span></label>';
+}
 function devPaneHead(title, actions = '') { return '<div class="dev-pane-head"><h3>' + escapeHtml(title) + '</h3><div class="dev-pane-actions">' + actions + '</div></div>'; }
 function devStatus(message, error = false) { return message ? '<p class="dev-status ' + (error ? 'is-error' : 'is-success') + '">' + escapeHtml(message) + '</p>' : ''; }
 function devHistoryIcon() { return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 12a8.5 8.5 0 1 0 2.5-6.4"/><path d="M3.5 4.5v5h5"/><path d="M12 7.5v4.8l3 1.8"/></svg>'; }
@@ -5043,7 +5049,7 @@ function devOutputPaneHead(kind, title, actions = '') {
 function renderDeveloperJsonFormat() {
   const dev = state.devTools; const result = dev.formatOutput || '';
   return '<div class="dev-workbench dev-json-format"><div class="dev-editor-grid">' +
-    '<section class="dev-pane">' + devPaneHead(t('devInput'), devActionButton('json-example', t('devExample')) + devActionButton('json-clear', t('devClear'))) + '<label class="dev-check"><input type="checkbox" data-dev-field="formatUnescape" ' + (dev.formatUnescape ? 'checked' : '') + '> ' + t('devUnescape') + '</label><textarea class="dev-code-editor" data-dev-field="formatInput" spellcheck="false" placeholder="{\n  &quot;name&quot;: &quot;OneBox&quot;\n}">' + escapeHtml(dev.formatInput) + '</textarea></section>' +
+    '<section class="dev-pane">' + devPaneHead(t('devInput'), devInlineToggle('formatUnescape', t('devUnescape'), dev.formatUnescape) + devActionButton('json-example', t('devExample')) + devActionButton('json-clear', t('devClear'))) + '<textarea class="dev-code-editor" data-dev-field="formatInput" spellcheck="false" placeholder="{\n  &quot;name&quot;: &quot;OneBox&quot;\n}">' + escapeHtml(dev.formatInput) + '</textarea></section>' +
     '<section class="dev-pane dev-output-pane">' + devOutputPaneHead('json-format', t('devOutput'), devActionButton('json-format', t('devFormat')) + devActionButton('json-minify', t('devMinify')) + devActionButton('json-expand-all', t('devExpandAll')) + devActionButton('json-collapse-all', t('devCollapseAll')) + devActionButton('dev-copy-output', t('devCopy'))) + devHistoryContent('json-format') + renderDeveloperJsonTree() + devStatus(dev.formatStatus, dev.formatStatus.startsWith(t('devInvalid'))) + '</section>' +
     '</div></div>';
 }
