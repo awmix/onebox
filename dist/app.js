@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.275';
+const APP_VERSION = '2.18.276';
 // The OAuth secret stays in the Cloudflare Worker. The browser only knows the
 // public client id and receives the authorization result in the URL fragment,
 // which is consumed immediately and never sent to a server.
@@ -5519,6 +5519,13 @@ async function githubFileContent(file) {
     return raw.ok ? await raw.text() : null;
   } catch { return null; }
 }
+async function githubGistDetails(gist) {
+  if (!gist?.id) return null;
+  const response = await fetch('https://api.github.com/gists/' + encodeURIComponent(gist.id), { headers: githubHeaders(), cache: 'no-store' });
+  if (!response.ok) throw await githubApiError(response, state.language === 'en' ? 'Could not read the OneBox Gist' : '无法读取 OneBox Gist');
+  const details = await response.json();
+  return details?.id ? details : gist;
+}
 function syncBase64Bytes(value) {
   const binary = atob(String(value || ''));
   const bytes = new Uint8Array(binary.length);
@@ -5789,9 +5796,10 @@ async function githubDownload() {
     let lastError = null;
     for (const candidate of candidates) {
       try {
-        const content = await githubFileContent(candidate.files?.['onebox-settings.json']);
+        const gistDetails = await githubGistDetails(candidate);
+        const content = await githubFileContent(gistDetails?.files?.['onebox-settings.json']);
         remote = parseGithubSyncPayload(content);
-        gist = candidate;
+        gist = gistDetails;
         break;
       } catch (error) {
         lastError = error;
