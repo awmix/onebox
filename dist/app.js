@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.259';
+const APP_VERSION = '2.18.260';
 // The OAuth secret stays in the Cloudflare Worker. The browser only knows the
 // public client id and receives the authorization result in the URL fragment,
 // which is consumed immediately and never sent to a server.
@@ -45,6 +45,7 @@ const STORAGE = {
   mascotPosition: 'onebox.mascot-position',
   mascotVisible: 'onebox.mascot-visible',
   mascotDisplayMode: 'onebox.mascot-display-mode',
+  petProfile: 'onebox.pet-profile',
 };
 const TOOL_DEFS = {
   calculator: { icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="3"/><path d="M8 7h8M8 11h.01M12 11h.01M16 11h.01M8 15h.01M12 15h.01M16 15h.01M8 18h8"/></svg>', key: 'calculator' },
@@ -67,8 +68,8 @@ const FEED_SOURCE_REGISTRY = [
   { id: 'bilibili', name: 'B站', badge: 'B', icon: 'icons/bilibili.ico?v=2.18.124', className: 'bilibili', mobileHost: 'm.bilibili.com', visibleByDefault: false, siteUrl: 'https://search.bilibili.com/all', fetchers: [{ kind: 'bilibili-hot', url: 'https://api.bilibili.com/x/web-interface/search/square?limit=30&platform=web' }, { kind: 'bilibili-hotword', url: 'https://s.search.bilibili.com/main/hotword' }] },
   { id: 'guancha', name: '风闻', badge: '风', icon: 'icons/guancha.png?v=2.18.124', className: 'guancha', mobileHost: 'user.guancha.cn', visibleByDefault: true, siteUrl: 'https://user.guancha.cn/main/index?s=fwdhsy', fetchers: [{ kind: 'guancha-fengwen', url: 'https://user.guancha.cn/main/index-list.json?page=1&order=1' }, { kind: 'guancha-fengwen', url: 'https://rsshub.app/guancha/topic/0/1' }] },
   { id: 'hupu', name: '虎扑', badge: '虎', icon: 'icons/hupu.ico?v=2.18.124', className: 'hupu', mobileHost: 'm.hupu.com', visibleByDefault: true, siteUrl: 'https://bbs.hupu.com/bxj', fetchers: [{ kind: 'hupu-bbs', url: 'https://bbs.hupu.com/bxj' }, { kind: 'hupu-bbs', url: 'https://bbs.hupu.com/topic-daily' }] },
-  { id: 'xiaohongshu', name: '红书', badge: '红', icon: 'https://www.xiaohongshu.com/favicon.ico?v=2.18.259', className: 'xiaohongshu', visibleByDefault: true, siteUrl: 'https://www.xiaohongshu.com/explore', fetchers: [{ kind: 'xiaohongshu-explore', url: 'https://www.xiaohongshu.com/explore' }, { kind: 'xiaohongshu-hotboard', url: 'https://uapis.cn/api/v1/misc/hotboard?type=xiaohongshu&limit=30', direct: true }] },
-  { id: 'douyin', name: '抖音', badge: '音', icon: 'https://www.douyin.com/favicon.ico?v=2.18.259', className: 'douyin', visibleByDefault: true, siteUrl: 'https://www.douyin.com/jingxuan', fetchers: [{ kind: 'douyin-hotboard', url: 'https://uapis.cn/api/v1/misc/hotboard?type=douyin&limit=30', direct: true }, { kind: 'douyin-jingxuan', url: 'https://www.douyin.com/jingxuan' }] },
+  { id: 'xiaohongshu', name: '红书', badge: '红', icon: 'https://www.xiaohongshu.com/favicon.ico?v=2.18.260', className: 'xiaohongshu', visibleByDefault: true, siteUrl: 'https://www.xiaohongshu.com/explore', fetchers: [{ kind: 'xiaohongshu-explore', url: 'https://www.xiaohongshu.com/explore' }, { kind: 'xiaohongshu-hotboard', url: 'https://uapis.cn/api/v1/misc/hotboard?type=xiaohongshu&limit=30', direct: true }] },
+  { id: 'douyin', name: '抖音', badge: '音', icon: 'https://www.douyin.com/favicon.ico?v=2.18.260', className: 'douyin', visibleByDefault: true, siteUrl: 'https://www.douyin.com/jingxuan', fetchers: [{ kind: 'douyin-hotboard', url: 'https://uapis.cn/api/v1/misc/hotboard?type=douyin&limit=30', direct: true }, { kind: 'douyin-jingxuan', url: 'https://www.douyin.com/jingxuan' }] },
 ];
 const RSS_SOURCES = FEED_SOURCE_REGISTRY.filter((source) => source.enabled !== false);
 const RSS_REFRESH_INTERVAL = 2 * 60 * 1000;
@@ -232,7 +233,7 @@ const DICT = {
     userAgreement: '用户协议', viewAgreement: '查看协议', agreementTitle: 'OneBox 用户协议', agreementIntro: 'OneBox 是一款本地优先的日常工具应用，主要功能在当前设备上运行。', agreementLocal: '本地数据：计算历史、日程、天气卡片、翻译历史、通知记录、阅读书架、阅读进度和笔记等，默认保存在当前设备。你可以在应用内删除对应记录或文档。', agreementNetwork: '网络服务：首页订阅源、天气和翻译会请求对应的第三方或开源服务；首页文章来自公开订阅源，内容、时效和可用性由来源网站决定。点击文章会打开来源网站，OneBox 不控制第三方页面的登录、广告或隐私规则。', agreementGithub: 'GitHub 云同步：点击 GitHub 授权并完成登录后启用，无需填写 OAuth Client ID。同步内容写入你自己的私有 Gist，访问令牌保存在当前设备；你可以随时退出连接或删除该 Gist。', agreementPermissions: '权限说明：定位仅用于查找当前位置天气；通知仅用于提醒日程和消息；文件选择仅用于导入本地阅读文档。未授权时，相应功能不会正常工作，但不影响其他功能。', agreementDisclaimer: '使用提示：天气、翻译、订阅源和第三方网页可能因网络、服务策略或接口变化而暂时不可用。请不要在同步数据、日程或笔记中保存不适合上传到个人 GitHub Gist 的敏感信息。', agreementUpdated: '最后更新',
     addReminder: '添加提醒', reminderText: '提醒内容', remindAt: '提醒时间', noNotifications: '还没有提醒。', once: '指定时间', everyDay: '每天', workdays: '工作日', restdays: '非工作日', weekly: '每周', weekdays: '重复星期',
     markRead: '全部已读', close: '关闭', system: '跟随系统', light: '浅色', dark: '深色', darkGray: '黑灰',
-    layout: '布局', classicLayout: '经典布局', simpleLayout: '简约布局', navigationLocation: '导航位置', navigationLocationMain: '主导航', navigationLocationTools: '工具 Tab', openMode: '打开方式', openCurrent: '当前页打开', openNewTab: '新标签页打开', language: '语言', theme: '主题', color: '颜色', blackWhite: '黑白配', noblePurple: '贵族紫', skyBlue: '天空蓝', notBananaGreen: '不蕉绿', meituanYellow: '美团黄', topDisplay: '顶部显示', footprint: '足迹', showFootprint: '在首页显示', hideFootprint: '不在首页显示', mascot: '宠物', showMascot: '显示宠物', hideMascot: '隐藏宠物', mascotDisplay: '宠物显示', mascotFullBody: '显示全身', mascotHalfBody: '显示半身', reorderHint: '长按工具标签可以调整顺序',
+    layout: '布局', classicLayout: '经典布局', simpleLayout: '简约布局', navigationLocation: '导航位置', navigationLocationMain: '主导航', navigationLocationTools: '工具 Tab', openMode: '打开方式', openCurrent: '当前页打开', openNewTab: '新标签页打开', language: '语言', theme: '主题', color: '颜色', blackWhite: '黑白配', noblePurple: '贵族紫', skyBlue: '天空蓝', notBananaGreen: '不蕉绿', meituanYellow: '美团黄', topDisplay: '顶部显示', footprint: '足迹', showFootprint: '在首页显示', hideFootprint: '不在首页显示', mascot: '宠物', petDescription: '显示方式、等级、服饰与互动', petSettings: '宠物设置', showMascot: '显示宠物', hideMascot: '隐藏宠物', mascotDisplay: '宠物显示', mascotFullBody: '显示全身', mascotHalfBody: '显示半身', petSocialTitle: '社交宠物', petLevel: 'Lv.{level} · {name}', petPoints: '{points} 积分', petNextLevel: '距离下一级还差 {points} 积分', petMaxLevel: '已达到最高等级', petOwner: '绑定：{owner}', petLocalOwner: '当前设备', petGithubOwner: 'GitHub · {owner}', petEarnHint: '阅读文章、读书和使用工具都能获得积分', petArticlePoints: '阅读文章 +3', petBookPoints: '打开书籍 +5', petToolPoints: '使用工具 +2', petOutfits: '服饰兑换', petOutfitLocked: '达到 Lv.{level} 解锁', petOutfitUse: '穿上', petOutfitWearing: '当前穿着', petUnlocked: '已解锁', petInteractions: '互动解锁', petInteractionLocked: 'Lv.{level} 解锁', petPointsEarned: '获得 {points} 积分', petLevelUp: '宠物升级到 Lv.{level}！', reorderHint: '长按工具标签可以调整顺序',
     languagePending: '日语、韩语语言包已预留，当前版本先提供中文和英文。',
     bookshelf: '书架', addBook: '添加文档', noBooks: '还没有本地文档。', readerHint: '支持 Markdown、TXT、PDF、EPUB；文档仅保存在当前设备。', openBook: '打开阅读', deleteBook: '删除文档', annotations: '笔记', readerComments: '笔记', readerNotesHint: '已保存的阅读笔记', addAnnotation: '笔记', annotationPlaceholder: '添加你的感受…', saveAnnotation: '保存', annotationHint: '选择文字后长按或点击笔记按钮。', noAnnotations: '还没有笔记。', reading: '正在阅读', closeReader: '关闭阅读', unsupportedFile: '请选择 .md、.markdown、.txt、.pdf 或 .epub 文件。', importFailed: '文档读取失败，请重试。', deleteConfirm: '确定删除这本文档吗？', pdfHint: 'PDF 使用浏览器原生阅读器打开。', epubHint: 'EPUB 已转换为适合 OneBox 的阅读视图。', readerContents: '目录', readerSettings: '阅读设置', readerReadingMethod: '阅读方式', readerTheme: '阅读背景', readerThemePaper: '纸张', readerThemeSepia: '墨水屏', readerThemeGreen: '护眼绿', readerThemeDark: '夜间', readerFontSize: '字号', readerFontFamily: '字体', readerLineHeight: '行距', readerParagraphSpacing: '段落间距', readerLetterSpacing: '字间距', readerAnimation: '翻页动画', readerAnimationSlide: '滑动', readerAnimationCover: '覆盖', readerAnimationNone: '无', readerScroll: '上下滚动', readerPages: '模拟翻页', readerProgress: '进度', readerFullscreen: '全屏', readerExitFullscreen: '退出全屏', readerFullscreenOnOpen: '是否全屏', readerFullscreenOnOpenHint: '下次打开文档时按此设置进入', readerNoContents: '暂无章节目录。', readerSettingsHint: '设置仅作用于当前设备上的阅读内容。', readerTocHint: '选择章节后跳转到对应位置。',
   },
@@ -276,7 +277,7 @@ const DICT = {
     userAgreement: 'User agreement', viewAgreement: 'View agreement', agreementTitle: 'OneBox user agreement', agreementIntro: 'OneBox is a local-first daily tools app. Most features run on this device.', agreementLocal: 'Local data: calculator history, events, weather cards, translation history, notifications, the reading shelf, reading progress and notes stay on this device by default. You can delete the related records or documents in the app.', agreementNetwork: 'Network services: Home subscriptions, weather and translation may request third-party or open-source services. Home articles come from public feeds; their freshness and availability depend on the source site. Opening an article takes you to that site, whose login, advertising and privacy rules are outside OneBox.', agreementGithub: 'GitHub cloud sync: click GitHub authorization and complete sign-in; no OAuth Client ID needs to be entered. Synced data is written to your own private Gist, while the access token stays on this device. You can disconnect at any time or delete the Gist.', agreementPermissions: 'Permissions: location is used only to find weather for your current place; notifications are used for event and message reminders; file access is used to import local reading documents. Other features remain available when these permissions are denied.', agreementDisclaimer: 'Use note: weather, translation, feeds and third-party pages may be temporarily unavailable because of network conditions, service policies or API changes. Do not put sensitive information that should not be uploaded to a personal GitHub Gist into synced settings, events or notes.', agreementUpdated: 'Last updated',
     addReminder: 'Add reminder', reminderText: 'Reminder', remindAt: 'When', noNotifications: 'No reminders yet.', once: 'Once', everyDay: 'Every day', workdays: 'Workdays', restdays: 'Rest days', weekly: 'Weekly', weekdays: 'Weekdays',
     markRead: 'Mark all read', close: 'Close', system: 'System', light: 'Light', dark: 'Dark', darkGray: 'Black gray',
-    layout: 'Layout', classicLayout: 'Classic layout', simpleLayout: 'Simple layout', openMode: 'Open links', openCurrent: 'Current page', openNewTab: 'New tab', theme: 'Theme', language: 'Language', color: 'Color', blackWhite: 'Black and white', noblePurple: 'Noble purple', skyBlue: 'Sky blue', notBananaGreen: 'WeChat green', meituanYellow: 'Meituan yellow', topDisplay: 'Show at top', footprint: 'Footprints', showFootprint: 'Show on Home', hideFootprint: 'Hide from Home', mascot: 'Pet', showMascot: 'Show pet', hideMascot: 'Hide pet', mascotDisplay: 'Pet display', mascotFullBody: 'Full body', mascotHalfBody: 'Upper body', homeSourceManage: 'Home sources', homeSourceManageHint: 'Choose sources to show in the home navigation', homeSourceAdd: 'Add', homeSourceRemove: 'Remove', homeSourceEmpty: 'No other sources available', reorderHint: 'Long-press a tool tab to reorder',
+    layout: 'Layout', classicLayout: 'Classic layout', simpleLayout: 'Simple layout', openMode: 'Open links', openCurrent: 'Current page', openNewTab: 'New tab', theme: 'Theme', language: 'Language', color: 'Color', blackWhite: 'Black and white', noblePurple: 'Noble purple', skyBlue: 'Sky blue', notBananaGreen: 'WeChat green', meituanYellow: 'Meituan yellow', topDisplay: 'Show at top', footprint: 'Footprints', showFootprint: 'Show on Home', hideFootprint: 'Hide from Home', mascot: 'Pet', petDescription: 'Display, level, outfits and play', petSettings: 'Pet settings', showMascot: 'Show pet', hideMascot: 'Hide pet', mascotDisplay: 'Pet display', mascotFullBody: 'Full body', mascotHalfBody: 'Upper body', petSocialTitle: 'Social pet', petLevel: 'Lv.{level} · {name}', petPoints: '{points} points', petNextLevel: '{points} points to the next level', petMaxLevel: 'Highest level reached', petOwner: 'Bound to: {owner}', petLocalOwner: 'This device', petGithubOwner: 'GitHub · {owner}', petEarnHint: 'Read articles, books and use tools to earn points', petArticlePoints: 'Read an article +3', petBookPoints: 'Open a book +5', petToolPoints: 'Use a tool +2', petOutfits: 'Outfit exchange', petOutfitLocked: 'Unlocks at Lv.{level}', petOutfitUse: 'Wear', petOutfitWearing: 'Wearing', petUnlocked: 'Unlocked', petInteractions: 'Interaction unlocks', petInteractionLocked: 'Unlocks at Lv.{level}', petPointsEarned: 'Earned {points} points', petLevelUp: 'Your pet reached Lv.{level}!', homeSourceManage: 'Home sources', homeSourceManageHint: 'Choose sources to show in the home navigation', homeSourceAdd: 'Add', homeSourceRemove: 'Remove', homeSourceEmpty: 'No other sources available', reorderHint: 'Long-press a tool tab to reorder',
     navigationLocation: 'Navigation location', navigationLocationMain: 'Main navigation', navigationLocationTools: 'Tool tabs',
     languagePending: 'Japanese and Korean are reserved for a future language pack. Chinese and English are available now.',
     bookshelf: 'Bookshelf', addBook: 'Add document', noBooks: 'No local documents yet.', readerHint: 'Supports Markdown, TXT, PDF and EPUB. Files stay on this device.', openBook: 'Open', deleteBook: 'Delete', annotations: 'Notes', readerComments: 'Notes', readerNotesHint: 'Saved reading notes', addAnnotation: 'Note', annotationPlaceholder: 'Add your thoughts…', saveAnnotation: 'Save', annotationHint: 'Select text, long-press or use the notes button.', noAnnotations: 'No notes yet.', reading: 'Reading', closeReader: 'Close reader', unsupportedFile: 'Choose a .md, .markdown, .txt, .pdf or .epub file.', importFailed: 'Could not read this document.', deleteConfirm: 'Delete this document?', pdfHint: 'PDF opens in the browser native reader.', epubHint: 'EPUB is converted into an adaptive OneBox reading view.', readerContents: 'Contents', readerSettings: 'Reading settings', readerReadingMethod: 'Reading mode', readerTheme: 'Reading background', readerThemePaper: 'Paper', readerThemeSepia: 'E-ink', readerThemeGreen: 'Green', readerThemeDark: 'Night', readerFontSize: 'Font size', readerFontFamily: 'Font', readerLineHeight: 'Line height', readerParagraphSpacing: 'Paragraph spacing', readerLetterSpacing: 'Letter spacing', readerAnimation: 'Page animation', readerAnimationSlide: 'Slide', readerAnimationCover: 'Cover', readerAnimationNone: 'None', readerScroll: 'Vertical scroll', readerPages: 'Page turn', readerProgress: 'Progress', readerFullscreen: 'Fullscreen', readerExitFullscreen: 'Exit fullscreen', readerFullscreenOnOpen: 'Open in fullscreen', readerFullscreenOnOpenHint: 'Apply this choice the next time a document opens', readerNoContents: 'No chapter contents.', readerSettingsHint: 'These settings apply only to reading on this device.', readerTocHint: 'Choose a chapter to jump to it.',
@@ -310,6 +311,46 @@ const storedFootprint = parseStored(STORAGE.footprint, true) !== false;
 const storedOpenMode = localStorage.getItem(STORAGE.openMode) || 'current';
 const storedMascotVisible = localStorage.getItem(STORAGE.mascotVisible) !== 'false';
 const storedMascotDisplayMode = localStorage.getItem(STORAGE.mascotDisplayMode) === 'full' ? 'full' : 'half';
+const PET_LEVELS = [
+  { level: 1, minPoints: 0, name: { zh: '初识陪伴', en: 'New companion' } },
+  { level: 2, minPoints: 30, name: { zh: '默契伙伴', en: 'Kindred friend' } },
+  { level: 3, minPoints: 100, name: { zh: '活力玩伴', en: 'Playful friend' } },
+  { level: 4, minPoints: 240, name: { zh: '贴心搭档', en: 'Trusted partner' } },
+  { level: 5, minPoints: 500, name: { zh: '闪耀伙伴', en: 'Shining partner' } },
+];
+const PET_OUTFITS = [
+  { id: 'original', level: 1, glyph: '🧡', name: { zh: '暖橙围巾', en: 'Warm scarf' } },
+  { id: 'blue', level: 2, glyph: '💙', name: { zh: '晴空领结', en: 'Sky bow' } },
+  { id: 'green', level: 3, glyph: '🍃', name: { zh: '森野披肩', en: 'Forest cape' } },
+  { id: 'purple', level: 4, glyph: '✨', name: { zh: '星光披风', en: 'Starlight cape' } },
+  { id: 'crown', level: 5, glyph: '👑', name: { zh: '闪耀王冠', en: 'Shining crown' } },
+];
+const PET_INTERACTIONS = [
+  { id: 'pat', level: 1, name: { zh: '摸摸头', en: 'Pat me' } },
+  { id: 'ball', level: 1, name: { zh: '玩玩球', en: 'Play ball' } },
+  { id: 'snack', level: 2, name: { zh: '喂零食', en: 'Treat' } },
+  { id: 'highfive', level: 3, name: { zh: '击个掌', en: 'High five' } },
+  { id: 'nap', level: 4, name: { zh: '打个盹', en: 'Nap' } },
+];
+function petLevelForPoints(points = 0) {
+  return [...PET_LEVELS].reverse().find((item) => Number(points) >= item.minPoints) || PET_LEVELS[0];
+}
+function normalizePetProfile(value) {
+  const source = value && typeof value === 'object' ? value : {};
+  const points = Math.max(0, Math.floor(Number(source.points) || 0));
+  const awards = source.lastAwards && typeof source.lastAwards === 'object' ? source.lastAwards : {};
+  const lastAwards = Object.fromEntries(Object.entries(awards).filter(([, at]) => Date.now() - Number(at) < 45 * 24 * 60 * 60 * 1000).slice(-120));
+  const stats = source.stats && typeof source.stats === 'object' ? source.stats : {};
+  const validOutfit = PET_OUTFITS.some((item) => item.id === source.activeOutfit) ? source.activeOutfit : 'original';
+  return {
+    points,
+    activeOutfit: validOutfit,
+    owner: String(source.owner || ''),
+    lastAwards,
+    stats: { articles: Math.max(0, Number(stats.articles) || 0), books: Math.max(0, Number(stats.books) || 0), tools: Math.max(0, Number(stats.tools) || 0), interactions: Math.max(0, Number(stats.interactions) || 0) },
+  };
+}
+const storedPetProfile = normalizePetProfile(parseStored(STORAGE.petProfile, {}));
 const storedToolActive = localStorage.getItem(STORAGE.toolActive) || '';
 const rawWeatherCards = parseStored(STORAGE.weatherCards, []);
 const legacyWeather = parseStored(STORAGE.legacyWeather, null);
@@ -509,6 +550,8 @@ const state = {
   openMode: storedOpenMode === 'new-tab' ? 'new-tab' : 'current',
   mascotVisible: storedMascotVisible,
   mascotDisplayMode: storedMascotDisplayMode,
+  petProfile: storedPetProfile,
+  petDialogOpen: false,
   swRegistration: null, updateAvailable: false, updateChecking: false, updateApplying: false, updateReloading: false, updateError: false,
   github: (() => { const value = parseStored(STORAGE.github, {}) || {}; return { clientId: GITHUB_CLIENT_ID, token: value.token || '', user: value.user || null, gistId: value.gistId || '', deviceCode: '', userCode: '', verificationUri: '', verificationUriComplete: '', expiresAt: 0, interval: 5, manualTokenOpen: false }; })(),
   githubSync: { active: false, mode: '', progress: 0, message: '', error: '' },
@@ -516,6 +559,57 @@ const state = {
 const homeFeedRequests = new Map();
 const homeFeedLoadingSuppressed = new Set();
 const homeFeedLoadingTimers = new Map();
+function petText(key, values = {}) {
+  return Object.entries(values).reduce((text, [name, value]) => text.replaceAll('{' + name + '}', String(value)), t(key));
+}
+function savePetProfile() { saveStored(STORAGE.petProfile, state.petProfile); }
+function petCurrentLevel() { return petLevelForPoints(state.petProfile?.points || 0); }
+function petOutfitById(id) { return PET_OUTFITS.find((item) => item.id === id) || PET_OUTFITS[0]; }
+function petOutfitUnlocked(outfit) { return petCurrentLevel().level >= Number(outfit?.level || 1); }
+function petInteractionUnlocked(action) {
+  const item = PET_INTERACTIONS.find((entry) => entry.id === action);
+  return !item || petCurrentLevel().level >= Number(item.level || 1);
+}
+function petOwnerLabel() {
+  const login = state.github?.user?.login;
+  return login ? petText('petGithubOwner', { owner: login }) : t('petLocalOwner');
+}
+function bindPetProfileToCurrentUser() {
+  const login = state.github?.user?.login;
+  if (!login || state.petProfile.owner === 'github:' + login) return;
+  state.petProfile.owner = 'github:' + login;
+  savePetProfile();
+}
+function awardPetPoints(amount, reason = 'interaction', uniqueKey = '') {
+  if (!state.petProfile || !Number.isFinite(Number(amount)) || Number(amount) <= 0) return false;
+  if (uniqueKey && state.petProfile.lastAwards?.[uniqueKey]) return false;
+  const before = petCurrentLevel();
+  const points = Math.max(1, Math.floor(Number(amount)));
+  state.petProfile.points += points;
+  state.petProfile.owner = state.github?.user?.login ? 'github:' + state.github.user.login : 'device';
+  if (uniqueKey) state.petProfile.lastAwards[uniqueKey] = Date.now();
+  if (reason === 'article') state.petProfile.stats.articles += 1;
+  if (reason === 'book') state.petProfile.stats.books += 1;
+  if (reason === 'tool') state.petProfile.stats.tools += 1;
+  if (reason === 'interaction') state.petProfile.stats.interactions += 1;
+  state.petProfile.lastAwards = Object.fromEntries(Object.entries(state.petProfile.lastAwards).slice(-120));
+  savePetProfile();
+  const after = petCurrentLevel();
+  if (after.level > before.level) toast(petText('petLevelUp', { level: after.level }), 'info');
+  if (mascotRuntime?.root) syncMascotOutfit();
+  if (state.petDialogOpen) renderPetDialog();
+  if (mascotRuntime?.panel && !mascotRuntime.panel.hidden) refreshMascotBriefing();
+  return true;
+}
+function setPetOutfit(id) {
+  const outfit = petOutfitById(id);
+  if (!petOutfitUnlocked(outfit)) return false;
+  state.petProfile.activeOutfit = outfit.id;
+  savePetProfile();
+  syncMascotOutfit();
+  if (state.petDialogOpen) renderPetDialog();
+  return true;
+}
 function homeFeedSourceRequesting(sourceId = state.homeFeed.active) {
   return sourceId !== 'footprint' && homeFeedRequests.has(sourceId);
 }
@@ -742,6 +836,7 @@ function renderBottomNav() {
 function selectTool(id) {
   if (id === 'convert') id = 'translate';
   if (!TOOL_DEFS[id]) id = 'calculator';
+  awardPetPoints(2, 'tool', 'tool:' + id + ':' + dateKey(new Date()));
   const revealActiveTab = () => requestAnimationFrame(() => { focusActiveToolTab(true); updateToolTabOverflowControls(); });
   if (id === 'navigation') {
     state.section = 'tools';
@@ -929,6 +1024,7 @@ function markFeedRead(id) {
   if (!id || state.homeFeedRead[id]) return;
   state.homeFeedRead[id] = Date.now();
   saveHomeFeedRead();
+  awardPetPoints(3, 'article', 'article:' + id);
 }
 function feedImageUrl(value) {
   const url = safeExternalUrl(value);
@@ -1430,8 +1526,8 @@ const MASCOT_ASSETS = {
 };
 const MASCOT_DIRECTIONS = ['up-left', 'up', 'up-right', 'left', 'center', 'right', 'down-left', 'down', 'down-right'];
 const MASCOT_REACTIONS = ['blink', 'heart', 'sparkle', 'surprised', 'wink', 'bashful', 'sleepy', 'dizzy', 'delighted'];
-const MASCOT_FULL_BODY_MARKUP = '<img class="onebox-mascot-fullbody" src="icons/mascot-fox-full.png?v=2.18.259" alt="" draggable="false">';
-const MASCOT_FULL_BODY_REACTIONS = 'icons/mascot-fox-full-reactions.png?v=2.18.259';
+const MASCOT_FULL_BODY_MARKUP = '<img class="onebox-mascot-fullbody" src="icons/mascot-fox-full.png?v=2.18.260" alt="" draggable="false">';
+const MASCOT_FULL_BODY_REACTIONS = 'icons/mascot-fox-full-reactions.png?v=2.18.260';
 const MASCOT_CLOCKWISE = ['right', 'down-right', 'down', 'down-left', 'left', 'up-left', 'up', 'up-right'];
 const MASCOT_SECTOR = (Math.PI * 2) / MASCOT_CLOCKWISE.length;
 const MASCOT_HYSTERESIS = 0.12;
@@ -1462,6 +1558,15 @@ function syncMascotDisplayMode(adjustPosition = false) {
     mascotSetPosition(mascotRuntime.position.left, mascotRuntime.position.top - (nextHeight - previousHeight) / 2);
   }
   mascotSyncPanelSide();
+}
+function syncMascotOutfit() {
+  const root = mascotRuntime.root;
+  const outfitNode = root?.querySelector('.onebox-mascot-outfit');
+  if (!root || !outfitNode) return;
+  const outfit = petOutfitById(state.petProfile?.activeOutfit);
+  outfitNode.textContent = outfit.glyph;
+  root.dataset.outfit = outfit.id;
+  outfitNode.setAttribute('aria-label', outfit.name[state.language] || outfit.name.zh);
 }
 function mascotWrapAngle(angle) { return Math.atan2(Math.sin(angle), Math.cos(angle)); }
 function mascotPositionValue() {
@@ -1675,7 +1780,10 @@ function mascotWeatherMarkup() {
   return '<div class="onebox-mascot-weather-inline"><div class="onebox-mascot-weather-now"><span class="onebox-mascot-weather-symbol" aria-hidden="true">' + condition[0] + '</span><span><strong>' + escapeHtml(place) + ' ' + escapeHtml(temp) + '</strong><span class="onebox-mascot-weather-condition"><span class="onebox-mascot-weather-meta">' + escapeHtml(meta) + '</span></span></span></div><p class="onebox-mascot-weather-insight">' + escapeHtml(mascotFutureSixHours(weather)) + '</p></div>';
 }
 function mascotActionButton(action, label, icon) {
-  return '<button type="button" data-mascot-action="' + action + '" aria-label="' + escapeHtml(label) + '"><span class="onebox-mascot-action-icon" aria-hidden="true">' + icon + '</span><span>' + escapeHtml(label) + '</span></button>';
+  const interaction = PET_INTERACTIONS.find((item) => item.id === action);
+  const unlocked = petInteractionUnlocked(action);
+  const displayLabel = !unlocked && interaction ? label + ' · Lv.' + interaction.level : label;
+  return '<button type="button" data-mascot-action="' + action + '" aria-label="' + escapeHtml(displayLabel) + '" ' + (unlocked ? '' : 'disabled') + '><span class="onebox-mascot-action-icon" aria-hidden="true">' + icon + '</span><span>' + escapeHtml(displayLabel) + '</span></button>';
 }
 function mascotBriefingMarkup() {
   const todayLabel = mascotDateLabel();
@@ -1907,12 +2015,13 @@ function mountMascot() {
   if (mascotRuntime.root) return;
   const root = document.createElement('aside');
   root.id = 'oneboxMascotRoot'; root.className = 'onebox-mascot-root'; root.dataset.edge = 'right'; root.dataset.panelSide = 'right';
-  root.innerHTML = '<span class="onebox-mascot-propeller" aria-hidden="true"><i></i><i></i><b></b></span><span class="onebox-mascot-rocket" aria-hidden="true">🚀</span><span class="onebox-mascot-ball" aria-hidden="true">⚽</span><span class="onebox-mascot-snack" aria-hidden="true">🍪</span><span class="onebox-mascot-highfive" aria-hidden="true">🖐️</span><span class="onebox-mascot-nap" aria-hidden="true">💤</span><div class="onebox-mascot-speech" role="status" aria-live="polite" hidden></div><div class="onebox-mascot-panel" hidden></div><button type="button" class="onebox-mascot-button" aria-label="查看今日速览"><span class="onebox-mascot-visual" aria-hidden="true">' + MASCOT_FULL_BODY_MARKUP + '<span class="onebox-mascot-layer onebox-mascot-direction"></span><span class="onebox-mascot-layer onebox-mascot-reaction"></span><span class="onebox-mascot-fallback">🦊</span></span></button>';
+  root.innerHTML = '<span class="onebox-mascot-propeller" aria-hidden="true"><i></i><i></i><b></b></span><span class="onebox-mascot-rocket" aria-hidden="true">🚀</span><span class="onebox-mascot-ball" aria-hidden="true">⚽</span><span class="onebox-mascot-snack" aria-hidden="true">🍪</span><span class="onebox-mascot-highfive" aria-hidden="true">🖐️</span><span class="onebox-mascot-nap" aria-hidden="true">💤</span><div class="onebox-mascot-speech" role="status" aria-live="polite" hidden></div><div class="onebox-mascot-panel" hidden></div><button type="button" class="onebox-mascot-button" aria-label="查看今日速览"><span class="onebox-mascot-visual" aria-hidden="true">' + MASCOT_FULL_BODY_MARKUP + '<span class="onebox-mascot-layer onebox-mascot-direction"></span><span class="onebox-mascot-layer onebox-mascot-reaction"></span><span class="onebox-mascot-outfit" aria-hidden="true"></span><span class="onebox-mascot-fallback">🦊</span></span></button>';
   document.body.appendChild(root);
   mascotRuntime.root = root; mascotRuntime.button = $('.onebox-mascot-button', root); mascotRuntime.panel = $('.onebox-mascot-panel', root); mascotRuntime.speech = $('.onebox-mascot-speech', root); mascotRuntime.directionLayer = $('.onebox-mascot-direction', root); mascotRuntime.reactionLayer = $('.onebox-mascot-reaction', root);
   mascotRuntime.directionLayer.style.backgroundImage = 'url("' + MASCOT_ASSETS.directions + '")';
   mascotRuntime.reactionLayer.style.backgroundImage = 'url("' + MASCOT_ASSETS.reactions + '")';
   syncMascotDisplayMode();
+  syncMascotOutfit();
   const saved = mascotPositionValue();
   if (saved) mascotSetPosition(saved.left, saved.top, false);
   else mascotSyncPanelSide();
@@ -1937,6 +2046,8 @@ function mountMascot() {
   mascotRuntime.panel.addEventListener('click', (event) => {
     if (event.target.closest('[data-close-mascot]')) { closeMascotBriefing(); return; }
     const action = event.target.closest('[data-mascot-action]')?.dataset.mascotAction;
+    if (action && !petInteractionUnlocked(action)) return;
+    if (['pat', 'ball', 'snack', 'highfive', 'nap'].includes(action)) awardPetPoints(1, 'interaction', 'interaction:' + action + ':' + dateKey(new Date()) + ':' + Math.floor(Date.now() / 60000));
     if (action === 'pat') {
       closeMascotBriefing();
       mascotPlayReaction('heart');
@@ -2423,6 +2534,7 @@ function renderMine() {
     github: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 18h10a3.5 3.5 0 0 0 .5-6.96A5.5 5.5 0 0 0 7 9.5a4.25 4.25 0 0 0 0 8.5Z"/><path d="m12 12 2-2m-2 2-2-2m2 2v4"/></svg>',
     reading: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4h8l3 3v5M14 4v4h4M9 12h3M9 16h3"/><circle cx="16.5" cy="16.5" r="3.5"/><path d="M16.5 14.8v1.9l1.2.7"/></svg>',
     agreement: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3.5h8l4 4v13H6z"/><path d="M14 3.5v4h4M9 12h6M9 15h3M14 16.5l1.5 1.5 2.5-3"/></svg>',
+    pet: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 1.5-4L12 7l4.5-2L18 9v5.2c0 3.4-2.7 5.8-6 5.8s-6-2.4-6-5.8Z"/><circle cx="9.2" cy="12.2" r=".8"/><circle cx="14.8" cy="12.2" r=".8"/><path d="M9.5 15.2c1.5 1.2 3.5 1.2 5 0"/></svg>',
   })[name];
   const row = (action, glyph, title, description) => '<button class="mine-row" ' + action + '><span class="mine-row-icon">' + icon(glyph) + '</span><span class="mine-row-copy"><strong>' + title + '</strong><small class="mine-row-description">' + description + '</small></span><span>›</span></button>';
   const updateBusy = state.updateChecking || state.updateApplying;
@@ -2430,8 +2542,36 @@ function renderMine() {
   const updateProgress = updateBusy ? '<span class="update-progress" role="status" aria-label="' + escapeHtml(updateStatus) + '"><span class="update-progress-dots" aria-hidden="true"><i>.</i><i>.</i><i>.</i></span></span>' : '<span class="update-status-label">' + escapeHtml(updateStatus) + '</span>';
   const updateButton = state.updateAvailable ? '<button class="primary mine-update-button" data-apply-update ' + (state.updateApplying ? 'disabled' : '') + '>' + (state.updateApplying ? t('updateApplying') : t('applyUpdate')) + '</button>' : '<button class="primary mine-update-button" data-check-update ' + (state.updateChecking || state.updateApplying ? 'disabled' : '') + '>' + t('checkUpdate') + '</button>';
   const updateRow = '<div class="mine-row mine-update-row"><span class="mine-row-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v10M8 10l4 4 4-4M5 19h14"/></svg></span><span class="mine-row-copy mine-update-copy"><strong>' + t('appUpdate') + '</strong><small class="mine-row-description">v' + APP_VERSION + (updateBusy ? ' ' : ' · ') + updateProgress + '</small></span><span class="mine-row-action">' + updateButton + '</span></div>';
-  return '<div class="section-page mine-page"><div class="mine-list">' + row('data-open-settings-page', 'settings', t('settings'), state.language === 'en' ? 'Theme, language, color and display' : '主题、语言、颜色与显示设置') + row('data-open-github-page', 'github', 'GitHub', escapeHtml(githubStatus)) + updateRow + row('data-open-agreement-page', 'agreement', t('userAgreement'), state.language === 'en' ? 'Learn how OneBox handles data' : '了解 OneBox 如何处理数据') + '</div></div>';
+  return '<div class="section-page mine-page"><div class="mine-list">' + row('data-open-settings-page', 'settings', t('settings'), state.language === 'en' ? 'Theme, language, color and display' : '主题、语言、颜色与显示设置') + row('data-open-pet-page', 'pet', t('mascot'), t('petDescription')) + row('data-open-github-page', 'github', 'GitHub', escapeHtml(githubStatus)) + updateRow + row('data-open-agreement-page', 'agreement', t('userAgreement'), state.language === 'en' ? 'Learn how OneBox handles data' : '了解 OneBox 如何处理数据') + '</div></div>';
 }
+
+function renderPetDialog() {
+  const dialog = $('#petDialog');
+  if (!dialog) return;
+  bindPetProfileToCurrentUser();
+  const profile = state.petProfile;
+  const current = petCurrentLevel();
+  const next = PET_LEVELS.find((item) => item.level > current.level);
+  const progress = next ? Math.min(100, Math.max(0, ((profile.points - current.minPoints) / Math.max(1, next.minPoints - current.minPoints)) * 100)) : 100;
+  const outfit = petOutfitById(profile.activeOutfit);
+  const petImage = 'icons/mascot-fox-full.png?v=' + APP_VERSION;
+  const outfitCards = PET_OUTFITS.map((item) => {
+    const unlocked = petOutfitUnlocked(item);
+    const active = item.id === outfit.id;
+    const status = active ? petText('petOutfitWearing') : unlocked ? petText('petOutfitUse') : petText('petOutfitLocked', { level: item.level });
+    return '<button type="button" class="pet-outfit-card ' + (active ? 'is-active ' : '') + (!unlocked ? 'is-locked' : '') + '" data-pet-outfit="' + item.id + '" ' + (unlocked ? '' : 'disabled') + '><span class="pet-outfit-glyph">' + item.glyph + '</span><span class="pet-outfit-copy"><strong>' + escapeHtml(item.name[state.language] || item.name.zh) + '</strong><small>' + escapeHtml(status) + '</small></span></button>';
+  }).join('');
+  const interactionCards = PET_INTERACTIONS.map((item) => {
+    const unlocked = petInteractionUnlocked(item.id);
+    return '<span class="pet-unlock-chip ' + (unlocked ? 'is-unlocked' : 'is-locked') + '"><span>' + escapeHtml(item.name[state.language] || item.name.zh) + '</span><small>' + escapeHtml(unlocked ? petText('petUnlocked') : petText('petInteractionLocked', { level: item.level })) + '</small></span>';
+  }).join('');
+  const stats = state.language === 'en' ? (profile.stats.articles + ' articles · ' + profile.stats.books + ' books · ' + profile.stats.tools + ' tools') : ('文章 ' + profile.stats.articles + ' · 书籍 ' + profile.stats.books + ' · 工具 ' + profile.stats.tools);
+  const progressLabel = next ? petText('petNextLevel', { points: Math.max(0, next.minPoints - profile.points) }) : petText('petMaxLevel');
+  dialog.innerHTML = '<div class="dialog-card pet-dialog-card" role="dialog" aria-modal="true"><div class="dialog-head pet-dialog-head"><div><h2>' + escapeHtml(t('mascot')) + '</h2><p>' + escapeHtml(t('petSocialTitle')) + '</p></div><button class="icon-btn small" data-close-pet aria-label="' + escapeHtml(t('close')) + '">×</button></div><div class="pet-dialog-body"><section class="pet-profile-card"><div class="pet-profile-avatar"><img src="' + petImage + '" alt=""><span>' + outfit.glyph + '</span></div><div class="pet-profile-copy"><strong>' + escapeHtml(petText('petLevel', { level: current.level, name: current.name[state.language] || current.name.zh })) + '</strong><p>' + escapeHtml(petText('petPoints', { points: profile.points })) + '</p><small>' + escapeHtml(petText('petOwner', { owner: petOwnerLabel() })) + '</small></div></section><section class="pet-progress-card"><div class="pet-progress-head"><strong>' + escapeHtml(petText('petPoints', { points: profile.points })) + '</strong><span>' + escapeHtml(progressLabel) + '</span></div><div class="pet-progress-track"><i style="width:' + progress.toFixed(1) + '%"></i></div><p>' + escapeHtml(t('petEarnHint')) + '</p><div class="pet-earn-list"><span>' + escapeHtml(t('petArticlePoints')) + '</span><span>' + escapeHtml(t('petBookPoints')) + '</span><span>' + escapeHtml(t('petToolPoints')) + '</span></div><small class="pet-stat-line">' + escapeHtml(stats) + '</small></section><section class="pet-settings-section"><h3>' + escapeHtml(t('petSettings')) + '</h3><div class="pet-setting-row"><span>' + escapeHtml(t('mascot')) + '</span><select id="petVisibility"><option value="show" ' + (state.mascotVisible ? 'selected' : '') + '>' + escapeHtml(t('showMascot')) + '</option><option value="hide" ' + (!state.mascotVisible ? 'selected' : '') + '>' + escapeHtml(t('hideMascot')) + '</option></select></div><div class="pet-setting-row"><span>' + escapeHtml(t('mascotDisplay')) + '</span><select id="petDisplayMode"><option value="half" ' + (state.mascotDisplayMode === 'half' ? 'selected' : '') + '>' + escapeHtml(t('mascotHalfBody')) + '</option><option value="full" ' + (state.mascotDisplayMode === 'full' ? 'selected' : '') + '>' + escapeHtml(t('mascotFullBody')) + '</option></select></div></section><section class="pet-outfits-section"><div class="pet-section-head"><h3>' + escapeHtml(t('petOutfits')) + '</h3><small>' + escapeHtml(petText('petLevel', { level: current.level, name: current.name[state.language] || current.name.zh })) + '</small></div><div class="pet-outfit-grid">' + outfitCards + '</div></section><section class="pet-unlocks-section"><div class="pet-section-head"><h3>' + escapeHtml(t('petInteractions')) + '</h3><small>' + escapeHtml(t('petEarnHint')) + '</small></div><div class="pet-unlock-list">' + interactionCards + '</div></section></div></div>';
+  dialog.hidden = false;
+  state.petDialogOpen = true;
+}
+function closePetDialog() { const dialog = $('#petDialog'); if (dialog) dialog.hidden = true; state.petDialogOpen = false; }
 
 function recentFeedItems() {
   const items = new Map();
@@ -3196,6 +3336,7 @@ async function openReaderBook(id) {
   state.readerImmersive = state.readerPreferences.fullscreenOnOpen === true;
   if (state.readerImmersive) requestReaderFullscreen(); else exitReaderFullscreen();
   state.readerBookId = id; state.readerSelectedText = ''; state.readerSelection = null; state.readerAnnotationDraft = null; book.lastOpenedAt = Date.now(); saveLibrary();
+  awardPetPoints(5, 'book', 'book:' + id + ':' + dateKey(new Date()));
   try {
     let content = ''; let hint = ''; let toc = [];
     if (book.type === 'md') { content = markdownToHtml(book.content); toc = readerTextToc(book.content).map((item) => ({ ...item })); }
@@ -5033,7 +5174,7 @@ function syncPayload(readerFiles = null) {
     weatherCards: state.weatherCards, translationHistory: state.translationHistory, notifications: state.notifications, library: state.library,
     readerPreferences: state.readerPreferences, readerLayout: state.readerLayout, translationHistoryOpen: state.translationHistoryOpen,
     homeFeedRead: state.homeFeedRead, layoutMode: state.layoutMode, topDisplay: state.topDisplay, footprint: state.footprint,
-    mascotVisible: state.mascotVisible, mascotDisplayMode: state.mascotDisplayMode, mascotPosition: parseStored(STORAGE.mascotPosition, null), homeFeedOrder: state.homeFeed.order,
+    mascotVisible: state.mascotVisible, mascotDisplayMode: state.mascotDisplayMode, mascotPosition: parseStored(STORAGE.mascotPosition, null), petProfile: state.petProfile, homeFeedOrder: state.homeFeed.order,
     homeFeedVisibility: state.homeFeed.visible, navigation: state.navigation, navigationLocation: state.navigationLocation, openMode: state.openMode,
     notificationPreference: state.notificationPreference, readerFiles,
   };
@@ -5273,6 +5414,7 @@ async function githubDownload() {
     if (typeof remote.mascotVisible === 'boolean') { state.mascotVisible = remote.mascotVisible; saveMascotVisibility(); }
     if (remote.mascotDisplayMode === 'full' || remote.mascotDisplayMode === 'half') { state.mascotDisplayMode = remote.mascotDisplayMode; saveMascotDisplayMode(); }
     if (remote.mascotPosition && Number.isFinite(Number(remote.mascotPosition.left)) && Number.isFinite(Number(remote.mascotPosition.top))) saveStored(STORAGE.mascotPosition, { left: Number(remote.mascotPosition.left), top: Number(remote.mascotPosition.top) });
+    if (remote.petProfile && typeof remote.petProfile === 'object') { state.petProfile = normalizePetProfile(remote.petProfile); savePetProfile(); }
     if (remote.notificationPreference === 'deny' || remote.notificationPreference === 'allow') { state.notificationPreference = remote.notificationPreference; saveStored(STORAGE.notificationPreference, state.notificationPreference); }
     if (remote.openMode === 'new-tab' || remote.openMode === 'current') { state.openMode = remote.openMode; saveStored(STORAGE.openMode, state.openMode); }
     state.github.gistId = id; saveGithub(); applyLanguage(); syncMascotDisplayMode(true); renderNav(); render();
@@ -5325,16 +5467,6 @@ function renderSettings() {
   const topDisplay = state.layoutMode === 'classic' ? '<div class="settings-preference-row settings-top-display-row"><h3>' + t('topDisplay') + '</h3><div class="settings-preference-control settings-top-display-control"><label class="setting-toggle"><input type="checkbox" data-top-display="theme" ' + (state.topDisplay.theme ? 'checked' : '') + '><span>' + t('theme') + '</span></label><label class="setting-toggle"><input type="checkbox" data-top-display="language" ' + (state.topDisplay.language ? 'checked' : '') + '><span>' + t('language') + '</span></label></div></div>' : '';
   dialog.innerHTML = '<div class="dialog-card settings-dialog-card" role="dialog" aria-modal="true"><div class="dialog-head"><h2>' + t('settings') + '</h2><button class="icon-btn small" data-close-settings aria-label="' + t('close') + '">×</button></div>' +
     '<div class="settings-preferences"><div class="settings-preference-row"><h3>' + t('layout') + '</h3><div class="settings-preference-control"><select id="settingsLayout"><option value="classic" ' + (state.layoutMode === 'classic' ? 'selected' : '') + '>' + t('classicLayout') + '</option><option value="simple" ' + (state.layoutMode === 'simple' ? 'selected' : '') + '>' + t('simpleLayout') + '</option></select></div></div>' + topDisplay + '<div class="settings-preference-row"><h3>' + t('theme') + '</h3><div class="settings-preference-control"><select id="settingsTheme"><option value="system" ' + (state.theme === 'system' ? 'selected' : '') + '>' + t('system') + '</option><option value="light" ' + (state.theme === 'light' ? 'selected' : '') + '>' + t('light') + '</option><option value="dark" ' + (state.theme === 'dark' ? 'selected' : '') + '>' + t('dark') + '</select></div></div><div class="settings-preference-row"><h3>' + t('color') + '</h3><div class="settings-preference-control"><select id="settingsColor"><option value="mono" ' + (state.color === 'mono' ? 'selected' : '') + '>' + t('blackWhite') + '</option><option value="purple" ' + (state.color === 'purple' ? 'selected' : '') + '>' + t('noblePurple') + '</option><option value="blue" ' + (state.color === 'blue' ? 'selected' : '') + '>' + t('skyBlue') + '</option><option value="green" ' + (state.color === 'green' ? 'selected' : '') + '>' + t('notBananaGreen') + '</option><option value="yellow" ' + (state.color === 'yellow' ? 'selected' : '') + '>' + t('meituanYellow') + '</option></select></div></div><div class="settings-preference-row"><h3>' + t('language') + '</h3><div class="settings-preference-control"><select id="settingsLanguage"><option value="system" ' + (state.languageMode === 'system' ? 'selected' : '') + '>' + t('system') + '</option><option value="zh" ' + (state.languageMode === 'zh' ? 'selected' : '') + '>中文</option><option value="en" ' + (state.languageMode === 'en' ? 'selected' : '') + '>English</option></select></div></div><div class="settings-preference-row"><h3>' + t('messages') + '</h3><div class="settings-preference-control"><select id="settingsNotifications"><option value="allow" ' + (notificationPreference === 'allow' ? 'selected' : '') + '>' + t('enableNotifications') + '</option><option value="deny" ' + (notificationPreference === 'deny' ? 'selected' : '') + '>' + t('disableNotifications') + '</option></select></div></div><div class="settings-preference-row"><h3>' + t('footprint') + '</h3><div class="settings-preference-control"><select id="settingsFootprint"><option value="hide" ' + (!state.footprint ? 'selected' : '') + '>' + t('hideFootprint') + '</option><option value="show" ' + (state.footprint ? 'selected' : '') + '>' + t('showFootprint') + '</option></select></div></div>' + homeFeeds + openMode + '</div>';
-  const mascotRow = document.createElement('div');
-  mascotRow.className = 'settings-preference-row';
-  mascotRow.innerHTML = '<h3>' + t('mascot') + '</h3><div class="settings-preference-control"><select id="settingsMascotVisibility"><option value="show">' + t('showMascot') + '</option><option value="hide">' + t('hideMascot') + '</option></select></div>';
-  mascotRow.querySelector('select').value = state.mascotVisible ? 'show' : 'hide';
-  dialog.querySelector('#settingsFootprint')?.closest('.settings-preference-row')?.after(mascotRow);
-  const mascotDisplayRow = document.createElement('div');
-  mascotDisplayRow.className = 'settings-preference-row';
-  mascotDisplayRow.innerHTML = '<h3>' + t('mascotDisplay') + '</h3><div class="settings-preference-control"><select id="settingsMascotDisplay"><option value="half">' + t('mascotHalfBody') + '</option><option value="full">' + t('mascotFullBody') + '</option></select></div>';
-  mascotDisplayRow.querySelector('select').value = state.mascotDisplayMode === 'full' ? 'full' : 'half';
-  mascotRow.after(mascotDisplayRow);
   const layoutRow = dialog.querySelector('#settingsLayout')?.closest('.settings-preference-row');
   if (layoutRow) {
     const navigationRow = document.createElement('div');
@@ -5597,6 +5729,7 @@ function render() {
   updateNotificationBadge();
   syncMascotContext();
   if (state.recentReadingOpen) renderRecentReading();
+  if (state.petDialogOpen) renderPetDialog();
   if (state.navigationDialog) renderNavigationDialog();
   if (state.section === 'home') scheduleHomeFeedSurfaceSync();
 }
@@ -6863,6 +6996,7 @@ workspace.addEventListener('click', async (event) => {
     return;
   }
   if (event.target.closest('[data-open-settings-page]')) return renderSettings();
+  if (event.target.closest('[data-open-pet-page]')) return renderPetDialog();
   if (event.target.closest('[data-check-update]')) return checkForUpdate();
   if (event.target.closest('[data-apply-update]')) return applyUpdate();
   if (event.target.closest('[data-open-github-page]')) return renderGithubDialog();
@@ -7284,11 +7418,28 @@ $('#settingsDialog').addEventListener('change', (event) => {
   if (event.target.id === 'settingsLanguage') { state.languageMode = event.target.value; saveThemeLanguage(); applyLanguage(); renderNav(); render(); renderSettings(); }
   if (event.target.id === 'settingsNotifications') { state.notificationPreference = event.target.value; saveStored(STORAGE.notificationPreference, state.notificationPreference); if (state.notificationPreference === 'allow') requestNotifications(); }
   if (event.target.id === 'settingsOpenMode') { state.openMode = event.target.value === 'new-tab' ? 'new-tab' : 'current'; saveStored(STORAGE.openMode, state.openMode); }
-  if (event.target.id === 'settingsMascotVisibility') { state.mascotVisible = event.target.value !== 'hide'; saveMascotVisibility(); syncMascotVisibility(); renderSettings(); }
-  if (event.target.id === 'settingsMascotDisplay') { state.mascotDisplayMode = event.target.value === 'full' ? 'full' : 'half'; saveMascotDisplayMode(); syncMascotDisplayMode(true); renderSettings(); }
   if (event.target.dataset.topDisplay) { state.topDisplay[event.target.dataset.topDisplay] = event.target.checked; saveTopDisplay(); renderHeaderControls(); renderSettings(); }
 });
 $('#settingsDialog').addEventListener('input', () => {});
+$('#petDialog').addEventListener('click', (event) => {
+  if (event.target === $('#petDialog') || event.target.closest('[data-close-pet]')) return closePetDialog();
+  const outfit = event.target.closest('[data-pet-outfit]');
+  if (outfit && setPetOutfit(outfit.dataset.petOutfit)) toast(state.language === 'en' ? 'Outfit equipped' : '服饰已换上', 'info');
+});
+$('#petDialog').addEventListener('change', (event) => {
+  if (event.target.id === 'petVisibility') {
+    state.mascotVisible = event.target.value !== 'hide';
+    saveMascotVisibility();
+    syncMascotVisibility();
+    renderPetDialog();
+  }
+  if (event.target.id === 'petDisplayMode') {
+    state.mascotDisplayMode = event.target.value === 'full' ? 'full' : 'half';
+    saveMascotDisplayMode();
+    syncMascotDisplayMode(true);
+    renderPetDialog();
+  }
+});
 $('#agreementDialog').addEventListener('click', (event) => {
   if (event.target === $('#agreementDialog') || event.target.closest('[data-close-agreement]')) closeAgreementDialog();
 });
