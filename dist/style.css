@@ -1428,10 +1428,11 @@ main:has(#workspace[data-tool="home"]), main:has(#workspace[data-tool="messages"
 .feed-refresh-state { display: flex; align-items: center; justify-content: center; min-height: 28px; padding: 5px 14px; color: var(--primary); }
 .feed-refresh-state span { width: 10px; height: 10px; border: 2px solid color-mix(in srgb, var(--primary) 28%, transparent); border-top-color: var(--primary); border-radius: 50%; animation: feed-spin .75s linear infinite; }
 .feed-new-content-action-wrap { display: flex; justify-content: center; padding: 8px 12px 2px; }
-.feed-new-content-action { border: 0; border-radius: 999px; padding: 7px 13px; background: color-mix(in srgb, var(--primary) 10%, transparent); color: var(--primary); font-size: 12px; font-weight: 800; cursor: pointer; }
-.feed-new-content-action:hover, .feed-new-content-action:focus-visible { background: color-mix(in srgb, var(--primary) 18%, transparent); }
-.feed-new-divider { display: flex; align-items: center; gap: 9px; margin: 4px 14px 5px; color: var(--muted); font-size: 10px; line-height: 1; }
-.feed-new-divider::before, .feed-new-divider::after { content: ''; height: 1px; flex: 1; background: color-mix(in srgb, var(--primary) 22%, var(--line)); }
+.feed-new-content-action { border: 0; border-radius: 0; padding: 7px 0; background: transparent; color: var(--primary); font-size: 12px; font-weight: 800; cursor: pointer; }
+.feed-new-content-action:hover, .feed-new-content-action:focus-visible { background: transparent; text-decoration: underline; text-underline-offset: 3px; }
+.feed-new-divider { display: flex; align-items: center; gap: 9px; margin: 4px 0 5px; color: var(--primary); font-size: 10px; line-height: 1; }
+.feed-new-divider::before, .feed-new-divider::after { content: ''; flex: 1; height: 0; border-top: 1px dashed var(--line); }
+.feed-new-divider span { padding: 0 2px; background: var(--panel); }
 
 #settingsDialog .settings-preferences { width: min(500px, 100%); }
 #settingsDialog .settings-preference-row { display: grid; grid-template-columns: 78px minmax(0, 1fr); gap: 8px; min-height: 54px; }
