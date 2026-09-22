@@ -8681,8 +8681,9 @@ html.ios-safari-browser.reader-focus.reader-safari-surface .reader-reference-she
 .onebox-mascot-empty { margin: 0; color: var(--muted); font-size: 12px; }
 .onebox-mascot-cloud-actions { display: grid; gap: 6px; margin-top: 13px; }
 .onebox-mascot-action-row { display: flex; flex-wrap: wrap; gap: 5px; min-width: 0; align-items: stretch; justify-content: flex-start; }
-.onebox-mascot-action-row-interactions { flex-wrap: nowrap; gap: 4px; width: 100%; }
-.onebox-mascot-action-row-interactions button { flex: 1 1 0; min-width: 0; justify-content: center; gap: 2px; padding: 7px 2px; font-size: 9px; }
+.onebox-mascot-action-row-interactions { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px; width: 100%; }
+.onebox-mascot-action-row-interactions button { width: 100%; min-width: 0; min-height: 34px; justify-content: center; gap: 2px; padding: 5px 1px; font-size: 9px; line-height: 1.15; white-space: normal; }
+.onebox-mascot-action-row-interactions .onebox-mascot-action-label { min-width: 0; overflow: hidden; overflow-wrap: anywhere; text-align: center; }
 .onebox-mascot-action-row-interactions .onebox-mascot-action-icon { width: 13px; height: 13px; flex-basis: 13px; }
 .onebox-mascot-action-row-interactions .onebox-mascot-action-icon svg { width: 13px; height: 13px; }
 .onebox-mascot-cloud-actions button { display: inline-flex; flex: 0 0 auto; min-width: 0; align-items: center; justify-content: flex-start; gap: 4px; padding: 7px 7px; border: 1px solid var(--line); border-radius: 12px; background: color-mix(in srgb, var(--primary) 8%, transparent); color: var(--ink); cursor: pointer; font: inherit; font-size: 10px; line-height: 1.1; white-space: nowrap; }
@@ -8827,6 +8828,8 @@ html.ios-safari-browser.reader-focus.reader-safari-surface .reader-reference-she
   .onebox-mascot-panel { bottom: calc(100% + 9px); width: min(278px, calc(100vw - 20px)); }
   .onebox-mascot-cloud { padding: 15px 14px 13px; }
   .onebox-mascot-cloud-actions button { gap: 2px; padding: 6px 2px; font-size: 9px; }
+  .onebox-mascot-action-row-interactions { gap: 3px; }
+  .onebox-mascot-action-row-interactions button { min-height: 33px; padding: 4px 1px; font-size: 8px; }
   .onebox-mascot-action-icon { width: 14px; height: 14px; flex-basis: 14px; }
   .onebox-mascot-action-icon svg { width: 14px; height: 14px; }
   .onebox-mascot-speech { bottom: calc(100% + 8px); max-width: min(210px, calc(100vw - 20px)); }
