@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.266';
+const APP_VERSION = '2.18.267';
 // The OAuth secret stays in the Cloudflare Worker. The browser only knows the
 // public client id and receives the authorization result in the URL fragment,
 // which is consumed immediately and never sent to a server.
@@ -325,7 +325,7 @@ function normalizeDevTools(value) {
   const records = Object.fromEntries(DEV_TOOL_IDS.map((id) => [id, Array.isArray(sourceRecords[id]) ? sourceRecords[id].filter((item) => item && item.id).slice(0, 24) : []]));
   return {
     active: DEV_TOOL_IDS.includes(source.active) ? source.active : DEV_TOOL_IDS[0],
-    formatInput: String(source.formatInput || ''), formatOutput: String(source.formatOutput || ''), formatStatus: String(source.formatStatus || ''), formatCompact: source.formatCompact === true, formatUnescape: source.formatUnescape !== false, formatCollapsed: Array.isArray(source.formatCollapsed) ? [...new Set(source.formatCollapsed.map((item) => String(item)))] : [],
+    fullscreen: source.fullscreen === true, formatInput: String(source.formatInput || ''), formatOutput: String(source.formatOutput || ''), formatStatus: String(source.formatStatus || ''), formatCompact: source.formatCompact === true, formatUnescape: source.formatUnescape !== false, formatCollapsed: Array.isArray(source.formatCollapsed) ? [...new Set(source.formatCollapsed.map((item) => String(item)))] : [],
     compareLeft: String(source.compareLeft || ''), compareRight: String(source.compareRight || ''), compareOutput: String(source.compareOutput || ''), compareStatus: String(source.compareStatus || ''),
     textInput: String(source.textInput || ''), textOutput: source.textOutput && typeof source.textOutput === 'object' ? source.textOutput : null,
     timestampMode: source.timestampMode === 'date' ? 'date' : 'timestamp', timestampUnit: source.timestampUnit === 'ms' ? 'ms' : 's', timestampValue: String(source.timestampValue || ''), timestampDate: String(source.timestampDate || ''), timestampOutput: String(source.timestampOutput || ''), timestampStatus: String(source.timestampStatus || ''),
@@ -5046,21 +5046,15 @@ function developerTool() {
   const modes = DEV_TOOL_IDS.map((id) => '<button type="button" class="dev-mode-tab ' + (state.devTools.active === id ? 'active' : '') + '" data-dev-mode="' + id + '">' + devModeLabel(id) + '</button>').join('');
   const mode = state.devTools.active;
   const content = mode === 'json-format' ? renderDeveloperJsonFormat() : mode === 'json-compare' ? renderDeveloperCompare() : mode === 'text-stats' ? renderDeveloperStats() : renderDeveloperTimestamp();
-  const fullscreen = '<button type="button" class="dev-fullscreen-button" data-dev-fullscreen aria-pressed="false" aria-label="' + escapeHtml(t('devFullscreen')) + '" title="' + escapeHtml(t('devFullscreen')) + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/></svg></button>';
-  return '<section class="dev-tools-page"><header class="dev-tools-head"><div><span class="section-kicker">TOOLBOX</span><h2>' + t('development') + '</h2><p>' + t('developmentDesc') + '</p></div><span class="dev-local-badge">' + (state.language === 'en' ? 'LOCAL' : '本地处理') + '</span></header><nav class="dev-mode-tabs" aria-label="' + escapeHtml(t('development')) + '">' + fullscreen + modes + '</nav><div class="dev-tools-body"><div class="dev-current-tool">' + content + '</div>' + devRecordPanel(mode) + '</div></section>';
+  const isFullscreen = state.devTools.fullscreen === true;
+  const fullscreen = '<button type="button" class="dev-fullscreen-button ' + (isFullscreen ? 'active' : '') + '" data-dev-fullscreen aria-pressed="' + String(isFullscreen) + '" aria-label="' + escapeHtml(t(isFullscreen ? 'devExitFullscreen' : 'devFullscreen')) + '" title="' + escapeHtml(t(isFullscreen ? 'devExitFullscreen' : 'devFullscreen')) + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="' + (isFullscreen ? 'M9 4H4v5M20 9V4h-5M15 20h5v-5M4 15v5h5' : 'M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5') + '"/></svg></button>';
+  return '<section class="dev-tools-page ' + (isFullscreen ? 'dev-is-fullscreen' : '') + '"><nav class="dev-mode-tabs" aria-label="' + escapeHtml(t('development')) + '">' + fullscreen + modes + '</nav><div class="dev-tools-body"><div class="dev-current-tool">' + content + '</div>' + devRecordPanel(mode) + '</div></section>';
 }
 function toggleDeveloperFullscreen(force) {
-  const page = $('.dev-tools-page');
-  if (!page) return;
-  const active = typeof force === 'boolean' ? force : !page.classList.contains('dev-is-fullscreen');
-  page.classList.toggle('dev-is-fullscreen', active);
-  document.body.classList.toggle('dev-tools-fullscreen', active);
-  const button = page.querySelector('[data-dev-fullscreen]');
-  if (button) {
-    button.setAttribute('aria-pressed', String(active));
-    button.setAttribute('aria-label', t(active ? 'devExitFullscreen' : 'devFullscreen'));
-    button.setAttribute('title', t(active ? 'devExitFullscreen' : 'devFullscreen'));
-  }
+  const active = typeof force === 'boolean' ? force : !state.devTools.fullscreen;
+  state.devTools.fullscreen = active;
+  saveDevTools();
+  render();
 }
 function runDeveloperAction(action, sourceEvent = null) {
   const dev = state.devTools;
@@ -5990,6 +5984,7 @@ function render() {
   const renderers = { calculator, dev: developerTool, calendar, weather, convert, translate: translateConvertView, reader, navigation: renderNavigation };
   workspace.dataset.tool = state.section === 'tools' ? state.tool : state.section;
   workspace.innerHTML = state.section === 'home' ? renderHome() : state.section === 'navigation' ? renderNavigation() : state.section === 'messages' ? renderMessages() : state.section === 'mine' ? renderMine() : (renderers[state.tool] || calculator)();
+  document.body.classList.toggle('dev-tools-fullscreen', state.section === 'tools' && state.tool === 'dev' && state.devTools.fullscreen === true);
   renderHomeSourceNav();
   document.documentElement.classList.toggle('reader-focus', state.section === 'tools' && state.tool === 'reader' && state.readerMode === 'reading' && state.readerImmersive);
   syncReaderSafariSurface();
@@ -7617,7 +7612,6 @@ window.addEventListener('scroll', () => {
 }, { passive: true });
 
 document.addEventListener('keydown', (event) => {
-  if (event.key === 'Escape' && $('.dev-tools-page.dev-is-fullscreen')) { toggleDeveloperFullscreen(false); return; }
   if (state.readerMode === 'reading' && !event.target.matches('input, textarea, select')) {
     if (event.key === 'ArrowLeft') { event.preventDefault(); turnReaderPage(-1); return; }
     if (event.key === 'ArrowRight') { event.preventDefault(); turnReaderPage(1); return; }
