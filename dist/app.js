@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.264';
+const APP_VERSION = '2.18.265';
 // The OAuth secret stays in the Cloudflare Worker. The browser only knows the
 // public client id and receives the authorization result in the URL fragment,
 // which is consumed immediately and never sent to a server.
@@ -15,6 +15,7 @@ const STORAGE = {
   language: 'onebox.language',
   toolOrder: 'onebox.tool-order',
   calculator: 'onebox.calculator',
+  devTools: 'onebox.dev-tools',
   translationHistoryOpen: 'onebox.translation-history-open',
   events: 'onebox.events',
   holidays: 'onebox.holidays',
@@ -49,6 +50,7 @@ const STORAGE = {
 };
 const TOOL_DEFS = {
   calculator: { icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="3"/><path d="M8 7h8M8 11h.01M12 11h.01M16 11h.01M8 15h.01M12 15h.01M16 15h.01M8 18h8"/></svg>', key: 'calculator' },
+  dev: { icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 8-4 4 4 4M16 8l4 4-4 4M13 5l-2 14"/></svg>', key: 'development' },
   calendar: { icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="16" rx="3"/><path d="M8 3v4M16 3v4M4 9h16M8 13h.01M12 13h.01M16 13h.01M8 17h.01M12 17h.01M16 17h.01"/></svg>', key: 'calendar' },
   weather: { icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.5"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>', key: 'weather' },
   translate: { icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 18 8 6l4 12M5.5 14h5M14 8h6M17 5v3M14 16h6M17 13v3"/></svg>', key: 'convert' },
@@ -196,13 +198,14 @@ const toast = (message, kind = 'info') => {
 
 const DICT = {
   zh: {
-    calculator: '计算', calendar: '日历', weather: '天气', convert: '转换', unitConvert: '换算', translate: '翻译', translateConvert: '转换', reader: '阅读',
+    calculator: '计算', development: '开发', calendar: '日历', weather: '天气', convert: '转换', unitConvert: '换算', translate: '翻译', translateConvert: '转换', reader: '阅读',
     online: '在线', offline: '离线', install: '安装应用', settings: '设置', notifications: '消息提示',
     heroSubtitle: '快速、清爽、可离线。你的数据优先保存在当前设备。',
     calculatorDesc: '支持括号、百分比、科学函数和键盘输入，并自动保留最近计算记录。',
     calendarDesc: '公历、农历、节气、节假日、补班和个人日程集中查看。',
     weatherDesc: '搜索区县，查看实时、小时级和未来 15 天天气趋势。',
     convertDesc: '常用单位换算',
+    developmentDesc: 'JSON、文本和时间工具，记录保存在本机。', devJsonFormat: 'JSON 格式化', devJsonCompare: 'JSON 对比', devTextStats: '文本统计', devTimestamp: '时间戳', devInput: '输入', devOutput: '输出', devFormat: '格式化', devMinify: '压缩', devCompare: '开始对比', devAnalyze: '统计文本', devConvert: '转换时间', devSaveRecord: '保存记录', devClear: '清空', devCopy: '复制结果', devExample: '示例', devRecords: '历史记录', devNoRecords: '还没有记录', devReuseHint: '点击记录即可复用', devJsonA: 'JSON A', devJsonB: 'JSON B', devValid: 'JSON 有效', devInvalid: 'JSON 格式有误', devSame: '两份 JSON 相同', devDifferent: '发现 {count} 处差异', devCharacters: '字符', devNonSpace: '非空格字符', devLines: '行数', devChinese: '中文字符', devWords: '单词', devParagraphs: '段落', devTimestampToDate: '时间戳 → 日期', devDateToTimestamp: '日期 → 时间戳', devSeconds: '秒', devMilliseconds: '毫秒', devNow: '当前时间',
     translateDesc: '快速翻译，结果保存在本机',
     recentCalculations: '最近计算', clear: '清除', ready: '完成的计算会显示在这里。',
     scientific: '科学计算', collapse: '收起', expand: '展开', degree: '度', radian: '弧度',
@@ -240,13 +243,14 @@ const DICT = {
     bookshelf: '书架', addBook: '添加文档', noBooks: '还没有本地文档。', readerHint: '支持 Markdown、TXT、PDF、EPUB；文档仅保存在当前设备。', openBook: '打开阅读', deleteBook: '删除文档', annotations: '笔记', readerComments: '笔记', readerNotesHint: '已保存的阅读笔记', addAnnotation: '笔记', annotationPlaceholder: '添加你的感受…', saveAnnotation: '保存', annotationHint: '选择文字后长按或点击笔记按钮。', noAnnotations: '还没有笔记。', reading: '正在阅读', closeReader: '关闭阅读', unsupportedFile: '请选择 .md、.markdown、.txt、.pdf 或 .epub 文件。', importFailed: '文档读取失败，请重试。', deleteConfirm: '确定删除这本文档吗？', pdfHint: 'PDF 使用浏览器原生阅读器打开。', epubHint: 'EPUB 已转换为适合 OneBox 的阅读视图。', readerContents: '目录', readerSettings: '阅读设置', readerReadingMethod: '阅读方式', readerTheme: '阅读背景', readerThemePaper: '纸张', readerThemeSepia: '墨水屏', readerThemeGreen: '护眼绿', readerThemeDark: '夜间', readerFontSize: '字号', readerFontFamily: '字体', readerLineHeight: '行距', readerParagraphSpacing: '段落间距', readerLetterSpacing: '字间距', readerAnimation: '翻页动画', readerAnimationSlide: '滑动', readerAnimationCover: '覆盖', readerAnimationNone: '无', readerScroll: '上下滚动', readerPages: '模拟翻页', readerProgress: '进度', readerFullscreen: '全屏', readerExitFullscreen: '退出全屏', readerFullscreenOnOpen: '是否全屏', readerFullscreenOnOpenHint: '下次打开文档时按此设置进入', readerNoContents: '暂无章节目录。', readerSettingsHint: '设置仅作用于当前设备上的阅读内容。', readerTocHint: '选择章节后跳转到对应位置。',
   },
   en: {
-    calculator: 'Calculator', calendar: 'Calendar', weather: 'Weather', convert: 'Convert', unitConvert: 'Convert', translate: 'Translate', translateConvert: 'Convert', reader: 'Reader',
+    calculator: 'Calculator', development: 'Dev', calendar: 'Calendar', weather: 'Weather', convert: 'Convert', unitConvert: 'Convert', translate: 'Translate', translateConvert: 'Convert', reader: 'Reader',
     online: 'Online', offline: 'Offline', install: 'Install', settings: 'Settings', notifications: 'Notifications',
     heroSubtitle: 'Fast, calm and offline-ready. Your data stays on this device first.',
     calculatorDesc: 'Parentheses, percentages, scientific functions, keyboard input and history.',
     calendarDesc: 'Gregorian, lunar, solar terms, holidays, make-up workdays and personal events.',
     weatherDesc: 'Search cities and districts for current, hourly and 15-day forecasts.',
     convertDesc: 'Common unit conversion',
+    developmentDesc: 'JSON, text and time tools with local history.', devJsonFormat: 'JSON format', devJsonCompare: 'JSON compare', devTextStats: 'Text stats', devTimestamp: 'Timestamp', devInput: 'Input', devOutput: 'Output', devFormat: 'Format', devMinify: 'Minify', devCompare: 'Compare', devAnalyze: 'Analyze text', devConvert: 'Convert', devSaveRecord: 'Save record', devClear: 'Clear', devCopy: 'Copy result', devExample: 'Example', devRecords: 'History', devNoRecords: 'No records yet', devReuseHint: 'Click a record to reuse it', devJsonA: 'JSON A', devJsonB: 'JSON B', devValid: 'Valid JSON', devInvalid: 'Invalid JSON', devSame: 'The two JSON values are identical', devDifferent: '{count} differences found', devCharacters: 'Characters', devNonSpace: 'Non-space', devLines: 'Lines', devChinese: 'Chinese', devWords: 'Words', devParagraphs: 'Paragraphs', devTimestampToDate: 'Timestamp → date', devDateToTimestamp: 'Date → timestamp', devSeconds: 'Seconds', devMilliseconds: 'Milliseconds', devNow: 'Now',
     translateDesc: 'Fast translation, saved locally',
     recentCalculations: 'Recent calculations', clear: 'Clear', ready: 'Completed calculations appear here.',
     scientific: 'Scientific', collapse: 'Hide', expand: 'Show', degree: 'DEG', radian: 'RAD',
@@ -296,6 +300,7 @@ const storedColor = localStorage.getItem(STORAGE.color);
 const storedColorExplicit = localStorage.getItem(STORAGE.colorExplicit) === 'true';
 const resolveLanguageMode = (mode) => mode === 'en' || mode === 'zh' ? mode : ((navigator.language || '').toLowerCase().startsWith('en') ? 'en' : 'zh');
 const storedCalculator = parseStored(STORAGE.calculator, { expr: '', history: [], historyOpen: false });
+const storedDevTools = parseStored(STORAGE.devTools, {}) || {};
 const storedTranslationHistoryOpen = parseStored(STORAGE.translationHistoryOpen, false) === true;
 const storedLibrary = parseStored(STORAGE.library, []);
 const storedReaderPreferences = parseStored(STORAGE.readerPreferences, {}) || {};
@@ -313,6 +318,21 @@ const storedFootprint = parseStored(STORAGE.footprint, true) !== false;
 const storedOpenMode = localStorage.getItem(STORAGE.openMode) || 'current';
 const storedMascotVisible = localStorage.getItem(STORAGE.mascotVisible) !== 'false';
 const storedMascotDisplayMode = localStorage.getItem(STORAGE.mascotDisplayMode) === 'full' ? 'full' : 'half';
+const DEV_TOOL_IDS = ['json-format', 'json-compare', 'text-stats', 'timestamp'];
+function normalizeDevTools(value) {
+  const source = value && typeof value === 'object' ? value : {};
+  const sourceRecords = source.records && typeof source.records === 'object' ? source.records : {};
+  const records = Object.fromEntries(DEV_TOOL_IDS.map((id) => [id, Array.isArray(sourceRecords[id]) ? sourceRecords[id].filter((item) => item && item.id).slice(0, 24) : []]));
+  return {
+    active: DEV_TOOL_IDS.includes(source.active) ? source.active : DEV_TOOL_IDS[0],
+    formatInput: String(source.formatInput || ''), formatOutput: String(source.formatOutput || ''), formatStatus: String(source.formatStatus || ''), formatCompact: source.formatCompact === true,
+    compareLeft: String(source.compareLeft || ''), compareRight: String(source.compareRight || ''), compareOutput: String(source.compareOutput || ''), compareStatus: String(source.compareStatus || ''),
+    textInput: String(source.textInput || ''), textOutput: source.textOutput && typeof source.textOutput === 'object' ? source.textOutput : null,
+    timestampMode: source.timestampMode === 'date' ? 'date' : 'timestamp', timestampUnit: source.timestampUnit === 'ms' ? 'ms' : 's', timestampValue: String(source.timestampValue || ''), timestampDate: String(source.timestampDate || ''), timestampOutput: String(source.timestampOutput || ''), timestampStatus: String(source.timestampStatus || ''),
+    records,
+  };
+}
+const initialDevTools = normalizeDevTools(storedDevTools);
 const PET_LEVELS = [
   { level: 1, minPoints: 0, name: { zh: '初识陪伴', en: 'New companion' } },
   { level: 2, minPoints: 30, name: { zh: '默契伙伴', en: 'Kindred friend' } },
@@ -529,7 +549,7 @@ const state = {
   layoutMode: storedLayout === 'classic' ? 'classic' : 'simple',
   toolOrder: initialToolOrder,
   calcExpr: storedCalculator.expr || '', calcHistory: Array.isArray(storedCalculator.history) ? storedCalculator.history : [],
-  calcJustEvaluated: false, calcInverse: false, calcHistoryOpen: storedCalculator.historyOpen === true, calcAngle: 'deg',
+  calcJustEvaluated: false, calcInverse: false, calcHistoryOpen: storedCalculator.historyOpen === true, calcAngle: 'deg', devTools: initialDevTools,
   month: new Date(today.getFullYear(), today.getMonth(), 1), selectedDate: dateKey(today),
   events: parseStored(STORAGE.events, {}) || {},
   weatherCards: initialWeatherCards.map((item) => ({ ...item, id: item.id || uid() })),
@@ -4856,6 +4876,163 @@ function weather() {
     '<div class="weather-section-heading"><h3 class="weather-section-title">' + t('hourly') + '</h3><p class="weather-data-note">' + escapeHtml(weatherDataNote) + '</p></div><div class="hourly-strip">' + hourly + '</div><h3 class="weather-section-title">' + t('advice') + '</h3><div class="advice-strip">' + advice + '</div><h3 class="weather-section-title">' + t('daily') + '</h3><div class="weather-days">' + days + '</div>';
 }
 
+// Developer tools ------------------------------------------------------------
+function saveDevTools() { saveStored(STORAGE.devTools, state.devTools); }
+function devRecordText(value, limit = 50000) { return String(value || '').slice(0, limit); }
+function addDevRecord(kind, record) {
+  const list = Array.isArray(state.devTools.records[kind]) ? state.devTools.records[kind] : [];
+  state.devTools.records[kind] = [{ id: uid(), at: Date.now(), ...record }, ...list].slice(0, 24);
+  saveDevTools();
+}
+function devModeLabel(mode) {
+  return mode === 'json-format' ? t('devJsonFormat') : mode === 'json-compare' ? t('devJsonCompare') : mode === 'text-stats' ? t('devTextStats') : t('devTimestamp');
+}
+function devRecordLabel(kind, item) {
+  const date = new Intl.DateTimeFormat(state.language === 'en' ? 'en-US' : 'zh-CN', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }).format(Number(item.at) || Date.now());
+  if (kind === 'json-format') return (item.compact ? t('devMinify') : t('devFormat')) + ' · ' + date;
+  if (kind === 'json-compare') return t('devJsonCompare') + ' · ' + date;
+  if (kind === 'text-stats') return t('devTextStats') + ' · ' + date;
+  return (item.mode === 'date' ? t('devDateToTimestamp') : t('devTimestampToDate')) + ' · ' + date;
+}
+function parseDeveloperJson(value) {
+  let source = String(value || '').trim();
+  source = source.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
+  const callback = source.match(/^[\w$]+\s*\(([\s\S]*)\)\s*;?$/);
+  if (callback) source = callback[1].trim();
+  let parsed = JSON.parse(source);
+  if (typeof parsed === 'string' && /^[\[{]/.test(parsed.trim())) parsed = JSON.parse(parsed);
+  return parsed;
+}
+function jsonValueLabel(value) {
+  if (value === undefined) return '∅';
+  const output = JSON.stringify(value);
+  return output === undefined ? String(value) : output;
+}
+function compareDeveloperJson(left, right, path = '$', changes = []) {
+  if (Object.is(left, right)) return changes;
+  const leftObject = left && typeof left === 'object'; const rightObject = right && typeof right === 'object';
+  if (leftObject && rightObject && Array.isArray(left) === Array.isArray(right)) {
+    const keys = Array.isArray(left) ? Array.from({ length: Math.max(left.length, right.length) }, (_, index) => index) : [...new Set([...Object.keys(left), ...Object.keys(right)])].sort();
+    keys.forEach((key) => compareDeveloperJson(left[key], right[key], Array.isArray(left) ? path + '[' + key + ']' : path + '.' + key, changes));
+    return changes;
+  }
+  changes.push({ path, before: jsonValueLabel(left), after: jsonValueLabel(right) });
+  return changes;
+}
+function formatDeveloperJson(value, compact = false) {
+  try {
+    const parsed = parseDeveloperJson(value);
+    return { ok: true, output: JSON.stringify(parsed, null, compact ? 0 : 2), message: t('devValid') };
+  } catch (error) {
+    return { ok: false, output: '', message: t('devInvalid') + (error?.message ? '：' + error.message : '') };
+  }
+}
+function developerTextStats(value) {
+  const text = String(value || '');
+  const characters = [...text].length;
+  const nonSpace = [...text].filter((item) => !/\s/u.test(item)).length;
+  const chinese = [...text].filter((item) => /[\u3400-\u9fff]/u.test(item)).length;
+  const words = text.trim() ? text.trim().split(/\s+/u).length : 0;
+  const lines = text ? text.split(/\r\n?|\n/u).length : 0;
+  const paragraphs = text.trim() ? text.trim().split(/\r?\n\s*\r?\n/u).length : 0;
+  return { characters, nonSpace, chinese, words, lines, paragraphs };
+}
+function developerTimestampResult() {
+  const dev = state.devTools;
+  if (dev.timestampMode === 'date') {
+    const date = new Date(dev.timestampDate || '');
+    if (!Number.isFinite(date.getTime())) return { ok: false, message: state.language === 'en' ? 'Enter a valid date and time.' : '请输入有效的日期和时间。', output: '' };
+    const seconds = Math.floor(date.getTime() / 1000);
+    return { ok: true, message: t('devDateToTimestamp'), output: seconds + ' s\n' + date.getTime() + ' ms' };
+  }
+  const raw = String(dev.timestampValue || '').trim();
+  const value = raw ? Number(raw) : Date.now() / (dev.timestampUnit === 'ms' ? 1 : 1000);
+  const milliseconds = dev.timestampUnit === 'ms' ? value : value * 1000;
+  const date = new Date(milliseconds);
+  if (!Number.isFinite(date.getTime())) return { ok: false, message: state.language === 'en' ? 'Enter a valid timestamp.' : '请输入有效的时间戳。', output: '' };
+  const formatted = new Intl.DateTimeFormat(state.language === 'en' ? 'en-US' : 'zh-CN', { dateStyle: 'medium', timeStyle: 'medium' }).format(date);
+  return { ok: true, message: t('devTimestampToDate'), output: formatted + '\n' + localDateTimeValue(date) };
+}
+function devActionButton(action, label, extra = '') { return '<button class="secondary dev-action" type="button" data-dev-action="' + action + '" ' + extra + '>' + label + '</button>'; }
+function devPaneHead(title, actions = '') { return '<div class="dev-pane-head"><h3>' + escapeHtml(title) + '</h3><div class="dev-pane-actions">' + actions + '</div></div>'; }
+function devStatus(message, error = false) { return message ? '<p class="dev-status ' + (error ? 'is-error' : 'is-success') + '">' + escapeHtml(message) + '</p>' : ''; }
+function devRecordPanel(kind) {
+  const records = state.devTools.records[kind] || [];
+  const list = records.length ? records.map((item) => '<button class="dev-record" type="button" data-dev-record-kind="' + kind + '" data-dev-record="' + escapeHtml(item.id) + '"><strong>' + escapeHtml(devRecordLabel(kind, item)) + '</strong><small>' + escapeHtml(kind === 'text-stats' ? String(item.text || '').replace(/\s+/g, ' ').slice(0, 44) : kind === 'json-compare' ? String(item.left || '').replace(/\s+/g, ' ').slice(0, 44) : kind === 'timestamp' ? String(item.output || '').split('\n')[0].slice(0, 44) : String(item.input || '').replace(/\s+/g, ' ').slice(0, 44)) + '</small></button>').join('') : '<p class="dev-history-empty">' + t('devNoRecords') + '</p>';
+  return '<aside class="dev-history-panel"><div class="dev-history-head"><div><h3>' + t('devRecords') + '</h3><p>' + t('devReuseHint') + '</p></div><span>' + records.length + '</span></div><div class="dev-record-list">' + list + '</div></aside>';
+}
+function renderDeveloperJsonFormat() {
+  const dev = state.devTools; const result = dev.formatOutput || '';
+  return '<div class="dev-workbench dev-json-format"><div class="dev-editor-grid">' +
+    '<section class="dev-pane">' + devPaneHead(t('devInput'), devActionButton('json-example', t('devExample')) + devActionButton('json-clear', t('devClear'))) + '<textarea class="dev-code-editor" data-dev-field="formatInput" spellcheck="false" placeholder="{\n  &quot;name&quot;: &quot;OneBox&quot;\n}">' + escapeHtml(dev.formatInput) + '</textarea></section>' +
+    '<section class="dev-pane dev-output-pane">' + devPaneHead(t('devOutput'), devActionButton('json-format', t('devFormat')) + devActionButton('json-minify', t('devMinify')) + devActionButton('dev-copy-output', t('devCopy'))) + '<textarea class="dev-code-editor" data-dev-field="formatOutput" readonly spellcheck="false" placeholder="' + escapeHtml(t('devOutput')) + '">' + escapeHtml(result) + '</textarea>' + devStatus(dev.formatStatus, dev.formatStatus.startsWith(t('devInvalid'))) + '</section>' +
+    '</div></div>';
+}
+function renderDeveloperCompare() {
+  const dev = state.devTools;
+  return '<div class="dev-workbench dev-json-compare"><div class="dev-compare-grid">' +
+    '<section class="dev-pane">' + devPaneHead(t('devJsonA'), devActionButton('json-a-example', t('devExample')) + devActionButton('json-a-clear', t('devClear'))) + '<textarea class="dev-code-editor" data-dev-field="compareLeft" spellcheck="false" placeholder="{ &quot;version&quot;: 1 }">' + escapeHtml(dev.compareLeft) + '</textarea></section>' +
+    '<section class="dev-pane">' + devPaneHead(t('devJsonB'), devActionButton('json-b-example', t('devExample')) + devActionButton('json-b-clear', t('devClear'))) + '<textarea class="dev-code-editor" data-dev-field="compareRight" spellcheck="false" placeholder="{ &quot;version&quot;: 2 }">' + escapeHtml(dev.compareRight) + '</textarea></section>' +
+    '</div><section class="dev-pane dev-compare-result">' + devPaneHead(t('devOutput'), devActionButton('json-compare', t('devCompare')) + devActionButton('dev-copy-output', t('devCopy'))) + '<pre class="dev-result-pre">' + escapeHtml(dev.compareOutput || t('devCompare')) + '</pre>' + devStatus(dev.compareStatus, dev.compareStatus.startsWith(t('devInvalid'))) + '</section></div>';
+}
+function renderDeveloperStats() {
+  const dev = state.devTools; const stats = dev.textOutput || developerTextStats(dev.textInput);
+  const cards = [['characters', t('devCharacters')], ['nonSpace', t('devNonSpace')], ['lines', t('devLines')], ['chinese', t('devChinese')], ['words', t('devWords')], ['paragraphs', t('devParagraphs')]].map(([key, label]) => '<div class="dev-stat-card"><strong>' + Number(stats[key] || 0).toLocaleString() + '</strong><span>' + label + '</span></div>').join('');
+  return '<div class="dev-workbench dev-text-stats"><div class="dev-editor-grid"><section class="dev-pane">' + devPaneHead(t('devInput'), devActionButton('text-clear', t('devClear'))) + '<textarea class="dev-text-editor" data-dev-field="textInput" spellcheck="true" placeholder="' + escapeHtml(state.language === 'en' ? 'Paste or type text here…' : '粘贴或输入文本…') + '">' + escapeHtml(dev.textInput) + '</textarea></section><section class="dev-pane dev-stats-pane">' + devPaneHead(t('devOutput'), devActionButton('text-analyze', t('devAnalyze'))) + '<div class="dev-stat-grid">' + cards + '</div></section></div></div>';
+}
+function renderDeveloperTimestamp() {
+  const dev = state.devTools;
+  const timestampMode = '<div class="dev-segmented"><button type="button" class="' + (dev.timestampMode === 'timestamp' ? 'active' : '') + '" data-dev-action="timestamp-mode" data-dev-value="timestamp">' + t('devTimestampToDate') + '</button><button type="button" class="' + (dev.timestampMode === 'date' ? 'active' : '') + '" data-dev-action="timestamp-mode" data-dev-value="date">' + t('devDateToTimestamp') + '</button></div>';
+  const input = dev.timestampMode === 'timestamp' ? '<div class="dev-timestamp-input-row"><input class="dev-plain-input" data-dev-field="timestampValue" inputmode="decimal" value="' + escapeHtml(dev.timestampValue) + '" placeholder="例如 1726905600"><select class="dev-plain-input" data-dev-field="timestampUnit"><option value="s" ' + (dev.timestampUnit === 's' ? 'selected' : '') + '>' + t('devSeconds') + '</option><option value="ms" ' + (dev.timestampUnit === 'ms' ? 'selected' : '') + '>' + t('devMilliseconds') + '</option></select></div>' : '<input class="dev-plain-input dev-date-input" data-dev-field="timestampDate" type="datetime-local" value="' + escapeHtml(dev.timestampDate) + '">';
+  return '<div class="dev-workbench dev-timestamp"><section class="dev-pane dev-timestamp-card">' + devPaneHead(t('devInput'), devActionButton('timestamp-now', t('devNow')) + devActionButton('timestamp-clear', t('devClear'))) + timestampMode + input + '<div class="dev-timestamp-actions">' + devActionButton('timestamp-convert', t('devConvert')) + '</div></section><section class="dev-pane dev-output-pane">' + devPaneHead(t('devOutput'), devActionButton('dev-copy-output', t('devCopy'))) + '<pre class="dev-result-pre">' + escapeHtml(dev.timestampOutput || t('devOutput')) + '</pre>' + devStatus(dev.timestampStatus, dev.timestampStatus.includes(state.language === 'en' ? 'valid' : '有效')) + '</section></div>';
+}
+function developerTool() {
+  const modes = DEV_TOOL_IDS.map((id) => '<button type="button" class="dev-mode-tab ' + (state.devTools.active === id ? 'active' : '') + '" data-dev-mode="' + id + '">' + devModeLabel(id) + '</button>').join('');
+  const mode = state.devTools.active;
+  const content = mode === 'json-format' ? renderDeveloperJsonFormat() : mode === 'json-compare' ? renderDeveloperCompare() : mode === 'text-stats' ? renderDeveloperStats() : renderDeveloperTimestamp();
+  return '<section class="dev-tools-page"><header class="dev-tools-head"><div><span class="section-kicker">TOOLBOX</span><h2>' + t('development') + '</h2><p>' + t('developmentDesc') + '</p></div><span class="dev-local-badge">' + (state.language === 'en' ? 'LOCAL' : '本地处理') + '</span></header><nav class="dev-mode-tabs" aria-label="' + escapeHtml(t('development')) + '">' + modes + '</nav><div class="dev-tools-body"><div class="dev-current-tool">' + content + '</div>' + devRecordPanel(mode) + '</div></section>';
+}
+function runDeveloperAction(action, sourceEvent = null) {
+  const dev = state.devTools;
+  if (action === 'json-example' || action === 'json-a-example' || action === 'json-b-example') {
+    const example = action === 'json-b-example' ? '{\n  "name": "OneBox",\n  "version": 2,\n  "features": ["calendar", "reader"]\n}' : '{\n  "name": "OneBox",\n  "version": 1,\n  "features": ["calendar"]\n}';
+    if (action === 'json-a-example') dev.compareLeft = example; else if (action === 'json-b-example') dev.compareRight = example; else dev.formatInput = example;
+  } else if (action === 'json-clear') dev.formatInput = '', dev.formatOutput = '', dev.formatStatus = '';
+  else if (action === 'json-a-clear') dev.compareLeft = '', dev.compareOutput = '', dev.compareStatus = '';
+  else if (action === 'json-b-clear') dev.compareRight = '', dev.compareOutput = '', dev.compareStatus = '';
+  else if (action === 'json-format' || action === 'json-minify') {
+    const compact = action === 'json-minify'; const result = formatDeveloperJson(dev.formatInput, compact); dev.formatCompact = compact; dev.formatOutput = result.output; dev.formatStatus = result.message;
+    if (result.ok) addDevRecord('json-format', { input: devRecordText(dev.formatInput), output: devRecordText(result.output), compact });
+  } else if (action === 'json-compare') {
+    try {
+      const left = parseDeveloperJson(dev.compareLeft); const right = parseDeveloperJson(dev.compareRight); const changes = compareDeveloperJson(left, right); dev.compareOutput = changes.length ? changes.map((item) => item.path + '\n− ' + item.before + '\n+ ' + item.after).join('\n\n') : '✓ ' + t('devSame'); dev.compareStatus = changes.length ? t('devDifferent').replace('{count}', changes.length) : t('devSame');
+      addDevRecord('json-compare', { left: devRecordText(dev.compareLeft), right: devRecordText(dev.compareRight), output: devRecordText(dev.compareOutput), status: dev.compareStatus });
+    } catch (error) { dev.compareOutput = ''; dev.compareStatus = t('devInvalid') + (error?.message ? '：' + error.message : ''); }
+  } else if (action === 'text-clear') dev.textInput = '', dev.textOutput = null;
+  else if (action === 'text-analyze') { dev.textOutput = developerTextStats(dev.textInput); addDevRecord('text-stats', { text: devRecordText(dev.textInput, 30000), output: dev.textOutput }); }
+  else if (action === 'timestamp-mode') dev.timestampMode = sourceEvent?.target?.closest?.('[data-dev-value]')?.dataset?.devValue || dev.timestampMode;
+  else if (action === 'timestamp-now') { if (dev.timestampMode === 'date') dev.timestampDate = localDateTimeValue(new Date()); else dev.timestampValue = String(dev.timestampUnit === 'ms' ? Date.now() : Math.floor(Date.now() / 1000)); }
+  else if (action === 'timestamp-clear') dev.timestampValue = '', dev.timestampDate = '', dev.timestampOutput = '', dev.timestampStatus = '';
+  else if (action === 'timestamp-convert') { const result = developerTimestampResult(); dev.timestampOutput = result.output; dev.timestampStatus = result.message; if (result.ok) addDevRecord('timestamp', { mode: dev.timestampMode, unit: dev.timestampUnit, value: dev.timestampValue, date: dev.timestampDate, output: devRecordText(result.output), status: result.message }); }
+  saveDevTools(); render();
+}
+function loadDeveloperRecord(kind, id) {
+  const record = (state.devTools.records[kind] || []).find((item) => item.id === id);
+  if (!record) return;
+  state.devTools.active = kind;
+  if (kind === 'json-format') Object.assign(state.devTools, { formatInput: record.input || '', formatOutput: record.output || '', formatCompact: record.compact === true, formatStatus: t('devValid') });
+  if (kind === 'json-compare') Object.assign(state.devTools, { compareLeft: record.left || '', compareRight: record.right || '', compareOutput: record.output || '', compareStatus: record.status || '' });
+  if (kind === 'text-stats') Object.assign(state.devTools, { textInput: record.text || '', textOutput: record.output || null });
+  if (kind === 'timestamp') Object.assign(state.devTools, { timestampMode: record.mode === 'date' ? 'date' : 'timestamp', timestampUnit: record.unit === 'ms' ? 'ms' : 's', timestampValue: record.value || '', timestampDate: record.date || '', timestampOutput: record.output || '', timestampStatus: record.status || '' });
+  saveDevTools(); render();
+}
+function developerCopyOutput() {
+  const dev = state.devTools;
+  const output = dev.active === 'json-format' ? dev.formatOutput : dev.active === 'json-compare' ? dev.compareOutput : dev.active === 'timestamp' ? dev.timestampOutput : JSON.stringify(dev.textOutput || developerTextStats(dev.textInput), null, 2);
+  if (!output) return toast(state.language === 'en' ? 'There is no result to copy yet.' : '还没有可复制的结果。', 'error');
+  navigator.clipboard?.writeText(output).then(() => toast(t('copied'))).catch(() => toast(state.language === 'en' ? 'Clipboard access was denied' : '浏览器不允许访问剪贴板，请手动复制', 'error'));
+}
+
 // Converter ------------------------------------------------------------------
 const units = {
   length: { name: '长度 / Length', units: [['米', 'm', 1], ['千米', 'km', 1000], ['厘米', 'cm', .01], ['毫米', 'mm', .001], ['微米', 'μm', 1e-6], ['纳米', 'nm', 1e-9], ['英寸', 'in', .0254], ['英尺', 'ft', .3048], ['码', 'yd', .9144], ['英里', 'mi', 1609.344], ['海里', 'nmi', 1852]] },
@@ -5408,6 +5585,7 @@ async function githubDownload() {
     const remote = JSON.parse(content);
     updateGithubSync(mode, 67, githubSyncLabel(mode, 'restore'));
     applyRemoteStorageSnapshot(remote.storage);
+    state.devTools = normalizeDevTools(parseStored(STORAGE.devTools, {}));
     await restoreReaderSyncAssets(remote, gist);
     if (['light', 'dark', 'dark-gray', 'system'].includes(remote.theme)) state.theme = remote.theme;
     if (['mono', 'purple', 'blue', 'green', 'yellow'].includes(remote.color)) { state.color = remote.color; saveColorPreference(); }
@@ -5739,7 +5917,7 @@ function render() {
   applyLanguage();
   if (state.section === 'home') loadHomeFeeds();
   nav.hidden = state.section !== 'tools';
-  const renderers = { calculator, calendar, weather, convert, translate: translateConvertView, reader, navigation: renderNavigation };
+  const renderers = { calculator, dev: developerTool, calendar, weather, convert, translate: translateConvertView, reader, navigation: renderNavigation };
   workspace.dataset.tool = state.section === 'tools' ? state.tool : state.section;
   workspace.innerHTML = state.section === 'home' ? renderHome() : state.section === 'navigation' ? renderNavigation() : state.section === 'messages' ? renderMessages() : state.section === 'mine' ? renderMine() : (renderers[state.tool] || calculator)();
   renderHomeSourceNav();
@@ -6308,7 +6486,7 @@ function pageSwipeMarkup(item) {
   }
   const previousTool = state.tool;
   state.tool = item.id;
-  const renderers = { calculator, calendar, weather, convert, translate: translateConvertView, reader, navigation: renderNavigation };
+  const renderers = { calculator, dev: developerTool, calendar, weather, convert, translate: translateConvertView, reader, navigation: renderNavigation };
   const markup = (renderers[item.id] || calculator)();
   state.tool = previousTool;
   return { tool: item.id, markup };
@@ -6870,6 +7048,12 @@ workspace.addEventListener('click', async (event) => {
   if (section) return selectSection(section.dataset.section);
   const homeTool = event.target.closest('[data-home-tool]');
   if (homeTool) return selectTool(homeTool.dataset.homeTool);
+  const devMode = event.target.closest('[data-dev-mode]');
+  if (devMode) { state.devTools.active = DEV_TOOL_IDS.includes(devMode.dataset.devMode) ? devMode.dataset.devMode : DEV_TOOL_IDS[0]; saveDevTools(); return render(); }
+  const devRecord = event.target.closest('[data-dev-record]');
+  if (devRecord) return loadDeveloperRecord(devRecord.dataset.devRecordKind, devRecord.dataset.devRecord);
+  const devAction = event.target.closest('[data-dev-action]');
+  if (devAction) { if (devAction.dataset.devAction === 'dev-copy-output') return developerCopyOutput(); return runDeveloperAction(devAction.dataset.devAction, event); }
   if (event.target.closest('[data-open-navigation-settings]')) {
     state.navigationSettingsOpen = !state.navigationSettingsOpen;
     clearNavigationActionCards();
@@ -7134,10 +7318,12 @@ workspace.addEventListener('dblclick', (event) => {
   if (day && state.section === 'tools' && state.tool === 'calendar') { event.preventDefault(); renderLunarDialog(day.dataset.date); }
 });
 workspace.addEventListener('input', (event) => {
+  if (event.target.dataset.devField) { state.devTools[event.target.dataset.devField] = event.target.value; saveDevTools(); }
   if (event.target.id === 'conversionValue') { conversion.value = event.target.value; const output = $('.conversion-result strong'); if (output) output.textContent = formatNumber(convertedValue()); }
   if (event.target.id === 'translationInput') state.translation.input = event.target.value;
 });
 workspace.addEventListener('change', (event) => {
+  if (event.target.dataset.devField) { state.devTools[event.target.dataset.devField] = event.target.value; saveDevTools(); if (event.target.dataset.devField === 'timestampUnit') render(); }
   if (event.target.id === 'readerFileInput') { importReaderFiles(event.target.files); return; }
   if (event.target.id === 'conversionCategory') { conversion.category = event.target.value; conversion.from = 0; conversion.to = 1; return render(); }
   if (event.target.id === 'fromUnit') { conversion.from = Number(event.target.value); return render(); }
