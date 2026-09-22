@@ -9288,3 +9288,127 @@ body.dev-tools-fullscreen #workspace[data-tool="dev"] {
     border-radius: 18px;
   }
 }
+
+/* 2.18.271: complete the desktop pass for the remaining sections. The
+   desktop shell must grow with its content; otherwise the shared mobile
+   viewport frame creates a second scrollbar or leaves most of the screen
+   unused. Mobile sizing rules above remain unchanged. */
+@media (min-width: 761px) {
+  body:has(#workspace[data-tool="calculator"]),
+  body:has(#workspace[data-tool="reader"]),
+  body:has(#workspace[data-tool="translate"]),
+  body:has(#workspace[data-tool="messages"]),
+  body:has(#workspace[data-tool="mine"]) {
+    overflow: auto;
+  }
+
+  main:has(#workspace[data-tool="calculator"]),
+  main:has(#workspace[data-tool="reader"]),
+  main:has(#workspace[data-tool="translate"]),
+  main:has(#workspace[data-tool="messages"]),
+  main:has(#workspace[data-tool="mine"]) {
+    height: auto;
+    min-height: 100dvh;
+    max-height: none;
+    overflow: visible;
+    overflow-x: clip;
+    overflow-y: visible;
+    padding-bottom: 24px;
+  }
+
+  #pageSwipeStage:has(> #workspace[data-tool="calculator"]),
+  #pageSwipeStage:has(> #workspace[data-tool="reader"]),
+  #pageSwipeStage:has(> #workspace[data-tool="translate"]),
+  #pageSwipeStage:has(> #workspace[data-tool="messages"]),
+  #pageSwipeStage:has(> #workspace[data-tool="mine"]) {
+    min-height: 0;
+    height: auto;
+  }
+
+  #workspace[data-tool="calculator"],
+  #workspace[data-tool="reader"],
+  #workspace[data-tool="translate"],
+  #workspace[data-tool="messages"],
+  #workspace[data-tool="mine"] {
+    height: auto;
+    min-height: 0;
+    max-height: none;
+    overflow: visible;
+  }
+
+  /* Calculator: use the desktop width for the keypad instead of keeping the
+     phone-sized 680px island centered inside a much larger surface. */
+  #workspace[data-tool="calculator"] .calculator-surface {
+    width: min(860px, 100%);
+    max-width: none;
+  }
+
+  #workspace[data-tool="calculator"] .display {
+    min-height: 126px;
+    padding: 15px 18px 16px;
+  }
+
+  #workspace[data-tool="calculator"] .expression {
+    min-height: 50px;
+    font-size: clamp(30px, 3.2vw, 42px);
+  }
+
+  #workspace[data-tool="calculator"] .calculator-keyboard {
+    margin-top: 14px;
+  }
+
+  #workspace[data-tool="calculator"] .calculator-grid {
+    gap: 11px;
+  }
+
+  #workspace[data-tool="calculator"] .calculator-grid .key {
+    min-height: 52px;
+    padding: 10px 6px;
+    font-size: 14px;
+  }
+
+  #workspace[data-tool="calculator"] .display-history-list:has(.empty) {
+    max-height: none;
+    overflow: visible;
+  }
+
+  /* Reading library: the book list/grid uses the complete desktop surface;
+     only an opened document gets its own reader viewport. */
+  #workspace[data-tool="reader"] .reader-library-view {
+    width: 100%;
+    min-height: 0;
+    padding: 24px 16px 48px;
+  }
+
+  #workspace[data-tool="reader"] .reader-book-grid {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 24px 18px;
+  }
+
+  /* Translation/conversion: let the outer page own vertical scrolling and
+     keep only genuine result/history areas scrollable when their content is
+     longer than their own panel. */
+  #workspace[data-tool="translate"] .translate-convert-page {
+    width: 100%;
+    min-height: 0;
+  }
+
+  #workspace[data-tool="translate"] .translation-result-pane .translation-result-current {
+    overflow: hidden;
+  }
+
+  #workspace[data-tool="translate"] .translation-result-pane .translation-history-list {
+    scrollbar-width: thin;
+  }
+
+  /* Messages and Mine were still using the mobile 680px content cap. */
+  #workspace[data-tool="messages"] .message-panel,
+  #workspace[data-tool="mine"] .mine-list {
+    width: 100%;
+    max-width: none;
+  }
+
+  #workspace[data-tool="messages"] .notification-list {
+    width: 100%;
+  }
+}
