@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.261';
+const APP_VERSION = '2.18.262';
 // The OAuth secret stays in the Cloudflare Worker. The browser only knows the
 // public client id and receives the authorization result in the URL fragment,
 // which is consumed immediately and never sent to a server.
@@ -68,12 +68,11 @@ const FEED_SOURCE_REGISTRY = [
   { id: 'bilibili', name: 'B站', badge: 'B', icon: 'icons/bilibili.ico?v=2.18.124', className: 'bilibili', mobileHost: 'm.bilibili.com', visibleByDefault: false, siteUrl: 'https://search.bilibili.com/all', fetchers: [{ kind: 'bilibili-hot', url: 'https://api.bilibili.com/x/web-interface/search/square?limit=30&platform=web' }, { kind: 'bilibili-hotword', url: 'https://s.search.bilibili.com/main/hotword' }] },
   { id: 'guancha', name: '风闻', badge: '风', icon: 'icons/guancha.png?v=2.18.124', className: 'guancha', mobileHost: 'user.guancha.cn', visibleByDefault: true, siteUrl: 'https://user.guancha.cn/main/index?s=fwdhsy', fetchers: [{ kind: 'guancha-fengwen', url: 'https://user.guancha.cn/main/index-list.json?page=1&order=1' }, { kind: 'guancha-fengwen', url: 'https://rsshub.app/guancha/topic/0/1' }] },
   { id: 'hupu', name: '虎扑', badge: '虎', icon: 'icons/hupu.ico?v=2.18.124', className: 'hupu', mobileHost: 'm.hupu.com', visibleByDefault: true, siteUrl: 'https://bbs.hupu.com/bxj', fetchers: [{ kind: 'hupu-bbs', url: 'https://bbs.hupu.com/bxj' }, { kind: 'hupu-bbs', url: 'https://bbs.hupu.com/topic-daily' }] },
-  { id: 'xiaohongshu', name: '红书', badge: '红', icon: 'https://www.xiaohongshu.com/favicon.ico?v=2.18.261', className: 'xiaohongshu', visibleByDefault: true, siteUrl: 'https://www.xiaohongshu.com/explore', fetchers: [{ kind: 'xiaohongshu-explore', url: 'https://www.xiaohongshu.com/explore' }, { kind: 'xiaohongshu-hotboard', url: 'https://uapis.cn/api/v1/misc/hotboard?type=xiaohongshu&limit=30', direct: true }] },
-  { id: 'douyin', name: '抖音', badge: '音', icon: 'https://www.douyin.com/favicon.ico?v=2.18.261', className: 'douyin', visibleByDefault: true, siteUrl: 'https://www.douyin.com/jingxuan', fetchers: [{ kind: 'douyin-hotboard', url: 'https://uapis.cn/api/v1/misc/hotboard?type=douyin&limit=30', direct: true }, { kind: 'douyin-jingxuan', url: 'https://www.douyin.com/jingxuan' }] },
+  { id: 'xiaohongshu', name: '红书', badge: '红', icon: 'https://www.xiaohongshu.com/favicon.ico?v=2.18.262', className: 'xiaohongshu', visibleByDefault: true, siteUrl: 'https://www.xiaohongshu.com/explore', fetchers: [{ kind: 'xiaohongshu-explore', url: 'https://www.xiaohongshu.com/explore' }, { kind: 'xiaohongshu-hotboard', url: 'https://uapis.cn/api/v1/misc/hotboard?type=xiaohongshu&limit=30', direct: true }] },
+  { id: 'douyin', name: '抖音', badge: '音', icon: 'https://www.douyin.com/favicon.ico?v=2.18.262', className: 'douyin', visibleByDefault: true, siteUrl: 'https://www.douyin.com/jingxuan', fetchers: [{ kind: 'douyin-hotboard', url: 'https://uapis.cn/api/v1/misc/hotboard?type=douyin&limit=30', direct: true }, { kind: 'douyin-jingxuan', url: 'https://www.douyin.com/jingxuan' }] },
 ];
 const RSS_SOURCES = FEED_SOURCE_REGISTRY.filter((source) => source.enabled !== false);
 const RSS_REFRESH_INTERVAL = 2 * 60 * 1000;
-const HOME_FEED_LOADING_GRACE_MS = 3500;
 const HOME_FEED_PENDING_LIMIT = 30;
 const RSS_RETENTION_MS = 2 * 24 * 60 * 60 * 1000;
 const RSS_MAX_ITEMS_PER_SOURCE = 60;
@@ -557,8 +556,6 @@ const state = {
   githubSync: { active: false, mode: '', progress: 0, message: '', error: '' },
 };
 const homeFeedRequests = new Map();
-const homeFeedLoadingSuppressed = new Set();
-const homeFeedLoadingTimers = new Map();
 function petText(key, values = {}) {
   return Object.entries(values).reduce((text, [name, value]) => text.replaceAll('{' + name + '}', String(value)), t(key));
 }
@@ -615,29 +612,10 @@ function homeFeedSourceRequesting(sourceId = state.homeFeed.active) {
 }
 function homeFeedHasRequests() { return homeFeedRequests.size > 0; }
 function syncHomeFeedLoading() {
-  state.homeFeed.loading = homeFeedSourceRequesting() && !homeFeedLoadingSuppressed.has(state.homeFeed.active);
-}
-function clearHomeFeedLoadingTimer(sourceId) {
-  const timer = homeFeedLoadingTimers.get(sourceId);
-  if (timer) clearTimeout(timer);
-  homeFeedLoadingTimers.delete(sourceId);
-}
-function renderHomeFeedRequestState(position = null) {
-  syncHomeFeedLoading();
-  if (state.section === 'home') {
-    const restorePosition = position || captureHomeFeedPosition();
-    render();
-    restoreHomeFeedPosition(restorePosition);
-  } else renderBottomNav();
-}
-function scheduleHomeFeedLoadingGrace(sourceId, requestToken) {
-  clearHomeFeedLoadingTimer(sourceId);
-  const timer = window.setTimeout(() => {
-    if (homeFeedRequests.get(sourceId) !== requestToken || !state.homeFeed.sources[sourceId]?.items?.length) return;
-    homeFeedLoadingSuppressed.add(sourceId);
-    if (state.homeFeed.active === sourceId) renderHomeFeedRequestState();
-  }, HOME_FEED_LOADING_GRACE_MS);
-  homeFeedLoadingTimers.set(sourceId, timer);
+  // Keep the indicator visible for the complete lifetime of the active
+  // request. Hiding it after a grace period made a later tab tap look inert
+  // while the original request was still running.
+  state.homeFeed.loading = homeFeedSourceRequesting();
 }
 if (storedHomeFeedVisibilityMigration < HOME_FEED_VISIBILITY_MIGRATION) {
   localStorage.setItem(STORAGE.homeFeedVisibilityMigration, String(HOME_FEED_VISIBILITY_MIGRATION));
@@ -920,12 +898,27 @@ function selectHomeFeedSource(sourceId) {
   if (!homeTabIds().includes(sourceId)) return;
   state.homeFeed.active = sourceId;
   saveActiveHomeFeedPreference();
-  syncHomeFeedLoading();
-  if (state.section === 'home') {
-    render();
-    requestAnimationFrame(() => focusActiveHomeFeedTab(true));
+  if (sourceId === 'footprint') {
+    syncHomeFeedLoading();
+    if (state.section === 'home') {
+      render();
+      requestAnimationFrame(() => focusActiveHomeFeedTab(true));
+    }
+    return undefined;
   }
-  if (sourceId !== 'footprint') return loadHomeFeeds(true, sourceId);
+  // A request may already be running from the initial load or background
+  // polling. Reuse it, but render immediately so a tap always acknowledges
+  // the refresh instead of appearing to do nothing and then updating later.
+  if (homeFeedRequests.has(sourceId)) {
+    syncHomeFeedLoading();
+    if (state.section === 'home') {
+      render();
+      requestAnimationFrame(() => focusActiveHomeFeedTab(true));
+    } else renderBottomNav();
+    return undefined;
+  }
+  loadHomeFeeds(true, sourceId);
+  if (state.section === 'home') requestAnimationFrame(() => focusActiveHomeFeedTab(true));
   return undefined;
 }
 
@@ -1385,8 +1378,6 @@ async function refreshHomeFeedSource(source, requestToken) {
     state.homeFeed.errors[source.id] = error;
   }
   homeFeedRequests.delete(source.id);
-  homeFeedLoadingSuppressed.delete(source.id);
-  clearHomeFeedLoadingTimer(source.id);
   state.homeFeed.hasNew = state.section === 'home' ? false : state.homeFeed.hasNew || discoveredNewItems;
   saveStored(STORAGE.homeFeeds, { cacheVersion: state.homeFeed.cacheVersion, updatedAt: state.homeFeed.updatedAt, newItems: state.homeFeed.newItems, newItemsPending: state.homeFeed.newItemsPending, sources: state.homeFeed.sources });
   syncHomeFeedLoading();
@@ -1411,10 +1402,8 @@ function loadHomeFeeds(force = false, sourceId = '') {
   sourcesToLoad.forEach((source) => {
     const requestToken = Symbol(source.id);
     homeFeedRequests.set(source.id, requestToken);
-    homeFeedLoadingSuppressed.delete(source.id);
     delete state.homeFeed.errors[source.id];
     delete state.homeFeed.stale[source.id];
-    if (state.homeFeed.sources[source.id]?.items?.length) scheduleHomeFeedLoadingGrace(source.id, requestToken);
   });
   syncHomeFeedLoading();
   if (state.section === 'home') { render(); restoreHomeFeedPosition(preservedPosition); }
@@ -1526,8 +1515,8 @@ const MASCOT_ASSETS = {
 };
 const MASCOT_DIRECTIONS = ['up-left', 'up', 'up-right', 'left', 'center', 'right', 'down-left', 'down', 'down-right'];
 const MASCOT_REACTIONS = ['blink', 'heart', 'sparkle', 'surprised', 'wink', 'bashful', 'sleepy', 'dizzy', 'delighted'];
-const MASCOT_FULL_BODY_MARKUP = '<img class="onebox-mascot-fullbody" src="icons/mascot-fox-full.png?v=2.18.261" alt="" draggable="false">';
-const MASCOT_FULL_BODY_REACTIONS = 'icons/mascot-fox-full-reactions.png?v=2.18.261';
+const MASCOT_FULL_BODY_MARKUP = '<img class="onebox-mascot-fullbody" src="icons/mascot-fox-full.png?v=2.18.262" alt="" draggable="false">';
+const MASCOT_FULL_BODY_REACTIONS = 'icons/mascot-fox-full-reactions.png?v=2.18.262';
 const MASCOT_CLOCKWISE = ['right', 'down-right', 'down', 'down-left', 'left', 'up-left', 'up', 'up-right'];
 const MASCOT_SECTOR = (Math.PI * 2) / MASCOT_CLOCKWISE.length;
 const MASCOT_HYSTERESIS = 0.12;
@@ -7479,9 +7468,6 @@ window.addEventListener('pagehide', () => {
   // Do not let a request that was in flight before the page was hidden keep
   // the cached homepage in an endless loading state when iOS restores it.
   homeFeedRequests.clear();
-  homeFeedLoadingTimers.forEach((timer) => clearTimeout(timer));
-  homeFeedLoadingTimers.clear();
-  homeFeedLoadingSuppressed.clear();
   state.homeFeed.loading = false;
   clearFeedNavigationPending();
   flushReaderProgress(); clearTimeout(persistenceTimer); writePersistentSnapshot();
