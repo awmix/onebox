@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.271';
+const APP_VERSION = '2.18.272';
 // The OAuth secret stays in the Cloudflare Worker. The browser only knows the
 // public client id and receives the authorization result in the URL fragment,
 // which is consumed immediately and never sent to a server.
@@ -231,7 +231,7 @@ const DICT = {
     githubClientId: 'GitHub OAuth Client ID', githubClientHint: 'OneBox 已内置公开的授权标识，不需要手动配置。', githubDeveloperSettings: '打开 OAuth Apps 设置',
     githubBrowserFlowError: '无法打开 GitHub 授权页，请检查网络后重试。', githubAccessToken: 'GitHub 访问令牌', githubTokenHint: '仅将令牌保存在当前设备，并通过 GitHub API 验证；建议使用只包含 gist 权限的令牌。', githubUseToken: '使用访问令牌连接', githubTokenMissing: '请先填写 GitHub 访问令牌。', githubTokenInvalid: '访问令牌无效或没有可用权限。', githubTokenConnected: 'GitHub 已连接', githubWaiting: '等待 GitHub 授权…', githubCancel: '取消授权',
     githubSyncScopeTitle: '同步范围', githubSyncScope: '设置、工具顺序、导航、首页来源、日程、天气卡片、翻译记录、通知、阅读书架、阅读进度、笔记和已导入的本地书籍文件。', githubSyncPrivacy: 'GitHub 令牌不会上传；首页订阅内容、节假日和天气接口缓存属于网络缓存，不参与同步。', githubAuthHint: '点击连接后会跳转到 GitHub，完成授权后自动返回 OneBox。',
-    githubLogin: '连接 GitHub', githubLogout: '退出 GitHub', upload: '上传到 GitHub', download: '从 GitHub 恢复',
+    githubLogin: '连接 GitHub', githubLogout: '退出 GitHub', upload: '上传到 GitHub', download: '从 GitHub 恢复', githubSyncNotFound: '当前 GitHub 账号中没有找到 OneBox 同步数据，请先在另一台设备上传。', githubSyncInvalidData: 'GitHub 中的 OneBox 同步数据已损坏或版本不兼容。',
     githubConnected: '已连接', githubNotConnected: '尚未连接', openDevice: '打开验证页面',
     appUpdate: '应用更新', checkUpdate: '更新', updateAvailable: '发现有新版本', upToDate: '已是最新版', updating: '检查中', updateApplying: '更新中', updateCheckFailed: '检查失败，可重试', applyUpdate: '更新',
     notificationsPermission: '消息通知', enableNotifications: '允许通知', disableNotifications: '不允许通知', notificationDescription: 'iPhone 需要先将 OneBox 添加到主屏幕并允许消息通知；应用关闭后的后台提醒仍需要 Push 服务端。',
@@ -276,7 +276,7 @@ const DICT = {
     githubClientId: 'GitHub OAuth Client ID', githubClientHint: 'OneBox includes its public authorization identifier; no manual setup is required.', githubDeveloperSettings: 'Open OAuth Apps settings',
     githubBrowserFlowError: 'GitHub authorization could not be opened. Check your network and try again.', githubAccessToken: 'GitHub access token', githubTokenHint: 'The token is stored only on this device and verified through GitHub API. A token with gist permission is recommended.', githubUseToken: 'Connect with access token', githubTokenMissing: 'Enter a GitHub access token first.', githubTokenInvalid: 'The access token is invalid or lacks the required permission.', githubTokenConnected: 'GitHub connected', githubWaiting: 'Waiting for GitHub authorization…', githubCancel: 'Cancel authorization',
     githubSyncScopeTitle: 'Sync scope', githubSyncScope: 'Settings, tool order, navigation, home sources, events, weather cards, translation history, notifications, the reading shelf, reading progress, notes and imported local book files.', githubSyncPrivacy: 'The GitHub token is never uploaded. Home feeds, holidays and weather API caches are network caches and are not synced.', githubAuthHint: 'Connect to jump to GitHub; after approval you will return to OneBox automatically.',
-    githubLogin: 'Connect GitHub', githubLogout: 'Disconnect GitHub', upload: 'Upload to GitHub', download: 'Restore from GitHub',
+    githubLogin: 'Connect GitHub', githubLogout: 'Disconnect GitHub', upload: 'Upload to GitHub', download: 'Restore from GitHub', githubSyncNotFound: 'No OneBox sync data was found in this GitHub account. Upload from another device first.', githubSyncInvalidData: 'The OneBox sync data in GitHub is damaged or incompatible.',
     githubConnected: 'Connected', githubNotConnected: 'Not connected', openDevice: 'Open verification page',
     appUpdate: 'App update', checkUpdate: 'Update', updateAvailable: 'A new version is available', upToDate: 'Latest version', updating: 'Checking', updateApplying: 'Updating', updateCheckFailed: 'Check failed. Try again.', applyUpdate: 'Update',
     notificationsPermission: 'Message notifications', enableNotifications: 'Allow notifications', disableNotifications: 'Do not allow notifications', notificationDescription: 'On iPhone, add OneBox to the Home Screen and allow notifications first; background alerts after the app is closed still require a Push server.',
@@ -2598,7 +2598,7 @@ function renderPetDialog() {
   }).join('');
   const stats = state.language === 'en' ? (profile.stats.articles + ' articles · ' + profile.stats.books + ' books · ' + profile.stats.tools + ' tools') : ('文章 ' + profile.stats.articles + ' · 书籍 ' + profile.stats.books + ' · 工具 ' + profile.stats.tools);
   const progressLabel = next ? petText('petNextLevel', { points: Math.max(0, next.minPoints - profile.points) }) : petText('petMaxLevel');
-  dialog.innerHTML = '<div class="dialog-card pet-dialog-card" role="dialog" aria-modal="true"><div class="dialog-head pet-dialog-head"><div><h2>' + escapeHtml(t('mascot')) + '</h2><p>' + escapeHtml(t('petSocialTitle')) + '</p></div><button class="icon-btn small" data-close-pet aria-label="' + escapeHtml(t('close')) + '">×</button></div><div class="pet-dialog-body"><section class="pet-profile-card"><div class="pet-profile-avatar"><img src="' + petImage + '" alt=""><span>' + outfit.glyph + '</span></div><div class="pet-profile-copy"><strong>' + escapeHtml(petText('petLevel', { level: current.level, name: current.name[state.language] || current.name.zh })) + '</strong><p>' + escapeHtml(petText('petPoints', { points: profile.points })) + '</p><small>' + escapeHtml(petText('petOwner', { owner: petOwnerLabel() })) + '</small></div></section><section class="pet-progress-card"><div class="pet-progress-head"><strong>' + escapeHtml(petText('petPoints', { points: profile.points })) + '</strong><span>' + escapeHtml(progressLabel) + '</span></div><div class="pet-progress-track"><i style="width:' + progress.toFixed(1) + '%"></i></div><p>' + escapeHtml(t('petEarnHint')) + '</p><div class="pet-earn-list"><span>' + escapeHtml(t('petArticlePoints')) + '</span><span>' + escapeHtml(t('petBookPoints')) + '</span><span>' + escapeHtml(t('petToolPoints')) + '</span></div><small class="pet-stat-line">' + escapeHtml(stats) + '</small></section><section class="pet-settings-section"><h3>' + escapeHtml(t('petSettings')) + '</h3><div class="pet-setting-row"><span>' + escapeHtml(t('mascot')) + '</span><select id="petVisibility"><option value="show" ' + (state.mascotVisible ? 'selected' : '') + '>' + escapeHtml(t('showMascot')) + '</option><option value="hide" ' + (!state.mascotVisible ? 'selected' : '') + '>' + escapeHtml(t('hideMascot')) + '</option></select></div><div class="pet-setting-row"><span>' + escapeHtml(t('mascotDisplay')) + '</span><select id="petDisplayMode"><option value="half" ' + (state.mascotDisplayMode === 'half' ? 'selected' : '') + '>' + escapeHtml(t('mascotHalfBody')) + '</option><option value="full" ' + (state.mascotDisplayMode === 'full' ? 'selected' : '') + '>' + escapeHtml(t('mascotFullBody')) + '</option></select></div></section><section class="pet-outfits-section"><div class="pet-section-head"><h3>' + escapeHtml(t('petOutfits')) + '</h3><small>' + escapeHtml(petText('petLevel', { level: current.level, name: current.name[state.language] || current.name.zh })) + '</small></div><div class="pet-outfit-grid">' + outfitCards + '</div></section><section class="pet-unlocks-section"><div class="pet-section-head"><h3>' + escapeHtml(t('petInteractions')) + '</h3><small>' + escapeHtml(t('petEarnHint')) + '</small></div><div class="pet-unlock-list">' + interactionCards + '</div></section></div></div>';
+  dialog.innerHTML = '<div class="dialog-card pet-dialog-card" role="dialog" aria-modal="true"><div class="dialog-head pet-dialog-head"><div><h2>' + escapeHtml(t('mascot')) + '</h2></div><button class="icon-btn small" data-close-pet aria-label="' + escapeHtml(t('close')) + '">×</button></div><div class="pet-dialog-body"><section class="pet-profile-card"><div class="pet-profile-avatar"><img src="' + petImage + '" alt=""><span>' + outfit.glyph + '</span></div><div class="pet-profile-copy"><strong>' + escapeHtml(petText('petLevel', { level: current.level, name: current.name[state.language] || current.name.zh })) + '</strong><p>' + escapeHtml(petText('petPoints', { points: profile.points })) + '</p><small>' + escapeHtml(petText('petOwner', { owner: petOwnerLabel() })) + '</small></div></section><section class="pet-progress-card"><div class="pet-progress-head"><strong>' + escapeHtml(petText('petPoints', { points: profile.points })) + '</strong><span>' + escapeHtml(progressLabel) + '</span></div><div class="pet-progress-track"><i style="width:' + progress.toFixed(1) + '%"></i></div><p>' + escapeHtml(t('petEarnHint')) + '</p><div class="pet-earn-list"><span>' + escapeHtml(t('petArticlePoints')) + '</span><span>' + escapeHtml(t('petBookPoints')) + '</span><span>' + escapeHtml(t('petToolPoints')) + '</span></div><small class="pet-stat-line">' + escapeHtml(stats) + '</small></section><section class="pet-settings-section"><h3>' + escapeHtml(t('petSettings')) + '</h3><div class="pet-setting-row"><span>' + escapeHtml(t('mascot')) + '</span><select id="petVisibility"><option value="show" ' + (state.mascotVisible ? 'selected' : '') + '>' + escapeHtml(t('showMascot')) + '</option><option value="hide" ' + (!state.mascotVisible ? 'selected' : '') + '>' + escapeHtml(t('hideMascot')) + '</option></select></div><div class="pet-setting-row"><span>' + escapeHtml(t('mascotDisplay')) + '</span><select id="petDisplayMode"><option value="half" ' + (state.mascotDisplayMode === 'half' ? 'selected' : '') + '>' + escapeHtml(t('mascotHalfBody')) + '</option><option value="full" ' + (state.mascotDisplayMode === 'full' ? 'selected' : '') + '>' + escapeHtml(t('mascotFullBody')) + '</option></select></div></section><section class="pet-outfits-section"><div class="pet-section-head"><h3>' + escapeHtml(t('petOutfits')) + '</h3><small>' + escapeHtml(petText('petLevel', { level: current.level, name: current.name[state.language] || current.name.zh })) + '</small></div><div class="pet-outfit-grid">' + outfitCards + '</div></section><section class="pet-unlocks-section"><div class="pet-section-head"><h3>' + escapeHtml(t('petInteractions')) + '</h3><small>' + escapeHtml(t('petEarnHint')) + '</small></div><div class="pet-unlock-list">' + interactionCards + '</div></section></div></div>';
   dialog.hidden = false;
   state.petDialogOpen = true;
 }
@@ -5475,10 +5475,39 @@ async function buildGithubSyncBundle() {
   const payload = syncPayload(assets.manifest);
   return { payload, files: { 'onebox-settings.json': JSON.stringify(payload, null, 2), ...assets.files }, bookCount: Object.keys(assets.manifest.books).length };
 }
-function githubFileContent(file) {
-  if (!file) return Promise.resolve(null);
-  if (!file.truncated || !file.raw_url) return Promise.resolve(file.content || '');
-  return fetch(file.raw_url).then((response) => response.ok ? response.text() : null).catch(() => null);
+function githubAvatarUrl(user) {
+  const avatar = String(user?.avatar_url || '').trim();
+  if (/^https?:\/\//i.test(avatar)) return avatar;
+  const login = String(user?.login || '').trim();
+  return login ? 'https://github.com/' + encodeURIComponent(login) + '.png?size=64' : '';
+}
+function githubAvatarMarkup(user) {
+  const avatar = githubAvatarUrl(user);
+  return avatar ? '<img src="' + escapeHtml(avatar) + '" alt="" onerror="this.remove();this.parentElement.classList.add(\'is-fallback\')">' : '';
+}
+async function hydrateGithubUser() {
+  if (!state.github.token || state.github.user?.avatar_url) return;
+  try {
+    const response = await fetch('https://api.github.com/user', { headers: githubHeaders(), cache: 'no-store' });
+    if (!response.ok) return;
+    const user = await response.json();
+    if (!user?.login) return;
+    state.github.user = { ...state.github.user, ...user };
+    saveGithub();
+    if (state.githubDialogOpen && !$('#githubDialog')?.hidden) renderGithubDialog();
+  } catch { /* the login remains usable even when the avatar request is unavailable */ }
+}
+async function githubFileContent(file) {
+  if (!file) return null;
+  if (!file.truncated || !file.raw_url) return file.content || '';
+  try {
+    const authorized = await fetch(file.raw_url, { headers: githubHeaders(), cache: 'no-store' });
+    if (authorized.ok) return await authorized.text();
+  } catch { /* some raw GitHub hosts reject browser authorization headers */ }
+  try {
+    const raw = await fetch(file.raw_url, { cache: 'no-store' });
+    return raw.ok ? await raw.text() : null;
+  } catch { return null; }
 }
 function syncBase64Bytes(value) {
   const binary = atob(String(value || ''));
@@ -5528,7 +5557,7 @@ async function githubApiError(response, fallback = '') {
     message = data?.message || data?.error_description || data?.error || '';
   } catch { /* GitHub may return an empty or non-JSON error body. */ }
   const suffix = response?.status ? ' (' + response.status + ')' : '';
-  return Error(message || fallback || (state.language === 'en' ? 'GitHub request failed' : 'GitHub 请求失败') + suffix);
+  return Error((message || fallback || (state.language === 'en' ? 'GitHub request failed' : 'GitHub 请求失败')) + suffix);
 }
 function githubSyncLabel(mode, key) {
   const english = state.language === 'en';
@@ -5616,19 +5645,45 @@ async function githubUseAccessToken() {
     toast(error.message || t('githubTokenInvalid'), 'error');
   }
 }
+async function findGithubGist() {
+  if (state.github.gistId) {
+    const known = await fetch('https://api.github.com/gists/' + encodeURIComponent(state.github.gistId), { headers: githubHeaders(), cache: 'no-store' });
+    if (known.ok) {
+      const gist = await known.json();
+      if (gist.files?.['onebox-settings.json']) return gist;
+    } else if (![404, 410].includes(known.status)) {
+      throw await githubApiError(known, state.language === 'en' ? 'Could not access the saved OneBox Gist' : '无法访问已保存的 OneBox Gist');
+    }
+    state.github.gistId = '';
+    saveGithub();
+  }
+  for (let page = 1; page <= 10; page += 1) {
+    const response = await fetch('https://api.github.com/gists?per_page=100&page=' + page, { headers: githubHeaders(), cache: 'no-store' });
+    if (!response.ok) throw await githubApiError(response);
+    const gists = await response.json();
+    const found = gists.find((item) => item.description === 'OneBox settings sync' && item.files?.['onebox-settings.json']);
+    if (found) {
+      state.github.gistId = found.id;
+      saveGithub();
+      return found;
+    }
+    if (!Array.isArray(gists) || gists.length < 100) break;
+  }
+  return null;
+}
 async function findOrCreateGist(bundle = null, onProgress = null) {
-  if (state.github.gistId) return state.github.gistId;
   onProgress?.(42, githubSyncLabel('upload', 'gist'));
-  const response = await fetch('https://api.github.com/gists?per_page=100', { headers: githubHeaders() });
-  if (!response.ok) throw await githubApiError(response);
-  const gists = await response.json();
-  const found = gists.find((item) => item.description === 'OneBox settings sync' && item.files?.['onebox-settings.json']);
-  if (found) { state.github.gistId = found.id; saveGithub(); return found.id; }
+  const found = await findGithubGist();
+  if (found?.id) return found.id;
   const initialBundle = bundle || await buildGithubSyncBundle();
   onProgress?.(57, githubSyncLabel('upload', 'gist'));
   const created = await fetch('https://api.github.com/gists', { method: 'POST', headers: githubHeaders(), body: JSON.stringify({ description: 'OneBox settings sync', public: false, files: Object.fromEntries(Object.entries(initialBundle.files).map(([name, content]) => [name, { content }])) }) });
   if (!created.ok) throw await githubApiError(created);
-  const gist = await created.json(); state.github.gistId = gist.id; saveGithub(); return gist.id;
+  const gist = await created.json();
+  if (!gist.id) throw Error(state.language === 'en' ? 'GitHub did not return a Gist id' : 'GitHub 未返回 Gist 标识');
+  state.github.gistId = gist.id;
+  saveGithub();
+  return gist.id;
 }
 async function githubUpload() {
   if (!state.github.token) return toast(state.language === 'en' ? 'Connect GitHub first' : '请先连接 GitHub', 'error');
@@ -5663,13 +5718,15 @@ async function githubDownload() {
   updateGithubSync(mode, 5, githubSyncLabel(mode, 'preparing'));
   try {
     updateGithubSync(mode, 24, githubSyncLabel(mode, 'gist'));
-    const id = await findOrCreateGist();
+    const gist = await findGithubGist();
+    if (!gist?.id) throw Error(t('githubSyncNotFound'));
+    const id = gist.id;
     updateGithubSync(mode, 42, githubSyncLabel(mode, 'download'));
-    const response = await fetch('https://api.github.com/gists/' + id, { headers: githubHeaders() });
-    if (!response.ok) throw await githubApiError(response);
-    const gist = await response.json(); const content = await githubFileContent(gist.files?.['onebox-settings.json']);
-    if (!content) throw Error();
-    const remote = JSON.parse(content);
+    const content = await githubFileContent(gist.files?.['onebox-settings.json']);
+    if (!content) throw Error(t('githubSyncInvalidData'));
+    let remote;
+    try { remote = JSON.parse(content); } catch { throw Error(t('githubSyncInvalidData')); }
+    if (!remote || remote.app !== 'OneBox' || typeof remote.storage !== 'object') throw Error(t('githubSyncInvalidData'));
     updateGithubSync(mode, 67, githubSyncLabel(mode, 'restore'));
     applyRemoteStorageSnapshot(remote.storage);
     state.devTools = normalizeDevTools(parseStored(STORAGE.devTools, {}));
@@ -5738,7 +5795,7 @@ function renderGithubDialog() {
   const sync = state.githubSync || { active: false, mode: '', progress: 0, message: '', error: '' };
   const syncing = Boolean(sync.active);
   const account = connected
-    ? '<div class="github-status-card is-connected"><span class="github-status-icon github-avatar"><img src="' + escapeHtml(state.github.user.avatar_url || '') + '" alt="" onerror="this.hidden=true;this.parentElement.classList.add(\'is-fallback\')"></span><span class="github-status-copy"><strong>' + escapeHtml(state.github.user.login || 'GitHub') + '</strong><small>' + t('githubConnected') + '</small></span><span class="github-status-badge">✓</span></div>'
+    ? '<div class="github-status-card is-connected"><span class="github-status-icon github-avatar' + (githubAvatarUrl(state.github.user) ? '' : ' is-fallback') + '">' + githubAvatarMarkup(state.github.user) + '</span><span class="github-status-copy"><strong>' + escapeHtml(state.github.user.login || 'GitHub') + '</strong><small>' + t('githubConnected') + '</small></span><span class="github-status-badge">✓</span></div>'
     : '<div class="github-status-card"><span class="github-status-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 18h10a3.5 3.5 0 0 0 .5-6.96A5.5 5.5 0 0 0 7 9.5a4.25 4.25 0 0 0 0 8.5Z"/><path d="m12 12 2-2m-2 2-2-2m2 2v4"/></svg></span><span class="github-status-copy"><strong>' + t('githubNotConnected') + '</strong><small>' + t('githubNotConnectedHint') + '</small></span></div>';
   const waiting = Boolean(state.github.deviceCode);
   const code = state.github.userCode ? '<div class="device-code"><div><small>' + (state.language === 'en' ? 'Authorize OneBox in GitHub' : '请在 GitHub 中授权 OneBox') + '</small><strong>' + escapeHtml(state.github.userCode) + '</strong><small>' + escapeHtml(t('githubWaiting')) + '</small></div><a class="secondary github-device-link" href="' + escapeHtml(state.github.verificationUriComplete || state.github.verificationUri || 'https://github.com/login/device') + '" target="_blank" rel="noreferrer">' + t('openDevice') + '</a></div>' : '';
@@ -7884,6 +7941,7 @@ function bootApp() {
   mountMascot();
   setInterval(checkNotifications, 30000);
   applyLanguage(); renderNav(); render(); checkNotifications(); scheduleHomeFeedPolling(); loadHomeFeeds();
+  void hydrateGithubUser();
   setupServiceWorker();
   if (githubCallback?.token) toast(state.language === 'en' ? 'GitHub connected' : 'GitHub 已连接');
   else if (githubCallback?.error) toast(githubCallback.error === 'missing_worker_secret' ? (state.language === 'en' ? 'OAuth service is not configured yet' : 'OAuth 服务尚未配置完成') : (state.language === 'en' ? 'GitHub authorization failed' : 'GitHub 授权失败'), 'error');
