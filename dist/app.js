@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.279';
+const APP_VERSION = '2.18.280';
 // The OAuth secret stays in the Cloudflare Worker. The browser only knows the
 // public client id and receives the authorization result in the URL fragment,
 // which is consumed immediately and never sent to a server.
@@ -76,8 +76,8 @@ const FEED_SOURCE_REGISTRY = [
 const RSS_SOURCES = FEED_SOURCE_REGISTRY.filter((source) => source.enabled !== false);
 const RSS_REFRESH_INTERVAL = 2 * 60 * 1000;
 const HOME_FEED_PENDING_LIMIT = 30;
-const HOME_FEED_REQUEST_TIMEOUT_MS = 4500;
-const HOME_FEED_SOURCE_DEADLINE_MS = 5500;
+const HOME_FEED_REQUEST_TIMEOUT_MS = 2600;
+const HOME_FEED_SOURCE_DEADLINE_MS = 3000;
 const HOME_FEED_RENDER_LIMIT = 80;
 const RSS_RETENTION_MS = 7 * 24 * 60 * 60 * 1000;
 const RSS_MAX_ITEMS_PER_SOURCE = 120;
@@ -5625,11 +5625,56 @@ async function restoreReaderSyncAssets(remote, gist) {
 }
 function applyRemoteStorageSnapshot(remoteStorage) {
   if (!remoteStorage || typeof remoteStorage !== 'object') return;
+  const remoteKeys = new Set(Object.keys(remoteStorage).filter((key) => isSyncableStorageKey(key)));
+  for (let index = localStorage.length - 1; index >= 0; index -= 1) {
+    const key = localStorage.key(index);
+    if (isSyncableStorageKey(key) && !remoteKeys.has(key)) localStorage.removeItem(key);
+  }
   Object.entries(remoteStorage).forEach(([key, value]) => {
     if (isSyncableStorageKey(key) && typeof value === 'string') {
       try { localStorage.setItem(key, value); } catch { /* keep the rest of the restore usable */ }
     }
   });
+  queuePersistentSnapshot();
+}
+function hydrateCalculatorFromStorage() {
+  const calculator = parseStored(STORAGE.calculator, { expr: '', history: [], historyOpen: false });
+  state.calcExpr = String(calculator.expr || '');
+  state.calcHistory = Array.isArray(calculator.history) ? calculator.history : [];
+  state.calcHistoryOpen = calculator.historyOpen === true;
+}
+function hydrateGithubRuntimeState() {
+  hydrateCalculatorFromStorage();
+  state.devTools = normalizeDevTools(parseStored(STORAGE.devTools, {}));
+  state.events = parseStored(STORAGE.events, {}) || {};
+  const storedWeather = parseStored(STORAGE.weatherCards, []);
+  state.weatherCards = (Array.isArray(storedWeather) ? storedWeather : []).map((item) => ({ ...item, loading: false }));
+  state.activeWeatherId = state.weatherCards[0]?.id || null;
+  state.translationHistory = parseStored(STORAGE.translationHistory, []);
+  state.notifications = parseStored(STORAGE.notifications, []);
+  state.library = normalizeReaderLibrary(parseStored(STORAGE.library, []));
+  state.readerPreferences = { ...state.readerPreferences, ...(parseStored(STORAGE.readerPreferences, {}) || {}) };
+  state.readerLayout = localStorage.getItem(STORAGE.readerLayout) === 'list' ? 'list' : 'grid';
+  state.translationHistoryOpen = parseStored(STORAGE.translationHistoryOpen, false) === true;
+  state.homeFeedRead = parseStored(STORAGE.homeFeedRead, {}) || {};
+  state.layoutMode = localStorage.getItem(STORAGE.layout) === 'classic' ? 'classic' : 'simple';
+  const storedTopDisplay = parseStored(STORAGE.topDisplay, {}) || {};
+  state.topDisplay = { theme: storedTopDisplay.theme !== false, language: storedTopDisplay.language !== false, messages: storedTopDisplay.messages !== false };
+  state.homeFeed.order = normalizeHomeFeedOrder(parseStored(STORAGE.homeFeedOrder, state.homeFeed.order));
+  state.homeFeed.visible = normalizeHomeFeedVisibility(parseStored(STORAGE.homeFeedVisibility, state.homeFeed.visible));
+  state.navigation = normalizeNavigation(parseStored(STORAGE.navigation, state.navigation));
+  state.navigationLocation = localStorage.getItem(STORAGE.navigationLocation) === 'tools' ? 'tools' : 'main';
+  state.toolOrder = normalizeToolOrder(parseStored(STORAGE.toolOrder, state.toolOrder), state.navigationLocation === 'tools', state.navigationLocation === 'tools');
+  state.footprint = parseStored(STORAGE.footprint, true) !== false;
+  state.mascotVisible = localStorage.getItem(STORAGE.mascotVisible) !== 'false';
+  state.mascotDisplayMode = localStorage.getItem(STORAGE.mascotDisplayMode) === 'full' ? 'full' : 'half';
+  state.petProfile = normalizePetProfile(parseStored(STORAGE.petProfile, {}));
+  state.notificationPreference = parseStored(STORAGE.notificationPreference, 'allow') === 'deny' ? 'deny' : 'allow';
+  state.openMode = localStorage.getItem(STORAGE.openMode) === 'new-tab' ? 'new-tab' : 'current';
+  const activeTool = localStorage.getItem(STORAGE.toolActive);
+  if (Object.keys(TOOL_DEFS).includes(activeTool)) state.tool = activeTool;
+  const activeHomeFeed = localStorage.getItem(STORAGE.homeFeedActive);
+  if (activeHomeFeed && homeTabIds().includes(activeHomeFeed)) state.homeFeed.active = activeHomeFeed;
 }
 function githubBrowserError(error) {
   const message = String(error?.message || '');
@@ -5821,6 +5866,10 @@ async function githubUpload() {
     Object.keys(current.files || {}).filter((name) => name.startsWith('onebox-book-') && !Object.prototype.hasOwnProperty.call(bundle.files, name)).forEach((name) => { files[name] = null; });
     const response = await fetch('https://api.github.com/gists/' + id, { method: 'PATCH', headers: githubHeaders(), body: JSON.stringify({ files }) });
     if (!response.ok) throw await githubApiError(response);
+    const verified = await githubGistDetails({ id });
+    const verifiedContent = await githubFileContent(verified?.files?.['onebox-settings.json']);
+    const verifiedPayload = parseGithubSyncPayload(verifiedContent);
+    if (verifiedPayload?.savedAt !== bundle.payload.savedAt) throw Error(state.language === 'en' ? 'GitHub did not persist the latest OneBox data' : 'GitHub 没有保存最新的 OneBox 数据');
     finishGithubSync(mode, state.language === 'en' ? 'Upload complete' : '上传完成');
     toast(state.language === 'en' ? 'OneBox data uploaded to GitHub' : 'OneBox 数据已上传到 GitHub');
   } catch (error) {
@@ -5857,14 +5906,14 @@ async function githubDownload() {
     const id = gist.id;
     updateGithubSync(mode, 67, githubSyncLabel(mode, 'restore'));
     applyRemoteStorageSnapshot(remote.storage);
-    state.devTools = normalizeDevTools(parseStored(STORAGE.devTools, {}));
     await restoreReaderSyncAssets(remote, gist);
-    if (['light', 'dark', 'dark-gray', 'system'].includes(remote.theme)) state.theme = remote.theme;
+    if (['light', 'dark', 'dark-gray', 'system'].includes(remote.theme)) { state.theme = remote.theme; localStorage.setItem(STORAGE.theme, state.theme); }
     if (['mono', 'purple', 'blue', 'green', 'yellow'].includes(remote.color)) { state.color = remote.color; saveColorPreference(); }
-    if (remote.languageMode || remote.language) state.languageMode = ['zh', 'en', 'system'].includes(remote.languageMode || remote.language) ? (remote.languageMode || remote.language) : 'system';
+    if (remote.languageMode || remote.language) { state.languageMode = ['zh', 'en', 'system'].includes(remote.languageMode || remote.language) ? (remote.languageMode || remote.language) : 'system'; localStorage.setItem(STORAGE.language, state.languageMode); }
     const remoteNavigationLocation = remote.navigationLocation === 'tools' ? 'tools' : remote.navigationLocation === 'main' ? 'main' : null;
-    if (Array.isArray(remote.toolOrder)) state.toolOrder = normalizeToolOrder(remote.toolOrder, remoteNavigationLocation === 'tools', remoteNavigationLocation === 'tools');
+    if (Array.isArray(remote.toolOrder)) { state.toolOrder = normalizeToolOrder(remote.toolOrder, remoteNavigationLocation === 'tools', remoteNavigationLocation === 'tools'); saveToolOrder(); }
     if (remote.calculator) saveStored(STORAGE.calculator, remote.calculator);
+    hydrateCalculatorFromStorage();
     if (remote.events) { state.events = remote.events; saveEvents(); }
     if (Array.isArray(remote.weatherCards)) { state.weatherCards = remote.weatherCards; state.activeWeatherId = state.weatherCards[0]?.id || null; saveWeatherCards(); }
     if (Array.isArray(remote.translationHistory)) { state.translationHistory = remote.translationHistory; saveTranslationHistory(); }
@@ -5890,11 +5939,16 @@ async function githubDownload() {
     if (typeof remote.footprint === 'boolean') { state.footprint = remote.footprint; saveFootprintPreference(); }
     if (typeof remote.mascotVisible === 'boolean') { state.mascotVisible = remote.mascotVisible; saveMascotVisibility(); }
     if (remote.mascotDisplayMode === 'full' || remote.mascotDisplayMode === 'half') { state.mascotDisplayMode = remote.mascotDisplayMode; saveMascotDisplayMode(); }
-    if (remote.mascotPosition && Number.isFinite(Number(remote.mascotPosition.left)) && Number.isFinite(Number(remote.mascotPosition.top))) saveStored(STORAGE.mascotPosition, { left: Number(remote.mascotPosition.left), top: Number(remote.mascotPosition.top) });
+    if (remote.mascotPosition && Number.isFinite(Number(remote.mascotPosition.left)) && Number.isFinite(Number(remote.mascotPosition.top))) {
+      const position = { left: Number(remote.mascotPosition.left), top: Number(remote.mascotPosition.top) };
+      saveStored(STORAGE.mascotPosition, position);
+      if (mascotRuntime.root) mascotSetPosition(position.left, position.top, false);
+    }
     if (remote.petProfile && typeof remote.petProfile === 'object') { state.petProfile = normalizePetProfile(remote.petProfile); savePetProfile(); }
     if (remote.notificationPreference === 'deny' || remote.notificationPreference === 'allow') { state.notificationPreference = remote.notificationPreference; saveStored(STORAGE.notificationPreference, state.notificationPreference); }
     if (remote.openMode === 'new-tab' || remote.openMode === 'current') { state.openMode = remote.openMode; saveStored(STORAGE.openMode, state.openMode); }
-    state.github.gistId = id; saveGithub(); applyLanguage(); syncMascotDisplayMode(true); renderNav(); render();
+    hydrateGithubRuntimeState();
+    state.github.gistId = id; saveGithub(); applyLanguage(); syncMascotDisplayMode(true); syncMascotVisibility(); renderNav(); render();
     finishGithubSync(mode, state.language === 'en' ? 'Restore complete' : '恢复完成');
     toast(state.language === 'en' ? 'Settings restored from GitHub' : '已从 GitHub 恢复设置');
   } catch (error) {
