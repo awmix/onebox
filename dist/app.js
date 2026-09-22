@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.257';
+const APP_VERSION = '2.18.258';
 // The OAuth secret stays in the Cloudflare Worker. The browser only knows the
 // public client id and receives the authorization result in the URL fragment,
 // which is consumed immediately and never sent to a server.
@@ -27,10 +27,12 @@ const STORAGE = {
   readerLayout: 'onebox.reader-layout',
   homeFeeds: 'onebox.home-feeds',
   homeFeedRead: 'onebox.home-feed-read',
+  homeFeedActive: 'onebox.home-feed-active',
   homeFeedOrder: 'onebox.home-feed-order',
   homeFeedVisibility: 'onebox.home-feed-visibility',
   homeFeedVisibilityMigration: 'onebox.home-feed-visibility-migration',
   layout: 'onebox.layout',
+  toolActive: 'onebox.tool-active',
   notificationPreference: 'onebox.notification-preference',
   color: 'onebox.color',
   colorExplicit: 'onebox.color-explicit',
@@ -65,8 +67,8 @@ const FEED_SOURCE_REGISTRY = [
   { id: 'bilibili', name: 'B站', badge: 'B', icon: 'icons/bilibili.ico?v=2.18.124', className: 'bilibili', mobileHost: 'm.bilibili.com', visibleByDefault: false, siteUrl: 'https://search.bilibili.com/all', fetchers: [{ kind: 'bilibili-hot', url: 'https://api.bilibili.com/x/web-interface/search/square?limit=30&platform=web' }, { kind: 'bilibili-hotword', url: 'https://s.search.bilibili.com/main/hotword' }] },
   { id: 'guancha', name: '风闻', badge: '风', icon: 'icons/guancha.png?v=2.18.124', className: 'guancha', mobileHost: 'user.guancha.cn', visibleByDefault: true, siteUrl: 'https://user.guancha.cn/main/index?s=fwdhsy', fetchers: [{ kind: 'guancha-fengwen', url: 'https://user.guancha.cn/main/index-list.json?page=1&order=1' }, { kind: 'guancha-fengwen', url: 'https://rsshub.app/guancha/topic/0/1' }] },
   { id: 'hupu', name: '虎扑', badge: '虎', icon: 'icons/hupu.ico?v=2.18.124', className: 'hupu', mobileHost: 'm.hupu.com', visibleByDefault: true, siteUrl: 'https://bbs.hupu.com/bxj', fetchers: [{ kind: 'hupu-bbs', url: 'https://bbs.hupu.com/bxj' }, { kind: 'hupu-bbs', url: 'https://bbs.hupu.com/topic-daily' }] },
-  { id: 'xiaohongshu', name: '红书', badge: '红', icon: 'https://www.xiaohongshu.com/favicon.ico?v=2.18.257', className: 'xiaohongshu', visibleByDefault: true, siteUrl: 'https://www.xiaohongshu.com/explore', fetchers: [{ kind: 'xiaohongshu-explore', url: 'https://www.xiaohongshu.com/explore' }, { kind: 'xiaohongshu-hotboard', url: 'https://uapis.cn/api/v1/misc/hotboard?type=xiaohongshu&limit=30', direct: true }] },
-  { id: 'douyin', name: '抖音', badge: '音', icon: 'https://www.douyin.com/favicon.ico?v=2.18.257', className: 'douyin', visibleByDefault: true, siteUrl: 'https://www.douyin.com/jingxuan', fetchers: [{ kind: 'douyin-hotboard', url: 'https://uapis.cn/api/v1/misc/hotboard?type=douyin&limit=30', direct: true }, { kind: 'douyin-jingxuan', url: 'https://www.douyin.com/jingxuan' }] },
+  { id: 'xiaohongshu', name: '红书', badge: '红', icon: 'https://www.xiaohongshu.com/favicon.ico?v=2.18.258', className: 'xiaohongshu', visibleByDefault: true, siteUrl: 'https://www.xiaohongshu.com/explore', fetchers: [{ kind: 'xiaohongshu-explore', url: 'https://www.xiaohongshu.com/explore' }, { kind: 'xiaohongshu-hotboard', url: 'https://uapis.cn/api/v1/misc/hotboard?type=xiaohongshu&limit=30', direct: true }] },
+  { id: 'douyin', name: '抖音', badge: '音', icon: 'https://www.douyin.com/favicon.ico?v=2.18.258', className: 'douyin', visibleByDefault: true, siteUrl: 'https://www.douyin.com/jingxuan', fetchers: [{ kind: 'douyin-hotboard', url: 'https://uapis.cn/api/v1/misc/hotboard?type=douyin&limit=30', direct: true }, { kind: 'douyin-jingxuan', url: 'https://www.douyin.com/jingxuan' }] },
 ];
 const RSS_SOURCES = FEED_SOURCE_REGISTRY.filter((source) => source.enabled !== false);
 const RSS_REFRESH_INTERVAL = 2 * 60 * 1000;
@@ -299,6 +301,7 @@ const storedHomeFeeds = parseStored(STORAGE.homeFeeds, {}) || {};
 const storedHomeFeedRead = parseStored(STORAGE.homeFeedRead, {}) || {};
 const storedHomeFeedOrder = parseStored(STORAGE.homeFeedOrder, DEFAULT_HOME_FEED_ORDER);
 const storedHomeFeedVisibility = parseStored(STORAGE.homeFeedVisibility, null);
+const storedHomeFeedActive = localStorage.getItem(STORAGE.homeFeedActive) || '';
 const storedNavigation = parseStored(STORAGE.navigation, null);
 const storedNavigationLocation = localStorage.getItem(STORAGE.navigationLocation) === 'tools' ? 'tools' : 'main';
 const storedNotificationPreference = parseStored(STORAGE.notificationPreference, 'allow');
@@ -307,6 +310,7 @@ const storedFootprint = parseStored(STORAGE.footprint, true) !== false;
 const storedOpenMode = localStorage.getItem(STORAGE.openMode) || 'current';
 const storedMascotVisible = localStorage.getItem(STORAGE.mascotVisible) !== 'false';
 const storedMascotDisplayMode = localStorage.getItem(STORAGE.mascotDisplayMode) === 'full' ? 'full' : 'half';
+const storedToolActive = localStorage.getItem(STORAGE.toolActive) || '';
 const rawWeatherCards = parseStored(STORAGE.weatherCards, []);
 const legacyWeather = parseStored(STORAGE.legacyWeather, null);
 const normalizeToolOrder = (value, includeNavigation = false, navigationFirst = false) => {
@@ -332,6 +336,11 @@ const normalizeHomeFeedVisibility = (value) => {
   if (Array.isArray(value) && storedHomeFeedVisibilityMigration < 2 && !normalized.includes('douyin')) normalized.push('douyin');
   return normalized;
 };
+const initialToolOrder = normalizeToolOrder(parseStored(STORAGE.toolOrder, DEFAULT_TOOL_ORDER), storedNavigationLocation === 'tools', storedNavigationLocation === 'tools');
+const initialHomeFeedOrder = normalizeHomeFeedOrder(storedHomeFeedOrder);
+const initialHomeFeedVisible = normalizeHomeFeedVisibility(storedHomeFeedVisibility);
+const initialHomeFeedIds = [...(storedFootprint ? ['footprint'] : []), ...initialHomeFeedOrder.filter((id) => initialHomeFeedVisible.includes(id))];
+const initialHomeFeedActive = initialHomeFeedIds.includes(storedHomeFeedActive) ? storedHomeFeedActive : initialHomeFeedIds[0] || DEFAULT_HOME_FEED_ORDER[0];
 function navigationSafeUrl(value) {
   try {
     const url = new URL(String(value || '').trim());
@@ -454,7 +463,7 @@ const initialWeatherCards = (Array.isArray(rawWeatherCards) && rawWeatherCards.l
 })).filter((item, index, cards) => !item.isCurrentLocation || cards.findIndex((candidate) => candidate.isCurrentLocation) === index);
 const initialHash = location.hash.slice(1);
 const initialToolHash = initialHash === 'navigation' && storedNavigationLocation === 'tools' ? 'navigation' : initialHash === 'convert' ? 'translate' : initialHash;
-const initialTool = Object.keys(TOOL_DEFS).includes(initialToolHash) ? initialToolHash : 'calculator';
+const initialTool = Object.keys(TOOL_DEFS).includes(initialToolHash) ? initialToolHash : initialToolOrder.includes(storedToolActive) ? storedToolActive : initialToolOrder[0] || 'calculator';
 const initialSection = initialHash === 'navigation' && storedNavigationLocation === 'tools' ? 'tools' : ['home', 'navigation', 'messages', 'mine'].includes(initialHash) ? initialHash : Object.keys(TOOL_DEFS).includes(initialToolHash) ? 'tools' : 'home';
 const normalizeReaderLibrary = (value) => {
   const books = Array.isArray(value) ? value.filter((book) => book && book.id && book.name) : [];
@@ -475,7 +484,7 @@ const state = {
   languageMode: ['zh', 'en', 'system'].includes(storedLanguage) ? storedLanguage : 'system',
   language: resolveLanguageMode(storedLanguage),
   layoutMode: storedLayout === 'classic' ? 'classic' : 'simple',
-  toolOrder: normalizeToolOrder(parseStored(STORAGE.toolOrder, DEFAULT_TOOL_ORDER), storedNavigationLocation === 'tools', storedNavigationLocation === 'tools'),
+  toolOrder: initialToolOrder,
   calcExpr: storedCalculator.expr || '', calcHistory: Array.isArray(storedCalculator.history) ? storedCalculator.history : [],
   calcJustEvaluated: false, calcInverse: false, calcHistoryOpen: storedCalculator.historyOpen === true, calcAngle: 'deg',
   month: new Date(today.getFullYear(), today.getMonth(), 1), selectedDate: dateKey(today),
@@ -489,7 +498,7 @@ const state = {
   library: normalizeReaderLibrary(storedLibrary),
   readerBookId: null, readerUrl: '', readerAssetUrls: [], readerContent: '', readerHint: '', readerToc: [], readerDialog: '', readerChromeHidden: false, readerImmersive: false, readerMode: 'library', readerReadingMode: 'scroll', readerPage: 0, readerSelectedText: '', readerSelection: null, readerAnnotationDraft: null, readerSelectionInput: 'mouse', readerLayout: storedReaderLayout === 'list' ? 'list' : 'grid', annotationBookId: null,
   readerPreferences: { theme: ['paper', 'sepia', 'green', 'dark'].includes(storedReaderPreferences.theme) ? storedReaderPreferences.theme : 'paper', fontSize: Number.isFinite(Number(storedReaderPreferences.fontSize)) ? Math.min(26, Math.max(15, Number(storedReaderPreferences.fontSize))) : 18, fontFamily: ['system', 'serif', 'mono'].includes(storedReaderPreferences.fontFamily) ? storedReaderPreferences.fontFamily : 'system', lineHeight: Number.isFinite(Number(storedReaderPreferences.lineHeight)) ? Math.min(2.2, Math.max(1.35, Number(storedReaderPreferences.lineHeight))) : 1.8, paragraphSpacing: Number.isFinite(Number(storedReaderPreferences.paragraphSpacing)) ? Math.min(28, Math.max(6, Number(storedReaderPreferences.paragraphSpacing))) : 14, letterSpacing: Number.isFinite(Number(storedReaderPreferences.letterSpacing)) ? Math.min(2, Math.max(0, Number(storedReaderPreferences.letterSpacing))) : 0, pageAnimation: ['slide', 'none'].includes(storedReaderPreferences.pageAnimation) ? storedReaderPreferences.pageAnimation : 'slide', readingMode: storedReaderPreferences.readingMode === 'pages' ? 'pages' : 'scroll', fullscreenOnOpen: storedReaderPreferences.fullscreenOnOpen === true },
-  homeFeed: { active: storedFootprint ? 'footprint' : (DEFAULT_HOME_FEED_VISIBLE[0] || DEFAULT_HOME_FEED_ORDER[0]), order: normalizeHomeFeedOrder(storedHomeFeedOrder), visible: normalizeHomeFeedVisibility(storedHomeFeedVisibility), hasNew: false, loading: false, errors: {}, stale: {}, updatedAt: Number(storedHomeFeeds.updatedAt || 0), cacheVersion: storedHomeFeeds.cacheVersion || '', newItems: boundedHomeFeedIdMap(storedHomeFeeds.newItems, RSS_MAX_ITEMS_PER_SOURCE), newItemsPending: boundedHomeFeedIdMap(storedHomeFeeds.newItemsPending && typeof storedHomeFeeds.newItemsPending === 'object' ? storedHomeFeeds.newItemsPending : storedHomeFeeds.newItems), sources: storedHomeFeeds.sources && typeof storedHomeFeeds.sources === 'object' ? storedHomeFeeds.sources : {} },
+  homeFeed: { active: initialHomeFeedActive, order: initialHomeFeedOrder, visible: initialHomeFeedVisible, hasNew: false, loading: false, errors: {}, stale: {}, updatedAt: Number(storedHomeFeeds.updatedAt || 0), cacheVersion: storedHomeFeeds.cacheVersion || '', newItems: boundedHomeFeedIdMap(storedHomeFeeds.newItems, RSS_MAX_ITEMS_PER_SOURCE), newItemsPending: boundedHomeFeedIdMap(storedHomeFeeds.newItemsPending && typeof storedHomeFeeds.newItemsPending === 'object' ? storedHomeFeeds.newItemsPending : storedHomeFeeds.newItems), sources: storedHomeFeeds.sources && typeof storedHomeFeeds.sources === 'object' ? storedHomeFeeds.sources : {} },
   navigation: normalizeNavigation(storedNavigation), navigationLocation: storedNavigationLocation, navigationDialog: null, navigationFolderDraft: null, navigationSettingsOpen: false,
   homeFeedRead: storedHomeFeedRead && typeof storedHomeFeedRead === 'object' ? storedHomeFeedRead : {},
   notifications: parseStored(STORAGE.notifications, []), notificationOpen: false, settingsOpen: false, githubDialogOpen: false, recentReadingOpen: false,
@@ -737,6 +746,7 @@ function selectTool(id) {
   if (id === 'navigation') {
     state.section = 'tools';
     state.tool = 'navigation';
+    saveActiveToolPreference();
     if (location.hash.slice(1) !== 'navigation') history.replaceState(null, '', '#navigation');
     renderNav(); renderBottomNav(); render();
     revealActiveTab();
@@ -744,6 +754,7 @@ function selectTool(id) {
   }
   state.section = 'tools';
   state.tool = id;
+  saveActiveToolPreference();
   if (location.hash.slice(1) !== id) history.replaceState(null, '', '#' + id);
   renderNav(); renderBottomNav(); render();
   revealActiveTab();
@@ -759,6 +770,12 @@ function selectSection(section) {
   if (location.hash.slice(1) !== route) history.replaceState(null, '', '#' + route);
   if (unchanged) { renderBottomNav(); return; }
   renderNav(); renderBottomNav(); render();
+}
+function saveActiveToolPreference() {
+  try { localStorage.setItem(STORAGE.toolActive, state.tool); queuePersistentSnapshot(); } catch { /* private mode can deny storage */ }
+}
+function saveActiveHomeFeedPreference() {
+  try { localStorage.setItem(STORAGE.homeFeedActive, state.homeFeed.active); queuePersistentSnapshot(); } catch { /* private mode can deny storage */ }
 }
 function saveToolOrder() { saveStored(STORAGE.toolOrder, state.toolOrder); }
 function swapToolOrder(from, to) {
@@ -807,6 +824,7 @@ function swapHomeFeedSources(from, to) {
 function selectHomeFeedSource(sourceId) {
   if (!homeTabIds().includes(sourceId)) return;
   state.homeFeed.active = sourceId;
+  saveActiveHomeFeedPreference();
   syncHomeFeedLoading();
   if (state.section === 'home') {
     render();
@@ -827,7 +845,10 @@ function setHomeTabVisibility(tabId, visible) {
     state.homeFeed.visible = DEFAULT_HOME_FEED_ORDER.filter((id) => selected.has(id));
     saveHomeFeedVisibility();
   }
-  if (!homeTabIds().includes(state.homeFeed.active)) state.homeFeed.active = homeTabIds()[0] || '';
+  if (!homeTabIds().includes(state.homeFeed.active)) {
+    state.homeFeed.active = homeTabIds()[0] || '';
+    saveActiveHomeFeedPreference();
+  }
   render();
   renderHomeSourceDialog();
   requestAnimationFrame(() => focusActiveHomeFeedTab(false));
@@ -1409,8 +1430,8 @@ const MASCOT_ASSETS = {
 };
 const MASCOT_DIRECTIONS = ['up-left', 'up', 'up-right', 'left', 'center', 'right', 'down-left', 'down', 'down-right'];
 const MASCOT_REACTIONS = ['blink', 'heart', 'sparkle', 'surprised', 'wink', 'bashful', 'sleepy', 'dizzy', 'delighted'];
-const MASCOT_FULL_BODY_MARKUP = '<img class="onebox-mascot-fullbody" src="icons/mascot-fox-full.png?v=2.18.257" alt="" draggable="false">';
-const MASCOT_FULL_BODY_REACTIONS = 'icons/mascot-fox-full-reactions.png?v=2.18.257';
+const MASCOT_FULL_BODY_MARKUP = '<img class="onebox-mascot-fullbody" src="icons/mascot-fox-full.png?v=2.18.258" alt="" draggable="false">';
+const MASCOT_FULL_BODY_REACTIONS = 'icons/mascot-fox-full-reactions.png?v=2.18.258';
 const MASCOT_CLOCKWISE = ['right', 'down-right', 'down', 'down-left', 'left', 'up-left', 'up', 'up-right'];
 const MASCOT_SECTOR = (Math.PI * 2) / MASCOT_CLOCKWISE.length;
 const MASCOT_HYSTERESIS = 0.12;
