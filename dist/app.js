@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.251';
+const APP_VERSION = '2.18.252';
 // The OAuth secret stays in the Cloudflare Worker. The browser only knows the
 // public client id and receives the authorization result in the URL fragment,
 // which is consumed immediately and never sent to a server.
@@ -65,8 +65,8 @@ const FEED_SOURCE_REGISTRY = [
   { id: 'bilibili', name: 'B站', badge: 'B', icon: 'icons/bilibili.ico?v=2.18.124', className: 'bilibili', mobileHost: 'm.bilibili.com', visibleByDefault: false, siteUrl: 'https://search.bilibili.com/all', fetchers: [{ kind: 'bilibili-hot', url: 'https://api.bilibili.com/x/web-interface/search/square?limit=30&platform=web' }, { kind: 'bilibili-hotword', url: 'https://s.search.bilibili.com/main/hotword' }] },
   { id: 'guancha', name: '风闻', badge: '风', icon: 'icons/guancha.png?v=2.18.124', className: 'guancha', mobileHost: 'user.guancha.cn', visibleByDefault: true, siteUrl: 'https://user.guancha.cn/main/index?s=fwdhsy', fetchers: [{ kind: 'guancha-fengwen', url: 'https://user.guancha.cn/main/index-list.json?page=1&order=1' }, { kind: 'guancha-fengwen', url: 'https://rsshub.app/guancha/topic/0/1' }] },
   { id: 'hupu', name: '虎扑', badge: '虎', icon: 'icons/hupu.ico?v=2.18.124', className: 'hupu', mobileHost: 'm.hupu.com', visibleByDefault: true, siteUrl: 'https://bbs.hupu.com/bxj', fetchers: [{ kind: 'hupu-bbs', url: 'https://bbs.hupu.com/bxj' }, { kind: 'hupu-bbs', url: 'https://bbs.hupu.com/topic-daily' }] },
-  { id: 'xiaohongshu', name: '红书', badge: '红', icon: 'https://www.xiaohongshu.com/favicon.ico?v=2.18.251', className: 'xiaohongshu', visibleByDefault: true, siteUrl: 'https://www.xiaohongshu.com/explore', fetchers: [{ kind: 'xiaohongshu-explore', url: 'https://www.xiaohongshu.com/explore' }, { kind: 'xiaohongshu-hotboard', url: 'https://uapis.cn/api/v1/misc/hotboard?type=xiaohongshu&limit=30', direct: true }] },
-  { id: 'douyin', name: '抖音', badge: '音', icon: 'https://www.douyin.com/favicon.ico?v=2.18.251', className: 'douyin', visibleByDefault: true, siteUrl: 'https://www.douyin.com/jingxuan', fetchers: [{ kind: 'douyin-hotboard', url: 'https://uapis.cn/api/v1/misc/hotboard?type=douyin&limit=30', direct: true }, { kind: 'douyin-jingxuan', url: 'https://www.douyin.com/jingxuan' }] },
+  { id: 'xiaohongshu', name: '红书', badge: '红', icon: 'https://www.xiaohongshu.com/favicon.ico?v=2.18.252', className: 'xiaohongshu', visibleByDefault: true, siteUrl: 'https://www.xiaohongshu.com/explore', fetchers: [{ kind: 'xiaohongshu-explore', url: 'https://www.xiaohongshu.com/explore' }, { kind: 'xiaohongshu-hotboard', url: 'https://uapis.cn/api/v1/misc/hotboard?type=xiaohongshu&limit=30', direct: true }] },
+  { id: 'douyin', name: '抖音', badge: '音', icon: 'https://www.douyin.com/favicon.ico?v=2.18.252', className: 'douyin', visibleByDefault: true, siteUrl: 'https://www.douyin.com/jingxuan', fetchers: [{ kind: 'douyin-hotboard', url: 'https://uapis.cn/api/v1/misc/hotboard?type=douyin&limit=30', direct: true }, { kind: 'douyin-jingxuan', url: 'https://www.douyin.com/jingxuan' }] },
 ];
 const RSS_SOURCES = FEED_SOURCE_REGISTRY.filter((source) => source.enabled !== false);
 const RSS_REFRESH_INTERVAL = 2 * 60 * 1000;
@@ -483,7 +483,7 @@ const state = {
   library: normalizeReaderLibrary(storedLibrary),
   readerBookId: null, readerUrl: '', readerAssetUrls: [], readerContent: '', readerHint: '', readerToc: [], readerDialog: '', readerChromeHidden: false, readerImmersive: false, readerMode: 'library', readerReadingMode: 'scroll', readerPage: 0, readerSelectedText: '', readerSelection: null, readerAnnotationDraft: null, readerSelectionInput: 'mouse', readerLayout: storedReaderLayout === 'list' ? 'list' : 'grid', annotationBookId: null,
   readerPreferences: { theme: ['paper', 'sepia', 'green', 'dark'].includes(storedReaderPreferences.theme) ? storedReaderPreferences.theme : 'paper', fontSize: Number.isFinite(Number(storedReaderPreferences.fontSize)) ? Math.min(26, Math.max(15, Number(storedReaderPreferences.fontSize))) : 18, fontFamily: ['system', 'serif', 'mono'].includes(storedReaderPreferences.fontFamily) ? storedReaderPreferences.fontFamily : 'system', lineHeight: Number.isFinite(Number(storedReaderPreferences.lineHeight)) ? Math.min(2.2, Math.max(1.35, Number(storedReaderPreferences.lineHeight))) : 1.8, paragraphSpacing: Number.isFinite(Number(storedReaderPreferences.paragraphSpacing)) ? Math.min(28, Math.max(6, Number(storedReaderPreferences.paragraphSpacing))) : 14, letterSpacing: Number.isFinite(Number(storedReaderPreferences.letterSpacing)) ? Math.min(2, Math.max(0, Number(storedReaderPreferences.letterSpacing))) : 0, pageAnimation: ['slide', 'none'].includes(storedReaderPreferences.pageAnimation) ? storedReaderPreferences.pageAnimation : 'slide', readingMode: storedReaderPreferences.readingMode === 'pages' ? 'pages' : 'scroll', fullscreenOnOpen: storedReaderPreferences.fullscreenOnOpen === true },
-  homeFeed: { active: storedFootprint ? 'footprint' : (DEFAULT_HOME_FEED_VISIBLE[0] || DEFAULT_HOME_FEED_ORDER[0]), order: normalizeHomeFeedOrder(storedHomeFeedOrder), visible: normalizeHomeFeedVisibility(storedHomeFeedVisibility), hasNew: false, loading: false, errors: {}, stale: {}, updatedAt: Number(storedHomeFeeds.updatedAt || 0), cacheVersion: storedHomeFeeds.cacheVersion || '', newItems: storedHomeFeeds.newItems && typeof storedHomeFeeds.newItems === 'object' ? storedHomeFeeds.newItems : {}, onlyNew: false, sources: storedHomeFeeds.sources && typeof storedHomeFeeds.sources === 'object' ? storedHomeFeeds.sources : {} },
+  homeFeed: { active: storedFootprint ? 'footprint' : (DEFAULT_HOME_FEED_VISIBLE[0] || DEFAULT_HOME_FEED_ORDER[0]), order: normalizeHomeFeedOrder(storedHomeFeedOrder), visible: normalizeHomeFeedVisibility(storedHomeFeedVisibility), hasNew: false, loading: false, errors: {}, stale: {}, updatedAt: Number(storedHomeFeeds.updatedAt || 0), cacheVersion: storedHomeFeeds.cacheVersion || '', newItems: storedHomeFeeds.newItems && typeof storedHomeFeeds.newItems === 'object' ? storedHomeFeeds.newItems : {}, newItemsPending: storedHomeFeeds.newItemsPending && typeof storedHomeFeeds.newItemsPending === 'object' ? storedHomeFeeds.newItemsPending : (storedHomeFeeds.newItems && typeof storedHomeFeeds.newItems === 'object' ? storedHomeFeeds.newItems : {}), sources: storedHomeFeeds.sources && typeof storedHomeFeeds.sources === 'object' ? storedHomeFeeds.sources : {} },
   navigation: normalizeNavigation(storedNavigation), navigationLocation: storedNavigationLocation, navigationDialog: null, navigationFolderDraft: null, navigationSettingsOpen: false,
   homeFeedRead: storedHomeFeedRead && typeof storedHomeFeedRead === 'object' ? storedHomeFeedRead : {},
   homeFeedRequest: 0,
@@ -737,11 +737,27 @@ function homeFeedSources() {
 function homeFeedNewIds(sourceId = state.homeFeed.active) {
   return new Set(Array.isArray(state.homeFeed.newItems?.[sourceId]) ? state.homeFeed.newItems[sourceId] : []);
 }
-function homeFeedNewCount(sourceId = state.homeFeed.active, items = null) {
-  const ids = homeFeedNewIds(sourceId);
+function homeFeedPendingIds(sourceId = state.homeFeed.active) {
+  return new Set(Array.isArray(state.homeFeed.newItemsPending?.[sourceId]) ? state.homeFeed.newItemsPending[sourceId] : []);
+}
+function homeFeedPendingCount(sourceId = state.homeFeed.active, items = null) {
+  const ids = homeFeedPendingIds(sourceId);
   if (!ids.size) return 0;
   if (!Array.isArray(items)) return ids.size;
   return items.reduce((count, item) => count + (ids.has(item.id) ? 1 : 0), 0);
+}
+function homeFeedNewActionLabel(count) {
+  return state.language === 'en' ? 'New ' + count + ' to view' : '新增 ' + count + ' 条查看';
+}
+function revealHomeFeedNew(sourceId = state.homeFeed.active) {
+  const pending = homeFeedPendingIds(sourceId);
+  if (!pending.size) return false;
+  state.homeFeed.newItemsPending[sourceId] = [];
+  saveStored(STORAGE.homeFeeds, { cacheVersion: state.homeFeed.cacheVersion, updatedAt: state.homeFeed.updatedAt, newItems: state.homeFeed.newItems, newItemsPending: state.homeFeed.newItemsPending, sources: state.homeFeed.sources });
+  if (state.section !== 'home') return true;
+  render();
+  requestAnimationFrame(() => scrollAppTo(0, 'smooth'));
+  return true;
 }
 function saveHomeFeedOrder() { saveStored(STORAGE.homeFeedOrder, state.homeFeed.order); }
 function saveHomeFeedVisibility() { saveStored(STORAGE.homeFeedVisibility, state.homeFeed.visible); }
@@ -754,7 +770,6 @@ function swapHomeFeedSources(from, to) {
 function selectHomeFeedSource(sourceId) {
   if (!homeTabIds().includes(sourceId)) return;
   state.homeFeed.active = sourceId;
-  state.homeFeed.onlyNew = false;
   if (state.section === 'home') {
     render();
     requestAnimationFrame(() => focusActiveHomeFeedTab(true));
@@ -1194,6 +1209,7 @@ async function loadHomeFeeds(force = false, sourceId = '') {
       const discoveredIds = previousIds.size ? result.items.filter((item) => !previousIds.has(item.id)).map((item) => item.id) : [];
       if (discoveredIds.length) discoveredNewItems = true;
       state.homeFeed.newItems[source.id] = discoveredIds;
+      state.homeFeed.newItemsPending[source.id] = discoveredIds;
       state.homeFeed.sources[source.id] = { ...result, items: mergeFeedItems(source, result.items) };
     } else if (state.homeFeed.sources[source.id]?.items?.length) state.homeFeed.stale[source.id] = true;
     else state.homeFeed.errors[source.id] = error;
@@ -1203,7 +1219,7 @@ async function loadHomeFeeds(force = false, sourceId = '') {
   state.homeFeed.loading = false;
   state.homeFeed.hasNew = state.section === 'home' ? false : state.homeFeed.hasNew || discoveredNewItems;
   state.homeFeed.cacheVersion = hasFreshResult ? APP_VERSION : '';
-  saveStored(STORAGE.homeFeeds, { cacheVersion: hasFreshResult ? APP_VERSION : '', updatedAt: state.homeFeed.updatedAt, newItems: state.homeFeed.newItems, sources: state.homeFeed.sources });
+  saveStored(STORAGE.homeFeeds, { cacheVersion: hasFreshResult ? APP_VERSION : '', updatedAt: state.homeFeed.updatedAt, newItems: state.homeFeed.newItems, newItemsPending: state.homeFeed.newItemsPending, sources: state.homeFeed.sources });
   if (state.section === 'home') {
     render();
     restoreHomeFeedPosition(preservedPosition);
@@ -1315,8 +1331,8 @@ const MASCOT_ASSETS = {
 };
 const MASCOT_DIRECTIONS = ['up-left', 'up', 'up-right', 'left', 'center', 'right', 'down-left', 'down', 'down-right'];
 const MASCOT_REACTIONS = ['blink', 'heart', 'sparkle', 'surprised', 'wink', 'bashful', 'sleepy', 'dizzy', 'delighted'];
-const MASCOT_FULL_BODY_MARKUP = '<img class="onebox-mascot-fullbody" src="icons/mascot-fox-full.png?v=2.18.251" alt="" draggable="false">';
-const MASCOT_FULL_BODY_REACTIONS = 'icons/mascot-fox-full-reactions.png?v=2.18.251';
+const MASCOT_FULL_BODY_MARKUP = '<img class="onebox-mascot-fullbody" src="icons/mascot-fox-full.png?v=2.18.252" alt="" draggable="false">';
+const MASCOT_FULL_BODY_REACTIONS = 'icons/mascot-fox-full-reactions.png?v=2.18.252';
 const MASCOT_CLOCKWISE = ['right', 'down-right', 'down', 'down-left', 'left', 'up-left', 'up', 'up-right'];
 const MASCOT_SECTOR = (Math.PI * 2) / MASCOT_CLOCKWISE.length;
 const MASCOT_HYSTERESIS = 0.12;
@@ -1972,11 +1988,12 @@ function openFeedLink(link) {
 function homeSourceTabsMarkup() {
   const sources = homeFeedSources();
   const sourceTabs = sources.map((source, index) => {
-    const newCount = homeFeedNewCount(source.id);
-    const newBadge = newCount ? '<em class="feed-source-new-count" aria-label="' + escapeHtml(t('feedTabNew')) + ' ' + newCount + '">+' + (newCount > 99 ? '99+' : newCount) + '</em>' : '';
-    return '<button class="feed-source-tab ' + (state.homeFeed.active === source.id ? 'active' : '') + '" draggable="true" data-feed-source="' + source.id + '" data-feed-source-index="' + index + '">' + homeTabMarkMarkup(source) + '<span>' + escapeHtml(source.name) + '</span>' + newBadge + '</button>';
+    const newCount = homeFeedPendingCount(source.id);
+    const newAction = newCount ? '<span class="feed-source-new-action" data-feed-only-new role="button" tabindex="0" aria-label="' + escapeHtml(homeFeedNewActionLabel(newCount)) + '">' + escapeHtml(homeFeedNewActionLabel(newCount)) + '</span>' : '';
+    const loading = state.homeFeed.loading && state.homeFeed.active === source.id ? '<i class="feed-tab-spinner" aria-label="' + escapeHtml(t('feedLoading')) + '"></i>' : '';
+    return '<button class="feed-source-tab ' + (state.homeFeed.active === source.id ? 'active' : '') + (state.homeFeed.loading && state.homeFeed.active === source.id ? ' is-loading' : '') + '" draggable="true" data-feed-source="' + source.id + '" data-feed-source-index="' + index + '" aria-busy="' + (state.homeFeed.loading && state.homeFeed.active === source.id ? 'true' : 'false') + '">' + homeTabMarkMarkup(source) + '<span>' + escapeHtml(source.name) + '</span>' + newAction + loading + '</button>';
   }).join('');
-  const footprintTab = state.footprint ? '<button class="feed-source-tab ' + (state.homeFeed.active === 'footprint' ? 'active' : '') + '" data-feed-source="footprint" aria-label="' + t('footprint') + '">' + homeTabMarkMarkup({ id: 'footprint' }) + '<span>' + t('footprint') + '</span></button>' : '';
+  const footprintTab = state.footprint ? '<button class="feed-source-tab ' + (state.homeFeed.active === 'footprint' ? 'active' : '') + '" data-feed-source="footprint" aria-label="' + t('footprint') + '">' + homeTabMarkMarkup({ id: 'footprint' }) + '<span>' + t('footprint') + '</span>' + (state.homeFeed.loading && state.homeFeed.active === 'footprint' ? '<i class="feed-tab-spinner" aria-label="' + escapeHtml(t('feedLoading')) + '"></i>' : '') + '</button>' : '';
   return footprintTab + sourceTabs;
 }
 function homeSourcePickerMarkup() {
@@ -2007,7 +2024,7 @@ function renderHomeSourceNav() {
   homeSourceNav.hidden = state.section !== 'home';
   const previousTabs = homeSourceNav.querySelector('.feed-source-tabs');
   const previousScrollLeft = previousTabs?.scrollLeft || 0;
-  homeSourceNav.innerHTML = state.section === 'home' ? '<div class="feed-source-panel"><button class="feed-source-scroll-button" data-feed-source-scroll="previous" type="button" hidden aria-label="' + escapeHtml(t('feedTabPrevious')) + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5.25 8.25 12 15 18.75"/></svg></button><div class="feed-source-tabs" role="tablist" aria-label="RSS 来源">' + homeSourceTabsMarkup() + '</div><button class="feed-source-scroll-button" data-feed-source-scroll="next" type="button" hidden aria-label="' + escapeHtml(t('feedTabNext')) + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5.25 15.75 12 9 18.75"/></svg></button><button class="feed-refresh" type="button" data-refresh-feeds aria-label="' + escapeHtml(t('feedRefresh')) + '" ' + (state.homeFeed.loading ? 'disabled' : '') + '><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0 1 4"/><path d="M20 5v6h-6"/></svg></button><button class="feed-source-manage" type="button" data-open-home-source-picker aria-label="' + escapeHtml(t('homeSourceManage')) + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button></div>' : '';
+  homeSourceNav.innerHTML = state.section === 'home' ? '<div class="feed-source-panel"><button class="feed-source-scroll-button" data-feed-source-scroll="previous" type="button" hidden aria-label="' + escapeHtml(t('feedTabPrevious')) + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5.25 8.25 12 15 18.75"/></svg></button><div class="feed-source-tabs" role="tablist" aria-label="RSS 来源">' + homeSourceTabsMarkup() + '</div><button class="feed-source-scroll-button" data-feed-source-scroll="next" type="button" hidden aria-label="' + escapeHtml(t('feedTabNext')) + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5.25 15.75 12 9 18.75"/></svg></button><button class="feed-source-manage" type="button" data-open-home-source-picker aria-label="' + escapeHtml(t('homeSourceManage')) + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button></div>' : '';
   const nextTabs = homeSourceNav.querySelector('.feed-source-tabs');
   if (nextTabs) {
     nextTabs.scrollLeft = Math.min(previousScrollLeft, Math.max(0, nextTabs.scrollWidth - nextTabs.clientWidth));
@@ -2022,22 +2039,30 @@ function renderHome() {
   // Also clean the already-rendered cache. A previous build could have saved
   // a street-level local item, so waiting for another network refresh would
   // otherwise keep showing both the old and the city-level entry.
-  const baseItems = sourceItems.filter((item) => !isStaleGeneratedLocalFeedItem(item)).filter((item) => { const timestamp = feedItemTimestamp(item); return !Number.isFinite(timestamp) || timestamp >= cutoff; });
-  const newCount = isFootprint ? 0 : homeFeedNewCount(state.homeFeed.active, baseItems);
-  const onlyNew = !isFootprint && state.homeFeed.onlyNew && newCount > 0;
+  const allItems = sourceItems.filter((item) => !isStaleGeneratedLocalFeedItem(item)).filter((item) => { const timestamp = feedItemTimestamp(item); return !Number.isFinite(timestamp) || timestamp >= cutoff; });
+  const pendingIds = homeFeedPendingIds(state.homeFeed.active);
   const newIds = homeFeedNewIds(state.homeFeed.active);
-  const items = onlyNew ? baseItems.filter((item) => newIds.has(item.id)) : baseItems;
-  if (!isFootprint) items.sort((a, b) => (feedItemTimestamp(b) || 0) - (feedItemTimestamp(a) || 0));
+  const newCount = isFootprint ? 0 : homeFeedPendingCount(state.homeFeed.active, allItems);
+  const items = isFootprint ? allItems : allItems.filter((item) => !pendingIds.has(item.id));
+  if (!isFootprint) items.sort((a, b) => {
+    const newOrder = Number(newIds.has(b.id)) - Number(newIds.has(a.id));
+    return newOrder || ((feedItemTimestamp(b) || 0) - (feedItemTimestamp(a) || 0));
+  });
   const visibleItems = items.slice(0, RSS_MAX_ITEMS_PER_SOURCE);
   const hasItems = visibleItems.length > 0;
   const errors = Object.keys(state.homeFeed.errors || {}).length;
-  const feedBody = state.homeFeed.loading && !hasItems && !isFootprint ? '<div class="feed-loading"><span></span><span></span><span></span></div>' : hasItems ? '<div class="feed-list">' + visibleItems.map(renderFeedItem).join('') + '</div>' : '<p class="empty feed-empty">' + (isFootprint ? (state.language === 'en' ? 'No articles read yet.' : '还没有阅读过首页消息。') : t('feedEmpty')) + '</p>';
-  // Keep cached rows in place while a background refresh is running. Showing
-  // a new row above them makes the whole feed jump when returning from an
-  // external article; only an empty feed needs the blocking loading state.
-  const refreshState = state.homeFeed.loading && !hasItems ? '<div class="feed-refresh-state" role="status"><span></span>' + (state.language === 'en' ? 'Refreshing' : '正在刷新') + '</div>' : '';
-  const refreshSummary = newCount ? '<div class="feed-new-summary" role="status"><span><strong>' + escapeHtml(t('feedNewItems')) + ' ' + newCount + (state.language === 'en' ? '' : ' 条') + '</strong><small>' + escapeHtml(t('feedLastRefresh')) + ' ' + escapeHtml(feedDate(state.homeFeed.updatedAt)) + '</small></span><button class="secondary compact-action" type="button" data-feed-only-new>' + escapeHtml(onlyNew ? t('feedShowAll') : t('feedShowNew')) + '</button></div>' : '';
-  return '<div class="home-page feed-home"><section class="feed-panel">' + refreshState + refreshSummary + (errors ? '<p class="feed-warning">' + t('feedPartial') + '</p>' : '') + feedBody + '<p class="feed-hint">' + t('feedProxyHint') + (state.homeFeed.updatedAt ? ' · ' + t('feedLastRefresh') + ' ' + escapeHtml(feedDate(state.homeFeed.updatedAt)) : '') + '</p></section></div>';
+  let separatorShown = false;
+  const feedList = visibleItems.map((item, index) => {
+    const isNew = !isFootprint && newIds.has(item.id);
+    const previousIsNew = index > 0 && newIds.has(visibleItems[index - 1].id);
+    const separator = !isFootprint && !separatorShown && previousIsNew && !isNew ? '<div class="feed-new-divider" role="separator"><span>' + (state.language === 'en' ? 'Previous items' : '之前内容') + '</span></div>' : '';
+    if (separator) separatorShown = true;
+    return separator + renderFeedItem(item);
+  }).join('');
+  const feedBody = state.homeFeed.loading && !hasItems && !isFootprint ? '<div class="feed-loading"><span></span><span></span><span></span></div>' : hasItems ? '<div class="feed-list">' + feedList + '</div>' : '<p class="empty feed-empty">' + (isFootprint ? (state.language === 'en' ? 'No articles read yet.' : '还没有阅读过首页消息。') : t('feedEmpty')) + '</p>';
+  const refreshState = state.homeFeed.loading ? '<div class="feed-refresh-state" role="status" aria-label="' + escapeHtml(t('feedLoading')) + '"><span></span></div>' : '';
+  const newContentAction = newCount ? '<div class="feed-new-content-action-wrap"><button class="feed-new-content-action" type="button" data-feed-only-new>' + escapeHtml(homeFeedNewActionLabel(newCount)) + '</button></div>' : '';
+  return '<div class="home-page feed-home"><section class="feed-panel">' + refreshState + newContentAction + (errors ? '<p class="feed-warning">' + t('feedPartial') + '</p>' : '') + feedBody + '<p class="feed-hint">' + t('feedProxyHint') + (state.homeFeed.updatedAt ? ' · ' + t('feedLastRefresh') + ' ' + escapeHtml(feedDate(state.homeFeed.updatedAt)) : '') + '</p></section></div>';
 }
 function navigationIconMarkup(site, extraClass = '') {
   const generatedSources = navigationIconSources(site?.url);
@@ -5498,6 +5523,7 @@ let pageSwipeAnimationToken = 0;
 let pageSwipeSuppressClickUntil = 0;
 let pageSwipeTrackState = null;
 let pageSwipeNavState = null;
+let homePullGesture = null;
 let readerSurfaceGesture = null;
 let readerSelectionSuppressUntil = 0;
 let readerSelectionHideTimer = 0;
@@ -6155,6 +6181,33 @@ function finishPageSwipe(event) {
   else settlePageSwipeBack();
 }
 
+function beginHomeFeedPull(event) {
+  if (state.section !== 'home' || event.pointerType === 'mouse' || state.homeFeed.loading || appScrollTop() > 1) return;
+  if (!event.target.closest('#workspace[data-tool="home"]') || event.target.closest('button, a, input, select, textarea, [contenteditable="true"]')) return;
+  homePullGesture = { pointerId: event.pointerId, startX: event.clientX, startY: event.clientY, distance: 0, cancelled: false };
+}
+function updateHomeFeedPull(event) {
+  const gesture = homePullGesture;
+  if (!gesture || (gesture.pointerId != null && event.pointerId !== gesture.pointerId)) return;
+  const dx = event.clientX - gesture.startX;
+  const dy = event.clientY - gesture.startY;
+  if (dy <= 0 || Math.abs(dx) > Math.abs(dy) + 12) { gesture.cancelled = true; return; }
+  gesture.distance = Math.min(76, Math.max(0, (dy - 4) * .48));
+  if (gesture.distance < 2) return;
+  workspace.style.setProperty('--feed-pull-distance', gesture.distance + 'px');
+  workspace.classList.add('feed-pulling');
+  if (event.cancelable) event.preventDefault();
+}
+function finishHomeFeedPull(event) {
+  const gesture = homePullGesture;
+  homePullGesture = null;
+  if (!gesture || (gesture.pointerId != null && event.pointerId !== gesture.pointerId)) return;
+  const shouldRefresh = !gesture.cancelled && gesture.distance >= 42 && state.section === 'home' && !state.homeFeed.loading;
+  workspace.classList.remove('feed-pulling');
+  workspace.style.removeProperty('--feed-pull-distance');
+  if (shouldRefresh) loadHomeFeeds(true);
+}
+
 workspace.addEventListener('pointerdown', (event) => {
   const row = event.target.closest('[data-swipe-row]');
   if (!row || event.target.closest('.swipe-delete')) {
@@ -6212,9 +6265,17 @@ homeSourceNav.addEventListener('pointerdown', (event) => {
 homeSourceNav.addEventListener('pointerup', endLongPress);
 homeSourceNav.addEventListener('pointercancel', endLongPress);
 homeSourceNav.addEventListener('click', (event) => {
-  if (event.target.closest('[data-refresh-feeds]')) {
+  const newAction = event.target.closest('[data-feed-only-new]');
+  if (newAction) {
     event.preventDefault();
-    loadHomeFeeds(true);
+    event.stopPropagation();
+    const sourceId = newAction.closest('[data-feed-source]')?.dataset.feedSource || state.homeFeed.active;
+    if (sourceId !== state.homeFeed.active) {
+      state.homeFeed.active = sourceId;
+      render();
+      requestAnimationFrame(() => focusActiveHomeFeedTab(true));
+    }
+    revealHomeFeedNew(sourceId);
     return;
   }
   if (event.target.closest('[data-open-home-source-picker]')) {
@@ -6278,11 +6339,15 @@ document.addEventListener('pointerdown', (event) => {
   if (event.target.closest('[data-reader-book-card], [data-reader-layout-toggle], [data-open-reader-file]')) return;
   clearReaderDeleteMode();
 }, true);
+document.querySelector('main')?.addEventListener('pointerdown', beginHomeFeedPull);
 document.querySelector('main')?.addEventListener('pointerdown', beginPageSwipe);
+document.addEventListener('pointermove', updateHomeFeedPull, { passive: false });
 document.addEventListener('pointermove', updatePageSwipe, { passive: false });
+document.addEventListener('pointerup', finishHomeFeedPull, { passive: true });
 document.addEventListener('pointerup', finishPageSwipe, { passive: true });
 document.addEventListener('pointercancel', () => {
-  tabSwipeGesture = null; pageSwipeGesture = null;
+  tabSwipeGesture = null; pageSwipeGesture = null; homePullGesture = null;
+  workspace.classList.remove('feed-pulling'); workspace.style.removeProperty('--feed-pull-distance');
   if (readerSurfaceGesture?.dragging) settleReaderPageDrag(readerSurfaceGesture, 0, true);
   readerSurfaceGesture = null;
   endLongPress(); cancelReorderDrag();
@@ -6624,19 +6689,14 @@ workspace.addEventListener('click', async (event) => {
     state.readerLayout = state.readerLayout === 'list' ? 'grid' : 'list';
     saveReaderLayout(); return render();
   }
-  if (event.target.closest('[data-feed-only-new]')) {
-    state.homeFeed.onlyNew = !state.homeFeed.onlyNew;
-    render();
-    if (state.homeFeed.onlyNew) scrollAppTo(0, 'smooth');
-    return;
-  }
+  const newAction = event.target.closest('[data-feed-only-new]');
+  if (newAction) { event.preventDefault(); event.stopPropagation(); return revealHomeFeedNew(newAction.closest('[data-feed-source]')?.dataset.feedSource || state.homeFeed.active); }
   const feedSource = event.target.closest('[data-feed-source]');
   if (feedSource) {
     if (Date.now() < tabSwipeSuppressClickUntil) { event.preventDefault(); return; }
     if (feedSource.dataset.feedSourceIndex != null && handleReorderClick(feedSource, 'feed', Number(feedSource.dataset.feedSourceIndex))) { event.preventDefault(); return; }
     return selectHomeFeedSource(feedSource.dataset.feedSource);
   }
-  if (event.target.closest('[data-refresh-feeds]')) return loadHomeFeeds(true);
   const feedItem = event.target.closest('[data-feed-link]');
   const feedLink = feedItem?.dataset.feedLink;
   if (feedItem) {
