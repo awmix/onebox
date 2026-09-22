@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.274';
+const APP_VERSION = '2.18.275';
 // The OAuth secret stays in the Cloudflare Worker. The browser only knows the
 // public client id and receives the authorization result in the URL fragment,
 // which is consumed immediately and never sent to a server.
@@ -231,7 +231,7 @@ const DICT = {
     githubClientId: 'GitHub OAuth Client ID', githubClientHint: 'OneBox 已内置公开的授权标识，不需要手动配置。', githubDeveloperSettings: '打开 OAuth Apps 设置',
     githubBrowserFlowError: '无法打开 GitHub 授权页，请检查网络后重试。', githubAccessToken: 'GitHub 访问令牌', githubTokenHint: '仅将令牌保存在当前设备，并通过 GitHub API 验证；建议使用只包含 gist 权限的令牌。', githubUseToken: '使用访问令牌连接', githubTokenMissing: '请先填写 GitHub 访问令牌。', githubTokenInvalid: '访问令牌无效或没有可用权限。', githubTokenConnected: 'GitHub 已连接', githubWaiting: '等待 GitHub 授权…', githubCancel: '取消授权',
     githubSyncScopeTitle: '同步范围', githubSyncScope: '设置、工具顺序、导航、首页来源、日程、天气卡片、翻译记录、通知、阅读书架、阅读进度、笔记和已导入的本地书籍文件。', githubSyncPrivacy: 'GitHub 令牌不会上传；首页订阅内容、节假日和天气接口缓存属于网络缓存，不参与同步。', githubAuthHint: '点击连接后会跳转到 GitHub，完成授权后自动返回 OneBox。',
-    githubLogin: '连接 GitHub', githubLogout: '退出 GitHub', upload: '上传到 GitHub', download: '从 GitHub 恢复', githubSyncNotFound: '当前 GitHub 账号中没有找到 OneBox 同步数据，请先在另一台设备上传。', githubSyncReadFailed: 'GitHub 中的 OneBox 同步文件无法读取，请检查 Gist 权限或内容。', githubSyncMalformed: 'GitHub 中的 OneBox 同步文件不是有效的 JSON。', githubSyncInvalidData: 'GitHub 中的 OneBox 同步数据格式错误或已损坏。',
+    githubLogin: '连接 GitHub', githubLogout: '退出 GitHub', upload: '上传到 GitHub', download: '从 GitHub 恢复', githubAuthExpired: 'GitHub 授权已失效，请重新连接 GitHub。', githubSyncNotFound: '当前 GitHub 账号中没有找到 OneBox 同步数据，请先在另一台设备上传。', githubSyncReadFailed: 'GitHub 中的 OneBox 同步文件无法读取，请检查 Gist 权限或内容。', githubSyncMalformed: 'GitHub 中的 OneBox 同步文件不是有效的 JSON。', githubSyncInvalidData: 'GitHub 中的 OneBox 同步数据格式错误或已损坏。',
     githubConnected: '已连接', githubNotConnected: '尚未连接', openDevice: '打开验证页面',
     appUpdate: '应用更新', checkUpdate: '更新', updateAvailable: '发现有新版本', upToDate: '已是最新版', updating: '检查中', updateApplying: '更新中', updateCheckFailed: '检查失败，可重试', applyUpdate: '更新',
     notificationsPermission: '消息通知', enableNotifications: '允许通知', disableNotifications: '不允许通知', notificationDescription: 'iPhone 需要先将 OneBox 添加到主屏幕并允许消息通知；应用关闭后的后台提醒仍需要 Push 服务端。',
@@ -276,7 +276,7 @@ const DICT = {
     githubClientId: 'GitHub OAuth Client ID', githubClientHint: 'OneBox includes its public authorization identifier; no manual setup is required.', githubDeveloperSettings: 'Open OAuth Apps settings',
     githubBrowserFlowError: 'GitHub authorization could not be opened. Check your network and try again.', githubAccessToken: 'GitHub access token', githubTokenHint: 'The token is stored only on this device and verified through GitHub API. A token with gist permission is recommended.', githubUseToken: 'Connect with access token', githubTokenMissing: 'Enter a GitHub access token first.', githubTokenInvalid: 'The access token is invalid or lacks the required permission.', githubTokenConnected: 'GitHub connected', githubWaiting: 'Waiting for GitHub authorization…', githubCancel: 'Cancel authorization',
     githubSyncScopeTitle: 'Sync scope', githubSyncScope: 'Settings, tool order, navigation, home sources, events, weather cards, translation history, notifications, the reading shelf, reading progress, notes and imported local book files.', githubSyncPrivacy: 'The GitHub token is never uploaded. Home feeds, holidays and weather API caches are network caches and are not synced.', githubAuthHint: 'Connect to jump to GitHub; after approval you will return to OneBox automatically.',
-    githubLogin: 'Connect GitHub', githubLogout: 'Disconnect GitHub', upload: 'Upload to GitHub', download: 'Restore from GitHub', githubSyncNotFound: 'No OneBox sync data was found in this GitHub account. Upload from another device first.', githubSyncReadFailed: 'The OneBox sync file in GitHub could not be read. Check the Gist permission or content.', githubSyncMalformed: 'The OneBox sync file in GitHub is not valid JSON.', githubSyncInvalidData: 'The OneBox sync data in GitHub is malformed or damaged.',
+    githubLogin: 'Connect GitHub', githubLogout: 'Disconnect GitHub', upload: 'Upload to GitHub', download: 'Restore from GitHub', githubAuthExpired: 'GitHub authorization expired. Please reconnect GitHub.', githubSyncNotFound: 'No OneBox sync data was found in this GitHub account. Upload from another device first.', githubSyncReadFailed: 'The OneBox sync file in GitHub could not be read. Check the Gist permission or content.', githubSyncMalformed: 'The OneBox sync file in GitHub is not valid JSON.', githubSyncInvalidData: 'The OneBox sync data in GitHub is malformed or damaged.',
     githubConnected: 'Connected', githubNotConnected: 'Not connected', openDevice: 'Open verification page',
     appUpdate: 'App update', checkUpdate: 'Update', updateAvailable: 'A new version is available', upToDate: 'Latest version', updating: 'Checking', updateApplying: 'Updating', updateCheckFailed: 'Check failed. Try again.', applyUpdate: 'Update',
     notificationsPermission: 'Message notifications', enableNotifications: 'Allow notifications', disableNotifications: 'Do not allow notifications', notificationDescription: 'On iPhone, add OneBox to the Home Screen and allow notifications first; background alerts after the app is closed still require a Push server.',
@@ -5489,7 +5489,10 @@ async function hydrateGithubUser() {
   if (!state.github.token || state.github.user?.avatar_url) return;
   try {
     const response = await fetch('https://api.github.com/user', { headers: githubHeaders(), cache: 'no-store' });
-    if (!response.ok) return;
+    if (!response.ok) {
+      if (response.status === 401) invalidateGithubToken();
+      return;
+    }
     const user = await response.json();
     if (!user?.login) return;
     state.github.user = { ...state.github.user, ...user };
@@ -5503,8 +5506,14 @@ async function githubFileContent(file) {
   if (!file.raw_url) return typeof file.content === 'string' ? file.content : '';
   try {
     const authorized = await fetch(file.raw_url, { headers: githubHeaders(), cache: 'no-store' });
+    if (authorized.status === 401) {
+      const error = Error(t('githubAuthExpired')); error.code = 'github-auth-expired'; throw error;
+    }
     if (authorized.ok) return await authorized.text();
-  } catch { /* some raw GitHub hosts reject browser authorization headers */ }
+  } catch (error) {
+    if (error?.code === 'github-auth-expired') throw error;
+    /* some raw GitHub hosts reject browser authorization headers */
+  }
   try {
     const raw = await fetch(file.raw_url, { cache: 'no-store' });
     return raw.ok ? await raw.text() : null;
@@ -5576,6 +5585,19 @@ function githubBrowserError(error) {
   }
   return message;
 }
+function invalidateGithubToken() {
+  if (!state.github.token && !state.github.user) return;
+  state.github.token = '';
+  state.github.user = null;
+  state.github.deviceCode = '';
+  state.github.userCode = '';
+  state.github.verificationUri = '';
+  state.github.verificationUriComplete = '';
+  state.github.expiresAt = 0;
+  state.github.manualTokenOpen = false;
+  saveGithub();
+  if (state.githubDialogOpen && !$('#githubDialog')?.hidden) renderGithubDialog();
+}
 async function githubApiError(response, fallback = '') {
   let message = '';
   try {
@@ -5583,6 +5605,10 @@ async function githubApiError(response, fallback = '') {
     message = data?.message || data?.error_description || data?.error || '';
   } catch { /* GitHub may return an empty or non-JSON error body. */ }
   const suffix = response?.status ? ' (' + response.status + ')' : '';
+  if (response?.status === 401) {
+    invalidateGithubToken();
+    const error = Error(t('githubAuthExpired')); error.code = 'github-auth-expired'; return error;
+  }
   return Error((message || fallback || (state.language === 'en' ? 'GitHub request failed' : 'GitHub 请求失败')) + suffix);
 }
 function githubSyncLabel(mode, key) {
@@ -5634,7 +5660,7 @@ async function pollGithubLogin() {
       if (data.access_token) {
         state.github.token = data.access_token; state.github.deviceCode = ''; state.github.verificationUriComplete = '';
         const userResponse = await fetch('https://api.github.com/user', { headers: githubHeaders() });
-        if (!userResponse.ok) throw Error();
+        if (!userResponse.ok) throw await githubApiError(userResponse, t('githubAuthExpired'));
         state.github.user = await userResponse.json(); saveGithub(); renderGithubDialog();
         toast(state.language === 'en' ? 'GitHub connected' : 'GitHub 已连接'); return;
       }
@@ -5769,6 +5795,7 @@ async function githubDownload() {
         break;
       } catch (error) {
         lastError = error;
+        if (error?.code === 'github-auth-expired') throw error;
       }
     }
     if (!gist?.id || !remote) throw lastError || Error(t('githubSyncInvalidData'));
