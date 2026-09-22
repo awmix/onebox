@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.265';
+const APP_VERSION = '2.18.266';
 // The OAuth secret stays in the Cloudflare Worker. The browser only knows the
 // public client id and receives the authorization result in the URL fragment,
 // which is consumed immediately and never sent to a server.
@@ -205,7 +205,7 @@ const DICT = {
     calendarDesc: '公历、农历、节气、节假日、补班和个人日程集中查看。',
     weatherDesc: '搜索区县，查看实时、小时级和未来 15 天天气趋势。',
     convertDesc: '常用单位换算',
-    developmentDesc: 'JSON、文本和时间工具，记录保存在本机。', devJsonFormat: 'JSON 格式化', devJsonCompare: 'JSON 对比', devTextStats: '文本统计', devTimestamp: '时间戳', devInput: '输入', devOutput: '输出', devFormat: '格式化', devMinify: '压缩', devCompare: '开始对比', devAnalyze: '统计文本', devConvert: '转换时间', devSaveRecord: '保存记录', devClear: '清空', devCopy: '复制结果', devExample: '示例', devRecords: '历史记录', devNoRecords: '还没有记录', devReuseHint: '点击记录即可复用', devJsonA: 'JSON A', devJsonB: 'JSON B', devValid: 'JSON 有效', devInvalid: 'JSON 格式有误', devSame: '两份 JSON 相同', devDifferent: '发现 {count} 处差异', devCharacters: '字符', devNonSpace: '非空格字符', devLines: '行数', devChinese: '中文字符', devWords: '单词', devParagraphs: '段落', devTimestampToDate: '时间戳 → 日期', devDateToTimestamp: '日期 → 时间戳', devSeconds: '秒', devMilliseconds: '毫秒', devNow: '当前时间',
+    developmentDesc: 'JSON、文本和时间工具，记录保存在本机。', devJsonFormat: 'JSON 格式化', devJsonCompare: 'JSON 对比', devTextStats: '文本统计', devTimestamp: '时间戳', devInput: '输入', devOutput: '输出', devFormat: '格式化', devMinify: '压缩', devCompare: '开始对比', devAnalyze: '统计文本', devConvert: '转换时间', devSaveRecord: '保存记录', devClear: '清空', devCopy: '复制结果', devExample: '示例', devRecords: '历史记录', devNoRecords: '还没有记录', devReuseHint: '点击记录即可复用', devJsonA: 'JSON A', devJsonB: 'JSON B', devValid: 'JSON 有效', devInvalid: 'JSON 格式有误', devSame: '两份 JSON 相同', devDifferent: '发现 {count} 处差异', devCharacters: '字符', devNonSpace: '非空格字符', devLines: '行数', devChinese: '中文字符', devWords: '单词', devParagraphs: '段落', devTimestampToDate: '时间戳 → 日期', devDateToTimestamp: '日期 → 时间戳', devSeconds: '秒', devMilliseconds: '毫秒', devNow: '当前时间', devUnescape: '去转义', devExpandAll: '全部展开', devCollapseAll: '全部折叠', devFullscreen: '全屏', devExitFullscreen: '退出全屏',
     translateDesc: '快速翻译，结果保存在本机',
     recentCalculations: '最近计算', clear: '清除', ready: '完成的计算会显示在这里。',
     scientific: '科学计算', collapse: '收起', expand: '展开', degree: '度', radian: '弧度',
@@ -250,7 +250,7 @@ const DICT = {
     calendarDesc: 'Gregorian, lunar, solar terms, holidays, make-up workdays and personal events.',
     weatherDesc: 'Search cities and districts for current, hourly and 15-day forecasts.',
     convertDesc: 'Common unit conversion',
-    developmentDesc: 'JSON, text and time tools with local history.', devJsonFormat: 'JSON format', devJsonCompare: 'JSON compare', devTextStats: 'Text stats', devTimestamp: 'Timestamp', devInput: 'Input', devOutput: 'Output', devFormat: 'Format', devMinify: 'Minify', devCompare: 'Compare', devAnalyze: 'Analyze text', devConvert: 'Convert', devSaveRecord: 'Save record', devClear: 'Clear', devCopy: 'Copy result', devExample: 'Example', devRecords: 'History', devNoRecords: 'No records yet', devReuseHint: 'Click a record to reuse it', devJsonA: 'JSON A', devJsonB: 'JSON B', devValid: 'Valid JSON', devInvalid: 'Invalid JSON', devSame: 'The two JSON values are identical', devDifferent: '{count} differences found', devCharacters: 'Characters', devNonSpace: 'Non-space', devLines: 'Lines', devChinese: 'Chinese', devWords: 'Words', devParagraphs: 'Paragraphs', devTimestampToDate: 'Timestamp → date', devDateToTimestamp: 'Date → timestamp', devSeconds: 'Seconds', devMilliseconds: 'Milliseconds', devNow: 'Now',
+    developmentDesc: 'JSON, text and time tools with local history.', devJsonFormat: 'JSON format', devJsonCompare: 'JSON compare', devTextStats: 'Text stats', devTimestamp: 'Timestamp', devInput: 'Input', devOutput: 'Output', devFormat: 'Format', devMinify: 'Minify', devCompare: 'Compare', devAnalyze: 'Analyze text', devConvert: 'Convert', devSaveRecord: 'Save record', devClear: 'Clear', devCopy: 'Copy result', devExample: 'Example', devRecords: 'History', devNoRecords: 'No records yet', devReuseHint: 'Click a record to reuse it', devJsonA: 'JSON A', devJsonB: 'JSON B', devValid: 'Valid JSON', devInvalid: 'Invalid JSON', devSame: 'The two JSON values are identical', devDifferent: '{count} differences found', devCharacters: 'Characters', devNonSpace: 'Non-space', devLines: 'Lines', devChinese: 'Chinese', devWords: 'Words', devParagraphs: 'Paragraphs', devTimestampToDate: 'Timestamp → date', devDateToTimestamp: 'Date → timestamp', devSeconds: 'Seconds', devMilliseconds: 'Milliseconds', devNow: 'Now', devUnescape: 'Unescape', devExpandAll: 'Expand all', devCollapseAll: 'Collapse all', devFullscreen: 'Fullscreen', devExitFullscreen: 'Exit fullscreen',
     translateDesc: 'Fast translation, saved locally',
     recentCalculations: 'Recent calculations', clear: 'Clear', ready: 'Completed calculations appear here.',
     scientific: 'Scientific', collapse: 'Hide', expand: 'Show', degree: 'DEG', radian: 'RAD',
@@ -325,7 +325,7 @@ function normalizeDevTools(value) {
   const records = Object.fromEntries(DEV_TOOL_IDS.map((id) => [id, Array.isArray(sourceRecords[id]) ? sourceRecords[id].filter((item) => item && item.id).slice(0, 24) : []]));
   return {
     active: DEV_TOOL_IDS.includes(source.active) ? source.active : DEV_TOOL_IDS[0],
-    formatInput: String(source.formatInput || ''), formatOutput: String(source.formatOutput || ''), formatStatus: String(source.formatStatus || ''), formatCompact: source.formatCompact === true,
+    formatInput: String(source.formatInput || ''), formatOutput: String(source.formatOutput || ''), formatStatus: String(source.formatStatus || ''), formatCompact: source.formatCompact === true, formatUnescape: source.formatUnescape !== false, formatCollapsed: Array.isArray(source.formatCollapsed) ? [...new Set(source.formatCollapsed.map((item) => String(item)))] : [],
     compareLeft: String(source.compareLeft || ''), compareRight: String(source.compareRight || ''), compareOutput: String(source.compareOutput || ''), compareStatus: String(source.compareStatus || ''),
     textInput: String(source.textInput || ''), textOutput: source.textOutput && typeof source.textOutput === 'object' ? source.textOutput : null,
     timestampMode: source.timestampMode === 'date' ? 'date' : 'timestamp', timestampUnit: source.timestampUnit === 'ms' ? 'ms' : 's', timestampValue: String(source.timestampValue || ''), timestampDate: String(source.timestampDate || ''), timestampOutput: String(source.timestampOutput || ''), timestampStatus: String(source.timestampStatus || ''),
@@ -4899,9 +4899,26 @@ function parseDeveloperJson(value) {
   source = source.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
   const callback = source.match(/^[\w$]+\s*\(([\s\S]*)\)\s*;?$/);
   if (callback) source = callback[1].trim();
-  let parsed = JSON.parse(source);
-  if (typeof parsed === 'string' && /^[\[{]/.test(parsed.trim())) parsed = JSON.parse(parsed);
-  return parsed;
+  const parseCandidate = (candidate) => {
+    const parsed = JSON.parse(candidate);
+    if (typeof parsed === 'string' && /^[\[{]/.test(parsed.trim())) return { value: JSON.parse(parsed), unescaped: true };
+    return { value: parsed, unescaped: false };
+  };
+  try { return parseCandidate(source); } catch (directError) {
+    if (state.devTools.formatUnescape === false) throw directError;
+    let decoded = source;
+    if ((decoded.startsWith('"') && decoded.endsWith('"')) || (decoded.startsWith("'") && decoded.endsWith("'"))) {
+      try {
+        const wrapped = decoded.startsWith("'") ? '"' + decoded.slice(1, -1).replace(/"/g, '\\"') + '"' : decoded;
+        const nested = JSON.parse(wrapped);
+        if (typeof nested === 'string') decoded = nested;
+      } catch { /* Continue with the lighter escape decoder below. */ }
+    }
+    decoded = decoded.replace(/\\(["\\/])/g, '$1').replace(/\\n/g, '\n').replace(/\\r/g, '\r').replace(/\\t/g, '\t').replace(/\\b/g, '\b').replace(/\\f/g, '\f').replace(/\\u([0-9a-f]{4})/gi, (_, hex) => String.fromCharCode(parseInt(hex, 16)));
+    const parsed = JSON.parse(decoded);
+    if (typeof parsed === 'string' && /^[\[{]/.test(parsed.trim())) return { value: JSON.parse(parsed), unescaped: true };
+    return { value: parsed, unescaped: true };
+  }
 }
 function jsonValueLabel(value) {
   if (value === undefined) return '∅';
@@ -4921,11 +4938,50 @@ function compareDeveloperJson(left, right, path = '$', changes = []) {
 }
 function formatDeveloperJson(value, compact = false) {
   try {
-    const parsed = parseDeveloperJson(value);
-    return { ok: true, output: JSON.stringify(parsed, null, compact ? 0 : 2), message: t('devValid') };
+    const result = parseDeveloperJson(value);
+    return { ok: true, output: JSON.stringify(result.value, null, compact ? 0 : 2), message: t('devValid') + (result.unescaped ? ' · ' + t('devUnescape') : '') };
   } catch (error) {
     return { ok: false, output: '', message: t('devInvalid') + (error?.message ? '：' + error.message : '') };
   }
+}
+function devJsonPathSegment(key, array) { return array ? '[' + key + ']' : '.' + String(key).replace(/([.\\])/g, '\\$1'); }
+function devJsonType(value) {
+  if (value === null) return 'null';
+  if (Array.isArray(value)) return 'array';
+  return typeof value;
+}
+function devJsonPrimitive(value) {
+  return '<span class="dev-json-value dev-json-' + devJsonType(value) + '">' + escapeHtml(jsonValueLabel(value)) + '</span>';
+}
+function devJsonSummary(value) {
+  const count = value && typeof value === 'object' ? Object.keys(value).length : 0;
+  return Array.isArray(value) ? '[… ' + count + ']' : '{… ' + count + '}';
+}
+function devJsonTreeNode(value, path = '$', label = '', depth = 0, trailingComma = false) {
+  const container = value && typeof value === 'object';
+  const entries = container ? Object.entries(value) : [];
+  const empty = container && entries.length === 0;
+  const collapsed = container && !empty && state.devTools.formatCollapsed.includes(path);
+  const keyMarkup = label === '' ? '' : '<span class="dev-json-key">' + escapeHtml(JSON.stringify(label)) + '</span><span class="dev-json-colon">:</span> ';
+  const comma = trailingComma ? ',' : '';
+  if (!container) return '<div class="dev-json-line dev-json-leaf" style="--dev-depth:' + depth + '">' + keyMarkup + devJsonPrimitive(value) + comma + '</div>';
+  const open = Array.isArray(value) ? '[' : '{';
+  const close = Array.isArray(value) ? ']' : '}';
+  const toggle = empty ? '<span class="dev-json-toggle-placeholder"></span>' : '<button class="dev-json-toggle" type="button" data-dev-json-toggle data-dev-json-path="' + encodeURIComponent(path) + '" aria-expanded="' + String(!collapsed) + '" aria-label="' + escapeHtml((collapsed ? t('devExpandAll') : t('devCollapseAll')) + ' ' + (label || '$')) + '">' + (collapsed ? '▸' : '▾') + '</button>';
+  const openLine = '<div class="dev-json-line dev-json-open ' + (collapsed ? 'is-collapsed' : '') + '" style="--dev-depth:' + depth + '">' + toggle + keyMarkup + '<span class="dev-json-bracket">' + (collapsed ? devJsonSummary(value) : open) + '</span>' + (collapsed ? comma : '') + '</div>';
+  if (empty || collapsed) return '<div class="dev-json-node ' + (collapsed ? 'is-collapsed' : '') + '">' + openLine + (empty ? '<span class="dev-json-close-inline">' + close + (comma ? ',' : '') + '</span>' : '') + '</div>';
+  const children = entries.map(([key, child], index) => devJsonTreeNode(child, path + devJsonPathSegment(key, Array.isArray(value)), Array.isArray(value) ? '' : key, depth + 1, index < entries.length - 1)).join('');
+  return '<div class="dev-json-node">' + openLine + '<div class="dev-json-children">' + children + '</div><div class="dev-json-line dev-json-close" style="--dev-depth:' + depth + '"><span class="dev-json-toggle-placeholder"></span><span class="dev-json-bracket">' + close + comma + '</span></div></div>';
+}
+function renderDeveloperJsonTree() {
+  if (!state.devTools.formatOutput) return '<div class="dev-json-empty">' + escapeHtml(t('devOutput')) + '</div>';
+  try { return '<div class="dev-json-tree" role="tree">' + devJsonTreeNode(JSON.parse(state.devTools.formatOutput)) + '</div>'; } catch { return '<pre class="dev-result-pre">' + escapeHtml(state.devTools.formatOutput) + '</pre>'; }
+}
+function collectDeveloperJsonPaths(value, path = '$', output = []) {
+  if (!value || typeof value !== 'object' || Object.keys(value).length === 0) return output;
+  output.push(path);
+  Object.entries(value).forEach(([key, child]) => collectDeveloperJsonPaths(child, path + devJsonPathSegment(key, Array.isArray(value)), output));
+  return output;
 }
 function developerTextStats(value) {
   const text = String(value || '');
@@ -4964,8 +5020,8 @@ function devRecordPanel(kind) {
 function renderDeveloperJsonFormat() {
   const dev = state.devTools; const result = dev.formatOutput || '';
   return '<div class="dev-workbench dev-json-format"><div class="dev-editor-grid">' +
-    '<section class="dev-pane">' + devPaneHead(t('devInput'), devActionButton('json-example', t('devExample')) + devActionButton('json-clear', t('devClear'))) + '<textarea class="dev-code-editor" data-dev-field="formatInput" spellcheck="false" placeholder="{\n  &quot;name&quot;: &quot;OneBox&quot;\n}">' + escapeHtml(dev.formatInput) + '</textarea></section>' +
-    '<section class="dev-pane dev-output-pane">' + devPaneHead(t('devOutput'), devActionButton('json-format', t('devFormat')) + devActionButton('json-minify', t('devMinify')) + devActionButton('dev-copy-output', t('devCopy'))) + '<textarea class="dev-code-editor" data-dev-field="formatOutput" readonly spellcheck="false" placeholder="' + escapeHtml(t('devOutput')) + '">' + escapeHtml(result) + '</textarea>' + devStatus(dev.formatStatus, dev.formatStatus.startsWith(t('devInvalid'))) + '</section>' +
+    '<section class="dev-pane">' + devPaneHead(t('devInput'), devActionButton('json-example', t('devExample')) + devActionButton('json-clear', t('devClear'))) + '<label class="dev-check"><input type="checkbox" data-dev-field="formatUnescape" ' + (dev.formatUnescape ? 'checked' : '') + '> ' + t('devUnescape') + '</label><textarea class="dev-code-editor" data-dev-field="formatInput" spellcheck="false" placeholder="{\n  &quot;name&quot;: &quot;OneBox&quot;\n}">' + escapeHtml(dev.formatInput) + '</textarea></section>' +
+    '<section class="dev-pane dev-output-pane">' + devPaneHead(t('devOutput'), devActionButton('json-format', t('devFormat')) + devActionButton('json-minify', t('devMinify')) + devActionButton('json-expand-all', t('devExpandAll')) + devActionButton('json-collapse-all', t('devCollapseAll')) + devActionButton('dev-copy-output', t('devCopy'))) + renderDeveloperJsonTree() + devStatus(dev.formatStatus, dev.formatStatus.startsWith(t('devInvalid'))) + '</section>' +
     '</div></div>';
 }
 function renderDeveloperCompare() {
@@ -4990,7 +5046,21 @@ function developerTool() {
   const modes = DEV_TOOL_IDS.map((id) => '<button type="button" class="dev-mode-tab ' + (state.devTools.active === id ? 'active' : '') + '" data-dev-mode="' + id + '">' + devModeLabel(id) + '</button>').join('');
   const mode = state.devTools.active;
   const content = mode === 'json-format' ? renderDeveloperJsonFormat() : mode === 'json-compare' ? renderDeveloperCompare() : mode === 'text-stats' ? renderDeveloperStats() : renderDeveloperTimestamp();
-  return '<section class="dev-tools-page"><header class="dev-tools-head"><div><span class="section-kicker">TOOLBOX</span><h2>' + t('development') + '</h2><p>' + t('developmentDesc') + '</p></div><span class="dev-local-badge">' + (state.language === 'en' ? 'LOCAL' : '本地处理') + '</span></header><nav class="dev-mode-tabs" aria-label="' + escapeHtml(t('development')) + '">' + modes + '</nav><div class="dev-tools-body"><div class="dev-current-tool">' + content + '</div>' + devRecordPanel(mode) + '</div></section>';
+  const fullscreen = '<button type="button" class="dev-fullscreen-button" data-dev-fullscreen aria-pressed="false" aria-label="' + escapeHtml(t('devFullscreen')) + '" title="' + escapeHtml(t('devFullscreen')) + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/></svg></button>';
+  return '<section class="dev-tools-page"><header class="dev-tools-head"><div><span class="section-kicker">TOOLBOX</span><h2>' + t('development') + '</h2><p>' + t('developmentDesc') + '</p></div><span class="dev-local-badge">' + (state.language === 'en' ? 'LOCAL' : '本地处理') + '</span></header><nav class="dev-mode-tabs" aria-label="' + escapeHtml(t('development')) + '">' + fullscreen + modes + '</nav><div class="dev-tools-body"><div class="dev-current-tool">' + content + '</div>' + devRecordPanel(mode) + '</div></section>';
+}
+function toggleDeveloperFullscreen(force) {
+  const page = $('.dev-tools-page');
+  if (!page) return;
+  const active = typeof force === 'boolean' ? force : !page.classList.contains('dev-is-fullscreen');
+  page.classList.toggle('dev-is-fullscreen', active);
+  document.body.classList.toggle('dev-tools-fullscreen', active);
+  const button = page.querySelector('[data-dev-fullscreen]');
+  if (button) {
+    button.setAttribute('aria-pressed', String(active));
+    button.setAttribute('aria-label', t(active ? 'devExitFullscreen' : 'devFullscreen'));
+    button.setAttribute('title', t(active ? 'devExitFullscreen' : 'devFullscreen'));
+  }
 }
 function runDeveloperAction(action, sourceEvent = null) {
   const dev = state.devTools;
@@ -5001,11 +5071,11 @@ function runDeveloperAction(action, sourceEvent = null) {
   else if (action === 'json-a-clear') dev.compareLeft = '', dev.compareOutput = '', dev.compareStatus = '';
   else if (action === 'json-b-clear') dev.compareRight = '', dev.compareOutput = '', dev.compareStatus = '';
   else if (action === 'json-format' || action === 'json-minify') {
-    const compact = action === 'json-minify'; const result = formatDeveloperJson(dev.formatInput, compact); dev.formatCompact = compact; dev.formatOutput = result.output; dev.formatStatus = result.message;
-    if (result.ok) addDevRecord('json-format', { input: devRecordText(dev.formatInput), output: devRecordText(result.output), compact });
+    const compact = action === 'json-minify'; const result = formatDeveloperJson(dev.formatInput, compact); dev.formatCompact = compact; dev.formatOutput = result.output; dev.formatStatus = result.message; dev.formatCollapsed = [];
+    if (result.ok) addDevRecord('json-format', { input: devRecordText(dev.formatInput), output: devRecordText(result.output), compact, unescape: dev.formatUnescape });
   } else if (action === 'json-compare') {
     try {
-      const left = parseDeveloperJson(dev.compareLeft); const right = parseDeveloperJson(dev.compareRight); const changes = compareDeveloperJson(left, right); dev.compareOutput = changes.length ? changes.map((item) => item.path + '\n− ' + item.before + '\n+ ' + item.after).join('\n\n') : '✓ ' + t('devSame'); dev.compareStatus = changes.length ? t('devDifferent').replace('{count}', changes.length) : t('devSame');
+      const left = parseDeveloperJson(dev.compareLeft).value; const right = parseDeveloperJson(dev.compareRight).value; const changes = compareDeveloperJson(left, right); dev.compareOutput = changes.length ? changes.map((item) => item.path + '\n− ' + item.before + '\n+ ' + item.after).join('\n\n') : '✓ ' + t('devSame'); dev.compareStatus = changes.length ? t('devDifferent').replace('{count}', changes.length) : t('devSame');
       addDevRecord('json-compare', { left: devRecordText(dev.compareLeft), right: devRecordText(dev.compareRight), output: devRecordText(dev.compareOutput), status: dev.compareStatus });
     } catch (error) { dev.compareOutput = ''; dev.compareStatus = t('devInvalid') + (error?.message ? '：' + error.message : ''); }
   } else if (action === 'text-clear') dev.textInput = '', dev.textOutput = null;
@@ -5020,7 +5090,7 @@ function loadDeveloperRecord(kind, id) {
   const record = (state.devTools.records[kind] || []).find((item) => item.id === id);
   if (!record) return;
   state.devTools.active = kind;
-  if (kind === 'json-format') Object.assign(state.devTools, { formatInput: record.input || '', formatOutput: record.output || '', formatCompact: record.compact === true, formatStatus: t('devValid') });
+  if (kind === 'json-format') Object.assign(state.devTools, { formatInput: record.input || '', formatOutput: record.output || '', formatCompact: record.compact === true, formatUnescape: record.unescape !== false, formatCollapsed: [], formatStatus: t('devValid') });
   if (kind === 'json-compare') Object.assign(state.devTools, { compareLeft: record.left || '', compareRight: record.right || '', compareOutput: record.output || '', compareStatus: record.status || '' });
   if (kind === 'text-stats') Object.assign(state.devTools, { textInput: record.text || '', textOutput: record.output || null });
   if (kind === 'timestamp') Object.assign(state.devTools, { timestampMode: record.mode === 'date' ? 'date' : 'timestamp', timestampUnit: record.unit === 'ms' ? 'ms' : 's', timestampValue: record.value || '', timestampDate: record.date || '', timestampOutput: record.output || '', timestampStatus: record.status || '' });
@@ -7048,12 +7118,28 @@ workspace.addEventListener('click', async (event) => {
   if (section) return selectSection(section.dataset.section);
   const homeTool = event.target.closest('[data-home-tool]');
   if (homeTool) return selectTool(homeTool.dataset.homeTool);
+  const devJsonToggle = event.target.closest('[data-dev-json-toggle]');
+  if (devJsonToggle) {
+    const path = decodeURIComponent(devJsonToggle.dataset.devJsonPath || '$');
+    const collapsed = new Set(state.devTools.formatCollapsed);
+    if (collapsed.has(path)) collapsed.delete(path); else collapsed.add(path);
+    state.devTools.formatCollapsed = [...collapsed]; saveDevTools(); return render();
+  }
+  if (event.target.closest('[data-dev-fullscreen]')) return toggleDeveloperFullscreen();
   const devMode = event.target.closest('[data-dev-mode]');
   if (devMode) { state.devTools.active = DEV_TOOL_IDS.includes(devMode.dataset.devMode) ? devMode.dataset.devMode : DEV_TOOL_IDS[0]; saveDevTools(); return render(); }
   const devRecord = event.target.closest('[data-dev-record]');
   if (devRecord) return loadDeveloperRecord(devRecord.dataset.devRecordKind, devRecord.dataset.devRecord);
   const devAction = event.target.closest('[data-dev-action]');
-  if (devAction) { if (devAction.dataset.devAction === 'dev-copy-output') return developerCopyOutput(); return runDeveloperAction(devAction.dataset.devAction, event); }
+  if (devAction) {
+    if (devAction.dataset.devAction === 'dev-copy-output') return developerCopyOutput();
+    if (devAction.dataset.devAction === 'json-expand-all' || devAction.dataset.devAction === 'json-collapse-all') {
+      if (devAction.dataset.devAction === 'json-expand-all') state.devTools.formatCollapsed = [];
+      else { try { state.devTools.formatCollapsed = collectDeveloperJsonPaths(JSON.parse(state.devTools.formatOutput || 'null')); } catch { state.devTools.formatCollapsed = []; } }
+      saveDevTools(); return render();
+    }
+    return runDeveloperAction(devAction.dataset.devAction, event);
+  }
   if (event.target.closest('[data-open-navigation-settings]')) {
     state.navigationSettingsOpen = !state.navigationSettingsOpen;
     clearNavigationActionCards();
@@ -7318,12 +7404,12 @@ workspace.addEventListener('dblclick', (event) => {
   if (day && state.section === 'tools' && state.tool === 'calendar') { event.preventDefault(); renderLunarDialog(day.dataset.date); }
 });
 workspace.addEventListener('input', (event) => {
-  if (event.target.dataset.devField) { state.devTools[event.target.dataset.devField] = event.target.value; saveDevTools(); }
+  if (event.target.dataset.devField) { state.devTools[event.target.dataset.devField] = event.target.type === 'checkbox' ? event.target.checked : event.target.value; saveDevTools(); }
   if (event.target.id === 'conversionValue') { conversion.value = event.target.value; const output = $('.conversion-result strong'); if (output) output.textContent = formatNumber(convertedValue()); }
   if (event.target.id === 'translationInput') state.translation.input = event.target.value;
 });
 workspace.addEventListener('change', (event) => {
-  if (event.target.dataset.devField) { state.devTools[event.target.dataset.devField] = event.target.value; saveDevTools(); if (event.target.dataset.devField === 'timestampUnit') render(); }
+  if (event.target.dataset.devField) { state.devTools[event.target.dataset.devField] = event.target.type === 'checkbox' ? event.target.checked : event.target.value; saveDevTools(); if (event.target.dataset.devField === 'timestampUnit') render(); }
   if (event.target.id === 'readerFileInput') { importReaderFiles(event.target.files); return; }
   if (event.target.id === 'conversionCategory') { conversion.category = event.target.value; conversion.from = 0; conversion.to = 1; return render(); }
   if (event.target.id === 'fromUnit') { conversion.from = Number(event.target.value); return render(); }
@@ -7531,6 +7617,7 @@ window.addEventListener('scroll', () => {
 }, { passive: true });
 
 document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape' && $('.dev-tools-page.dev-is-fullscreen')) { toggleDeveloperFullscreen(false); return; }
   if (state.readerMode === 'reading' && !event.target.matches('input, textarea, select')) {
     if (event.key === 'ArrowLeft') { event.preventDefault(); turnReaderPage(-1); return; }
     if (event.key === 'ArrowRight') { event.preventDefault(); turnReaderPage(1); return; }
