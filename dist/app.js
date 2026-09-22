@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.278';
+const APP_VERSION = '2.18.279';
 // The OAuth secret stays in the Cloudflare Worker. The browser only knows the
 // public client id and receives the authorization result in the URL fragment,
 // which is consumed immediately and never sent to a server.
@@ -76,8 +76,8 @@ const FEED_SOURCE_REGISTRY = [
 const RSS_SOURCES = FEED_SOURCE_REGISTRY.filter((source) => source.enabled !== false);
 const RSS_REFRESH_INTERVAL = 2 * 60 * 1000;
 const HOME_FEED_PENDING_LIMIT = 30;
-const HOME_FEED_REQUEST_TIMEOUT_MS = 7000;
-const HOME_FEED_SOURCE_DEADLINE_MS = 9000;
+const HOME_FEED_REQUEST_TIMEOUT_MS = 4500;
+const HOME_FEED_SOURCE_DEADLINE_MS = 5500;
 const HOME_FEED_RENDER_LIMIT = 80;
 const RSS_RETENTION_MS = 7 * 24 * 60 * 60 * 1000;
 const RSS_MAX_ITEMS_PER_SOURCE = 120;
@@ -1392,12 +1392,12 @@ async function refreshHomeFeedSource(source, requestToken) {
     const pendingIds = [...new Set([...pendingBefore, ...discoveredIds])]
       .filter((id) => availableIds.has(id))
       .slice(-HOME_FEED_PENDING_LIMIT);
-    const previousNewIds = homeFeedNewIds(source.id);
-    state.homeFeed.newItems[source.id] = discoveredIds.length
-      ? discoveredIds
-      : pendingBefore.size
-        ? previousNewIds.filter((id) => availableIds.has(id))
-        : [];
+    // Keep one authoritative batch for both the count and the divider. This
+    // includes items discovered by an earlier refresh that the user has not
+    // opened yet, so the label cannot say 5 while only 2 are highlighted.
+    const currentNewIds = [...new Set([...pendingBefore, ...discoveredIds])]
+      .filter((id) => availableIds.has(id));
+    state.homeFeed.newItems[source.id] = currentNewIds;
     state.homeFeed.newItemsPending[source.id] = pendingIds;
     state.homeFeed.sources[source.id] = { ...result, items: mergedItems };
     state.homeFeed.updatedAt = Date.now();
@@ -1432,6 +1432,10 @@ function loadHomeFeeds(force = false, sourceId = '') {
   const now = Date.now();
   const sourcesToLoad = candidates.filter((source) => {
     if (homeFeedRequests.has(source.id)) return false;
+    // A render after a failed request must not immediately start the same
+    // request again. Explicit Tab taps and pull-to-refresh pass force=true
+    // and are the intentional retry boundary.
+    if (!force && (state.homeFeed.errors[source.id] || state.homeFeed.stale[source.id])) return false;
     if (force) return true;
     const cached = state.homeFeed.sources[source.id];
     return !cached?.items?.length || state.homeFeed.cacheVersion !== APP_VERSION || now - Number(cached.updatedAt || 0) >= RSS_REFRESH_INTERVAL;
