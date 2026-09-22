@@ -6,8 +6,9 @@
     .dark-dot { fill: #11131a; }
     .blue-dot { fill: #405cf5; }
     @media (prefers-color-scheme: dark) {
-      .tile { fill: #171a22; }
-      .dark-dot { fill: #f5f6fa; }
+      .tile { fill: #11131a; }
+      .dark-dot { fill: #696f7d; }
+      .blue-dot { fill: #eaedf4; }
     }
   </style>
   <rect class="tile" x="0" y="0" width="512" height="512"/>
