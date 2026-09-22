@@ -1241,10 +1241,6 @@ html.reader-focus #readerDialog .reader-dialog-card { width: min(720px, 100%); m
 .feed-source-scroll-button svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 2; }
 .feed-source-tab { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 7px; padding: 8px 11px; border: 1px solid transparent; border-radius: 11px; background: transparent; color: var(--muted); font-weight: 700; cursor: pointer; white-space: nowrap; }
 .feed-source-tab.active { background: var(--soft); border-color: var(--primary); color: var(--primary); }
-.feed-source-new-action { display: inline-flex; align-items: center; min-height: 20px; padding: 2px 6px; border-radius: 999px; color: var(--primary); background: color-mix(in srgb, var(--primary) 10%, transparent); font-size: 10px; font-style: normal; font-weight: 800; line-height: 1.1; cursor: pointer; }
-.feed-source-new-action:hover, .feed-source-new-action:focus-visible { background: color-mix(in srgb, var(--primary) 18%, transparent); text-decoration: underline; }
-.feed-source-tab.is-loading { color: var(--primary); }
-.feed-tab-spinner { display: inline-block; width: 13px; height: 13px; flex: 0 0 13px; border: 2px solid color-mix(in srgb, var(--primary) 24%, transparent); border-top-color: var(--primary); border-radius: 50%; animation: feed-spin .75s linear infinite; }
 .feed-source-mark, .feed-source-tag b { display: inline-grid; place-items: center; flex: 0 0 auto; width: 22px; height: 22px; border-radius: 7px; font-size: 10px; font-weight: 850; letter-spacing: -.04em; }
 .feed-source-mark.all, .feed-source-tag.all b { background: var(--primary); color: #fff; }
 .feed-source-mark.ithome, .feed-source-tag.ithome b { background: #d92f36; color: #fff; }
@@ -1384,7 +1380,6 @@ html.reader-focus #readerDialog .reader-dialog-card { width: min(720px, 100%); m
 #workspace[data-tool="home"] .feed-source-tag.v2ex b { background: #5c86a8; color: #fff; border: 0; }
 #workspace[data-tool="home"] .feed-panel { margin-top: 6px; border-radius: 16px; touch-action: pan-y; }
 #workspace[data-tool="home"].feed-pulling { transform: translate3d(0, var(--feed-pull-distance, 0px), 0); transition: none; }
-#workspace[data-tool="home"] .feed-source-new-action { max-width: 142px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 @media (max-width: 600px) {
   #workspace[data-tool="home"] .feed-source-panel { padding-inline: 6px; }

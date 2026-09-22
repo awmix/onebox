@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.252';
+const APP_VERSION = '2.18.253';
 // The OAuth secret stays in the Cloudflare Worker. The browser only knows the
 // public client id and receives the authorization result in the URL fragment,
 // which is consumed immediately and never sent to a server.
@@ -65,8 +65,8 @@ const FEED_SOURCE_REGISTRY = [
   { id: 'bilibili', name: 'B站', badge: 'B', icon: 'icons/bilibili.ico?v=2.18.124', className: 'bilibili', mobileHost: 'm.bilibili.com', visibleByDefault: false, siteUrl: 'https://search.bilibili.com/all', fetchers: [{ kind: 'bilibili-hot', url: 'https://api.bilibili.com/x/web-interface/search/square?limit=30&platform=web' }, { kind: 'bilibili-hotword', url: 'https://s.search.bilibili.com/main/hotword' }] },
   { id: 'guancha', name: '风闻', badge: '风', icon: 'icons/guancha.png?v=2.18.124', className: 'guancha', mobileHost: 'user.guancha.cn', visibleByDefault: true, siteUrl: 'https://user.guancha.cn/main/index?s=fwdhsy', fetchers: [{ kind: 'guancha-fengwen', url: 'https://user.guancha.cn/main/index-list.json?page=1&order=1' }, { kind: 'guancha-fengwen', url: 'https://rsshub.app/guancha/topic/0/1' }] },
   { id: 'hupu', name: '虎扑', badge: '虎', icon: 'icons/hupu.ico?v=2.18.124', className: 'hupu', mobileHost: 'm.hupu.com', visibleByDefault: true, siteUrl: 'https://bbs.hupu.com/bxj', fetchers: [{ kind: 'hupu-bbs', url: 'https://bbs.hupu.com/bxj' }, { kind: 'hupu-bbs', url: 'https://bbs.hupu.com/topic-daily' }] },
-  { id: 'xiaohongshu', name: '红书', badge: '红', icon: 'https://www.xiaohongshu.com/favicon.ico?v=2.18.252', className: 'xiaohongshu', visibleByDefault: true, siteUrl: 'https://www.xiaohongshu.com/explore', fetchers: [{ kind: 'xiaohongshu-explore', url: 'https://www.xiaohongshu.com/explore' }, { kind: 'xiaohongshu-hotboard', url: 'https://uapis.cn/api/v1/misc/hotboard?type=xiaohongshu&limit=30', direct: true }] },
-  { id: 'douyin', name: '抖音', badge: '音', icon: 'https://www.douyin.com/favicon.ico?v=2.18.252', className: 'douyin', visibleByDefault: true, siteUrl: 'https://www.douyin.com/jingxuan', fetchers: [{ kind: 'douyin-hotboard', url: 'https://uapis.cn/api/v1/misc/hotboard?type=douyin&limit=30', direct: true }, { kind: 'douyin-jingxuan', url: 'https://www.douyin.com/jingxuan' }] },
+  { id: 'xiaohongshu', name: '红书', badge: '红', icon: 'https://www.xiaohongshu.com/favicon.ico?v=2.18.253', className: 'xiaohongshu', visibleByDefault: true, siteUrl: 'https://www.xiaohongshu.com/explore', fetchers: [{ kind: 'xiaohongshu-explore', url: 'https://www.xiaohongshu.com/explore' }, { kind: 'xiaohongshu-hotboard', url: 'https://uapis.cn/api/v1/misc/hotboard?type=xiaohongshu&limit=30', direct: true }] },
+  { id: 'douyin', name: '抖音', badge: '音', icon: 'https://www.douyin.com/favicon.ico?v=2.18.253', className: 'douyin', visibleByDefault: true, siteUrl: 'https://www.douyin.com/jingxuan', fetchers: [{ kind: 'douyin-hotboard', url: 'https://uapis.cn/api/v1/misc/hotboard?type=douyin&limit=30', direct: true }, { kind: 'douyin-jingxuan', url: 'https://www.douyin.com/jingxuan' }] },
 ];
 const RSS_SOURCES = FEED_SOURCE_REGISTRY.filter((source) => source.enabled !== false);
 const RSS_REFRESH_INTERVAL = 2 * 60 * 1000;
@@ -1169,23 +1169,28 @@ function mergeFeedItems(source, incoming) {
 }
 async function fetchFeedSource(source) {
   const fetchers = Array.isArray(source.fetchers) ? source.fetchers : (source.urls || []).map((url) => ({ kind: 'rss', url }));
-  const successful = [];
-  for (const fetcher of fetchers) {
-    try {
-      const targetUrl = fetcher.direct ? fetcher.url : jinaReaderUrl(fetcher.url);
-      const response = await fetchWithTimeout(targetUrl, { cache: 'no-store', headers: { Accept: 'text/plain, application/json, application/xml' } }, 14000);
-      if (!response.ok) throw Error('HTTP ' + response.status);
-      const text = await response.text();
-      const payload = fetcher.kind === 'rss' || fetcher.kind === 'guancha-fengwen' ? null : jinaJson(text);
-      const items = fetcher.kind === 'rss' ? rssMarkdownItems(text, source) : fetcher.kind === 'hupu-bbs' ? hupuBbsItems(text, source) : fetcher.kind === 'guancha-fengwen' ? guanchaFengwenItems(text, source) : fetcher.kind === 'xiaohongshu-explore' ? xiaohongshuExploreItems(text, source) : fetcher.kind === 'douyin-jingxuan' ? douyinJingxuanItems(source) : structuredHotItems(payload, source, fetcher.kind);
-      if (items.length) { successful.push({ items, feedUrl: fetcher.url }); break; }
-    } catch { /* try the next source-specific fallback */ }
+  const fetchOne = async (fetcher) => {
+    const targetUrl = fetcher.direct ? fetcher.url : jinaReaderUrl(fetcher.url);
+    const response = await fetchWithTimeout(targetUrl, { cache: 'no-store', headers: { Accept: 'text/plain, application/json, application/xml' } }, 8000);
+    if (!response.ok) throw Error('HTTP ' + response.status);
+    const text = await response.text();
+    const payload = fetcher.kind === 'rss' || fetcher.kind === 'guancha-fengwen' ? null : jinaJson(text);
+    const items = fetcher.kind === 'rss' ? rssMarkdownItems(text, source) : fetcher.kind === 'hupu-bbs' ? hupuBbsItems(text, source) : fetcher.kind === 'guancha-fengwen' ? guanchaFengwenItems(text, source) : fetcher.kind === 'xiaohongshu-explore' ? xiaohongshuExploreItems(text, source) : fetcher.kind === 'douyin-jingxuan' ? douyinJingxuanItems(source) : structuredHotItems(payload, source, fetcher.kind);
+    if (!items.length) throw Error('Feed empty');
+    return { items, feedUrl: fetcher.url };
+  };
+  let successful;
+  try {
+    // Source fallbacks race each other. A slow or unavailable primary endpoint
+    // must not make the whole refresh wait before its fallback can respond.
+    successful = await Promise.any(fetchers.map(fetchOne));
+  } catch {
+    throw Error('Feed unavailable');
   }
-  if (!successful.length) throw Error('Feed unavailable');
-  const items = [...new Map(successful.flatMap((result) => result.items).map((item) => [item.id, item])).values()]
+  const items = [...new Map(successful.items.map((item) => [item.id, item])).values()]
     .sort((a, b) => (feedItemTimestamp(b) || 0) - (feedItemTimestamp(a) || 0))
     .slice(0, RSS_MAX_ITEMS_PER_SOURCE);
-  return { items, updatedAt: Date.now(), feedUrl: successful.map((result) => result.feedUrl).join(',') };
+  return { items, updatedAt: Date.now(), feedUrl: successful.feedUrl };
 }
 async function loadHomeFeeds(force = false, sourceId = '') {
   if (state.homeFeed.loading) return;
@@ -1331,8 +1336,8 @@ const MASCOT_ASSETS = {
 };
 const MASCOT_DIRECTIONS = ['up-left', 'up', 'up-right', 'left', 'center', 'right', 'down-left', 'down', 'down-right'];
 const MASCOT_REACTIONS = ['blink', 'heart', 'sparkle', 'surprised', 'wink', 'bashful', 'sleepy', 'dizzy', 'delighted'];
-const MASCOT_FULL_BODY_MARKUP = '<img class="onebox-mascot-fullbody" src="icons/mascot-fox-full.png?v=2.18.252" alt="" draggable="false">';
-const MASCOT_FULL_BODY_REACTIONS = 'icons/mascot-fox-full-reactions.png?v=2.18.252';
+const MASCOT_FULL_BODY_MARKUP = '<img class="onebox-mascot-fullbody" src="icons/mascot-fox-full.png?v=2.18.253" alt="" draggable="false">';
+const MASCOT_FULL_BODY_REACTIONS = 'icons/mascot-fox-full-reactions.png?v=2.18.253';
 const MASCOT_CLOCKWISE = ['right', 'down-right', 'down', 'down-left', 'left', 'up-left', 'up', 'up-right'];
 const MASCOT_SECTOR = (Math.PI * 2) / MASCOT_CLOCKWISE.length;
 const MASCOT_HYSTERESIS = 0.12;
@@ -1988,12 +1993,9 @@ function openFeedLink(link) {
 function homeSourceTabsMarkup() {
   const sources = homeFeedSources();
   const sourceTabs = sources.map((source, index) => {
-    const newCount = homeFeedPendingCount(source.id);
-    const newAction = newCount ? '<span class="feed-source-new-action" data-feed-only-new role="button" tabindex="0" aria-label="' + escapeHtml(homeFeedNewActionLabel(newCount)) + '">' + escapeHtml(homeFeedNewActionLabel(newCount)) + '</span>' : '';
-    const loading = state.homeFeed.loading && state.homeFeed.active === source.id ? '<i class="feed-tab-spinner" aria-label="' + escapeHtml(t('feedLoading')) + '"></i>' : '';
-    return '<button class="feed-source-tab ' + (state.homeFeed.active === source.id ? 'active' : '') + (state.homeFeed.loading && state.homeFeed.active === source.id ? ' is-loading' : '') + '" draggable="true" data-feed-source="' + source.id + '" data-feed-source-index="' + index + '" aria-busy="' + (state.homeFeed.loading && state.homeFeed.active === source.id ? 'true' : 'false') + '">' + homeTabMarkMarkup(source) + '<span>' + escapeHtml(source.name) + '</span>' + newAction + loading + '</button>';
+    return '<button class="feed-source-tab ' + (state.homeFeed.active === source.id ? 'active' : '') + '" draggable="true" data-feed-source="' + source.id + '" data-feed-source-index="' + index + '">' + homeTabMarkMarkup(source) + '<span>' + escapeHtml(source.name) + '</span></button>';
   }).join('');
-  const footprintTab = state.footprint ? '<button class="feed-source-tab ' + (state.homeFeed.active === 'footprint' ? 'active' : '') + '" data-feed-source="footprint" aria-label="' + t('footprint') + '">' + homeTabMarkMarkup({ id: 'footprint' }) + '<span>' + t('footprint') + '</span>' + (state.homeFeed.loading && state.homeFeed.active === 'footprint' ? '<i class="feed-tab-spinner" aria-label="' + escapeHtml(t('feedLoading')) + '"></i>' : '') + '</button>' : '';
+  const footprintTab = state.footprint ? '<button class="feed-source-tab ' + (state.homeFeed.active === 'footprint' ? 'active' : '') + '" data-feed-source="footprint" aria-label="' + t('footprint') + '">' + homeTabMarkMarkup({ id: 'footprint' }) + '<span>' + t('footprint') + '</span></button>' : '';
   return footprintTab + sourceTabs;
 }
 function homeSourcePickerMarkup() {
@@ -2061,7 +2063,7 @@ function renderHome() {
   }).join('');
   const feedBody = state.homeFeed.loading && !hasItems && !isFootprint ? '<div class="feed-loading"><span></span><span></span><span></span></div>' : hasItems ? '<div class="feed-list">' + feedList + '</div>' : '<p class="empty feed-empty">' + (isFootprint ? (state.language === 'en' ? 'No articles read yet.' : '还没有阅读过首页消息。') : t('feedEmpty')) + '</p>';
   const refreshState = state.homeFeed.loading ? '<div class="feed-refresh-state" role="status" aria-label="' + escapeHtml(t('feedLoading')) + '"><span></span></div>' : '';
-  const newContentAction = newCount ? '<div class="feed-new-content-action-wrap"><button class="feed-new-content-action" type="button" data-feed-only-new>' + escapeHtml(homeFeedNewActionLabel(newCount)) + '</button></div>' : '';
+  const newContentAction = !state.homeFeed.loading && newCount ? '<div class="feed-new-content-action-wrap"><button class="feed-new-content-action" type="button" data-feed-only-new>' + escapeHtml(homeFeedNewActionLabel(newCount)) + '</button></div>' : '';
   return '<div class="home-page feed-home"><section class="feed-panel">' + refreshState + newContentAction + (errors ? '<p class="feed-warning">' + t('feedPartial') + '</p>' : '') + feedBody + '<p class="feed-hint">' + t('feedProxyHint') + (state.homeFeed.updatedAt ? ' · ' + t('feedLastRefresh') + ' ' + escapeHtml(feedDate(state.homeFeed.updatedAt)) : '') + '</p></section></div>';
 }
 function navigationIconMarkup(site, extraClass = '') {
@@ -6265,19 +6267,6 @@ homeSourceNav.addEventListener('pointerdown', (event) => {
 homeSourceNav.addEventListener('pointerup', endLongPress);
 homeSourceNav.addEventListener('pointercancel', endLongPress);
 homeSourceNav.addEventListener('click', (event) => {
-  const newAction = event.target.closest('[data-feed-only-new]');
-  if (newAction) {
-    event.preventDefault();
-    event.stopPropagation();
-    const sourceId = newAction.closest('[data-feed-source]')?.dataset.feedSource || state.homeFeed.active;
-    if (sourceId !== state.homeFeed.active) {
-      state.homeFeed.active = sourceId;
-      render();
-      requestAnimationFrame(() => focusActiveHomeFeedTab(true));
-    }
-    revealHomeFeedNew(sourceId);
-    return;
-  }
   if (event.target.closest('[data-open-home-source-picker]')) {
     event.preventDefault();
     openHomeSourceDialog();
