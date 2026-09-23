@@ -1432,9 +1432,9 @@ main:has(#workspace[data-tool="home"]), main:has(#workspace[data-tool="messages"
 .feed-load-more-wrap { display: flex; justify-content: center; padding: 8px 12px 12px; border-top: 1px solid var(--line); }
 .feed-load-more { border: 0; border-radius: 0; padding: 7px 0; background: transparent; color: var(--muted); font-size: 12px; cursor: pointer; }
 .feed-load-more:hover, .feed-load-more:focus-visible { color: var(--primary); background: transparent; text-decoration: underline; text-underline-offset: 3px; }
-.feed-new-divider { display: flex; align-items: center; gap: 9px; margin: 5px 0 6px; color: var(--primary); font-size: 11px; font-weight: 750; line-height: 1.2; letter-spacing: .01em; }
-.feed-new-divider::before, .feed-new-divider::after { content: ''; flex: 1; height: 0; border-top: 2px dashed var(--primary); }
-.feed-new-divider span { padding: 0 4px; background: var(--panel); }
+.feed-new-divider { display: flex; align-items: center; gap: 10px; margin: 14px 0 10px; color: var(--muted); font-size: 11px; font-weight: 600; line-height: 1.2; letter-spacing: .03em; }
+.feed-new-divider::before, .feed-new-divider::after { content: ''; flex: 1; height: 1px; background: color-mix(in srgb, var(--primary) 18%, var(--line)); }
+.feed-new-divider span { padding: 5px 10px; border: 1px solid var(--line); border-radius: 999px; background: var(--panel-2); }
 
 #settingsDialog .settings-preferences { width: min(500px, 100%); }
 #settingsDialog .settings-preference-row { display: grid; grid-template-columns: 78px minmax(0, 1fr); gap: 8px; min-height: 54px; }
