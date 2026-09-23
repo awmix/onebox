@@ -14,8 +14,8 @@
   "dir": "ltr",
   "categories": ["productivity", "utilities"],
   "icons": [
-    { "src": "icons/icon-black-v305-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "icons/icon-black-v305-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "icons/icon-black-v305-1024.png", "sizes": "1024x1024", "type": "image/png", "purpose": "any" }
+    { "src": "icons/icon-black-v306-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-black-v306-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-black-v306-1024.png", "sizes": "1024x1024", "type": "image/png", "purpose": "any" }
   ]
 }
