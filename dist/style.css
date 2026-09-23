@@ -9556,3 +9556,94 @@ body.dev-tools-fullscreen #workspace[data-tool="dev"] {
     width: 100%;
   }
 }
+
+/* Desktop developer fullscreen uses the remaining viewport as a real
+   workbench. Editors and result panes stretch together instead of leaving a
+   large unused area below short result cards. */
+@media (min-width: 761px) {
+  .dev-tools-page.dev-is-fullscreen {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .dev-tools-page.dev-is-fullscreen .dev-mode-tabs,
+  .dev-tools-page.dev-is-fullscreen .dev-tools-body,
+  .dev-tools-page.dev-is-fullscreen .dev-current-tool,
+  .dev-tools-page.dev-is-fullscreen .dev-workbench {
+    min-height: 0;
+  }
+
+  .dev-tools-page.dev-is-fullscreen .dev-tools-body,
+  .dev-tools-page.dev-is-fullscreen .dev-current-tool,
+  .dev-tools-page.dev-is-fullscreen .dev-workbench {
+    flex: 1 1 auto;
+  }
+
+  .dev-tools-page.dev-is-fullscreen .dev-tools-body,
+  .dev-tools-page.dev-is-fullscreen .dev-current-tool {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .dev-tools-page.dev-is-fullscreen .dev-workbench:not(.dev-timestamp) {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .dev-tools-page.dev-is-fullscreen .dev-editor-grid {
+    flex: 1 1 auto;
+    align-items: stretch;
+  }
+
+  .dev-tools-page.dev-is-fullscreen .dev-pane {
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .dev-tools-page.dev-is-fullscreen .dev-code-editor,
+  .dev-tools-page.dev-is-fullscreen .dev-text-editor,
+  .dev-tools-page.dev-is-fullscreen .dev-json-tree,
+  .dev-tools-page.dev-is-fullscreen .dev-json-empty,
+  .dev-tools-page.dev-is-fullscreen .dev-live-output {
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+
+  .dev-tools-page.dev-is-fullscreen .dev-code-editor,
+  .dev-tools-page.dev-is-fullscreen .dev-text-editor,
+  .dev-tools-page.dev-is-fullscreen .dev-json-tree,
+  .dev-tools-page.dev-is-fullscreen .dev-json-empty {
+    height: auto;
+  }
+
+  .dev-tools-page.dev-is-fullscreen .dev-compare-grid {
+    flex: 1 1 auto;
+    min-height: 0;
+    align-items: stretch;
+  }
+
+  .dev-tools-page.dev-is-fullscreen .dev-compare-result {
+    flex: 0 0 min(30%, 260px);
+    min-height: 0;
+  }
+
+  .dev-tools-page.dev-is-fullscreen .dev-compare-result .dev-live-output {
+    overflow: auto;
+  }
+
+  .dev-tools-page.dev-is-fullscreen .dev-timestamp {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-content: stretch;
+  }
+}
+
+/* A centered drop zone should be forgiving on touch screens. */
+#workspace[data-tool="navigation"] .navigation-card.navigation-combine-ready {
+  transform: scale(1.045);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--primary) 18%, transparent), 0 16px 32px color-mix(in srgb, var(--ink) 12%, transparent);
+}

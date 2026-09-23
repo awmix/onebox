@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.303';
+const APP_VERSION = '2.18.304';
 // The OAuth secret stays in the Cloudflare Worker. The browser only knows the
 // public client id and receives the authorization result in the URL fragment,
 // which is consumed immediately and never sent to a server.
@@ -76,8 +76,12 @@ const FEED_SOURCE_REGISTRY = [
 const RSS_SOURCES = FEED_SOURCE_REGISTRY.filter((source) => source.enabled !== false);
 const RSS_REFRESH_INTERVAL = 2 * 60 * 1000;
 const HOME_FEED_PENDING_LIMIT = 30;
-const HOME_FEED_REQUEST_TIMEOUT_MS = 2600;
-const HOME_FEED_SOURCE_DEADLINE_MS = 3000;
+// Keep the feed deadline long enough for the reader proxy to return fresh
+// content. The former 2.6/3 second cut-off made the active source look stale
+// even when its fallback was healthy, especially on mobile Safari.
+const HOME_FEED_REQUEST_TIMEOUT_MS = 4500;
+const HOME_FEED_SOURCE_DEADLINE_MS = 5500;
+const HOME_FEED_CONCURRENCY = 6;
 const HOME_FEED_RENDER_LIMIT = 80;
 const RSS_RETENTION_MS = 7 * 24 * 60 * 60 * 1000;
 const RSS_MAX_ITEMS_PER_SOURCE = 120;
@@ -1422,13 +1426,12 @@ async function refreshHomeFeedSource(source, requestToken) {
 }
 function loadHomeFeeds(force = false, sourceId = '') {
   const visibleSources = homeFeedSources();
-  // Keep the initial/polling request focused on the selected Tab. Loading all
-  // visible sources at once made one slow proxy hold up every Tab and created
-  // a burst of concurrent requests on mobile Safari. Other sources are loaded
-  // on demand when their Tab is selected.
+  // Refresh every visible source on the initial load and polling pass. Keep
+  // the active Tab first, then use a small worker pool so one slow source
+  // cannot block the rest or create an unbounded mobile request burst.
   const candidates = sourceId && sourceId !== 'footprint'
     ? visibleSources.filter((source) => source.id === sourceId)
-    : visibleSources.filter((source) => source.id === state.homeFeed.active);
+    : [...visibleSources].sort((left, right) => Number(right.id === state.homeFeed.active) - Number(left.id === state.homeFeed.active));
   const now = Date.now();
   const sourcesToLoad = candidates.filter((source) => {
     if (homeFeedRequests.has(source.id)) return false;
@@ -1451,7 +1454,15 @@ function loadHomeFeeds(force = false, sourceId = '') {
   syncHomeFeedLoading();
   if (state.section === 'home') { render(); restoreHomeFeedPosition(preservedPosition); }
   else renderBottomNav();
-  sourcesToLoad.forEach((source) => refreshHomeFeedSource(source, homeFeedRequests.get(source.id)));
+  let nextSource = 0;
+  const refreshWorker = async () => {
+    while (nextSource < sourcesToLoad.length) {
+      const source = sourcesToLoad[nextSource++];
+      await refreshHomeFeedSource(source, homeFeedRequests.get(source.id));
+    }
+  };
+  const workers = Math.min(HOME_FEED_CONCURRENCY, sourcesToLoad.length);
+  Array.from({ length: workers }, () => refreshWorker()).forEach((worker) => worker.catch(() => {}));
 }
 function renderFeedItem(item) {
   const source = feedSource(item);
@@ -6342,6 +6353,10 @@ let navigationDrag = null;
 let navigationDialogPressTimer = null;
 let navigationDialogPress = null;
 let navigationSuppressClickUntil = 0;
+const NAVIGATION_LONG_PRESS_MS = 390;
+const NAVIGATION_MOVE_TOLERANCE = 16;
+const NAVIGATION_DRAG_THRESHOLD = 5;
+const NAVIGATION_COMBINE_ZONE = 0.4;
 function clearNavigationCombineTimer(drag = navigationDrag) {
   if (!drag) return;
   clearTimeout(drag.combineTimer);
@@ -6361,7 +6376,8 @@ function startNavigationLongPress(target, event) {
     if (!navigationDrag || navigationDrag.target !== target) return;
     navigationDrag.longPressed = true;
     target.classList.add('navigation-long-pressed');
-  }, 520);
+  }, NAVIGATION_LONG_PRESS_MS);
+  try { target.setPointerCapture?.(event.pointerId); navigationDrag.pressCaptureTarget = target; } catch {}
 }
 function endNavigationLongPress() { clearTimeout(navigationPressTimer); navigationPressTimer = null; }
 function startNavigationDialogLongPress(target, event) {
@@ -6370,12 +6386,12 @@ function startNavigationDialogLongPress(target, event) {
   navigationDialogPressTimer = setTimeout(() => {
     if (!navigationDialogPress || navigationDialogPress.target !== target) return;
     navigationDialogPress.longPressed = true;
-  }, 520);
+  }, NAVIGATION_LONG_PRESS_MS);
 }
 function updateNavigationDialogLongPress(event) {
   const press = navigationDialogPress;
   if (!press || (press.pointerId != null && event.pointerId !== press.pointerId)) return;
-  if (Math.hypot(event.clientX - press.startX, event.clientY - press.startY) > 10 && !press.longPressed) {
+  if (Math.hypot(event.clientX - press.startX, event.clientY - press.startY) > NAVIGATION_MOVE_TOLERANCE && !press.longPressed) {
     clearTimeout(navigationDialogPressTimer); navigationDialogPressTimer = null; navigationDialogPress = null;
   }
 }
@@ -6424,6 +6440,7 @@ function restoreNavigationDrag(drag) {
   if (drag.placeholder?.isConnected) drag.placeholder.replaceWith(drag.target);
   drag.ghost?.remove();
   try { if (drag.captureTarget?.hasPointerCapture?.(drag.pointerId)) drag.captureTarget.releasePointerCapture(drag.pointerId); } catch {}
+  try { if (drag.pressCaptureTarget?.hasPointerCapture?.(drag.pointerId)) drag.pressCaptureTarget.releasePointerCapture(drag.pointerId); } catch {}
   drag.target.classList.remove('navigation-dragging', 'navigation-long-pressed');
   drag.placeholder = null; drag.ghost = null;
 }
@@ -6453,11 +6470,15 @@ function updateNavigationDrag(event) {
   if (!drag || (drag.pointerId != null && event.pointerId !== drag.pointerId)) return;
   const dx = event.clientX - drag.startX; const dy = event.clientY - drag.startY;
   if (!drag.longPressed) {
-    if (Math.hypot(dx, dy) > 10) { endNavigationLongPress(); navigationDrag = null; }
+    if (Math.hypot(dx, dy) > NAVIGATION_MOVE_TOLERANCE) {
+      endNavigationLongPress();
+      try { if (drag.pressCaptureTarget?.hasPointerCapture?.(drag.pointerId)) drag.pressCaptureTarget.releasePointerCapture(drag.pointerId); } catch {}
+      navigationDrag = null;
+    }
     return;
   }
   if (!drag.active) {
-    if (Math.hypot(dx, dy) < 8) return;
+    if (Math.hypot(dx, dy) < NAVIGATION_DRAG_THRESHOLD) return;
     drag.active = true;
     drag.target.classList.add('navigation-dragging'); drag.target.classList.remove('navigation-long-pressed');
     createNavigationDragOverlay(drag, event);
@@ -6473,7 +6494,7 @@ function updateNavigationDrag(event) {
   } else {
     drag.folderTarget = null;
     const rect = drag.over.getBoundingClientRect();
-    const centered = Math.abs(event.clientX - (rect.left + rect.width / 2)) < rect.width * .22 && Math.abs(event.clientY - (rect.top + rect.height / 2)) < rect.height * .22;
+    const centered = Math.abs(event.clientX - (rect.left + rect.width / 2)) < rect.width * NAVIGATION_COMBINE_ZONE && Math.abs(event.clientY - (rect.top + rect.height / 2)) < rect.height * NAVIGATION_COMBINE_ZONE;
     if (centered && drag.target.dataset.navigationType === 'site' && drag.over.dataset.navigationType === 'site') {
       if (drag.combineOver !== drag.over) {
         clearNavigationCombineTimer(drag); drag.combineOver = drag.over; drag.combineTarget = drag.over; drag.over.classList.add('navigation-drop-target', 'navigation-combine-ready');
