@@ -36,4 +36,4 @@ GitHub Pages 是纯静态托管，OneBox 使用 GitHub Device Flow，不把 OAut
 
 仓库不需要 `npm install` 或构建步骤，GitHub Actions 直接发布 `dist/` 目录。
 
-在 iPhone Safari 上，旧的 `/onebox/` 收藏图标可能被 Safari 按页面地址长期保存。站点会将该地址转到使用同一页面与图标资源的 `/onebox/index.html`；调整入口时请保留查询参数和片段，以免影响 GitHub 授权回跳和工具页链接。
+在 iPhone Safari 上，添加收藏时会使用页面声明的 canonical URL。站点会将 `/onebox/` 转到 `/onebox/index.html`，并把后者声明为 canonical；调整入口时须保持两者一致，并保留查询参数和片段，以免收藏回到旧地址或影响 GitHub 授权回跳和工具页链接。
