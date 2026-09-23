@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.302';
+const APP_VERSION = '2.18.303';
 // The OAuth secret stays in the Cloudflare Worker. The browser only knows the
 // public client id and receives the authorization result in the URL fragment,
 // which is consumed immediately and never sent to a server.
@@ -5051,7 +5051,7 @@ function devOutputPaneHead(kind, title, actions = '') {
   return '<div class="dev-pane-head dev-output-pane-head"><div class="dev-output-title"><h3>' + escapeHtml(title) + '</h3><div class="dev-history-anchor">' + devHistoryToggle(kind) + '</div></div><div class="dev-pane-actions">' + actions + '</div></div>';
 }
 function renderDeveloperJsonFormat() {
-  const dev = state.devTools; const result = dev.formatOutput || '';
+  const dev = state.devTools;
   return '<div class="dev-workbench dev-json-format"><div class="dev-editor-grid">' +
     '<section class="dev-pane">' + devPaneHead(t('devInput'), devInlineToggle('formatUnescape', t('devUnescape'), dev.formatUnescape) + devActionButton('json-example', t('devExample')) + devActionButton('json-clear', t('devClear'))) + '<textarea class="dev-code-editor" data-dev-field="formatInput" spellcheck="false" placeholder="{\n  &quot;name&quot;: &quot;OneBox&quot;\n}">' + escapeHtml(dev.formatInput) + '</textarea></section>' +
     '<section class="dev-pane dev-output-pane">' + devOutputPaneHead('json-format', t('devOutput'), devActionButton('json-minify', t('devMinify')) + devActionButton('json-expand-all', t('devExpandAll')) + devActionButton('json-collapse-all', t('devCollapseAll')) + devActionButton('dev-copy-output', t('devCopy'))) + devHistoryContent('json-format') + '<div class="dev-live-output" data-dev-live-output>' + developerLiveOutputMarkup() + '</div>' + '</section>' +
@@ -5136,6 +5136,8 @@ function runDeveloperAction(action, sourceEvent = null) {
   if (action === 'json-example' || action === 'json-a-example' || action === 'json-b-example') {
     const example = action === 'json-b-example' ? '{\n  "name": "OneBox",\n  "version": 2,\n  "features": ["calendar", "reader"]\n}' : '{\n  "name": "OneBox",\n  "version": 1,\n  "features": ["calendar"]\n}';
     if (action === 'json-a-example') dev.compareLeft = example; else if (action === 'json-b-example') dev.compareRight = example; else dev.formatInput = example;
+    if (action === 'json-example') { const result = formatDeveloperJson(dev.formatInput, dev.formatCompact); dev.formatOutput = result.output; dev.formatStatus = result.message; dev.formatCollapsed = []; }
+    else { const result = developerCompareResult(); dev.compareOutput = result.output; dev.compareStatus = result.status; }
   } else if (action === 'json-clear') dev.formatInput = '', dev.formatOutput = '', dev.formatStatus = '';
   else if (action === 'json-a-clear') dev.compareLeft = '', dev.compareOutput = '', dev.compareStatus = '';
   else if (action === 'json-b-clear') dev.compareRight = '', dev.compareOutput = '', dev.compareStatus = '';
@@ -5150,7 +5152,7 @@ function runDeveloperAction(action, sourceEvent = null) {
   } else if (action === 'text-clear') dev.textInput = '', dev.textOutput = null;
   else if (action === 'text-analyze') { dev.textOutput = developerTextStats(dev.textInput); addDevRecord('text-stats', { text: devRecordText(dev.textInput, 30000), output: dev.textOutput }); }
   else if (action === 'timestamp-mode') { dev.timestampMode = sourceEvent?.target?.closest?.('[data-dev-value]')?.dataset?.devValue || dev.timestampMode; syncDeveloperTimestampOutput(); }
-  else if (action === 'timestamp-now') { if (dev.timestampMode === 'date') dev.timestampDate = localDateTimeValue(new Date()); else dev.timestampValue = String(dev.timestampUnit === 'ms' ? Date.now() : Math.floor(Date.now() / 1000)); }
+  else if (action === 'timestamp-now') { if (dev.timestampMode === 'date') dev.timestampDate = localDateTimeValue(new Date()); else dev.timestampValue = String(dev.timestampUnit === 'ms' ? Date.now() : Math.floor(Date.now() / 1000)); syncDeveloperTimestampOutput(); }
   else if (action === 'timestamp-clear') dev.timestampValue = '', dev.timestampDate = '', dev.timestampOutput = '', dev.timestampStatus = '';
   else if (action === 'timestamp-convert') { const result = developerTimestampResult(); dev.timestampOutput = result.output; dev.timestampStatus = result.message; if (result.ok) addDevRecord('timestamp', { mode: dev.timestampMode, unit: dev.timestampUnit, value: dev.timestampValue, date: dev.timestampDate, output: devRecordText(result.output), status: result.message }); }
   saveDevTools(); render();
