@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.310';
+const APP_VERSION = '2.18.311';
 // The OAuth secret stays in the Cloudflare Worker. The browser only knows the
 // public client id and receives the authorization result in the URL fragment,
 // which is consumed immediately and never sent to a server.
@@ -5967,13 +5967,12 @@ async function githubUpload() {
     Object.keys(current.files || {}).filter((name) => name.startsWith('onebox-book-') && !Object.prototype.hasOwnProperty.call(bundle.files, name)).forEach((name) => { files[name] = null; });
     const response = await fetch('https://api.github.com/gists/' + id, { method: 'PATCH', headers: githubHeaders(), body: JSON.stringify({ files }) });
     if (!response.ok) throw await githubApiError(response);
-    const verified = await githubGistDetails({ id });
-    const fileEncoder = new TextEncoder();
-    const missingFiles = Object.entries(bundle.files).filter(([name, content]) => {
-      const file = verified?.files?.[name];
-      return !file || (Number.isFinite(Number(file.size)) && Number(file.size) !== fileEncoder.encode(content).byteLength);
-    }).map(([name]) => name);
-    if (missingFiles.length) throw Error((state.language === 'en' ? 'GitHub did not save all OneBox files: ' : 'GitHub 没有完整保存 OneBox 文件：') + missingFiles.slice(0, 3).join(', '));
+    // Validate the representation returned by this write, instead of an immediate
+    // follow-up GET that can observe a stale snapshot.
+    const updated = await response.json();
+    const verified = updated?.files ? updated : await githubGistDetails({ id });
+    const missingFiles = Object.keys(bundle.files).filter((name) => !verified?.files?.[name]);
+    if (missingFiles.length) throw Error((state.language === 'en' ? 'GitHub response is missing OneBox files: ' : 'GitHub 响应中缺少 OneBox 文件：') + missingFiles.slice(0, 3).join(', '));
     const verifiedContent = await githubFileContent(verified?.files?.['onebox-settings.json']);
     const verifiedPayload = parseGithubSyncPayload(verifiedContent);
     if (verifiedPayload?.savedAt !== bundle.payload.savedAt) throw Error(state.language === 'en' ? 'GitHub did not persist the latest OneBox data' : 'GitHub 没有保存最新的 OneBox 数据');
