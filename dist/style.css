@@ -8549,9 +8549,9 @@ html.ios-safari-browser.reader-focus.reader-safari-surface .reader-reference-she
 .pet-dialog-head { position: sticky; top: 0; z-index: 2; display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: 0; padding: 17px 20px 14px; background: var(--panel); border-bottom: 1px solid var(--line); }
 .pet-dialog-head h2 { margin: 0; font-size: 21px; }
 .pet-dialog-head p { margin: 3px 0 0; color: var(--muted); font-size: 11px; }
-.pet-dialog-body { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; padding: 12px 16px 16px; }
+.pet-dialog-body { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0; padding: 0 20px 16px; }
 .pet-profile-card, .pet-outfits-section, .pet-unlocks-section { grid-column: 1 / -1; }
-.pet-profile-card { display: flex; align-items: center; gap: 11px; padding: 10px 12px; border: 1px solid color-mix(in srgb, var(--primary) 27%, var(--line)); border-radius: 18px; background: linear-gradient(135deg, color-mix(in srgb, var(--primary) 11%, var(--panel)), var(--panel-2)); }
+.pet-profile-card { display: flex; align-items: center; gap: 11px; padding: 14px 0; border-bottom: 1px solid var(--line); }
 .pet-profile-avatar { position: relative; display: grid; width: 64px; height: 64px; flex: 0 0 64px; place-items: end center; overflow: hidden; border-radius: 19px; background: color-mix(in srgb, var(--primary) 10%, var(--panel)); }
 .pet-profile-avatar img { width: 100%; height: 100%; object-fit: contain; object-position: 50% 100%; filter: drop-shadow(0 4px 5px color-mix(in srgb, var(--ink) 18%, transparent)); }
 .pet-profile-avatar span { position: absolute; right: 6px; bottom: 5px; display: grid; width: 22px; height: 22px; place-items: center; border-radius: 50%; background: var(--panel); font-size: 13px; line-height: 1; }
@@ -8559,7 +8559,9 @@ html.ios-safari-browser.reader-focus.reader-safari-surface .reader-reference-she
 .pet-profile-copy strong { display: block; font-size: 16px; }
 .pet-profile-copy p { margin: 5px 0 2px; color: var(--primary); font-size: 13px; font-weight: 750; }
 .pet-profile-copy small { display: block; overflow: hidden; color: var(--muted); font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
-.pet-progress-card, .pet-settings-section, .pet-outfits-section, .pet-unlocks-section { padding: 13px 14px; border: 1px solid var(--line); border-radius: 17px; background: color-mix(in srgb, var(--panel-2) 78%, transparent); }
+.pet-progress-card, .pet-settings-section, .pet-outfits-section, .pet-unlocks-section { padding: 14px 0; border: 0; border-radius: 0; background: transparent; }
+.pet-settings-section { padding-left: 14px; border-left: 1px solid var(--line); }
+.pet-outfits-section, .pet-unlocks-section { border-top: 1px solid var(--line); }
 .pet-progress-head, .pet-section-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
 .pet-progress-head strong, .pet-section-head h3 { margin: 0; font-size: 14px; }
 .pet-progress-head span, .pet-section-head small { color: var(--muted); font-size: 10px; }
@@ -8589,8 +8591,9 @@ html.ios-safari-browser.reader-focus.reader-safari-surface .reader-reference-she
 @media (max-width: 600px) {
   #petDialog { padding: calc(32px + env(safe-area-inset-top) + 6px) 8px 12px; }
   .pet-dialog-card { max-height: calc(100vh - 48px - env(safe-area-inset-top)); }
-  .pet-dialog-body { grid-template-columns: 1fr; padding: 11px 14px 14px; }
+  .pet-dialog-body { grid-template-columns: 1fr; padding: 0 15px 14px; }
   .pet-profile-card, .pet-outfits-section, .pet-unlocks-section { grid-column: auto; }
+  .pet-settings-section { padding-left: 0; border-top: 1px solid var(--line); border-left: 0; }
   .pet-dialog-head { padding-inline: 15px; }
   .pet-outfit-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
