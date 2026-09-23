@@ -35,3 +35,5 @@ GitHub Pages 是纯静态托管，OneBox 使用 GitHub Device Flow，不把 OAut
 4. 检查 Manifest、Service Worker、离线应用壳和无控制台错误。
 
 仓库不需要 `npm install` 或构建步骤，GitHub Actions 直接发布 `dist/` 目录。
+
+在 iPhone Safari 上，旧的 `/onebox/` 收藏图标可能被 Safari 按页面地址长期保存。站点会将该地址转到使用同一页面与图标资源的 `/onebox/index.html`；调整入口时请保留查询参数和片段，以免影响 GitHub 授权回跳和工具页链接。
