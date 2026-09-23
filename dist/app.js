@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.301';
+const APP_VERSION = '2.18.302';
 // The OAuth secret stays in the Cloudflare Worker. The browser only knows the
 // public client id and receives the authorization result in the URL fragment,
 // which is consumed immediately and never sent to a server.
@@ -5054,7 +5054,7 @@ function renderDeveloperJsonFormat() {
   const dev = state.devTools; const result = dev.formatOutput || '';
   return '<div class="dev-workbench dev-json-format"><div class="dev-editor-grid">' +
     '<section class="dev-pane">' + devPaneHead(t('devInput'), devInlineToggle('formatUnescape', t('devUnescape'), dev.formatUnescape) + devActionButton('json-example', t('devExample')) + devActionButton('json-clear', t('devClear'))) + '<textarea class="dev-code-editor" data-dev-field="formatInput" spellcheck="false" placeholder="{\n  &quot;name&quot;: &quot;OneBox&quot;\n}">' + escapeHtml(dev.formatInput) + '</textarea></section>' +
-    '<section class="dev-pane dev-output-pane">' + devOutputPaneHead('json-format', t('devOutput'), devActionButton('json-format', t('devFormat')) + devActionButton('json-minify', t('devMinify')) + devActionButton('json-expand-all', t('devExpandAll')) + devActionButton('json-collapse-all', t('devCollapseAll')) + devActionButton('dev-copy-output', t('devCopy'))) + devHistoryContent('json-format') + renderDeveloperJsonTree() + devStatus(dev.formatStatus, dev.formatStatus.startsWith(t('devInvalid'))) + '</section>' +
+    '<section class="dev-pane dev-output-pane">' + devOutputPaneHead('json-format', t('devOutput'), devActionButton('json-minify', t('devMinify')) + devActionButton('json-expand-all', t('devExpandAll')) + devActionButton('json-collapse-all', t('devCollapseAll')) + devActionButton('dev-copy-output', t('devCopy'))) + devHistoryContent('json-format') + '<div class="dev-live-output" data-dev-live-output>' + developerLiveOutputMarkup() + '</div>' + '</section>' +
     '</div></div>';
 }
 function renderDeveloperCompare() {
@@ -5062,18 +5062,60 @@ function renderDeveloperCompare() {
   return '<div class="dev-workbench dev-json-compare"><div class="dev-compare-grid">' +
     '<section class="dev-pane">' + devPaneHead(t('devJsonA'), devActionButton('json-a-example', t('devExample')) + devActionButton('json-a-clear', t('devClear'))) + '<textarea class="dev-code-editor" data-dev-field="compareLeft" spellcheck="false" placeholder="{ &quot;version&quot;: 1 }">' + escapeHtml(dev.compareLeft) + '</textarea></section>' +
     '<section class="dev-pane">' + devPaneHead(t('devJsonB'), devActionButton('json-b-example', t('devExample')) + devActionButton('json-b-clear', t('devClear'))) + '<textarea class="dev-code-editor" data-dev-field="compareRight" spellcheck="false" placeholder="{ &quot;version&quot;: 2 }">' + escapeHtml(dev.compareRight) + '</textarea></section>' +
-    '</div><section class="dev-pane dev-compare-result">' + devOutputPaneHead('json-compare', t('devOutput'), devActionButton('json-compare', t('devCompare')) + devActionButton('dev-copy-output', t('devCopy'))) + devHistoryContent('json-compare') + '<pre class="dev-result-pre">' + escapeHtml(dev.compareOutput || t('devCompare')) + '</pre>' + devStatus(dev.compareStatus, dev.compareStatus.startsWith(t('devInvalid'))) + '</section></div>';
+    '</div><section class="dev-pane dev-compare-result">' + devOutputPaneHead('json-compare', t('devOutput'), devActionButton('dev-copy-output', t('devCopy'))) + devHistoryContent('json-compare') + '<div class="dev-live-output" data-dev-live-output>' + developerLiveOutputMarkup() + '</div></section></div>';
+}
+function renderDeveloperStatsCards(stats) {
+  return [['characters', t('devCharacters')], ['nonSpace', t('devNonSpace')], ['lines', t('devLines')], ['chinese', t('devChinese')], ['words', t('devWords')], ['paragraphs', t('devParagraphs')]].map(([key, label]) => '<div class="dev-stat-card"><strong>' + Number(stats[key] || 0).toLocaleString() + '</strong><span>' + label + '</span></div>').join('');
 }
 function renderDeveloperStats() {
-  const dev = state.devTools; const stats = dev.textOutput || developerTextStats(dev.textInput);
-  const cards = [['characters', t('devCharacters')], ['nonSpace', t('devNonSpace')], ['lines', t('devLines')], ['chinese', t('devChinese')], ['words', t('devWords')], ['paragraphs', t('devParagraphs')]].map(([key, label]) => '<div class="dev-stat-card"><strong>' + Number(stats[key] || 0).toLocaleString() + '</strong><span>' + label + '</span></div>').join('');
-  return '<div class="dev-workbench dev-text-stats"><div class="dev-editor-grid"><section class="dev-pane">' + devPaneHead(t('devInput'), devActionButton('text-clear', t('devClear'))) + '<textarea class="dev-text-editor" data-dev-field="textInput" spellcheck="true" placeholder="' + escapeHtml(state.language === 'en' ? 'Paste or type text here…' : '粘贴或输入文本…') + '">' + escapeHtml(dev.textInput) + '</textarea></section><section class="dev-pane dev-stats-pane">' + devOutputPaneHead('text-stats', t('devOutput'), devActionButton('text-analyze', t('devAnalyze'))) + '<div class="dev-stat-grid">' + cards + '</div>' + devHistoryContent('text-stats') + '</section></div></div>';
+  const dev = state.devTools;
+  return '<div class="dev-workbench dev-text-stats"><div class="dev-editor-grid"><section class="dev-pane">' + devPaneHead(t('devInput'), devActionButton('text-clear', t('devClear'))) + '<textarea class="dev-text-editor" data-dev-field="textInput" spellcheck="true" placeholder="' + escapeHtml(state.language === 'en' ? 'Paste or type text here…' : '粘贴或输入文本…') + '">' + escapeHtml(dev.textInput) + '</textarea></section><section class="dev-pane dev-stats-pane">' + devOutputPaneHead('text-stats', t('devOutput')) + '<div class="dev-live-output" data-dev-live-output>' + developerLiveOutputMarkup() + '</div>' + devHistoryContent('text-stats') + '</section></div></div>';
 }
 function renderDeveloperTimestamp() {
   const dev = state.devTools;
   const timestampMode = '<div class="dev-segmented"><button type="button" class="' + (dev.timestampMode === 'timestamp' ? 'active' : '') + '" data-dev-action="timestamp-mode" data-dev-value="timestamp">' + t('devTimestampToDate') + '</button><button type="button" class="' + (dev.timestampMode === 'date' ? 'active' : '') + '" data-dev-action="timestamp-mode" data-dev-value="date">' + t('devDateToTimestamp') + '</button></div>';
   const input = dev.timestampMode === 'timestamp' ? '<div class="dev-timestamp-input-row"><input class="dev-plain-input" data-dev-field="timestampValue" inputmode="decimal" value="' + escapeHtml(dev.timestampValue) + '" placeholder="例如 1726905600"><select class="dev-plain-input" data-dev-field="timestampUnit"><option value="s" ' + (dev.timestampUnit === 's' ? 'selected' : '') + '>' + t('devSeconds') + '</option><option value="ms" ' + (dev.timestampUnit === 'ms' ? 'selected' : '') + '>' + t('devMilliseconds') + '</option></select></div>' : '<input class="dev-plain-input dev-date-input" data-dev-field="timestampDate" type="datetime-local" value="' + escapeHtml(dev.timestampDate) + '">';
-  return '<div class="dev-workbench dev-timestamp"><section class="dev-pane dev-timestamp-card">' + devPaneHead(t('devInput'), devActionButton('timestamp-now', t('devNow')) + devActionButton('timestamp-clear', t('devClear'))) + timestampMode + input + '<div class="dev-timestamp-actions">' + devActionButton('timestamp-convert', t('devConvert')) + '</div></section><section class="dev-pane dev-output-pane">' + devOutputPaneHead('timestamp', t('devOutput'), devActionButton('dev-copy-output', t('devCopy'))) + '<pre class="dev-result-pre">' + escapeHtml(dev.timestampOutput || t('devOutput')) + '</pre>' + devHistoryContent('timestamp') + devStatus(dev.timestampStatus, dev.timestampStatus.includes(state.language === 'en' ? 'valid' : '有效')) + '</section></div>';
+  return '<div class="dev-workbench dev-timestamp"><section class="dev-pane dev-timestamp-card">' + devPaneHead(t('devInput'), devActionButton('timestamp-now', t('devNow')) + devActionButton('timestamp-clear', t('devClear'))) + timestampMode + input + '</section><section class="dev-pane dev-output-pane">' + devOutputPaneHead('timestamp', t('devOutput'), devActionButton('dev-copy-output', t('devCopy'))) + '<div class="dev-live-output" data-dev-live-output>' + developerLiveOutputMarkup() + '</div>' + devHistoryContent('timestamp') + '</section></div>';
+}
+function developerCompareResult() {
+  const dev = state.devTools;
+  if (!String(dev.compareLeft || '').trim() || !String(dev.compareRight || '').trim()) return { output: '', status: '' };
+  try {
+    const left = parseDeveloperJson(dev.compareLeft).value; const right = parseDeveloperJson(dev.compareRight).value; const changes = compareDeveloperJson(left, right);
+    return { output: changes.length ? changes.map((item) => item.path + '\n− ' + item.before + '\n+ ' + item.after).join('\n\n') : '✓ ' + t('devSame'), status: changes.length ? t('devDifferent').replace('{count}', changes.length) : t('devSame') };
+  } catch (error) { return { output: '', status: t('devInvalid') + (error?.message ? '：' + error.message : '') }; }
+}
+function syncDeveloperTimestampOutput() {
+  const dev = state.devTools;
+  const hasInput = dev.timestampMode === 'date' ? Boolean(dev.timestampDate) : Boolean(String(dev.timestampValue || '').trim());
+  if (!hasInput) { dev.timestampOutput = ''; dev.timestampStatus = ''; return; }
+  const result = developerTimestampResult(); dev.timestampOutput = result.output; dev.timestampStatus = result.message;
+}
+function developerLiveOutputMarkup() {
+  const dev = state.devTools;
+  if (dev.active === 'json-format') return renderDeveloperJsonTree() + devStatus(dev.formatStatus, dev.formatStatus.startsWith(t('devInvalid')));
+  if (dev.active === 'json-compare') return '<pre class="dev-result-pre">' + escapeHtml(dev.compareOutput || t('devCompare')) + '</pre>' + devStatus(dev.compareStatus, dev.compareStatus.startsWith(t('devInvalid')));
+  if (dev.active === 'text-stats') return '<div class="dev-stat-grid">' + renderDeveloperStatsCards(dev.textOutput || developerTextStats(dev.textInput)) + '</div>';
+  return '<pre class="dev-result-pre">' + escapeHtml(dev.timestampOutput || t('devOutput')) + '</pre>' + devStatus(dev.timestampStatus, dev.timestampStatus.includes(state.language === 'en' ? 'valid' : '有效'));
+}
+function refreshDeveloperLiveOutput() {
+  if (state.section !== 'tools' || state.tool !== 'dev') return;
+  const host = workspace.querySelector('[data-dev-live-output]');
+  if (host) host.innerHTML = developerLiveOutputMarkup();
+}
+function updateDeveloperLiveState(field) {
+  const dev = state.devTools;
+  if (dev.active === 'json-format' && (field === 'formatInput' || field === 'formatUnescape')) {
+    if (!String(dev.formatInput || '').trim()) { dev.formatOutput = ''; dev.formatStatus = ''; dev.formatCollapsed = []; }
+    else { const result = formatDeveloperJson(dev.formatInput, dev.formatCompact); dev.formatOutput = result.output; dev.formatStatus = result.message; dev.formatCollapsed = []; }
+  } else if (dev.active === 'json-compare' && (field === 'compareLeft' || field === 'compareRight')) {
+    const result = developerCompareResult(); dev.compareOutput = result.output; dev.compareStatus = result.status;
+  } else if (dev.active === 'text-stats' && field === 'textInput') {
+    dev.textOutput = developerTextStats(dev.textInput);
+  } else if (dev.active === 'timestamp' && ['timestampValue', 'timestampUnit', 'timestampDate'].includes(field)) {
+    syncDeveloperTimestampOutput();
+  }
+  saveDevTools(); refreshDeveloperLiveOutput();
 }
 function developerTool() {
   const modes = DEV_TOOL_IDS.map((id) => '<button type="button" class="dev-mode-tab ' + (state.devTools.active === id ? 'active' : '') + '" data-dev-mode="' + id + '">' + devModeLabel(id) + '</button>').join('');
@@ -5107,7 +5149,7 @@ function runDeveloperAction(action, sourceEvent = null) {
     } catch (error) { dev.compareOutput = ''; dev.compareStatus = t('devInvalid') + (error?.message ? '：' + error.message : ''); }
   } else if (action === 'text-clear') dev.textInput = '', dev.textOutput = null;
   else if (action === 'text-analyze') { dev.textOutput = developerTextStats(dev.textInput); addDevRecord('text-stats', { text: devRecordText(dev.textInput, 30000), output: dev.textOutput }); }
-  else if (action === 'timestamp-mode') dev.timestampMode = sourceEvent?.target?.closest?.('[data-dev-value]')?.dataset?.devValue || dev.timestampMode;
+  else if (action === 'timestamp-mode') { dev.timestampMode = sourceEvent?.target?.closest?.('[data-dev-value]')?.dataset?.devValue || dev.timestampMode; syncDeveloperTimestampOutput(); }
   else if (action === 'timestamp-now') { if (dev.timestampMode === 'date') dev.timestampDate = localDateTimeValue(new Date()); else dev.timestampValue = String(dev.timestampUnit === 'ms' ? Date.now() : Math.floor(Date.now() / 1000)); }
   else if (action === 'timestamp-clear') dev.timestampValue = '', dev.timestampDate = '', dev.timestampOutput = '', dev.timestampStatus = '';
   else if (action === 'timestamp-convert') { const result = developerTimestampResult(); dev.timestampOutput = result.output; dev.timestampStatus = result.message; if (result.ok) addDevRecord('timestamp', { mode: dev.timestampMode, unit: dev.timestampUnit, value: dev.timestampValue, date: dev.timestampDate, output: devRecordText(result.output), status: result.message }); }
@@ -6242,11 +6284,11 @@ function render() {
   syncHomeFeedLoading();
   applyLanguage();
   if (state.section === 'home') loadHomeFeeds();
-  nav.hidden = state.section !== 'tools';
+  const developerFullscreen = state.section === 'tools' && state.tool === 'dev' && state.devTools.fullscreen === true;
+  nav.hidden = state.section !== 'tools' || developerFullscreen;
   const renderers = { calculator, dev: developerTool, calendar, weather, convert, translate: translateConvertView, reader, navigation: renderNavigation };
   workspace.dataset.tool = state.section === 'tools' ? state.tool : state.section;
   workspace.innerHTML = state.section === 'home' ? renderHome() : state.section === 'navigation' ? renderNavigation() : state.section === 'messages' ? renderMessages() : state.section === 'mine' ? renderMine() : (renderers[state.tool] || calculator)();
-  const developerFullscreen = state.section === 'tools' && state.tool === 'dev' && state.devTools.fullscreen === true;
   document.body.classList.toggle('dev-tools-fullscreen', developerFullscreen);
   document.body.classList.toggle('dev-history-open', developerFullscreen && state.devTools.historyOpen === true);
   renderHomeSourceNav();
@@ -7676,12 +7718,12 @@ workspace.addEventListener('dblclick', (event) => {
   if (day && state.section === 'tools' && state.tool === 'calendar') { event.preventDefault(); renderLunarDialog(day.dataset.date); }
 });
 workspace.addEventListener('input', (event) => {
-  if (event.target.dataset.devField) { state.devTools[event.target.dataset.devField] = event.target.type === 'checkbox' ? event.target.checked : event.target.value; saveDevTools(); }
+  if (event.target.dataset.devField) { const field = event.target.dataset.devField; state.devTools[field] = event.target.type === 'checkbox' ? event.target.checked : event.target.value; updateDeveloperLiveState(field); }
   if (event.target.id === 'conversionValue') { conversion.value = event.target.value; const output = $('.conversion-result strong'); if (output) output.textContent = formatNumber(convertedValue()); }
   if (event.target.id === 'translationInput') state.translation.input = event.target.value;
 });
 workspace.addEventListener('change', (event) => {
-  if (event.target.dataset.devField) { state.devTools[event.target.dataset.devField] = event.target.type === 'checkbox' ? event.target.checked : event.target.value; saveDevTools(); if (event.target.dataset.devField === 'timestampUnit') render(); }
+  if (event.target.dataset.devField === 'timestampUnit') { state.devTools.timestampUnit = event.target.value; updateDeveloperLiveState('timestampUnit'); }
   if (event.target.id === 'readerFileInput') { importReaderFiles(event.target.files); return; }
   if (event.target.id === 'conversionCategory') { conversion.category = event.target.value; conversion.from = 0; conversion.to = 1; return render(); }
   if (event.target.id === 'fromUnit') { conversion.from = Number(event.target.value); return render(); }
