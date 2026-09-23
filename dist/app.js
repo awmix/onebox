@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.309';
+const APP_VERSION = '2.18.310';
 // The OAuth secret stays in the Cloudflare Worker. The browser only knows the
 // public client id and receives the authorization result in the URL fragment,
 // which is consumed immediately and never sent to a server.
@@ -137,18 +137,26 @@ async function oneBoxDbPut(storeName, key, value) {
   const db = await openOneBoxDb();
   if (!db) return false;
   return new Promise((resolve) => {
-    const request = db.transaction(storeName, 'readwrite').objectStore(storeName).put(value, key);
-    request.onsuccess = () => resolve(true);
-    request.onerror = () => resolve(false);
+    let transaction;
+    try {
+      transaction = db.transaction(storeName, 'readwrite');
+      transaction.objectStore(storeName).put(value, key);
+    } catch { resolve(false); return; }
+    transaction.oncomplete = () => resolve(true);
+    transaction.onerror = transaction.onabort = () => resolve(false);
   });
 }
 async function oneBoxDbDelete(storeName, key) {
   const db = await openOneBoxDb();
   if (!db) return false;
   return new Promise((resolve) => {
-    const request = db.transaction(storeName, 'readwrite').objectStore(storeName).delete(key);
-    request.onsuccess = () => resolve(true);
-    request.onerror = () => resolve(false);
+    let transaction;
+    try {
+      transaction = db.transaction(storeName, 'readwrite');
+      transaction.objectStore(storeName).delete(key);
+    } catch { resolve(false); return; }
+    transaction.oncomplete = () => resolve(true);
+    transaction.onerror = transaction.onabort = () => resolve(false);
   });
 }
 async function writePersistentSnapshot() {
@@ -296,6 +304,8 @@ const DICT = {
 const t = (key) => DICT[state.language]?.[key] || DICT.zh[key] || key;
 DICT.zh.readerHint = '支持 md、txt、pdf、epub本地阅读';
 DICT.en.readerHint = 'Read md, txt, pdf and epub files locally.';
+DICT.zh.githubDescription += ' 跨设备时先在有最新数据的设备上传，再在其他设备恢复；恢复会选择最近更新的备份。';
+DICT.en.githubDescription += ' To move data between devices, upload from the device with the latest data, then restore on the other device. Restore selects the most recently updated backup.';
 const toolName = (id) => t(TOOL_DEFS[id]?.key || id);
 const storedTheme = localStorage.getItem(STORAGE.theme);
 const storedLanguage = localStorage.getItem(STORAGE.language) || 'system';
@@ -2847,27 +2857,29 @@ async function epubCoverData(bytes) {
   return '';
 }
 async function hydrateReaderBookCover(book) {
-  if (!book || book.hasCover === false || book._coverData) return;
-  if (book.type === 'md') {
-    const markdownCover = readerMarkdownCover(book.content);
-    if (markdownCover) { readerDefineCover(book, markdownCover); await oneBoxDbPut('book-covers', book.id, markdownCover); }
-    book.hasCover = Boolean(markdownCover);
-    saveLibrary();
-    if (state.tool === 'reader' && state.readerMode === 'library') render();
-    return;
-  }
-  const stored = await oneBoxDbGet('book-covers', book.id);
-  if (stored) readerDefineCover(book, stored);
-  if (!stored && book.type === 'epub') {
-    const binary = await oneBoxDbGet('books', book.id);
-    if (binary) {
-      const cover = await epubCoverData(new Uint8Array(binary));
-      if (cover) { readerDefineCover(book, cover); await oneBoxDbPut('book-covers', book.id, cover); }
+  if (!book || book._coverData || book._coverHydrating || book._coverHydrated) return;
+  Object.defineProperty(book, '_coverHydrating', { value: true, writable: true, configurable: true, enumerable: false });
+  const hadCover = book.hasCover === true;
+  try {
+    let cover = book.type === 'md' ? readerMarkdownCover(book.content) : '';
+    if (!cover) cover = await oneBoxDbGet('book-covers', book.id) || '';
+    if (!cover && book.type === 'epub') {
+      const binary = await oneBoxDbGet('books', book.id);
+      if (binary) cover = await epubCoverData(new Uint8Array(binary));
     }
+    if (cover) {
+      readerDefineCover(book, cover);
+      await oneBoxDbPut('book-covers', book.id, cover);
+    }
+    book.hasCover = Boolean(cover);
+    if (book.hasCover !== hadCover) {
+      saveLibrary();
+      if (state.tool === 'reader' && state.readerMode === 'library') render();
+    }
+  } finally {
+    book._coverHydrating = false;
+    Object.defineProperty(book, '_coverHydrated', { value: true, configurable: true, enumerable: false });
   }
-  book.hasCover = Boolean(book._coverData);
-  saveLibrary();
-  if (state.tool === 'reader' && state.readerMode === 'library') render();
 }
 async function epubToHtml(bytes) {
   const entries = zipEntries(bytes); const decoder = new TextDecoder();
@@ -2972,7 +2984,7 @@ async function importReaderFiles(fileList) {
         cover = readerMarkdownCover(book.content);
       } else {
         const binary = await file.arrayBuffer();
-        await oneBoxDbPut('books', id, binary);
+        if (!await oneBoxDbPut('books', id, binary)) throw Error('Book file could not be saved locally');
         if (book.type === 'epub') cover = await epubCoverData(new Uint8Array(binary));
       }
       if (cover) { book.hasCover = true; readerDefineCover(book, cover); await oneBoxDbPut('book-covers', id, cover); }
@@ -4145,7 +4157,7 @@ function reader() {
   const activeBook = readerBookById(state.readerBookId);
   if (state.readerMode === 'reading' && activeBook) return readerReadingView(activeBook);
   const books = [...state.library].sort((a, b) => Number(b.order || 0) - Number(a.order || 0) || Number(b.lastOpenedAt || b.createdAt) - Number(a.lastOpenedAt || a.createdAt));
-  books.forEach((book) => { if (book.hasCover !== false && !book._coverData) hydrateReaderBookCover(book); });
+  books.forEach((book) => { if (!book._coverData) hydrateReaderBookCover(book); });
   const cards = books.map((book) => {
     const progress = typeof book.progress === 'number' ? book.progress : Number(book.progress?.percent || 0);
     return '<article class="book-card reader-book-card" data-reader-book-card data-reader-book-index="' + books.indexOf(book) + '" data-id="' + escapeHtml(book.id) + '"><button class="book-open reader-book-open" data-open-reader="' + escapeHtml(book.id) + '"><span class="book-cover reader-book-cover ' + book.type + '">' + readerBookCoverMarkup(book) + '</span><span class="book-copy reader-book-copy"><strong>' + escapeHtml(book.name) + '</strong><span class="reader-book-meta"><span>' + book.type.toUpperCase() + '</span><i></i><span>' + Math.max(1, Math.round(book.size / 1024)) + ' KB</span></span><span class="reader-book-progress"><span class="prog-bar"><i style="width:' + Math.round(progress * 100) + '%"></i></span><em>' + Math.round(progress * 100) + '%</em></span></span></button><button class="book-delete reader-book-delete" data-delete-book="' + escapeHtml(book.id) + '" aria-label="' + t('deleteBook') + '" title="' + t('deleteBook') + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M9 7V4h6v3M8 10v7M12 10v7M16 10v7M7 7l1 14h8l1-14"/></svg></button></article>';
@@ -5503,10 +5515,14 @@ function syncChunkBase64(value) {
 async function buildReaderSyncAssets() {
   const files = {};
   const books = {};
+  let libraryChanged = false;
   for (const book of state.library) {
     if (!book?.id) continue;
     const key = syncAssetKey(book.id);
-    const binary = await syncBytes(await oneBoxDbGet('books', book.id));
+    const storedBinary = await oneBoxDbGet('books', book.id);
+    const binary = await syncBytes(storedBinary);
+    if (book.type === 'md' && typeof book.content !== 'string') throw Error((state.language === 'en' ? 'Markdown document is missing on this device: ' : '本机缺少 Markdown 文档：') + book.name);
+    if (book.type !== 'md' && !binary?.length) throw Error((state.language === 'en' ? 'Book file is missing on this device: ' : '本机缺少书籍文件：') + book.name);
     if (binary?.length) {
       const chunks = syncChunkBase64(readerBytesToBase64(binary));
       const names = chunks.map((content, index) => {
@@ -5514,12 +5530,18 @@ async function buildReaderSyncAssets() {
       });
       books[book.id] = { files: names };
     }
-    const cover = await oneBoxDbGet('book-covers', book.id);
+    let cover = await oneBoxDbGet('book-covers', book.id);
+    if (!cover && book.type === 'md') cover = readerMarkdownCover(book.content);
+    if (!cover && book.type === 'epub' && binary) cover = await epubCoverData(binary);
     if (typeof cover === 'string' && cover) {
       const name = 'onebox-book-' + key + '.cover'; files[name] = cover;
       books[book.id] ||= {}; books[book.id].cover = name;
+      if (await oneBoxDbPut('book-covers', book.id, cover) && book.hasCover !== true) { book.hasCover = true; libraryChanged = true; }
+    } else if (book.hasCover === true) {
+      book.hasCover = false; libraryChanged = true;
     }
   }
+  if (libraryChanged) saveLibrary();
   return { files, manifest: { version: 1, books } };
 }
 function syncPayload(readerFiles = null) {
@@ -5661,21 +5683,38 @@ function parseGithubSyncPayload(content) {
   return remote;
 }
 async function restoreReaderSyncAssets(remote, gist) {
+  const storedLibrary = remote?.storage?.[STORAGE.library];
+  let library = Array.isArray(remote?.library) ? remote.library : [];
+  if (!library.length && typeof storedLibrary === 'string') {
+    try { const parsed = JSON.parse(storedLibrary); if (Array.isArray(parsed)) library = parsed; } catch { /* legacy payload without readable library metadata */ }
+  }
   const manifest = remote?.readerFiles?.books;
-  if (!manifest || typeof manifest !== 'object') return;
+  const requiredBooks = library.filter((book) => book?.id && book.type !== 'md');
+  if (!manifest || typeof manifest !== 'object' || Array.isArray(manifest)) {
+    if (requiredBooks.length) throw Error(state.language === 'en' ? 'This GitHub backup lists books but contains no book files. Upload again from the device that has the original books.' : '这份 GitHub 备份只有书籍目录，没有书籍文件。请在保存原书的设备上重新上传后再恢复。');
+    return;
+  }
+  const writes = [];
+  for (const book of requiredBooks) {
+    const entry = manifest[book.id];
+    if (!Array.isArray(entry?.files) || !entry.files.length) throw Error((state.language === 'en' ? 'The GitHub backup is missing book file: ' : 'GitHub 备份缺少书籍文件：') + book.name);
+    const chunks = await Promise.all(entry.files.map((name) => githubFileContent(gist.files?.[name])));
+    if (chunks.some((chunk) => typeof chunk !== 'string')) throw Error((state.language === 'en' ? 'Could not download all parts of book: ' : '无法完整下载书籍分段：') + book.name);
+    const byteChunks = chunks.map(syncBase64Bytes);
+    const total = byteChunks.reduce((sum, chunk) => sum + chunk.length, 0);
+    if (!total) throw Error((state.language === 'en' ? 'The downloaded book file is empty: ' : '下载到的书籍文件为空：') + book.name);
+    const bytes = new Uint8Array(total); let offset = 0;
+    byteChunks.forEach((chunk) => { bytes.set(chunk, offset); offset += chunk.length; });
+    writes.push({ store: 'books', id: book.id, value: bytes.buffer, label: book.name });
+  }
   for (const [id, entry] of Object.entries(manifest)) {
-    const chunks = Array.isArray(entry?.files) ? await Promise.all(entry.files.map((name) => githubFileContent(gist.files?.[name]))) : [];
-    if (chunks.length && chunks.every((chunk) => typeof chunk === 'string')) {
-      const byteChunks = chunks.map(syncBase64Bytes);
-      const total = byteChunks.reduce((sum, chunk) => sum + chunk.length, 0);
-      const bytes = new Uint8Array(total); let offset = 0;
-      byteChunks.forEach((chunk) => { bytes.set(chunk, offset); offset += chunk.length; });
-      await oneBoxDbPut('books', id, bytes.buffer);
-    }
-    if (entry?.cover) {
-      const cover = await githubFileContent(gist.files?.[entry.cover]);
-      if (cover) await oneBoxDbPut('book-covers', id, cover);
-    }
+    if (!entry?.cover) continue;
+    const cover = await githubFileContent(gist.files?.[entry.cover]);
+    if (typeof cover !== 'string' || !/^data:image\//i.test(cover)) throw Error(state.language === 'en' ? 'A book cover is missing or invalid in the GitHub backup.' : 'GitHub 备份中的书籍封面缺失或无效。');
+    writes.push({ store: 'book-covers', id, value: cover, label: id });
+  }
+  for (const item of writes) {
+    if (!await oneBoxDbPut(item.store, item.id, item.value)) throw Error((state.language === 'en' ? 'Could not save book data on this device: ' : '无法将书籍数据保存到本机：') + item.label);
   }
 }
 function applyRemoteStorageSnapshot(remoteStorage) {
@@ -5855,10 +5894,12 @@ async function githubUseAccessToken() {
 async function findGithubGists() {
   const candidates = [];
   const seen = new Set();
-  const addCandidate = (gist) => {
+  const listedOrder = new Map();
+  const addCandidate = (gist, order = Number.MAX_SAFE_INTEGER) => {
     if (!gist?.id || seen.has(gist.id) || gist.description !== 'OneBox settings sync' || !gist.files?.['onebox-settings.json']) return;
     seen.add(gist.id);
     candidates.push(gist);
+    listedOrder.set(gist.id, order);
   };
   if (state.github.gistId) {
     const known = await fetch('https://api.github.com/gists/' + encodeURIComponent(state.github.gistId), { headers: githubHeaders(), cache: 'no-store' });
@@ -5876,10 +5917,15 @@ async function findGithubGists() {
     if (!response.ok) throw await githubApiError(response);
     const gists = await response.json();
     if (!Array.isArray(gists)) throw Error(t('githubSyncReadFailed'));
-    gists.filter((item) => item.description === 'OneBox settings sync' && item.files?.['onebox-settings.json']).forEach(addCandidate);
+    gists.forEach((item, index) => {
+      const order = (page - 1) * 100 + index;
+      if (seen.has(item?.id)) listedOrder.set(item.id, Math.min(listedOrder.get(item.id) ?? Number.MAX_SAFE_INTEGER, order));
+      else addCandidate(item, order);
+    });
     if (gists.length < 100) break;
   }
-  return candidates;
+  const updatedAt = (gist) => Date.parse(gist?.updated_at || gist?.created_at || '') || 0;
+  return candidates.sort((left, right) => updatedAt(right) - updatedAt(left) || (listedOrder.get(left.id) ?? Number.MAX_SAFE_INTEGER) - (listedOrder.get(right.id) ?? Number.MAX_SAFE_INTEGER));
 }
 async function findGithubGist() {
   const [found] = await findGithubGists();
@@ -5922,6 +5968,12 @@ async function githubUpload() {
     const response = await fetch('https://api.github.com/gists/' + id, { method: 'PATCH', headers: githubHeaders(), body: JSON.stringify({ files }) });
     if (!response.ok) throw await githubApiError(response);
     const verified = await githubGistDetails({ id });
+    const fileEncoder = new TextEncoder();
+    const missingFiles = Object.entries(bundle.files).filter(([name, content]) => {
+      const file = verified?.files?.[name];
+      return !file || (Number.isFinite(Number(file.size)) && Number(file.size) !== fileEncoder.encode(content).byteLength);
+    }).map(([name]) => name);
+    if (missingFiles.length) throw Error((state.language === 'en' ? 'GitHub did not save all OneBox files: ' : 'GitHub 没有完整保存 OneBox 文件：') + missingFiles.slice(0, 3).join(', '));
     const verifiedContent = await githubFileContent(verified?.files?.['onebox-settings.json']);
     const verifiedPayload = parseGithubSyncPayload(verifiedContent);
     if (verifiedPayload?.savedAt !== bundle.payload.savedAt) throw Error(state.language === 'en' ? 'GitHub did not persist the latest OneBox data' : 'GitHub 没有保存最新的 OneBox 数据');
@@ -5960,8 +6012,8 @@ async function githubDownload() {
     if (!gist?.id || !remote) throw lastError || Error(t('githubSyncInvalidData'));
     const id = gist.id;
     updateGithubSync(mode, 67, githubSyncLabel(mode, 'restore'));
-    applyRemoteStorageSnapshot(remote.storage);
     await restoreReaderSyncAssets(remote, gist);
+    applyRemoteStorageSnapshot(remote.storage);
     if (['light', 'dark', 'dark-gray', 'system'].includes(remote.theme)) { state.theme = remote.theme; localStorage.setItem(STORAGE.theme, state.theme); }
     if (['mono', 'purple', 'blue', 'green', 'yellow'].includes(remote.color)) { state.color = remote.color; saveColorPreference(); }
     if (remote.languageMode || remote.language) { state.languageMode = ['zh', 'en', 'system'].includes(remote.languageMode || remote.language) ? (remote.languageMode || remote.language) : 'system'; localStorage.setItem(STORAGE.language, state.languageMode); }

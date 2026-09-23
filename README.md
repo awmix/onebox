@@ -25,6 +25,8 @@ python3 -m http.server 4173 -d dist
 
 GitHub Pages 是纯静态托管，OneBox 使用 GitHub Device Flow，不把 OAuth Client Secret 放进前端，也不要求用户填写 Client ID。点击“GitHub”后会打开 GitHub 设备授权页；用户登录并授权后，OneBox 会自动完成登录，并使用你的私有 Gist 保存设置、工具配置、导航、日程、天气卡片、翻译记录、通知、阅读书架/进度/笔记及本地导入的书籍文件。书籍二进制内容会拆分为多个 Gist 文件，访问令牌只保存在当前设备，退出 GitHub 会清除本地令牌。
 
+跨设备同步由“上传到 GitHub”和“从 GitHub 恢复”两步完成：先在有最新数据的设备上传，再在另一台设备恢复。账户中有多个 OneBox Gist 时，会按 GitHub 最近更新时间选择备份；上传与恢复都会检查书籍附件是否完整，缺失时明确报错，不再提示成功但只恢复书架目录。
+
 首页订阅内容、节假日和天气接口响应属于网络缓存，不参与同步；GitHub 登录令牌也不会上传到 Gist。
 
 ## 发布前检查
