@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.318';
+const APP_VERSION = '2.18.319';
 // The OAuth secret stays in the Cloudflare Worker. The browser only knows the
 // public client id and receives the authorization result in the URL fragment,
 // which is consumed immediately and never sent to a server.
@@ -434,7 +434,7 @@ function navigationUsesDesktopBrandIcon(value) {
 function navigationUsesOneBoxBrandIcon(value) {
   try {
     const url = new URL(value);
-    return /(^|\.)awmix\.github\.io$/i.test(url.hostname) && /^\/onebox(?:\/|$)/i.test(url.pathname);
+    return /(^|\.)(?:awmix|oneboxy)\.github\.io$/i.test(url.hostname) && /^\/onebox(?:\/|$)/i.test(url.pathname);
   } catch { return false; }
 }
 function navigationAppAssetUrl(path) {
@@ -455,7 +455,7 @@ function navigationIconSources(value) {
     const parsed = new URL(url);
     const hostname = parsed.hostname;
     if (navigationUsesDesktopBrandIcon(url)) return [navigationAppAssetUrl('icons/bilibili.svg'), 'https://static.hdslb.com/images/favicon.ico', 'https://www.bilibili.com/favicon.ico'];
-    if (navigationUsesOneBoxBrandIcon(url)) return [navigationAppAssetUrl('icons/onebox-brand-v317-192.png?v=2.18.318'), navigationAppAssetUrl('icons/onebox-brand-v317-512.png?v=2.18.318')];
+    if (navigationUsesOneBoxBrandIcon(url)) return [navigationAppAssetUrl('icons/onebox-brand-v317-192.png?v=2.18.319'), navigationAppAssetUrl('icons/onebox-brand-v317-512.png?v=2.18.319')];
     const direct = navigationAssetBases(url).flatMap((base) => [
       new URL('apple-touch-icon.png', base).href,
       new URL('apple-touch-icon-dark.png', base).href,
@@ -5572,7 +5572,7 @@ function githubAvatarMarkup(user) {
   return avatar ? '<img src="' + escapeHtml(avatar) + '" alt="" onerror="this.remove();this.parentElement.classList.add(\'is-fallback\')">' : '';
 }
 async function hydrateGithubUser() {
-  if (!state.github.token || state.github.user?.avatar_url) return;
+  if (!state.github.token) return;
   try {
     const response = await fetch('https://api.github.com/user', { headers: githubHeaders(), cache: 'no-store' });
     if (!response.ok) {
@@ -5581,10 +5581,16 @@ async function hydrateGithubUser() {
     }
     const user = await response.json();
     if (!user?.login) return;
+    const previousLogin = state.github.user?.login || '';
     state.github.user = { ...state.github.user, ...user };
     saveGithub();
+    if (previousLogin !== user.login) {
+      bindPetProfileToCurrentUser();
+      render();
+      if ($('#petDialog') && !$('#petDialog').hidden) renderPetDialog();
+    }
     if (state.githubDialogOpen && !$('#githubDialog')?.hidden) renderGithubDialog();
-  } catch { /* the login remains usable even when the avatar request is unavailable */ }
+  } catch { /* keep the last-known GitHub account when its profile cannot be refreshed */ }
 }
 async function githubFileContent(file) {
   if (!file) return null;
