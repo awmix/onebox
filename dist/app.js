@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.313';
+const APP_VERSION = '2.18.314';
 // The OAuth secret stays in the Cloudflare Worker. The browser only knows the
 // public client id and receives the authorization result in the URL fragment,
 // which is consumed immediately and never sent to a server.
@@ -455,7 +455,7 @@ function navigationIconSources(value) {
     const parsed = new URL(url);
     const hostname = parsed.hostname;
     if (navigationUsesDesktopBrandIcon(url)) return [navigationAppAssetUrl('icons/bilibili.svg'), 'https://static.hdslb.com/images/favicon.ico', 'https://www.bilibili.com/favicon.ico'];
-    if (navigationUsesOneBoxBrandIcon(url)) return [navigationAppAssetUrl('icons/onebox-brand-v313-192.png?v=2.18.313'), navigationAppAssetUrl('icons/onebox-brand-v313-512.png?v=2.18.313')];
+    if (navigationUsesOneBoxBrandIcon(url)) return [navigationAppAssetUrl('icons/onebox-brand-v313-192.png?v=2.18.314'), navigationAppAssetUrl('icons/onebox-brand-v313-512.png?v=2.18.314')];
     const direct = navigationAssetBases(url).flatMap((base) => [
       new URL('apple-touch-icon.png', base).href,
       new URL('apple-touch-icon-dark.png', base).href,
@@ -899,6 +899,9 @@ function swapToolOrder(from, to) {
 function homeFeedSources() {
   const visible = new Set(state.homeFeed.visible || DEFAULT_HOME_FEED_VISIBLE);
   return state.homeFeed.order.map((id) => RSS_SOURCES.find((source) => source.id === id)).filter((source) => source && visible.has(source.id));
+}
+function homeFeedUnavailableSources() {
+  return homeFeedSources().filter((source) => state.homeFeed.errors[source.id] || state.homeFeed.stale[source.id]);
 }
 function homeFeedNewIds(sourceId = state.homeFeed.active) {
   return new Set(Array.isArray(state.homeFeed.newItems?.[sourceId]) ? state.homeFeed.newItems[sourceId] : []);
@@ -2312,7 +2315,7 @@ function renderHome() {
   const visibleItems = items.slice(0, renderLimit);
   const hasMoreItems = !isFootprint && items.length > visibleItems.length;
   const hasItems = visibleItems.length > 0;
-  const errors = Object.keys(state.homeFeed.errors || {}).length;
+  const unavailableSources = homeFeedUnavailableSources();
   let separatorShown = false;
   const feedList = visibleItems.map((item, index) => {
     const isNew = !isFootprint && newIds.has(item.id);
@@ -2325,7 +2328,11 @@ function renderHome() {
   const refreshState = state.homeFeed.loading ? '<div class="feed-refresh-state" role="status" aria-label="' + escapeHtml(t('feedLoading')) + '"><span></span></div>' : '';
   const newContentAction = !state.homeFeed.loading && !homeFeedSourceRequesting() && newCount ? '<div class="feed-new-content-action-wrap"><button class="feed-new-content-action" type="button" data-feed-only-new>' + escapeHtml(homeFeedNewActionLabel(newCount)) + '</button></div>' : '';
   const loadMoreAction = hasMoreItems ? '<div class="feed-load-more-wrap"><button class="feed-load-more" type="button" data-feed-load-more>' + escapeHtml(t('feedLoadMore')) + '</button></div>' : '';
-  return '<div class="home-page feed-home"><section class="feed-panel">' + refreshState + newContentAction + (errors ? '<p class="feed-warning">' + t('feedPartial') + '</p>' : '') + feedBody + loadMoreAction + '<p class="feed-hint">' + t('feedProxyHint') + (state.homeFeed.updatedAt ? ' · ' + t('feedLastRefresh') + ' ' + escapeHtml(feedDate(state.homeFeed.updatedAt)) : '') + '</p></section></div>';
+  const feedWarningText = state.language === 'en'
+    ? t('feedPartial') + ': ' + unavailableSources.map((source) => source.name).join(', ') + '. Other feeds can still update; tap the matching tab to retry.'
+    : t('feedPartial') + '：' + unavailableSources.map((source) => source.name).join('、') + '。其他来源仍可正常显示；点击对应 Tab 可重试。';
+  const feedWarning = unavailableSources.length ? '<p class="feed-warning" role="status">' + escapeHtml(feedWarningText) + '</p>' : '';
+  return '<div class="home-page feed-home"><section class="feed-panel">' + refreshState + newContentAction + feedWarning + feedBody + loadMoreAction + '<p class="feed-hint">' + t('feedProxyHint') + (state.homeFeed.updatedAt ? ' · ' + t('feedLastRefresh') + ' ' + escapeHtml(feedDate(state.homeFeed.updatedAt)) : '') + '</p></section></div>';
 }
 function navigationIconMarkup(site, extraClass = '') {
   const generatedSources = navigationIconSources(site?.url);
@@ -2390,7 +2397,7 @@ function navigationItemMarkup(item, index = 0, folderId = '') {
   const actionButtons = '<span class="navigation-card-actions" role="group" aria-label="' + escapeHtml(t('navigationTitle')) + '"><span class="navigation-primary-actions">' + openButton + '</span><span class="navigation-secondary-actions">' + editButton + deleteButton + '</span></span>';
   if (item.type === 'folder') {
     const preview = item.children.slice(0, 4).map((site) => navigationIconMarkup(site, 'navigation-folder-site-icon')).join('') || '<span class="navigation-folder-empty-icon">＋</span>';
-    return '<article class="navigation-card navigation-folder-card" data-navigation-item data-navigation-type="folder" data-navigation-id="' + escapeHtml(item.id) + '"' + indexAttribute + '>' + actionButtons + '<button class="navigation-card-main" type="button" data-navigation-open-folder="' + escapeHtml(item.id) + '" aria-label="' + escapeHtml(item.name) + '"><span class="navigation-folder-preview">' + preview + '</span><strong>' + escapeHtml(item.name) + '</strong><small>' + escapeHtml(t('navigationSiteCount').replace('{count}', String(item.children.length))) + '</small></button></article>';
+    return '<article class="navigation-card navigation-folder-card" data-navigation-item data-navigation-type="folder" data-navigation-id="' + escapeHtml(item.id) + '"' + indexAttribute + '>' + actionButtons + '<button class="navigation-card-main" type="button" data-navigation-open-folder="' + escapeHtml(item.id) + '" aria-label="' + escapeHtml(item.name) + '"><span class="navigation-folder-preview">' + preview + '</span><strong>' + escapeHtml(item.name) + '</strong></button></article>';
   }
   const target = state.openMode === 'new-tab' ? ' target="_blank" rel="noreferrer"' : '';
   return '<article class="navigation-card navigation-site-card" data-navigation-item data-navigation-type="site" data-navigation-id="' + escapeHtml(item.id) + '"' + folderAttribute + indexAttribute + '>' + actionButtons + '<a class="navigation-card-main" data-navigation-open-site draggable="false" href="' + escapeHtml(item.url) + '"' + target + ' aria-label="' + escapeHtml(t('navigationOpen') + ' ' + item.name) + '">' + navigationIconMarkup(item) + '<strong>' + escapeHtml(item.name) + '</strong></a></article>';
@@ -6428,7 +6435,6 @@ function startNavigationLongPress(target, event) {
     navigationDrag.longPressed = true;
     target.classList.add('navigation-long-pressed');
   }, NAVIGATION_LONG_PRESS_MS);
-  try { target.setPointerCapture?.(event.pointerId); navigationDrag.pressCaptureTarget = target; } catch {}
 }
 function endNavigationLongPress() { clearTimeout(navigationPressTimer); navigationPressTimer = null; }
 function startNavigationDialogLongPress(target, event) {
@@ -6491,7 +6497,6 @@ function restoreNavigationDrag(drag) {
   if (drag.placeholder?.isConnected) drag.placeholder.replaceWith(drag.target);
   drag.ghost?.remove();
   try { if (drag.captureTarget?.hasPointerCapture?.(drag.pointerId)) drag.captureTarget.releasePointerCapture(drag.pointerId); } catch {}
-  try { if (drag.pressCaptureTarget?.hasPointerCapture?.(drag.pointerId)) drag.pressCaptureTarget.releasePointerCapture(drag.pointerId); } catch {}
   drag.target.classList.remove('navigation-dragging', 'navigation-long-pressed');
   drag.placeholder = null; drag.ghost = null;
 }
@@ -6523,7 +6528,6 @@ function updateNavigationDrag(event) {
   if (!drag.longPressed) {
     if (Math.hypot(dx, dy) > NAVIGATION_MOVE_TOLERANCE) {
       endNavigationLongPress();
-      try { if (drag.pressCaptureTarget?.hasPointerCapture?.(drag.pointerId)) drag.pressCaptureTarget.releasePointerCapture(drag.pointerId); } catch {}
       navigationDrag = null;
     }
     return;
