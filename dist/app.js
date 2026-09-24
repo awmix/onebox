@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.336';
+const APP_VERSION = '2.18.337';
 // The OAuth secret stays in the Cloudflare Worker. The browser only knows the
 // public client id and receives the authorization result in the URL fragment,
 // which is consumed immediately and never sent to a server.
@@ -241,10 +241,10 @@ const DICT = {
     copied: '已复制', translationInput: '输入待翻译内容', translateNow: '开始翻译', saveTranslation: '保存到本机',
     source: '源语言', target: '目标语言', translationResult: '翻译结果', translationHistory: '最近翻译',
     noTranslation: '翻译结果会显示在这里。', noHistory: '还没有保存翻译。',
-    githubSync: 'GitHub 云同步', githubDescription: '点击后跳转到 GitHub 授权页，授权成功后自动返回 OneBox；数据保存到你自己的私有 Gist。', githubNotConnectedHint: '点击下方按钮跳转到 GitHub 授权。',
+    githubSync: 'GitHub 云同步', githubDescription: '将本机设置、阅读数据和书籍保存到你的私有 Gist。', githubNotConnectedHint: '连接后即可跨设备同步。',
     githubClientId: 'GitHub OAuth Client ID', githubClientHint: 'OneBox 已内置公开的授权标识，不需要手动配置。', githubDeveloperSettings: '打开 OAuth Apps 设置',
-    githubBrowserFlowError: '无法打开 GitHub 授权页，请检查网络后重试。', githubNetworkError: '无法连接 GitHub API，请检查网络或稍后重试。', githubAccessToken: 'GitHub 访问令牌', githubTokenHint: '仅将令牌保存在当前设备，并通过 GitHub API 验证；建议使用只包含 gist 权限的令牌。', githubUseToken: '使用访问令牌连接', githubTokenMissing: '请先填写 GitHub 访问令牌。', githubTokenInvalid: '访问令牌无效或没有可用权限。', githubTokenConnected: 'GitHub 已连接', githubWaiting: '等待 GitHub 授权…', githubCancel: '取消授权',
-    githubSyncScopeTitle: '同步范围', githubSyncScope: '设置、工具顺序、导航、首页来源、日程、天气卡片、翻译记录、通知、阅读书架、阅读进度、笔记和已导入书籍的原文件。', githubSyncPrivacy: 'GitHub 令牌不会上传；首页订阅内容、节假日和天气接口缓存属于网络缓存，不参与同步。', githubAuthHint: '点击连接后会跳转到 GitHub，完成授权后自动返回 OneBox。',
+    githubBrowserFlowError: '无法打开 GitHub 授权页，请检查网络后重试。', githubNetworkError: '无法连接 GitHub API，请检查网络或稍后重试。', githubAccessToken: 'GitHub 访问令牌', githubTokenHint: '令牌只保存在当前设备，需要 gist 权限。', githubUseToken: '使用访问令牌连接', githubTokenMissing: '请先填写 GitHub 访问令牌。', githubTokenInvalid: '访问令牌无效或没有可用权限。', githubTokenConnected: 'GitHub 已连接', githubWaiting: '等待 GitHub 授权…', githubCancel: '取消授权',
+    githubSyncScopeTitle: '同步内容', githubSyncScope: '设置、导航、阅读数据和本地书籍。', githubSyncPrivacy: '令牌和首页网络缓存不会同步。', githubAuthHint: '授权后会自动返回 OneBox。', githubUploadHint: '保存本机最新数据', githubDownloadHint: '恢复最近备份', githubConnectHint: '授权后开启同步', githubLogoutHint: '仅断开本机连接', githubBackgroundHint: '关闭窗口也会继续。',
     githubLogin: '连接 GitHub', githubLogout: '退出 GitHub', upload: '上传到 GitHub', download: '从 GitHub 恢复', githubAuthExpired: 'GitHub 授权已失效，请重新连接 GitHub。', githubSyncNotFound: '当前 GitHub 账号中没有找到 OneBox 同步数据，请先在另一台设备上传。', githubSyncReadFailed: 'GitHub 中的 OneBox 同步文件无法读取，请检查 Gist 权限或内容。', githubSyncMalformed: 'GitHub 中的 OneBox 同步文件不是有效的 JSON。', githubSyncInvalidData: 'GitHub 中的 OneBox 同步数据格式错误或已损坏。',
     githubConnected: '已连接', githubNotConnected: '尚未连接', openDevice: '打开验证页面',
     appUpdate: '应用更新', checkUpdate: '更新', updateAvailable: '发现有新版本', upToDate: '已是最新版', updating: '检查中', updateApplying: '更新中', updateCheckFailed: '检查失败，可重试', applyUpdate: '更新',
@@ -286,10 +286,10 @@ const DICT = {
     copied: 'Copied', translationInput: 'Text to translate', translateNow: 'Translate', saveTranslation: 'Save locally',
     source: 'Source', target: 'Target', translationResult: 'Translation', translationHistory: 'Recent translations',
     noTranslation: 'Your translation will appear here.', noHistory: 'No saved translations yet.',
-    githubSync: 'GitHub cloud sync', githubDescription: 'Jump to GitHub authorization and return to OneBox after approval; data is saved in your own private Gist.', githubNotConnectedHint: 'Click below to jump to GitHub authorization.',
+    githubSync: 'GitHub cloud sync', githubDescription: 'Save this device’s settings, reading data and books to your private Gist.', githubNotConnectedHint: 'Connect to sync across devices.',
     githubClientId: 'GitHub OAuth Client ID', githubClientHint: 'OneBox includes its public authorization identifier; no manual setup is required.', githubDeveloperSettings: 'Open OAuth Apps settings',
-    githubBrowserFlowError: 'GitHub authorization could not be opened. Check your network and try again.', githubNetworkError: 'Could not connect to the GitHub API. Check your network and try again.', githubAccessToken: 'GitHub access token', githubTokenHint: 'The token is stored only on this device and verified through GitHub API. A token with gist permission is recommended.', githubUseToken: 'Connect with access token', githubTokenMissing: 'Enter a GitHub access token first.', githubTokenInvalid: 'The access token is invalid or lacks the required permission.', githubTokenConnected: 'GitHub connected', githubWaiting: 'Waiting for GitHub authorization…', githubCancel: 'Cancel authorization',
-    githubSyncScopeTitle: 'Sync scope', githubSyncScope: 'Settings, tool order, navigation, home sources, events, weather cards, translation history, notifications, the reading shelf, reading progress, notes and imported book source files.', githubSyncPrivacy: 'The GitHub token is never uploaded. Home feeds, holidays and weather API caches are network caches and are not synced.', githubAuthHint: 'Connect to jump to GitHub; after approval you will return to OneBox automatically.',
+    githubBrowserFlowError: 'GitHub authorization could not be opened. Check your network and try again.', githubNetworkError: 'Could not connect to the GitHub API. Check your network and try again.', githubAccessToken: 'GitHub access token', githubTokenHint: 'Stored only on this device; gist permission is required.', githubUseToken: 'Connect with access token', githubTokenMissing: 'Enter a GitHub access token first.', githubTokenInvalid: 'The access token is invalid or lacks the required permission.', githubTokenConnected: 'GitHub connected', githubWaiting: 'Waiting for GitHub authorization…', githubCancel: 'Cancel authorization',
+    githubSyncScopeTitle: 'Sync content', githubSyncScope: 'Settings, navigation, reading data and local books.', githubSyncPrivacy: 'Tokens and home network caches are not synced.', githubAuthHint: 'You will return to OneBox after authorization.', githubUploadHint: 'Save the latest device data', githubDownloadHint: 'Restore the latest backup', githubConnectHint: 'Authorize to enable sync', githubLogoutHint: 'Disconnect this device only', githubBackgroundHint: 'Closing the window will not stop it.',
     githubLogin: 'Connect GitHub', githubLogout: 'Disconnect GitHub', upload: 'Upload to GitHub', download: 'Restore from GitHub', githubAuthExpired: 'GitHub authorization expired. Please reconnect GitHub.', githubSyncNotFound: 'No OneBox sync data was found in this GitHub account. Upload from another device first.', githubSyncReadFailed: 'The OneBox sync file in GitHub could not be read. Check the Gist permission or content.', githubSyncMalformed: 'The OneBox sync file in GitHub is not valid JSON.', githubSyncInvalidData: 'The OneBox sync data in GitHub is malformed or damaged.',
     githubConnected: 'Connected', githubNotConnected: 'Not connected', openDevice: 'Open verification page',
     appUpdate: 'App update', checkUpdate: 'Update', updateAvailable: 'A new version is available', upToDate: 'Latest version', updating: 'Checking', updateApplying: 'Updating', updateCheckFailed: 'Check failed. Try again.', applyUpdate: 'Update',
@@ -306,8 +306,7 @@ const DICT = {
 const t = (key) => DICT[state.language]?.[key] || DICT.zh[key] || key;
 DICT.zh.readerHint = '支持 md、txt、pdf、epub本地阅读';
 DICT.en.readerHint = 'Read md, txt, pdf and epub files locally.';
-DICT.zh.githubDescription += ' 跨设备时先在有最新数据的设备上传，再在其他设备恢复；恢复会选择最近更新的备份。';
-DICT.en.githubDescription += ' To move data between devices, upload from the device with the latest data, then restore on the other device. Restore selects the most recently updated backup.';
+// Keep the cloud-sync summary short; the action labels explain upload versus restore.
 const toolName = (id) => t(TOOL_DEFS[id]?.key || id);
 const storedTheme = localStorage.getItem(STORAGE.theme);
 const storedLanguage = localStorage.getItem(STORAGE.language) || 'system';
@@ -5986,12 +5985,31 @@ function githubSyncLabel(mode, key) {
   };
   return labels[mode]?.[key]?.[english ? 0 : 1] || '';
 }
+function renderGithubSyncIndicator() {
+  const indicator = $('#githubSyncIndicator');
+  if (!indicator) return;
+  const sync = state.githubSync || { active: false, mode: '', progress: 0, message: '', error: '' };
+  const visible = Boolean(sync.active || sync.error);
+  indicator.hidden = !visible;
+  indicator.classList.toggle('is-error', Boolean(sync.error));
+  indicator.dataset.mode = sync.mode || '';
+  const progress = Math.max(0, Math.min(100, Number(sync.progress) || 0));
+  indicator.style.setProperty('--sync-progress', progress + '%');
+  const label = indicator.querySelector('[data-github-sync-label]');
+  const detail = indicator.querySelector('[data-github-sync-detail]');
+  const labelText = sync.error ? (state.language === 'en' ? 'Sync failed' : '同步失败') : sync.mode === 'download' ? (state.language === 'en' ? 'Restoring' : '恢复中') : (state.language === 'en' ? 'Syncing' : '同步中');
+  if (label) label.textContent = labelText;
+  if (detail) detail.textContent = sync.error ? '!' : progress + '%';
+  indicator.setAttribute('aria-label', (sync.error ? (state.language === 'en' ? 'GitHub sync failed' : 'GitHub 同步失败') : (state.language === 'en' ? 'GitHub sync in progress' : 'GitHub 正在同步')) + ' · ' + progress + '%');
+}
 function updateGithubSync(mode, progress, message, error = '') {
   state.githubSync = { active: !error && progress < 100, mode, progress: Math.max(0, Math.min(100, Math.round(progress))), message: message || '', error: error || '' };
+  renderGithubSyncIndicator();
   if (state.githubDialogOpen && !$('#githubDialog')?.hidden) renderGithubDialog();
 }
 function finishGithubSync(mode, message, error = '') {
   state.githubSync = { active: false, mode, progress: error ? state.githubSync.progress : 100, message: message || '', error: error || '' };
+  renderGithubSyncIndicator();
   if (state.githubDialogOpen && !$('#githubDialog')?.hidden) renderGithubDialog();
 }
 function consumeGithubOAuthCallback() {
@@ -6365,17 +6383,24 @@ function renderGithubDialog() {
   const connected = Boolean(state.github.token && state.github.user);
   const sync = state.githubSync || { active: false, mode: '', progress: 0, message: '', error: '' };
   const syncing = Boolean(sync.active);
+  const accountLabel = state.language === 'en' ? 'Account' : '账户';
+  const privateLabel = state.language === 'en' ? 'Private Gist' : '私有 Gist';
   const account = connected
     ? '<div class="github-status-card is-connected"><span class="github-status-icon github-avatar' + (githubAvatarUrl(state.github.user) ? '' : ' is-fallback') + '">' + githubAvatarMarkup(state.github.user) + '</span><span class="github-status-copy"><strong>' + escapeHtml(state.github.user.login || 'GitHub') + '</strong><small>' + t('githubConnected') + '</small></span><span class="github-status-badge">✓</span></div>'
     : '<div class="github-status-card"><span class="github-status-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 18h10a3.5 3.5 0 0 0 .5-6.96A5.5 5.5 0 0 0 7 9.5a4.25 4.25 0 0 0 0 8.5Z"/><path d="m12 12 2-2m-2 2-2-2m2 2v4"/></svg></span><span class="github-status-copy"><strong>' + t('githubNotConnected') + '</strong><small>' + t('githubNotConnectedHint') + '</small></span></div>';
   const waiting = Boolean(state.github.deviceCode);
-  const code = state.github.userCode ? '<div class="device-code"><div><small>' + (state.language === 'en' ? 'Authorize OneBox in GitHub' : '请在 GitHub 中授权 OneBox') + '</small><strong>' + escapeHtml(state.github.userCode) + '</strong><small>' + escapeHtml(t('githubWaiting')) + '</small></div><a class="secondary github-device-link" href="' + escapeHtml(state.github.verificationUriComplete || state.github.verificationUri || 'https://github.com/login/device') + '" target="_blank" rel="noreferrer">' + t('openDevice') + '</a></div>' : '';
-  const manualToken = state.github.manualTokenOpen && !connected ? '<section class="github-manual-token"><label for="githubAccessToken">' + t('githubAccessToken') + '</label><input id="githubAccessToken" type="password" placeholder="github_pat_…" autocomplete="off"><p>' + t('githubTokenHint') + '</p><button class="secondary" data-github-token>' + t('githubUseToken') + '</button></section>' : '';
+  const code = state.github.userCode ? '<div class="device-code"><div><small>' + (state.language === 'en' ? 'Authorize OneBox in GitHub' : '请在 GitHub 中授权 OneBox') + '</small><strong>' + escapeHtml(state.github.userCode) + '</strong><small>' + escapeHtml(t('githubWaiting')) + '</small></div><a class="github-device-link" href="' + escapeHtml(state.github.verificationUriComplete || state.github.verificationUri || 'https://github.com/login/device') + '" target="_blank" rel="noreferrer">' + t('openDevice') + '</a></div>' : '';
+  const manualToken = state.github.manualTokenOpen && !connected ? '<section class="github-manual-token"><label for="githubAccessToken">' + t('githubAccessToken') + '</label><input id="githubAccessToken" type="password" placeholder="github_pat_…" autocomplete="off"><p>' + t('githubTokenHint') + '</p><button class="github-secondary-button" data-github-token>' + t('githubUseToken') + '</button></section>' : '';
+  const actionButton = (type, label, hint, icon, primary = false) => '<button class="github-action-button' + (primary ? ' is-primary' : '') + '" data-github-' + type + (syncing ? ' disabled' : '') + '><span class="github-action-icon" aria-hidden="true">' + icon + '</span><span class="github-action-copy"><strong>' + label + '</strong><small>' + hint + '</small></span><span class="github-action-arrow" aria-hidden="true">→</span></button>';
+  const uploadIcon = '<svg viewBox="0 0 24 24"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5M5 14.5V19h14v-4.5"/></svg>';
+  const downloadIcon = '<svg viewBox="0 0 24 24"><path d="M12 4v12m0 0 4.5-4.5M12 16 7.5 11.5M5 19.5h14"/></svg>';
+  const connectIcon = '<svg viewBox="0 0 24 24"><path d="M8.5 12h7M12 8.5v7M7 4.5h10A2.5 2.5 0 0 1 19.5 7v10a2.5 2.5 0 0 1-2.5 2.5H7A2.5 2.5 0 0 1 4.5 17V7A2.5 2.5 0 0 1 7 4.5Z"/></svg>';
+  const summary = '<section class="github-summary"><span class="github-summary-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3.5 19 7v10l-7 3.5L5 17V7l7-3.5Z"/><path d="m5 7 7 3.5L19 7M12 10.5V20.5"/></svg></span><span><strong>' + escapeHtml(t('githubDescription')) + '</strong><small>' + escapeHtml(t('githubSyncPrivacy')) + '</small></span></section>';
+  const syncProgress = (sync.message || syncing || sync.error) ? '<section class="github-sync-progress' + (sync.error ? ' is-error' : '') + (syncing ? ' is-active' : '') + '" aria-live="polite"><div class="github-sync-progress-head"><strong>' + escapeHtml(sync.message || (state.language === 'en' ? 'Syncing…' : '正在同步…')) + '</strong><span>' + (sync.error ? '!' : String(sync.progress) + '%') + '</span></div><div class="github-sync-progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + String(sync.progress) + '"><span style="width:' + String(sync.progress) + '%"></span></div>' + (sync.error ? '<p>' + escapeHtml(sync.error) + '</p>' : sync.progress >= 100 ? '' : '<small>' + escapeHtml(t('githubBackgroundHint')) + '</small>') + '</section>' : '';
   const actions = connected
-    ? '<div class="github-action-grid"><button class="primary" data-github-upload ' + (syncing ? 'disabled' : '') + '>' + t('upload') + '</button><button class="secondary" data-github-download ' + (syncing ? 'disabled' : '') + '>' + t('download') + '</button></div><button class="text-btn github-disconnect" data-github-logout ' + (syncing ? 'disabled' : '') + '>' + t('githubLogout') + '</button>'
-    : (waiting ? '<button class="secondary github-connect" disabled>' + t('githubWaiting') + '</button><button class="text-btn github-cancel" data-github-cancel>' + t('githubCancel') + '</button>' : '<button class="primary github-connect" data-github-login>' + t('githubLogin') + '</button>');
-  const syncProgress = (sync.message || syncing || sync.error) ? '<section class="github-sync-progress ' + (sync.error ? 'is-error' : '') + '" aria-live="polite"><div class="github-sync-progress-head"><strong>' + escapeHtml(sync.message || (state.language === 'en' ? 'Syncing…' : '正在同步…')) + '</strong><span>' + (sync.error ? '!' : String(sync.progress) + '%') + '</span></div><div class="github-sync-progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + String(sync.progress) + '"><span style="width:' + String(sync.progress) + '%"></span></div>' + (sync.error ? '<p>' + escapeHtml(sync.error) + '</p>' : sync.progress >= 100 ? '' : '<small>' + escapeHtml(state.language === 'en' ? 'You can close this dialog; the sync will continue.' : '可以关闭此窗口，同步仍会继续。') + '</small>') + '</section>' : '';
-  dialog.innerHTML = '<div class="dialog-card github-dialog-card" role="dialog" aria-modal="true"><div class="dialog-head github-dialog-head"><div><h2>GitHub</h2></div><button class="icon-btn small github-dialog-close" data-close-github aria-label="' + t('close') + '">×</button></div><div class="github-dialog-body"><section class="github-status-section"><div class="github-section-label"><h3>' + t('githubSync') + '</h3></div>' + account + '</section><p class="github-dialog-note">' + escapeHtml(t('githubDescription')) + '</p><section class="github-sync-scope"><strong>' + t('githubSyncScopeTitle') + '</strong><p>' + escapeHtml(t('githubSyncScope')) + '</p><small>' + escapeHtml(t('githubSyncPrivacy')) + '</small></section><p class="github-dialog-note github-auth-hint">' + escapeHtml(t('githubAuthHint')) + '</p>' + code + manualToken + syncProgress + '</div><section class="github-actions">' + actions + '</section></div>';
+    ? '<div class="github-action-grid">' + actionButton('upload', t('upload'), t('githubUploadHint'), uploadIcon, true) + actionButton('download', t('download'), t('githubDownloadHint'), downloadIcon) + '</div><button class="github-disconnect-button" data-github-logout ' + (syncing ? 'disabled' : '') + '><span class="github-disconnect-icon" aria-hidden="true">↪</span><span><strong>' + t('githubLogout') + '</strong><small>' + t('githubLogoutHint') + '</small></span></button>'
+    : (waiting ? '<div class="github-waiting-actions"><button class="github-secondary-button github-connect" disabled>' + t('githubWaiting') + '</button><button class="github-secondary-button github-cancel" data-github-cancel>' + t('githubCancel') + '</button></div>' : '<button class="github-action-button is-primary github-connect" data-github-login><span class="github-action-icon" aria-hidden="true">' + connectIcon + '</span><span class="github-action-copy"><strong>' + t('githubLogin') + '</strong><small>' + t('githubConnectHint') + '</small></span><span class="github-action-arrow" aria-hidden="true">→</span></button>');
+  dialog.innerHTML = '<div class="dialog-card github-dialog-card" role="dialog" aria-modal="true"><div class="dialog-head github-dialog-head"><div class="github-dialog-title"><span class="github-dialog-kicker">' + t('githubSync') + '</span><h2>GitHub</h2></div><button class="icon-btn small github-dialog-close" data-close-github aria-label="' + t('close') + '">×</button></div><div class="github-dialog-body"><section class="github-status-section"><div class="github-section-label"><h3>' + accountLabel + '</h3><span>' + privateLabel + '</span></div>' + account + '</section>' + summary + '<section class="github-sync-scope"><strong>' + t('githubSyncScopeTitle') + '</strong><span>' + escapeHtml(t('githubSyncScope')) + '</span></section>' + code + manualToken + syncProgress + '</div><section class="github-actions">' + actions + '</section></div>';
   dialog.hidden = false; state.githubDialogOpen = true;
 }
 function closeGithubDialog() { const dialog = $('#githubDialog'); if (dialog) dialog.hidden = true; state.githubDialogOpen = false; }
@@ -8299,6 +8324,7 @@ document.addEventListener('keydown', (event) => {
 $('#themeBtn').addEventListener('click', cycleTheme);
 $('#languageBtn').addEventListener('click', cycleLanguage);
 $('#settingsBtn').addEventListener('click', () => renderSettings());
+$('#githubSyncIndicator')?.addEventListener('click', () => renderGithubDialog());
 $('#notifyBtn').addEventListener('click', () => {
   state.notificationOpen = !state.notificationOpen;
   if (state.notificationOpen) { state.notifications.forEach((item) => { if (item.at <= Date.now()) item.read = true; }); saveNotifications(); renderNotifications(); }

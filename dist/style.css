@@ -9732,3 +9732,191 @@ body.dev-tools-fullscreen #workspace[data-tool="dev"] {
   transform: scale(1.045);
   box-shadow: 0 0 0 4px color-mix(in srgb, var(--primary) 18%, transparent), 0 16px 32px color-mix(in srgb, var(--ink) 12%, transparent);
 }
+
+/* 2.18.337: GitHub sync uses one compact visual system in the dialog and
+   remains visible as a small progress control after the dialog is closed. */
+.header-sync-indicator {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  gap: 7px;
+  height: 34px;
+  max-width: 164px;
+  padding: 4px 10px 4px 5px;
+  border: 1px solid color-mix(in srgb, var(--primary) 24%, var(--line));
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--primary) 7%, var(--panel));
+  color: var(--ink);
+  cursor: pointer;
+  text-align: left;
+}
+.header-sync-indicator[hidden] { display: none !important; }
+.header-sync-indicator.is-error {
+  border-color: color-mix(in srgb, var(--danger, #d85b6a) 42%, var(--line));
+  background: color-mix(in srgb, var(--danger, #d85b6a) 9%, var(--panel));
+}
+.header-sync-ring {
+  position: relative;
+  display: grid;
+  flex: 0 0 24px;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: conic-gradient(var(--primary) var(--sync-progress, 0%), color-mix(in srgb, var(--primary) 14%, var(--line)) 0);
+}
+.header-sync-ring::after {
+  position: absolute;
+  inset: 3px;
+  border-radius: inherit;
+  background: var(--panel);
+  content: '';
+}
+.header-sync-ring i {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--primary);
+  animation: github-sync-pulse 1.2s ease-in-out infinite;
+}
+.header-sync-indicator.is-error .header-sync-ring { background: conic-gradient(var(--danger, #d85b6a) 100%, var(--danger, #d85b6a) 0); }
+.header-sync-indicator.is-error .header-sync-ring i { background: var(--danger, #d85b6a); animation: none; }
+.header-sync-copy { display: grid; min-width: 0; gap: 1px; line-height: 1.1; }
+.header-sync-copy strong { overflow: hidden; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+.header-sync-copy small { color: var(--muted); font-size: 10px; font-variant-numeric: tabular-nums; }
+@keyframes github-sync-pulse { 0%, 100% { opacity: .42; transform: scale(.85); } 50% { opacity: 1; transform: scale(1.15); } }
+
+#githubDialog {
+  align-items: center;
+  justify-content: center;
+  padding: max(12px, env(safe-area-inset-top)) 10px max(12px, env(safe-area-inset-bottom));
+}
+#githubDialog .github-dialog-card {
+  width: min(440px, 100%);
+  max-height: min(720px, calc(100dvh - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom)));
+  border: 1px solid color-mix(in srgb, var(--line) 86%, var(--primary) 14%);
+  border-radius: 24px;
+  background: var(--panel);
+  box-shadow: 0 24px 72px color-mix(in srgb, #000 28%, transparent);
+}
+#githubDialog .github-dialog-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 17px 18px 15px;
+  border-bottom: 1px solid var(--line);
+  background: var(--panel);
+}
+.github-dialog-title { display: grid; gap: 3px; min-width: 0; }
+.github-dialog-kicker { overflow: hidden; color: var(--primary); font-size: 10px; font-weight: 800; letter-spacing: .08em; text-overflow: ellipsis; white-space: nowrap; }
+#githubDialog .github-dialog-head h2 { margin: 0; font-size: 22px; letter-spacing: -.035em; }
+#githubDialog .github-dialog-close { width: 32px; height: 32px; border-radius: 11px; }
+#githubDialog .github-dialog-body { gap: 12px; padding: 16px 18px 18px; }
+.github-status-section { gap: 7px; }
+.github-section-label { align-items: center; }
+.github-section-label h3 { font-size: 11px; letter-spacing: .04em; text-transform: uppercase; }
+.github-section-label > span { color: var(--muted); font-size: 10px; }
+.github-status-card { gap: 10px; padding: 10px 11px; border-radius: 15px; }
+.github-status-icon { flex-basis: 34px; width: 34px; height: 34px; border-radius: 11px; }
+.github-status-copy strong { font-size: 14px; }
+.github-status-copy small { font-size: 11px; }
+.github-summary {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 11px 12px;
+  border: 1px solid var(--line);
+  border-radius: 15px;
+  background: color-mix(in srgb, var(--primary) 5%, var(--panel-2));
+}
+.github-summary-icon { display: grid; flex: 0 0 28px; place-items: center; width: 28px; height: 28px; border-radius: 9px; background: var(--soft); color: var(--primary); }
+.github-summary-icon svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.7; }
+.github-summary > span:last-child { display: grid; gap: 3px; min-width: 0; }
+.github-summary strong { font-size: 12px; line-height: 1.45; }
+.github-summary small { color: var(--muted); font-size: 10px; line-height: 1.45; }
+.github-sync-scope { gap: 3px; padding: 10px 12px; border-radius: 15px; }
+.github-sync-scope strong { font-size: 11px; }
+.github-sync-scope span { color: var(--muted); font-size: 10px; line-height: 1.45; }
+.github-dialog-note, .github-auth-hint { display: none; }
+.github-manual-token { gap: 7px; padding-top: 12px; }
+.github-manual-token p { font-size: 10px; }
+.github-secondary-button {
+  min-height: 42px;
+  padding: 9px 13px;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  background: var(--panel-2);
+  color: var(--ink);
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 750;
+}
+.github-actions { gap: 9px; margin: 0; padding: 0 18px 17px; }
+.github-action-grid { gap: 8px; }
+.github-action-button {
+  display: flex;
+  min-width: 0;
+  min-height: 58px;
+  align-items: center;
+  gap: 9px;
+  padding: 9px 10px;
+  border: 1px solid var(--line);
+  border-radius: 15px;
+  background: var(--panel-2);
+  color: var(--ink);
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+}
+.github-action-button.is-primary { border-color: transparent; background: var(--primary); color: #fff; box-shadow: 0 8px 18px color-mix(in srgb, var(--primary) 22%, transparent); }
+.github-action-button:disabled, .github-secondary-button:disabled, .github-disconnect-button:disabled { cursor: wait; opacity: .58; }
+.github-action-icon { display: grid; flex: 0 0 30px; place-items: center; width: 30px; height: 30px; border-radius: 10px; background: color-mix(in srgb, currentColor 12%, transparent); }
+.github-action-icon svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.8; }
+.github-action-copy { display: grid; min-width: 0; flex: 1 1 auto; gap: 2px; }
+.github-action-copy strong { overflow: hidden; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.github-action-copy small { overflow: hidden; color: var(--muted); font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+.github-action-button.is-primary .github-action-copy small { color: color-mix(in srgb, #fff 76%, transparent); }
+.github-action-arrow { flex: 0 0 auto; color: var(--muted); font-size: 17px; }
+.github-action-button.is-primary .github-action-arrow { color: color-mix(in srgb, #fff 84%, transparent); }
+.github-disconnect-button {
+  display: flex;
+  width: 100%;
+  min-height: 42px;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+.github-disconnect-icon { display: grid; flex: 0 0 24px; place-items: center; width: 24px; height: 24px; border-radius: 8px; background: var(--panel-2); font-size: 16px; }
+.github-disconnect-button span:last-child { display: grid; gap: 1px; }
+.github-disconnect-button strong { color: var(--ink); font-size: 11px; }
+.github-disconnect-button small { font-size: 10px; }
+.github-waiting-actions { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; }
+#githubDialog .github-device-link { display: inline-flex; min-height: 40px; align-items: center; justify-content: center; padding: 8px 11px; border: 1px solid var(--primary); border-radius: 12px; background: var(--primary); color: #fff; font-size: 11px; font-weight: 750; text-decoration: none; }
+.github-sync-progress { gap: 7px; padding: 10px 11px; border-radius: 15px; }
+.github-sync-progress-head strong { font-size: 11px; line-height: 1.35; }
+.github-sync-progress-head span { font-size: 11px; }
+.github-sync-progress-track { position: relative; height: 7px; }
+.github-sync-progress-track > span { position: relative; z-index: 1; }
+.github-sync-progress.is-active .github-sync-progress-track::after { position: absolute; inset: 0 auto 0 -35%; width: 35%; background: linear-gradient(90deg, transparent, color-mix(in srgb, #fff 60%, transparent), transparent); content: ''; animation: github-progress-sheen 1.15s linear infinite; }
+@keyframes github-progress-sheen { to { transform: translateX(390%); } }
+@media (max-width: 600px) {
+  .header-sync-indicator { width: 34px; min-width: 34px; height: 34px; justify-content: center; padding: 4px; border-radius: 11px; }
+  .header-sync-copy { display: none; }
+  #githubDialog .github-dialog-card { max-height: calc(100dvh - 18px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); border-radius: 21px; }
+  #githubDialog .github-dialog-head { padding: 15px 16px 13px; }
+  #githubDialog .github-dialog-body { padding: 14px 16px 16px; }
+  #githubDialog .github-actions { padding: 0 16px 14px; }
+  #githubDialog .github-action-grid { grid-template-columns: 1fr; }
+}
