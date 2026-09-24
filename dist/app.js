@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.334';
+const APP_VERSION = '2.18.335';
 // The OAuth secret stays in the Cloudflare Worker. The browser only knows the
 // public client id and receives the authorization result in the URL fragment,
 // which is consumed immediately and never sent to a server.
@@ -5592,7 +5592,7 @@ async function githubApiFetch(url, options = {}) {
   throw lastError || Error(state.language === 'en' ? 'GitHub request failed' : 'GitHub 请求失败');
 }
 const GITHUB_SYNC_CHUNK_CHARS = 700000;
-const GITHUB_SYNC_EXCLUDED_STORAGE_KEYS = new Set([STORAGE.github, STORAGE.homeFeeds]);
+const GITHUB_SYNC_EXCLUDED_STORAGE_KEYS = new Set([STORAGE.github, STORAGE.homeFeeds, STORAGE.library]);
 function isSyncableStorageKey(key) {
   return String(key || '').startsWith('onebox.')
     && !GITHUB_SYNC_EXCLUDED_STORAGE_KEYS.has(key)
@@ -6114,7 +6114,10 @@ function githubSyncUploadBatches(entries) {
   let current = {};
   let size = 0;
   entries.forEach(([name, value]) => {
-    const content = value === null ? null : String(value);
+    const content = value === null ? null : String(value ?? '');
+    if (content !== null && !content.length) {
+      throw Error((state.language === 'en' ? 'GitHub sync file is empty: ' : 'GitHub 同步文件内容为空：') + name);
+    }
     const weight = (content ? content.length : 0) + String(name).length + 64;
     if (Object.keys(current).length && size + weight > GITHUB_SYNC_UPLOAD_BATCH_CHARS) {
       batches.push(current);
@@ -6128,9 +6131,22 @@ function githubSyncUploadBatches(entries) {
   return batches;
 }
 async function githubPatchGistFiles(id, files) {
+  const normalizedFiles = {};
+  Object.entries(files || {}).forEach(([name, value]) => {
+    if (value === null) {
+      normalizedFiles[name] = null;
+      return;
+    }
+    const content = typeof value === 'object' && value !== null ? value.content : value;
+    if (typeof content !== 'string' || !content.length) {
+      throw Error((state.language === 'en' ? 'GitHub sync file is empty: ' : 'GitHub 同步文件内容为空：') + name);
+    }
+    normalizedFiles[name] = { content };
+  });
+  if (!Object.keys(normalizedFiles).length) return await githubGistDetails({ id });
   let lastError = null;
   for (let attempt = 0; attempt < 3; attempt += 1) {
-    const response = await githubApiFetch('https://api.github.com/gists/' + id, { method: 'PATCH', headers: githubHeaders(true), body: JSON.stringify({ files }) });
+    const response = await githubApiFetch('https://api.github.com/gists/' + id, { method: 'PATCH', headers: githubHeaders(true), body: JSON.stringify({ files: normalizedFiles }) });
     if (response.ok) {
       const updated = await response.json();
       return updated?.files ? updated : await githubGistDetails({ id });
@@ -6207,10 +6223,9 @@ async function githubUpload() {
     if (!currentResponse.ok) throw await githubApiError(currentResponse);
     const current = await currentResponse.json();
     const staleFiles = Object.keys(current.files || {}).filter((name) => name.startsWith('onebox-book-') && !Object.prototype.hasOwnProperty.call(bundle.files, name));
-    const entries = [
-      ...staleFiles.map((name) => [name, null]),
-      ...Object.entries(bundle.files).filter(([name]) => name !== 'onebox-settings.json'),
-    ];
+    // Upload real content first. Deletions are deferred to the manifest update
+    // below so GitHub never receives a deletion-only or otherwise empty batch.
+    const entries = Object.entries(bundle.files).filter(([name]) => name !== 'onebox-settings.json');
     const batches = githubSyncUploadBatches(entries);
     for (let index = 0; index < batches.length; index += 1) {
       updateGithubSync(mode, 64 + Math.round((index / Math.max(1, batches.length + 1)) * 16), githubSyncLabel(mode, 'upload'));
@@ -6220,7 +6235,9 @@ async function githubUpload() {
     updateGithubSync(mode, 80, githubSyncLabel(mode, 'upload'));
     // Commit the manifest last so it only points at book files after those files
     // have been uploaded. Each request stays small enough for mobile Safari.
-    let verified = await githubPatchGistFiles(id, { 'onebox-settings.json': { content: bundle.files['onebox-settings.json'] } });
+    const finalFiles = { 'onebox-settings.json': { content: bundle.files['onebox-settings.json'] } };
+    staleFiles.forEach((name) => { finalFiles[name] = null; });
+    let verified = await githubPatchGistFiles(id, finalFiles);
     const settingsVerification = await verifyGithubSettingsPayload(bundle, id, verified);
     verified = settingsVerification.gist || verified;
     const missingFiles = Object.keys(bundle.files).filter((name) => !verified?.files?.[name]);
