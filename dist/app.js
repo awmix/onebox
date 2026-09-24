@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.335';
+const APP_VERSION = '2.18.336';
 // The OAuth secret stays in the Cloudflare Worker. The browser only knows the
 // public client id and receives the authorization result in the URL fragment,
 // which is consumed immediately and never sent to a server.
@@ -6115,7 +6115,7 @@ function githubSyncUploadBatches(entries) {
   let size = 0;
   entries.forEach(([name, value]) => {
     const content = value === null ? null : String(value ?? '');
-    if (content !== null && !content.length) {
+    if (content !== null && !content.trim().length) {
       throw Error((state.language === 'en' ? 'GitHub sync file is empty: ' : 'GitHub 同步文件内容为空：') + name);
     }
     const weight = (content ? content.length : 0) + String(name).length + 64;
@@ -6138,7 +6138,7 @@ async function githubPatchGistFiles(id, files) {
       return;
     }
     const content = typeof value === 'object' && value !== null ? value.content : value;
-    if (typeof content !== 'string' || !content.length) {
+    if (typeof content !== 'string' || !content.trim().length) {
       throw Error((state.language === 'en' ? 'GitHub sync file is empty: ' : 'GitHub 同步文件内容为空：') + name);
     }
     normalizedFiles[name] = { content };
@@ -6192,10 +6192,12 @@ async function verifyGithubSettingsPayload(bundle, id, initialGist) {
   }
   throw lastError || Error(state.language === 'en' ? 'GitHub sync settings could not be verified' : 'GitHub 同步设置无法校验');
 }
-async function findOrCreateGist(bundle = null, onProgress = null) {
+async function findOrCreateGist(bundle = null, onProgress = null, forceNew = false) {
   onProgress?.(42, githubSyncLabel('upload', 'gist'));
-  const found = await findGithubGist();
-  if (found?.id) return found.id;
+  if (!forceNew) {
+    const found = await findGithubGist();
+    if (found?.id) return found.id;
+  }
   const initialBundle = bundle || await buildGithubSyncBundle();
   onProgress?.(57, githubSyncLabel('upload', 'gist'));
   const settingsContent = initialBundle.files?.['onebox-settings.json'];
@@ -6208,7 +6210,11 @@ async function findOrCreateGist(bundle = null, onProgress = null) {
   saveGithub();
   return gist.id;
 }
-async function githubUpload() {
+function githubFilesMissingField(error) {
+  return error?.status === 422 && Array.isArray(error.githubErrors)
+    && error.githubErrors.some((item) => item?.field === 'files' && item?.code === 'missing_field');
+}
+async function githubUpload(allowFreshGistRetry = true, forceNewGist = false) {
   if (!state.github.token) return toast(state.language === 'en' ? 'Connect GitHub first' : '请先连接 GitHub', 'error');
   if (state.githubSync.active) return;
   const mode = 'upload';
@@ -6217,14 +6223,12 @@ async function githubUpload() {
     updateGithubSync(mode, 12, githubSyncLabel(mode, 'bundle'));
     const bundle = await buildGithubSyncBundle();
     updateGithubSync(mode, 32, githubSyncLabel(mode, 'gist'));
-    const id = await findOrCreateGist(bundle, (progress, message) => updateGithubSync(mode, progress, message));
+    const id = await findOrCreateGist(bundle, (progress, message) => updateGithubSync(mode, progress, message), forceNewGist);
     updateGithubSync(mode, 62, githubSyncLabel(mode, 'upload'));
-    const currentResponse = await githubApiFetch('https://api.github.com/gists/' + id, { headers: githubHeaders() });
-    if (!currentResponse.ok) throw await githubApiError(currentResponse);
-    const current = await currentResponse.json();
-    const staleFiles = Object.keys(current.files || {}).filter((name) => name.startsWith('onebox-book-') && !Object.prototype.hasOwnProperty.call(bundle.files, name));
-    // Upload real content first. Deletions are deferred to the manifest update
-    // below so GitHub never receives a deletion-only or otherwise empty batch.
+    // Upload real content only. Old book chunks are intentionally retained as
+    // unreachable Gist files: deleting them via PATCH is a known source of
+    // GitHub's ambiguous `files missing_field` 422 response, and the manifest
+    // below is the authoritative list used during restore.
     const entries = Object.entries(bundle.files).filter(([name]) => name !== 'onebox-settings.json');
     const batches = githubSyncUploadBatches(entries);
     for (let index = 0; index < batches.length; index += 1) {
@@ -6235,9 +6239,7 @@ async function githubUpload() {
     updateGithubSync(mode, 80, githubSyncLabel(mode, 'upload'));
     // Commit the manifest last so it only points at book files after those files
     // have been uploaded. Each request stays small enough for mobile Safari.
-    const finalFiles = { 'onebox-settings.json': { content: bundle.files['onebox-settings.json'] } };
-    staleFiles.forEach((name) => { finalFiles[name] = null; });
-    let verified = await githubPatchGistFiles(id, finalFiles);
+    let verified = await githubPatchGistFiles(id, { 'onebox-settings.json': { content: bundle.files['onebox-settings.json'] } });
     const settingsVerification = await verifyGithubSettingsPayload(bundle, id, verified);
     verified = settingsVerification.gist || verified;
     const missingFiles = Object.keys(bundle.files).filter((name) => !verified?.files?.[name]);
@@ -6248,6 +6250,12 @@ async function githubUpload() {
     finishGithubSync(mode, state.language === 'en' ? 'Upload complete' : '上传完成');
     toast(state.language === 'en' ? 'OneBox data uploaded to GitHub' : 'OneBox 数据已上传到 GitHub');
   } catch (error) {
+    if (allowFreshGistRetry && githubFilesMissingField(error)) {
+      state.github.gistId = '';
+      saveGithub();
+      state.githubSync.active = false;
+      return githubUpload(false, true);
+    }
     const message = githubBrowserError(error) || (state.language === 'en' ? 'GitHub upload failed' : 'GitHub 上传失败，请重试');
     finishGithubSync(mode, state.language === 'en' ? 'Upload failed' : '上传失败', message);
     toast((state.language === 'en' ? 'GitHub upload failed: ' : 'GitHub 上传失败：') + message, 'error');
