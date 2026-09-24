@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.333';
+const APP_VERSION = '2.18.334';
 // The OAuth secret stays in the Cloudflare Worker. The browser only knows the
 // public client id and receives the authorization result in the URL fragment,
 // which is consumed immediately and never sent to a server.
@@ -72,8 +72,8 @@ const FEED_SOURCE_REGISTRY = [
   { id: 'hupu', name: '虎扑', badge: '虎', icon: 'icons/hupu.ico?v=2.18.124', className: 'hupu', mobileHost: 'm.hupu.com', visibleByDefault: true, siteUrl: 'https://bbs.hupu.com/bxj', fetchers: [{ kind: 'hupu-bbs', url: 'https://bbs.hupu.com/bxj' }, { kind: 'hupu-bbs', url: 'https://bbs.hupu.com/topic-daily' }] },
   { id: 'xiaohongshu', name: '红书', badge: '红', icon: 'https://www.xiaohongshu.com/favicon.ico?v=2.18.264', className: 'xiaohongshu', visibleByDefault: true, siteUrl: 'https://www.xiaohongshu.com/explore', fetchers: [{ kind: 'xiaohongshu-explore', url: 'https://www.xiaohongshu.com/explore' }, { kind: 'xiaohongshu-hotboard', url: 'https://uapis.cn/api/v1/misc/hotboard?type=xiaohongshu&limit=30', direct: true }] },
   { id: 'douyin', name: '抖音', badge: '音', icon: 'https://www.douyin.com/favicon.ico?v=2.18.264', className: 'douyin', visibleByDefault: true, siteUrl: 'https://www.douyin.com/jingxuan', fetchers: [{ kind: 'douyin-hotboard', url: 'https://uapis.cn/api/v1/misc/hotboard?type=douyin&limit=30', direct: true }, { kind: 'douyin-jingxuan', url: 'https://www.douyin.com/jingxuan' }] },
-  { id: 'thepaper', name: '澎湃', badge: '澎', icon: 'https://m.thepaper.cn/_next/static/media/logo.8d76cf45.png?v=2.18.333', className: 'thepaper', mobileHost: 'm.thepaper.cn', visibleByDefault: true, siteUrl: 'https://m.thepaper.cn/', fetchers: [{ kind: 'thepaper-channel', url: 'https://www.thepaper.cn/channel_25950', timeoutMs: 15000, deadlineMs: 18000 }] },
-  { id: 'jiemian', name: '界面', badge: '面', icon: 'https://www.jiemian.com/favicon.ico?v=2.18.333', className: 'jiemian', mobileHost: 'www.jiemian.com', visibleByDefault: true, siteUrl: 'https://www.jiemian.com/lists/4.html', fetchers: [{ kind: 'jiemian-newsflash', url: 'https://www.jiemian.com/lists/1323kb.html', timeoutMs: 15000, deadlineMs: 18000 }] },
+  { id: 'thepaper', name: '澎湃', badge: '澎', icon: 'https://m.thepaper.cn/_next/static/media/logo.8d76cf45.png?v=2.18.334', className: 'thepaper', mobileHost: 'm.thepaper.cn', visibleByDefault: true, siteUrl: 'https://m.thepaper.cn/', fetchers: [{ kind: 'thepaper-channel', url: 'https://www.thepaper.cn/channel_25950', timeoutMs: 15000, deadlineMs: 18000 }] },
+  { id: 'jiemian', name: '界面', badge: '面', icon: 'https://www.jiemian.com/favicon.ico?v=2.18.334', className: 'jiemian', mobileHost: 'www.jiemian.com', visibleByDefault: true, siteUrl: 'https://www.jiemian.com/lists/4.html', fetchers: [{ kind: 'jiemian-newsflash', url: 'https://www.jiemian.com/lists/1323kb.html', timeoutMs: 15000, deadlineMs: 18000 }] },
 ];
 const RSS_SOURCES = FEED_SOURCE_REGISTRY.filter((source) => source.enabled !== false);
 const RSS_REFRESH_INTERVAL = 2 * 60 * 1000;
@@ -459,7 +459,7 @@ function navigationIconSources(value) {
     const parsed = new URL(url);
     const hostname = parsed.hostname;
     if (navigationUsesDesktopBrandIcon(url)) return [navigationAppAssetUrl('icons/bilibili.svg'), 'https://static.hdslb.com/images/favicon.ico', 'https://www.bilibili.com/favicon.ico'];
-    if (navigationUsesOneBoxBrandIcon(url)) return [navigationAppAssetUrl('icons/onebox-brand-v317-192.png?v=2.18.333'), navigationAppAssetUrl('icons/onebox-brand-v317-512.png?v=2.18.333')];
+    if (navigationUsesOneBoxBrandIcon(url)) return [navigationAppAssetUrl('icons/onebox-brand-v317-192.png?v=2.18.334'), navigationAppAssetUrl('icons/onebox-brand-v317-512.png?v=2.18.334')];
     const direct = navigationAssetBases(url).flatMap((base) => [
       new URL('apple-touch-icon.png', base).href,
       new URL('apple-touch-icon-dark.png', base).href,
@@ -5574,6 +5574,23 @@ function githubHeaders(withBody = false) {
   if (withBody) headers['Content-Type'] = 'application/json';
   return headers;
 }
+async function githubApiFetch(url, options = {}) {
+  let lastError = null;
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      const response = await fetch(url, options);
+      const retryableStatus = [408, 425, 429, 500, 502, 503, 504].includes(response.status);
+      if (!retryableStatus || attempt === 2) return response;
+      const retryAfter = Number(response.headers.get('Retry-After'));
+      await sleep(Number.isFinite(retryAfter) && retryAfter > 0 ? retryAfter * 1000 : 900 * (attempt + 1));
+    } catch (error) {
+      lastError = error;
+      if (attempt === 2) throw error;
+      await sleep(900 * (attempt + 1));
+    }
+  }
+  throw lastError || Error(state.language === 'en' ? 'GitHub request failed' : 'GitHub 请求失败');
+}
 const GITHUB_SYNC_CHUNK_CHARS = 700000;
 const GITHUB_SYNC_EXCLUDED_STORAGE_KEYS = new Set([STORAGE.github, STORAGE.homeFeeds]);
 function isSyncableStorageKey(key) {
@@ -5680,7 +5697,7 @@ function githubAvatarMarkup(user) {
 async function hydrateGithubUser() {
   if (!state.github.token) return;
   try {
-    const response = await fetch('https://api.github.com/user', { headers: githubHeaders(), cache: 'no-store' });
+    const response = await githubApiFetch('https://api.github.com/user', { headers: githubHeaders(), cache: 'no-store' });
     if (!response.ok) {
       if (response.status === 401) invalidateGithubToken();
       return;
@@ -5720,14 +5737,14 @@ async function githubFileContent(file) {
 async function githubGistDetails(gist, version = '') {
   if (!gist?.id) return null;
   const suffix = version ? '/' + encodeURIComponent(version) : '';
-  const response = await fetch('https://api.github.com/gists/' + encodeURIComponent(gist.id) + suffix, { headers: githubHeaders(), cache: 'no-store' });
+  const response = await githubApiFetch('https://api.github.com/gists/' + encodeURIComponent(gist.id) + suffix, { headers: githubHeaders(), cache: 'no-store' });
   if (!response.ok) throw await githubApiError(response, state.language === 'en' ? 'Could not read the OneBox Gist' : '无法读取 OneBox Gist');
   const details = await response.json();
   return details?.id ? details : gist;
 }
 async function githubGistHistory(gist) {
   if (!gist?.id) return [];
-  const response = await fetch('https://api.github.com/gists/' + encodeURIComponent(gist.id) + '/commits?per_page=12', { headers: githubHeaders(), cache: 'no-store' });
+  const response = await githubApiFetch('https://api.github.com/gists/' + encodeURIComponent(gist.id) + '/commits?per_page=12', { headers: githubHeaders(), cache: 'no-store' });
   if (!response.ok) throw await githubApiError(response, state.language === 'en' ? 'Could not read the OneBox Gist history' : '无法读取 OneBox Gist 历史版本');
   const history = await response.json();
   return Array.isArray(history) ? history : [];
@@ -5920,8 +5937,6 @@ function hydrateGithubRuntimeState() {
 function githubBrowserError(error) {
   const message = String(error?.message || '');
   if (/Failed to fetch|NetworkError|Load failed/i.test(message)) {
-    state.github.manualTokenOpen = true;
-    renderGithubDialog();
     return t('githubNetworkError');
   }
   return message;
@@ -6011,7 +6026,7 @@ async function pollGithubLogin() {
       const data = await response.json();
       if (data.access_token) {
         state.github.token = data.access_token; state.github.deviceCode = ''; state.github.verificationUriComplete = '';
-        const userResponse = await fetch('https://api.github.com/user', { headers: githubHeaders() });
+        const userResponse = await githubApiFetch('https://api.github.com/user', { headers: githubHeaders() });
         if (!userResponse.ok) throw await githubApiError(userResponse, t('githubAuthExpired'));
         state.github.user = await userResponse.json(); saveGithub(); renderGithubDialog();
         toast(state.language === 'en' ? 'GitHub connected' : 'GitHub 已连接'); return;
@@ -6035,7 +6050,7 @@ async function githubUseAccessToken() {
   const previousUser = state.github.user;
   state.github.token = token;
   try {
-    const response = await fetch('https://api.github.com/user', { headers: githubHeaders() });
+    const response = await githubApiFetch('https://api.github.com/user', { headers: githubHeaders() });
     const data = await response.json();
     if (!response.ok || !data.login) throw Error(t('githubTokenInvalid'));
     state.github.user = data;
@@ -6060,7 +6075,7 @@ async function findGithubGists() {
     listedOrder.set(gist.id, order);
   };
   if (state.github.gistId) {
-    const known = await fetch('https://api.github.com/gists/' + encodeURIComponent(state.github.gistId), { headers: githubHeaders(), cache: 'no-store' });
+    const known = await githubApiFetch('https://api.github.com/gists/' + encodeURIComponent(state.github.gistId), { headers: githubHeaders(), cache: 'no-store' });
     if (known.ok) addCandidate(await known.json());
     else if (![404, 410].includes(known.status)) {
       throw await githubApiError(known, state.language === 'en' ? 'Could not access the saved OneBox Gist' : '无法访问已保存的 OneBox Gist');
@@ -6071,7 +6086,7 @@ async function findGithubGists() {
     }
   }
   for (let page = 1; page <= 10; page += 1) {
-    const response = await fetch('https://api.github.com/gists?per_page=100&page=' + page, { headers: githubHeaders(), cache: 'no-store' });
+    const response = await githubApiFetch('https://api.github.com/gists?per_page=100&page=' + page, { headers: githubHeaders(), cache: 'no-store' });
     if (!response.ok) throw await githubApiError(response);
     const gists = await response.json();
     if (!Array.isArray(gists)) throw Error(t('githubSyncReadFailed'));
@@ -6115,7 +6130,7 @@ function githubSyncUploadBatches(entries) {
 async function githubPatchGistFiles(id, files) {
   let lastError = null;
   for (let attempt = 0; attempt < 3; attempt += 1) {
-    const response = await fetch('https://api.github.com/gists/' + id, { method: 'PATCH', headers: githubHeaders(true), body: JSON.stringify({ files }) });
+    const response = await githubApiFetch('https://api.github.com/gists/' + id, { method: 'PATCH', headers: githubHeaders(true), body: JSON.stringify({ files }) });
     if (response.ok) {
       const updated = await response.json();
       return updated?.files ? updated : await githubGistDetails({ id });
@@ -6169,7 +6184,7 @@ async function findOrCreateGist(bundle = null, onProgress = null) {
   onProgress?.(57, githubSyncLabel('upload', 'gist'));
   const settingsContent = initialBundle.files?.['onebox-settings.json'];
   if (typeof settingsContent !== 'string') throw Error(state.language === 'en' ? 'OneBox settings file is missing' : 'OneBox 设置文件缺失');
-  const created = await fetch('https://api.github.com/gists', { method: 'POST', headers: githubHeaders(true), body: JSON.stringify({ description: 'OneBox settings sync', public: false, files: { 'onebox-settings.json': { content: settingsContent } } }) });
+  const created = await githubApiFetch('https://api.github.com/gists', { method: 'POST', headers: githubHeaders(true), body: JSON.stringify({ description: 'OneBox settings sync', public: false, files: { 'onebox-settings.json': { content: settingsContent } } }) });
   if (!created.ok) throw await githubApiError(created);
   const gist = await created.json();
   if (!gist.id) throw Error(state.language === 'en' ? 'GitHub did not return a Gist id' : 'GitHub 未返回 Gist 标识');
@@ -6188,7 +6203,7 @@ async function githubUpload() {
     updateGithubSync(mode, 32, githubSyncLabel(mode, 'gist'));
     const id = await findOrCreateGist(bundle, (progress, message) => updateGithubSync(mode, progress, message));
     updateGithubSync(mode, 62, githubSyncLabel(mode, 'upload'));
-    const currentResponse = await fetch('https://api.github.com/gists/' + id, { headers: githubHeaders() });
+    const currentResponse = await githubApiFetch('https://api.github.com/gists/' + id, { headers: githubHeaders() });
     if (!currentResponse.ok) throw await githubApiError(currentResponse);
     const current = await currentResponse.json();
     const staleFiles = Object.keys(current.files || {}).filter((name) => name.startsWith('onebox-book-') && !Object.prototype.hasOwnProperty.call(bundle.files, name));
