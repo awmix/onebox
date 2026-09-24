@@ -5665,7 +5665,7 @@ async function buildGithubSyncBundle() {
   const payload = syncPayload(assets.manifest, syncLibraryMetadata());
   return { payload, files: { 'onebox-settings.json': JSON.stringify(payload, null, 2), ...assets.files }, bookCount: Object.keys(assets.manifest.books).length };
 }
-function githubAvatarUrlfunction githubAvatarUrl(user) {
+function githubAvatarUrl(user) {
   const avatar = String(user?.avatar_url || '').trim();
   if (/^https?:\/\//i.test(avatar)) return avatar;
   const login = String(user?.login || '').trim();
