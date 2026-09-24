@@ -5862,7 +5862,7 @@ async function verifyReaderSyncAssets(readerFiles, gist) {
     if (!total || (Number.isFinite(Number(entry.size)) && total !== Number(entry.size))) throw Error(state.language === 'en' ? 'GitHub book file size is invalid' : 'GitHub 书籍文件大小校验失败');
   }
 }
-function applyRemoteStorageSnapshotfunction applyRemoteStorageSnapshot(remoteStorage) {
+function applyRemoteStorageSnapshot(remoteStorage) {
   if (!remoteStorage || typeof remoteStorage !== 'object') return;
   const remoteKeys = new Set(Object.keys(remoteStorage).filter((key) => isSyncableStorageKey(key)));
   for (let index = localStorage.length - 1; index >= 0; index -= 1) {
