@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.322';
+const APP_VERSION = '2.18.323';
 // The OAuth secret stays in the Cloudflare Worker. The browser only knows the
 // public client id and receives the authorization result in the URL fragment,
 // which is consumed immediately and never sent to a server.
@@ -72,6 +72,8 @@ const FEED_SOURCE_REGISTRY = [
   { id: 'hupu', name: '虎扑', badge: '虎', icon: 'icons/hupu.ico?v=2.18.124', className: 'hupu', mobileHost: 'm.hupu.com', visibleByDefault: true, siteUrl: 'https://bbs.hupu.com/bxj', fetchers: [{ kind: 'hupu-bbs', url: 'https://bbs.hupu.com/bxj' }, { kind: 'hupu-bbs', url: 'https://bbs.hupu.com/topic-daily' }] },
   { id: 'xiaohongshu', name: '红书', badge: '红', icon: 'https://www.xiaohongshu.com/favicon.ico?v=2.18.264', className: 'xiaohongshu', visibleByDefault: true, siteUrl: 'https://www.xiaohongshu.com/explore', fetchers: [{ kind: 'xiaohongshu-explore', url: 'https://www.xiaohongshu.com/explore' }, { kind: 'xiaohongshu-hotboard', url: 'https://uapis.cn/api/v1/misc/hotboard?type=xiaohongshu&limit=30', direct: true }] },
   { id: 'douyin', name: '抖音', badge: '音', icon: 'https://www.douyin.com/favicon.ico?v=2.18.264', className: 'douyin', visibleByDefault: true, siteUrl: 'https://www.douyin.com/jingxuan', fetchers: [{ kind: 'douyin-hotboard', url: 'https://uapis.cn/api/v1/misc/hotboard?type=douyin&limit=30', direct: true }, { kind: 'douyin-jingxuan', url: 'https://www.douyin.com/jingxuan' }] },
+  { id: 'thepaper', name: '澎湃', badge: '澎', icon: 'https://m.thepaper.cn/favicon.ico?v=2.18.323', className: 'thepaper', mobileHost: 'm.thepaper.cn', visibleByDefault: true, siteUrl: 'https://m.thepaper.cn/', fetchers: [{ kind: 'thepaper-channel', url: 'https://www.thepaper.cn/channel_25950', timeoutMs: 15000, deadlineMs: 18000 }] },
+  { id: 'jiemian', name: '界面', badge: '面', icon: 'https://www.jiemian.com/favicon.ico?v=2.18.323', className: 'jiemian', mobileHost: 'www.jiemian.com', visibleByDefault: true, siteUrl: 'https://www.jiemian.com/lists/4.html', fetchers: [{ kind: 'rss', url: 'https://www.jiemian.com/lists/4.html', timeoutMs: 15000, deadlineMs: 18000 }] },
 ];
 const RSS_SOURCES = FEED_SOURCE_REGISTRY.filter((source) => source.enabled !== false);
 const RSS_REFRESH_INTERVAL = 2 * 60 * 1000;
@@ -399,7 +401,7 @@ const normalizeToolOrder = (value, includeNavigation = false, navigationFirst = 
   return (includeNavigation ? normalized : normalized.filter((id) => id !== 'navigation')).slice(0, allowed.length);
 };
 const LEGACY_DEFAULT_HOME_FEED_VISIBLE = ['ithome', 'huxiu', 'zhihu', 'v2ex', 'weibo', 'bilibili'];
-const HOME_FEED_VISIBILITY_MIGRATION = 2;
+const HOME_FEED_VISIBILITY_MIGRATION = 4;
 const storedHomeFeedVisibilityMigration = Number(localStorage.getItem(STORAGE.homeFeedVisibilityMigration) || 0);
 const normalizeHomeFeedOrder = (value) => {
   const order = Array.isArray(value) ? value.filter((id) => DEFAULT_HOME_FEED_ORDER.includes(id)) : [];
@@ -412,6 +414,8 @@ const normalizeHomeFeedVisibility = (value) => {
   if (isLegacyDefault) return [...DEFAULT_HOME_FEED_VISIBLE];
   if (Array.isArray(value) && storedHomeFeedVisibilityMigration < 1 && !normalized.includes('xiaohongshu')) normalized.push('xiaohongshu');
   if (Array.isArray(value) && storedHomeFeedVisibilityMigration < 2 && !normalized.includes('douyin')) normalized.push('douyin');
+  if (Array.isArray(value) && storedHomeFeedVisibilityMigration < 3 && !normalized.includes('thepaper')) normalized.push('thepaper');
+  if (Array.isArray(value) && storedHomeFeedVisibilityMigration < 4 && !normalized.includes('jiemian')) normalized.push('jiemian');
   return normalized;
 };
 const initialToolOrder = normalizeToolOrder(parseStored(STORAGE.toolOrder, DEFAULT_TOOL_ORDER), storedNavigationLocation === 'tools', storedNavigationLocation === 'tools');
@@ -455,7 +459,7 @@ function navigationIconSources(value) {
     const parsed = new URL(url);
     const hostname = parsed.hostname;
     if (navigationUsesDesktopBrandIcon(url)) return [navigationAppAssetUrl('icons/bilibili.svg'), 'https://static.hdslb.com/images/favicon.ico', 'https://www.bilibili.com/favicon.ico'];
-    if (navigationUsesOneBoxBrandIcon(url)) return [navigationAppAssetUrl('icons/onebox-brand-v317-192.png?v=2.18.322'), navigationAppAssetUrl('icons/onebox-brand-v317-512.png?v=2.18.322')];
+    if (navigationUsesOneBoxBrandIcon(url)) return [navigationAppAssetUrl('icons/onebox-brand-v317-192.png?v=2.18.323'), navigationAppAssetUrl('icons/onebox-brand-v317-512.png?v=2.18.323')];
     const direct = navigationAssetBases(url).flatMap((base) => [
       new URL('apple-touch-icon.png', base).href,
       new URL('apple-touch-icon-dark.png', base).href,
@@ -1206,13 +1210,55 @@ function rssMarkdownItems(value, source) {
   return nodes.map((node, index) => {
     const linkNode = node.querySelector('link');
     const link = linkNode?.getAttribute('href') || linkNode?.textContent || node.querySelector('guid')?.textContent || '';
+    const enclosure = node.querySelector('enclosure');
+    const mediaContent = node.getElementsByTagName('media:content')[0] || node.getElementsByTagName('media:thumbnail')[0];
+    const itunesImage = node.getElementsByTagName('itunes:image')[0];
+    const publishedNode = node.querySelector('pubDate, published, updated') || node.getElementsByTagName('dc:date')[0];
+    const descriptionNode = node.querySelector('description, summary, content') || node.getElementsByTagName('content:encoded')[0];
     return normalizeFeedItem({
       title: node.querySelector('title')?.textContent,
       link,
-      description: node.querySelector('description, summary, content')?.textContent,
-      pubDate: node.querySelector('pubDate, published, updated')?.textContent,
-      enclosure: { url: node.querySelector('enclosure')?.getAttribute('url') || '' },
-    }, source, { approximate: false, publishedMs: parseFeedTimestamp(node.querySelector('pubDate, published, updated')?.textContent) || syntheticFeedTime(index) });
+      description: descriptionNode?.textContent,
+      pubDate: publishedNode?.textContent,
+      enclosure: { url: enclosure?.getAttribute('url') || mediaContent?.getAttribute('url') || itunesImage?.getAttribute('href') || '' },
+    }, source, { approximate: false, publishedMs: parseFeedTimestamp(publishedNode?.textContent) || syntheticFeedTime(index) });
+  }).filter(Boolean);
+}
+function thepaperRelativeTimestamp(value, index) {
+  const text = String(value || '');
+  const match = text.match(/(\d+)\s*(分钟|小时|天)前/);
+  if (match) {
+    const unit = match[2] === '分钟' ? 60 * 1000 : match[2] === '小时' ? 60 * 60 * 1000 : 24 * 60 * 60 * 1000;
+    return Date.now() - Number(match[1]) * unit;
+  }
+  if (/刚刚|刚才/.test(text)) return Date.now();
+  if (/昨天/.test(text)) return Date.now() - 24 * 60 * 60 * 1000;
+  return syntheticFeedTime(index);
+}
+function thepaperChannelItems(value, source) {
+  const content = jinaContent(value);
+  const matches = [...content.matchAll(/\[([^\]\n]{2,240})\]\((https?:\/\/(?:www|m)\.thepaper\.cn\/(?:newsDetail_forward_|detail\/|papernews\/)[^)\s]+)\)/g)];
+  const seen = new Set();
+  return matches.map((match, index) => {
+    const rawTitle = feedText(match[1])
+      .replace(/^推荐\s+/u, '')
+      .replace(/^#+\s*/u, '')
+      .replace(/\s+#+\s*$/u, '')
+      .replace(/_+\s*$/u, '')
+      .trim();
+    const link = match[2].replace(/^http:/i, 'https:');
+    if (!rawTitle || seen.has(link)) return null;
+    seen.add(link);
+    const start = (match.index || 0) + match[0].length;
+    const nextMatch = matches[index + 1];
+    const block = content.slice(start, nextMatch?.index ?? content.length);
+    const nearby = content.slice(Math.max(0, (match.index || 0) - 720), match.index || 0);
+    const imageMatches = [...nearby.matchAll(/!\[[^\]]*\]\((https?:\/\/[^)\s]+)/g)];
+    const description = feedText(block).replace(/^(?:推荐\s*)?(?:[^\d\n]{1,24})?(?:\d+\s*(?:分钟前|小时前|天前)|刚刚|刚才|昨天)\s*/u, '').slice(0, 180);
+    return normalizeFeedItem({ title: rawTitle, link, description, image: imageMatches.at(-1)?.[1] || '' }, source, {
+      approximate: false,
+      publishedMs: thepaperRelativeTimestamp(block, index),
+    });
   }).filter(Boolean);
 }
 function hupuBbsItems(value, source) {
@@ -1359,10 +1405,10 @@ async function fetchFeedSource(source) {
   const sourceController = new AbortController();
   const fetchOne = async (fetcher) => {
     const targetUrl = fetcher.direct ? fetcher.url : jinaReaderUrl(fetcher.url);
-    const { response, text } = await fetchTextWithTimeout(targetUrl, { cache: 'no-store', headers: { Accept: 'text/plain, application/json, application/xml' } }, HOME_FEED_REQUEST_TIMEOUT_MS, sourceController.signal);
+    const { response, text } = await fetchTextWithTimeout(targetUrl, { cache: 'no-store', headers: { Accept: 'text/plain, application/json, application/xml' } }, fetcher.timeoutMs || HOME_FEED_REQUEST_TIMEOUT_MS, sourceController.signal);
     if (!response.ok) throw Error('HTTP ' + response.status);
     const payload = fetcher.kind === 'rss' || fetcher.kind === 'guancha-fengwen' ? null : jinaJson(text);
-    const items = fetcher.kind === 'rss' ? rssMarkdownItems(text, source) : fetcher.kind === 'hupu-bbs' ? hupuBbsItems(text, source) : fetcher.kind === 'guancha-fengwen' ? guanchaFengwenItems(text, source) : fetcher.kind === 'xiaohongshu-explore' ? xiaohongshuExploreItems(text, source) : fetcher.kind === 'douyin-jingxuan' ? douyinJingxuanItems(source) : structuredHotItems(payload, source, fetcher.kind);
+    const items = fetcher.kind === 'rss' ? rssMarkdownItems(text, source) : fetcher.kind === 'thepaper-channel' ? thepaperChannelItems(text, source) : fetcher.kind === 'hupu-bbs' ? hupuBbsItems(text, source) : fetcher.kind === 'guancha-fengwen' ? guanchaFengwenItems(text, source) : fetcher.kind === 'xiaohongshu-explore' ? xiaohongshuExploreItems(text, source) : fetcher.kind === 'douyin-jingxuan' ? douyinJingxuanItems(source) : structuredHotItems(payload, source, fetcher.kind);
     if (!items.length) throw Error('Feed empty');
     return { items, feedUrl: fetcher.url };
   };
@@ -1372,8 +1418,9 @@ async function fetchFeedSource(source) {
     // Source fallbacks race each other. A slow or unavailable primary endpoint
     // must not make the whole refresh wait before its fallback can respond.
     const fallbackRequest = Promise.any(fetchers.map(fetchOne));
+    const sourceDeadlineMs = Math.max(HOME_FEED_SOURCE_DEADLINE_MS, ...fetchers.map((fetcher) => Number(fetcher.deadlineMs) || 0));
     const sourceDeadline = new Promise((_, reject) => {
-      deadlineTimer = setTimeout(() => reject(Error('Feed timeout')), HOME_FEED_SOURCE_DEADLINE_MS);
+      deadlineTimer = setTimeout(() => reject(Error('Feed timeout')), sourceDeadlineMs);
     });
     successful = await Promise.race([fallbackRequest, sourceDeadline]);
   } catch {

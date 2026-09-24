@@ -1252,6 +1252,8 @@ html.reader-focus #readerDialog .reader-dialog-card { width: min(720px, 100%); m
 .feed-source-mark.bilibili, .feed-source-tag.bilibili b { background: transparent; color: #00aeec; }
 .feed-source-mark.guancha, .feed-source-tag.guancha b { background: transparent; color: #fff; }
 .feed-source-mark.hupu, .feed-source-tag.hupu b { background: #d52b2b; color: #fff; }
+.feed-source-mark.thepaper, .feed-source-tag.thepaper b { background: #d9363e; color: #fff; }
+.feed-source-mark.jiemian, .feed-source-tag.jiemian b { background: #1e2734; color: #fff; }
 .feed-source-mark.footprint { background: var(--soft); color: var(--primary); }
 .feed-source-mark.footprint svg { width: 16px; height: 16px; fill: currentColor; }
 @keyframes feed-spin { to { transform: rotate(360deg); } }
@@ -1379,6 +1381,10 @@ html.reader-focus #readerDialog .reader-dialog-card { width: min(720px, 100%); m
 #workspace[data-tool="home"] .feed-source-tag.huxiu b { background: #e39a35; color: #fff; border: 0; }
 #workspace[data-tool="home"] .feed-source-mark.v2ex,
 #workspace[data-tool="home"] .feed-source-tag.v2ex b { background: #5c86a8; color: #fff; border: 0; }
+#workspace[data-tool="home"] .feed-source-mark.thepaper,
+#workspace[data-tool="home"] .feed-source-tag.thepaper b { background: #d9363e; color: #fff; border: 0; }
+#workspace[data-tool="home"] .feed-source-mark.jiemian,
+#workspace[data-tool="home"] .feed-source-tag.jiemian b { background: #1e2734; color: #fff; border: 0; }
 #workspace[data-tool="home"] .feed-panel { margin-top: 6px; border-radius: 16px; touch-action: pan-y; }
 #workspace[data-tool="home"].feed-pulling { transform: translate3d(0, var(--feed-pull-distance, 0px), 0); transition: none; }
 
