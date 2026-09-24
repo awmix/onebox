@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.319';
+const APP_VERSION = '2.18.320';
 // The OAuth secret stays in the Cloudflare Worker. The browser only knows the
 // public client id and receives the authorization result in the URL fragment,
 // which is consumed immediately and never sent to a server.
@@ -242,7 +242,7 @@ const DICT = {
     githubSync: 'GitHub 云同步', githubDescription: '点击后跳转到 GitHub 授权页，授权成功后自动返回 OneBox；数据保存到你自己的私有 Gist。', githubNotConnectedHint: '点击下方按钮跳转到 GitHub 授权。',
     githubClientId: 'GitHub OAuth Client ID', githubClientHint: 'OneBox 已内置公开的授权标识，不需要手动配置。', githubDeveloperSettings: '打开 OAuth Apps 设置',
     githubBrowserFlowError: '无法打开 GitHub 授权页，请检查网络后重试。', githubAccessToken: 'GitHub 访问令牌', githubTokenHint: '仅将令牌保存在当前设备，并通过 GitHub API 验证；建议使用只包含 gist 权限的令牌。', githubUseToken: '使用访问令牌连接', githubTokenMissing: '请先填写 GitHub 访问令牌。', githubTokenInvalid: '访问令牌无效或没有可用权限。', githubTokenConnected: 'GitHub 已连接', githubWaiting: '等待 GitHub 授权…', githubCancel: '取消授权',
-    githubSyncScopeTitle: '同步范围', githubSyncScope: '设置、工具顺序、导航、首页来源、日程、天气卡片、翻译记录、通知、阅读书架、阅读进度、笔记和已导入的本地书籍文件。', githubSyncPrivacy: 'GitHub 令牌不会上传；首页订阅内容、节假日和天气接口缓存属于网络缓存，不参与同步。', githubAuthHint: '点击连接后会跳转到 GitHub，完成授权后自动返回 OneBox。',
+    githubSyncScopeTitle: '同步范围', githubSyncScope: '设置、工具顺序、导航、首页来源、日程、天气卡片、翻译记录、通知、阅读书架、阅读进度、笔记和已导入书籍的原文件。', githubSyncPrivacy: 'GitHub 令牌不会上传；首页订阅内容、节假日和天气接口缓存属于网络缓存，不参与同步。', githubAuthHint: '点击连接后会跳转到 GitHub，完成授权后自动返回 OneBox。',
     githubLogin: '连接 GitHub', githubLogout: '退出 GitHub', upload: '上传到 GitHub', download: '从 GitHub 恢复', githubAuthExpired: 'GitHub 授权已失效，请重新连接 GitHub。', githubSyncNotFound: '当前 GitHub 账号中没有找到 OneBox 同步数据，请先在另一台设备上传。', githubSyncReadFailed: 'GitHub 中的 OneBox 同步文件无法读取，请检查 Gist 权限或内容。', githubSyncMalformed: 'GitHub 中的 OneBox 同步文件不是有效的 JSON。', githubSyncInvalidData: 'GitHub 中的 OneBox 同步数据格式错误或已损坏。',
     githubConnected: '已连接', githubNotConnected: '尚未连接', openDevice: '打开验证页面',
     appUpdate: '应用更新', checkUpdate: '更新', updateAvailable: '发现有新版本', upToDate: '已是最新版', updating: '检查中', updateApplying: '更新中', updateCheckFailed: '检查失败，可重试', applyUpdate: '更新',
@@ -252,7 +252,7 @@ const DICT = {
     markRead: '全部已读', close: '关闭', system: '跟随系统', light: '浅色', dark: '深色', darkGray: '黑灰',
     layout: '布局', classicLayout: '经典布局', simpleLayout: '简约布局', navigationLocation: '导航位置', navigationLocationMain: '主导航', navigationLocationTools: '工具 Tab', openMode: '打开方式', openCurrent: '当前页打开', openNewTab: '新标签页打开', language: '语言', theme: '主题', color: '颜色', blackWhite: '黑白配', noblePurple: '贵族紫', skyBlue: '天空蓝', notBananaGreen: '不蕉绿', meituanYellow: '美团黄', topDisplay: '顶部显示', footprint: '足迹', showFootprint: '在首页显示', hideFootprint: '不在首页显示', mascot: '宠物', petDescription: '显示方式、等级、服饰与互动', petSettings: '宠物设置', showMascot: '显示宠物', hideMascot: '隐藏宠物', mascotDisplay: '宠物显示', mascotFullBody: '显示全身', mascotHalfBody: '显示半身', petSocialTitle: '社交宠物', petLevel: 'Lv.{level} · {name}', petPoints: '{points} 积分', petNextLevel: '距离下一级还差 {points} 积分', petMaxLevel: '已达到最高等级', petOwner: '绑定：{owner}', petLocalOwner: '当前设备', petGithubOwner: 'GitHub · {owner}', petEarnHint: '阅读文章、读书和使用工具都能获得积分', petArticlePoints: '阅读文章 +3', petBookPoints: '打开书籍 +5', petToolPoints: '使用工具 +2', petOutfits: '服饰兑换', petOutfitLocked: '达到 Lv.{level} 解锁', petOutfitUse: '穿上', petOutfitWearing: '当前穿着', petUnlocked: '已解锁', petInteractions: '互动解锁', petInteractionLocked: 'Lv.{level} 解锁', petPointsEarned: '获得 {points} 积分', petLevelUp: '宠物升级到 Lv.{level}！', reorderHint: '长按工具标签可以调整顺序',
     languagePending: '日语、韩语语言包已预留，当前版本先提供中文和英文。',
-    bookshelf: '书架', addBook: '添加文档', noBooks: '还没有本地文档。', readerHint: '支持 Markdown、TXT、PDF、EPUB；文档仅保存在当前设备。', openBook: '打开阅读', deleteBook: '删除文档', annotations: '笔记', readerComments: '笔记', readerNotesHint: '已保存的阅读笔记', addAnnotation: '笔记', annotationPlaceholder: '添加你的感受…', saveAnnotation: '保存', annotationHint: '选择文字后长按或点击笔记按钮。', noAnnotations: '还没有笔记。', reading: '正在阅读', closeReader: '关闭阅读', unsupportedFile: '请选择 .md、.markdown、.txt、.pdf 或 .epub 文件。', importFailed: '文档读取失败，请重试。', deleteConfirm: '确定删除这本文档吗？', pdfHint: 'PDF 使用浏览器原生阅读器打开。', epubHint: 'EPUB 已转换为适合 OneBox 的阅读视图。', readerContents: '目录', readerSettings: '阅读设置', readerReadingMethod: '阅读方式', readerTheme: '阅读背景', readerThemePaper: '纸张', readerThemeSepia: '墨水屏', readerThemeGreen: '护眼绿', readerThemeDark: '夜间', readerFontSize: '字号', readerFontFamily: '字体', readerLineHeight: '行距', readerParagraphSpacing: '段落间距', readerLetterSpacing: '字间距', readerAnimation: '翻页动画', readerAnimationSlide: '滑动', readerAnimationCover: '覆盖', readerAnimationNone: '无', readerScroll: '上下滚动', readerPages: '模拟翻页', readerProgress: '进度', readerFullscreen: '全屏', readerExitFullscreen: '退出全屏', readerFullscreenOnOpen: '是否全屏', readerFullscreenOnOpenHint: '下次打开文档时按此设置进入', readerNoContents: '暂无章节目录。', readerSettingsHint: '设置仅作用于当前设备上的阅读内容。', readerTocHint: '选择章节后跳转到对应位置。',
+    bookshelf: '书架', addBook: '添加文档', noBooks: '还没有本地文档。', readerHint: '支持 Markdown、TXT、PDF、EPUB；文档仅保存在当前设备。', readerMissingSource: '原文件未备份', readerFileMissing: '这份备份没有包含原书文件。请在仍保存原书的设备重新上传，或重新导入同名文件。', openBook: '打开阅读', deleteBook: '删除文档', annotations: '笔记', readerComments: '笔记', readerNotesHint: '已保存的阅读笔记', addAnnotation: '笔记', annotationPlaceholder: '添加你的感受…', saveAnnotation: '保存', annotationHint: '选择文字后长按或点击笔记按钮。', noAnnotations: '还没有笔记。', reading: '正在阅读', closeReader: '关闭阅读', unsupportedFile: '请选择 .md、.markdown、.txt、.pdf 或 .epub 文件。', importFailed: '文档读取失败，请重试。', deleteConfirm: '确定删除这本文档吗？', pdfHint: 'PDF 使用浏览器原生阅读器打开。', epubHint: 'EPUB 已转换为适合 OneBox 的阅读视图。', readerContents: '目录', readerSettings: '阅读设置', readerReadingMethod: '阅读方式', readerTheme: '阅读背景', readerThemePaper: '纸张', readerThemeSepia: '墨水屏', readerThemeGreen: '护眼绿', readerThemeDark: '夜间', readerFontSize: '字号', readerFontFamily: '字体', readerLineHeight: '行距', readerParagraphSpacing: '段落间距', readerLetterSpacing: '字间距', readerAnimation: '翻页动画', readerAnimationSlide: '滑动', readerAnimationCover: '覆盖', readerAnimationNone: '无', readerScroll: '上下滚动', readerPages: '模拟翻页', readerProgress: '进度', readerFullscreen: '全屏', readerExitFullscreen: '退出全屏', readerFullscreenOnOpen: '是否全屏', readerFullscreenOnOpenHint: '下次打开文档时按此设置进入', readerNoContents: '暂无章节目录。', readerSettingsHint: '设置仅作用于当前设备上的阅读内容。', readerTocHint: '选择章节后跳转到对应位置。',
   },
   en: {
     calculator: 'Calculator', development: 'Dev', calendar: 'Calendar', weather: 'Weather', convert: 'Convert', unitConvert: 'Convert', translate: 'Translate', translateConvert: 'Convert', reader: 'Reader',
@@ -287,7 +287,7 @@ const DICT = {
     githubSync: 'GitHub cloud sync', githubDescription: 'Jump to GitHub authorization and return to OneBox after approval; data is saved in your own private Gist.', githubNotConnectedHint: 'Click below to jump to GitHub authorization.',
     githubClientId: 'GitHub OAuth Client ID', githubClientHint: 'OneBox includes its public authorization identifier; no manual setup is required.', githubDeveloperSettings: 'Open OAuth Apps settings',
     githubBrowserFlowError: 'GitHub authorization could not be opened. Check your network and try again.', githubAccessToken: 'GitHub access token', githubTokenHint: 'The token is stored only on this device and verified through GitHub API. A token with gist permission is recommended.', githubUseToken: 'Connect with access token', githubTokenMissing: 'Enter a GitHub access token first.', githubTokenInvalid: 'The access token is invalid or lacks the required permission.', githubTokenConnected: 'GitHub connected', githubWaiting: 'Waiting for GitHub authorization…', githubCancel: 'Cancel authorization',
-    githubSyncScopeTitle: 'Sync scope', githubSyncScope: 'Settings, tool order, navigation, home sources, events, weather cards, translation history, notifications, the reading shelf, reading progress, notes and imported local book files.', githubSyncPrivacy: 'The GitHub token is never uploaded. Home feeds, holidays and weather API caches are network caches and are not synced.', githubAuthHint: 'Connect to jump to GitHub; after approval you will return to OneBox automatically.',
+    githubSyncScopeTitle: 'Sync scope', githubSyncScope: 'Settings, tool order, navigation, home sources, events, weather cards, translation history, notifications, the reading shelf, reading progress, notes and imported book source files.', githubSyncPrivacy: 'The GitHub token is never uploaded. Home feeds, holidays and weather API caches are network caches and are not synced.', githubAuthHint: 'Connect to jump to GitHub; after approval you will return to OneBox automatically.',
     githubLogin: 'Connect GitHub', githubLogout: 'Disconnect GitHub', upload: 'Upload to GitHub', download: 'Restore from GitHub', githubAuthExpired: 'GitHub authorization expired. Please reconnect GitHub.', githubSyncNotFound: 'No OneBox sync data was found in this GitHub account. Upload from another device first.', githubSyncReadFailed: 'The OneBox sync file in GitHub could not be read. Check the Gist permission or content.', githubSyncMalformed: 'The OneBox sync file in GitHub is not valid JSON.', githubSyncInvalidData: 'The OneBox sync data in GitHub is malformed or damaged.',
     githubConnected: 'Connected', githubNotConnected: 'Not connected', openDevice: 'Open verification page',
     appUpdate: 'App update', checkUpdate: 'Update', updateAvailable: 'A new version is available', upToDate: 'Latest version', updating: 'Checking', updateApplying: 'Updating', updateCheckFailed: 'Check failed. Try again.', applyUpdate: 'Update',
@@ -298,7 +298,7 @@ const DICT = {
     layout: 'Layout', classicLayout: 'Classic layout', simpleLayout: 'Simple layout', openMode: 'Open links', openCurrent: 'Current page', openNewTab: 'New tab', theme: 'Theme', language: 'Language', color: 'Color', blackWhite: 'Black and white', noblePurple: 'Noble purple', skyBlue: 'Sky blue', notBananaGreen: 'WeChat green', meituanYellow: 'Meituan yellow', topDisplay: 'Show at top', footprint: 'Footprints', showFootprint: 'Show on Home', hideFootprint: 'Hide from Home', mascot: 'Pet', petDescription: 'Display, level, outfits and play', petSettings: 'Pet settings', showMascot: 'Show pet', hideMascot: 'Hide pet', mascotDisplay: 'Pet display', mascotFullBody: 'Full body', mascotHalfBody: 'Upper body', petSocialTitle: 'Social pet', petLevel: 'Lv.{level} · {name}', petPoints: '{points} points', petNextLevel: '{points} points to the next level', petMaxLevel: 'Highest level reached', petOwner: 'Bound to: {owner}', petLocalOwner: 'This device', petGithubOwner: 'GitHub · {owner}', petEarnHint: 'Read articles, books and use tools to earn points', petArticlePoints: 'Read an article +3', petBookPoints: 'Open a book +5', petToolPoints: 'Use a tool +2', petOutfits: 'Outfit exchange', petOutfitLocked: 'Unlocks at Lv.{level}', petOutfitUse: 'Wear', petOutfitWearing: 'Wearing', petUnlocked: 'Unlocked', petInteractions: 'Interaction unlocks', petInteractionLocked: 'Unlocks at Lv.{level}', petPointsEarned: 'Earned {points} points', petLevelUp: 'Your pet reached Lv.{level}!', homeSourceManage: 'Home sources', homeSourceManageHint: 'Choose sources to show in the home navigation', homeSourceAdd: 'Add', homeSourceRemove: 'Remove', homeSourceEmpty: 'No other sources available', reorderHint: 'Long-press a tool tab to reorder',
     navigationLocation: 'Navigation location', navigationLocationMain: 'Main navigation', navigationLocationTools: 'Tool tabs',
     languagePending: 'Japanese and Korean are reserved for a future language pack. Chinese and English are available now.',
-    bookshelf: 'Bookshelf', addBook: 'Add document', noBooks: 'No local documents yet.', readerHint: 'Supports Markdown, TXT, PDF and EPUB. Files stay on this device.', openBook: 'Open', deleteBook: 'Delete', annotations: 'Notes', readerComments: 'Notes', readerNotesHint: 'Saved reading notes', addAnnotation: 'Note', annotationPlaceholder: 'Add your thoughts…', saveAnnotation: 'Save', annotationHint: 'Select text, long-press or use the notes button.', noAnnotations: 'No notes yet.', reading: 'Reading', closeReader: 'Close reader', unsupportedFile: 'Choose a .md, .markdown, .txt, .pdf or .epub file.', importFailed: 'Could not read this document.', deleteConfirm: 'Delete this document?', pdfHint: 'PDF opens in the browser native reader.', epubHint: 'EPUB is converted into an adaptive OneBox reading view.', readerContents: 'Contents', readerSettings: 'Reading settings', readerReadingMethod: 'Reading mode', readerTheme: 'Reading background', readerThemePaper: 'Paper', readerThemeSepia: 'E-ink', readerThemeGreen: 'Green', readerThemeDark: 'Night', readerFontSize: 'Font size', readerFontFamily: 'Font', readerLineHeight: 'Line height', readerParagraphSpacing: 'Paragraph spacing', readerLetterSpacing: 'Letter spacing', readerAnimation: 'Page animation', readerAnimationSlide: 'Slide', readerAnimationCover: 'Cover', readerAnimationNone: 'None', readerScroll: 'Vertical scroll', readerPages: 'Page turn', readerProgress: 'Progress', readerFullscreen: 'Fullscreen', readerExitFullscreen: 'Exit fullscreen', readerFullscreenOnOpen: 'Open in fullscreen', readerFullscreenOnOpenHint: 'Apply this choice the next time a document opens', readerNoContents: 'No chapter contents.', readerSettingsHint: 'These settings apply only to reading on this device.', readerTocHint: 'Choose a chapter to jump to it.',
+    bookshelf: 'Bookshelf', addBook: 'Add document', noBooks: 'No local documents yet.', readerHint: 'Supports Markdown, TXT, PDF and EPUB. Files stay on this device.', readerMissingSource: 'Original file not backed up', readerFileMissing: 'This backup does not include the original book file. Upload again from the device that still has it, or import a matching file here.', openBook: 'Open', deleteBook: 'Delete', annotations: 'Notes', readerComments: 'Notes', readerNotesHint: 'Saved reading notes', addAnnotation: 'Note', annotationPlaceholder: 'Add your thoughts…', saveAnnotation: 'Save', annotationHint: 'Select text, long-press or use the notes button.', noAnnotations: 'No notes yet.', reading: 'Reading', closeReader: 'Close reader', unsupportedFile: 'Choose a .md, .markdown, .txt, .pdf or .epub file.', importFailed: 'Could not read this document.', deleteConfirm: 'Delete this document?', pdfHint: 'PDF opens in the browser native reader.', epubHint: 'EPUB is converted into an adaptive OneBox reading view.', readerContents: 'Contents', readerSettings: 'Reading settings', readerReadingMethod: 'Reading mode', readerTheme: 'Reading background', readerThemePaper: 'Paper', readerThemeSepia: 'E-ink', readerThemeGreen: 'Green', readerThemeDark: 'Night', readerFontSize: 'Font size', readerFontFamily: 'Font', readerLineHeight: 'Line height', readerParagraphSpacing: 'Paragraph spacing', readerLetterSpacing: 'Letter spacing', readerAnimation: 'Page animation', readerAnimationSlide: 'Slide', readerAnimationCover: 'Cover', readerAnimationNone: 'None', readerScroll: 'Vertical scroll', readerPages: 'Page turn', readerProgress: 'Progress', readerFullscreen: 'Fullscreen', readerExitFullscreen: 'Exit fullscreen', readerFullscreenOnOpen: 'Open in fullscreen', readerFullscreenOnOpenHint: 'Apply this choice the next time a document opens', readerNoContents: 'No chapter contents.', readerSettingsHint: 'These settings apply only to reading on this device.', readerTocHint: 'Choose a chapter to jump to it.',
   },
 };
 const t = (key) => DICT[state.language]?.[key] || DICT.zh[key] || key;
@@ -455,7 +455,7 @@ function navigationIconSources(value) {
     const parsed = new URL(url);
     const hostname = parsed.hostname;
     if (navigationUsesDesktopBrandIcon(url)) return [navigationAppAssetUrl('icons/bilibili.svg'), 'https://static.hdslb.com/images/favicon.ico', 'https://www.bilibili.com/favicon.ico'];
-    if (navigationUsesOneBoxBrandIcon(url)) return [navigationAppAssetUrl('icons/onebox-brand-v317-192.png?v=2.18.319'), navigationAppAssetUrl('icons/onebox-brand-v317-512.png?v=2.18.319')];
+    if (navigationUsesOneBoxBrandIcon(url)) return [navigationAppAssetUrl('icons/onebox-brand-v317-192.png?v=2.18.320'), navigationAppAssetUrl('icons/onebox-brand-v317-512.png?v=2.18.320')];
     const direct = navigationAssetBases(url).flatMap((base) => [
       new URL('apple-touch-icon.png', base).href,
       new URL('apple-touch-icon-dark.png', base).href,
@@ -2972,11 +2972,13 @@ async function importReaderFiles(fileList) {
     const extension = file.name.split('.').pop()?.toLowerCase();
     if (!['md', 'markdown', 'txt', 'pdf', 'epub'].includes(extension)) { toast(t('unsupportedFile'), 'error'); continue; }
     try {
-      const id = uid(); const type = extension === 'markdown' ? 'md' : extension;
+      const type = extension === 'markdown' ? 'md' : extension;
       const fingerprint = [type, file.name.trim().toLocaleLowerCase(), file.size, file.lastModified || 0].join('|');
-      const duplicate = state.library.some((book) => book.fingerprint === fingerprint || (!book.fingerprint && book.type === type && book.name.trim().toLocaleLowerCase() === file.name.trim().toLocaleLowerCase() && Number(book.size) === file.size));
-      if (duplicate) { duplicateCount += 1; continue; }
-      const book = { id, name: file.name, type, size: file.size, fingerprint, createdAt: Date.now(), lastOpenedAt: 0, order: state.library.reduce((max, item) => Math.max(max, Number(item.order) || 0), 0) + 1, progress: 0, annotations: [], hasCover: false };
+      const duplicate = state.library.find((book) => book.fingerprint === fingerprint || (book.syncFileMissing && book.type === type && book.name.trim().toLocaleLowerCase() === file.name.trim().toLocaleLowerCase() && Number(book.size) === file.size) || (!book.fingerprint && book.type === type && book.name.trim().toLocaleLowerCase() === file.name.trim().toLocaleLowerCase() && Number(book.size) === file.size));
+      if (duplicate && !duplicate.syncFileMissing) { duplicateCount += 1; continue; }
+      const id = duplicate?.id || uid();
+      const book = { ...(duplicate || {}), id, name: file.name, type, size: file.size, fingerprint, createdAt: duplicate?.createdAt || Date.now(), lastOpenedAt: duplicate?.lastOpenedAt || 0, order: duplicate?.order ?? state.library.reduce((max, item) => Math.max(max, Number(item.order) || 0), 0) + 1, progress: duplicate?.progress ?? 0, annotations: duplicate?.annotations || [], hasCover: false };
+      delete book.syncFileMissing;
       let cover = '';
       if (book.type === 'md') {
         book.content = await file.text();
@@ -2987,7 +2989,9 @@ async function importReaderFiles(fileList) {
         if (book.type === 'epub') cover = await epubCoverData(new Uint8Array(binary));
       }
       if (cover) { book.hasCover = true; readerDefineCover(book, cover); await oneBoxDbPut('book-covers', id, cover); }
-      state.library.unshift(book); saveLibrary(); addedCount += 1;
+      if (duplicate) state.library = state.library.map((item) => item.id === duplicate.id ? book : item);
+      else state.library.unshift(book);
+      saveLibrary(); addedCount += 1;
     } catch { toast(t('importFailed'), 'error'); }
   }
   const input = $('#readerFileInput'); if (input) input.value = '';
@@ -3399,7 +3403,11 @@ async function openReaderBook(id) {
     if (book.type === 'md') { content = markdownToHtml(book.content); toc = readerTextToc(book.content).map((item) => ({ ...item })); }
     else if (book.type === 'txt' && typeof book.content === 'string') { content = textToHtml(book.content); toc = readerTextToc(book.content).map((item) => ({ ...item })); hint = 'TXT · ' + Math.max(1, Math.round(book.size / 1024)) + ' KB'; }
     else {
-      const data = await oneBoxDbGet('books', id); if (!data) throw Error();
+      const data = await oneBoxDbGet('books', id);
+      if (!data) {
+        if (book.syncFileMissing) throw Error(t('readerFileMissing'));
+        throw Error();
+      }
       const bytes = new Uint8Array(data);
       if (book.type === 'txt') { const source = readerDecodeText(bytes); content = textToHtml(source); toc = readerTextToc(source).map((item) => ({ ...item })); hint = 'TXT · ' + Math.max(1, Math.round(book.size / 1024)) + ' KB'; }
       else if (book.type === 'epub') { const parsed = await epubToHtml(bytes); content = parsed.html; toc = parsed.toc || []; hint = parsed.title ? parsed.title + ' · ' + t('epubHint') : t('epubHint'); }
@@ -3408,7 +3416,7 @@ async function openReaderBook(id) {
     // Restore the user's last reading mode for both Safari and the PWA. The
     // mode is a device preference, not a per-open default.
     renderReaderView(content, hint, toc, state.readerPreferences.readingMode === 'pages' ? 'pages' : 'scroll');
-  } catch { releaseReaderAssets(); toast(t('importFailed'), 'error'); state.readerBookId = null; }
+  } catch (error) { releaseReaderAssets(); toast(error?.message || t('importFailed'), 'error'); state.readerBookId = null; }
 }
 function closeReader() {
   const wasDocumentScroll = readerUsesDocumentScroll();
@@ -4159,7 +4167,7 @@ function reader() {
   books.forEach((book) => { if (!book._coverData) hydrateReaderBookCover(book); });
   const cards = books.map((book) => {
     const progress = typeof book.progress === 'number' ? book.progress : Number(book.progress?.percent || 0);
-    return '<article class="book-card reader-book-card" data-reader-book-card data-reader-book-index="' + books.indexOf(book) + '" data-id="' + escapeHtml(book.id) + '"><button class="book-open reader-book-open" data-open-reader="' + escapeHtml(book.id) + '"><span class="book-cover reader-book-cover ' + book.type + '">' + readerBookCoverMarkup(book) + '</span><span class="book-copy reader-book-copy"><strong>' + escapeHtml(book.name) + '</strong><span class="reader-book-meta"><span>' + book.type.toUpperCase() + '</span><i></i><span>' + Math.max(1, Math.round(book.size / 1024)) + ' KB</span></span><span class="reader-book-progress"><span class="prog-bar"><i style="width:' + Math.round(progress * 100) + '%"></i></span><em>' + Math.round(progress * 100) + '%</em></span></span></button><button class="book-delete reader-book-delete" data-delete-book="' + escapeHtml(book.id) + '" aria-label="' + t('deleteBook') + '" title="' + t('deleteBook') + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M9 7V4h6v3M8 10v7M12 10v7M16 10v7M7 7l1 14h8l1-14"/></svg></button></article>';
+    return '<article class="book-card reader-book-card" data-reader-book-card data-reader-book-index="' + books.indexOf(book) + '" data-id="' + escapeHtml(book.id) + '"><button class="book-open reader-book-open" data-open-reader="' + escapeHtml(book.id) + '"><span class="book-cover reader-book-cover ' + book.type + '">' + readerBookCoverMarkup(book) + '</span><span class="book-copy reader-book-copy"><strong>' + escapeHtml(book.name) + '</strong>' + (book.syncFileMissing ? '<small class="reader-book-source-missing">' + t('readerMissingSource') + '</small>' : '') + '<span class="reader-book-meta"><span>' + book.type.toUpperCase() + '</span><i></i><span>' + Math.max(1, Math.round(book.size / 1024)) + ' KB</span></span><span class="reader-book-progress"><span class="prog-bar"><i style="width:' + Math.round(progress * 100) + '%"></i></span><em>' + Math.round(progress * 100) + '%</em></span></span></button><button class="book-delete reader-book-delete" data-delete-book="' + escapeHtml(book.id) + '" aria-label="' + t('deleteBook') + '" title="' + t('deleteBook') + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M9 7V4h6v3M8 10v7M12 10v7M16 10v7M7 7l1 14h8l1-14"/></svg></button></article>';
   }).join('');
   const layoutClass = state.readerLayout === 'list' ? 'reader-book-list' : 'reader-book-grid-cards';
   const libraryBody = '<div class="reader-book-grid ' + layoutClass + (!books.length ? ' reader-book-grid-empty' : '') + '">' + (books.length ? cards : '') + readerAddCardMarkup() + '</div>';
@@ -5522,6 +5530,7 @@ async function buildReaderSyncAssets() {
     const binary = await syncBytes(storedBinary);
     if (book.type === 'md' && typeof book.content !== 'string') throw Error((state.language === 'en' ? 'Markdown document is missing on this device: ' : '本机缺少 Markdown 文档：') + book.name);
     if (book.type !== 'md' && !binary?.length) throw Error((state.language === 'en' ? 'Book file is missing on this device: ' : '本机缺少书籍文件：') + book.name);
+    if (book.syncFileMissing) { delete book.syncFileMissing; libraryChanged = true; }
     if (binary?.length) {
       const chunks = syncChunkBase64(readerBytesToBase64(binary));
       const names = chunks.map((content, index) => {
@@ -5690,37 +5699,56 @@ function parseGithubSyncPayload(content) {
 async function restoreReaderSyncAssets(remote, gist) {
   const storedLibrary = remote?.storage?.[STORAGE.library];
   let library = Array.isArray(remote?.library) ? remote.library : [];
+  let hasLibrary = Array.isArray(remote?.library);
   if (!library.length && typeof storedLibrary === 'string') {
-    try { const parsed = JSON.parse(storedLibrary); if (Array.isArray(parsed)) library = parsed; } catch { /* legacy payload without readable library metadata */ }
+    try { const parsed = JSON.parse(storedLibrary); if (Array.isArray(parsed)) { library = parsed; hasLibrary = true; } } catch { /* legacy payload without readable library metadata */ }
   }
   const manifest = remote?.readerFiles?.books;
   const requiredBooks = library.filter((book) => book?.id && book.type !== 'md');
-  if (!manifest || typeof manifest !== 'object' || Array.isArray(manifest)) {
-    if (requiredBooks.length) throw Error(state.language === 'en' ? 'This GitHub backup lists books but contains no book files. Upload again from the device that has the original books.' : '这份 GitHub 备份只有书籍目录，没有书籍文件。请在保存原书的设备上重新上传后再恢复。');
-    return;
-  }
-  const writes = [];
+  const missingIds = new Set();
+  const sourceWrites = [];
+  const coverWrites = [];
+  const validManifest = manifest && typeof manifest === 'object' && !Array.isArray(manifest);
   for (const book of requiredBooks) {
-    const entry = manifest[book.id];
-    if (!Array.isArray(entry?.files) || !entry.files.length) throw Error((state.language === 'en' ? 'The GitHub backup is missing book file: ' : 'GitHub 备份缺少书籍文件：') + book.name);
-    const chunks = await Promise.all(entry.files.map((name) => githubFileContent(gist.files?.[name])));
-    if (chunks.some((chunk) => typeof chunk !== 'string')) throw Error((state.language === 'en' ? 'Could not download all parts of book: ' : '无法完整下载书籍分段：') + book.name);
-    const byteChunks = chunks.map(syncBase64Bytes);
-    const total = byteChunks.reduce((sum, chunk) => sum + chunk.length, 0);
-    if (!total) throw Error((state.language === 'en' ? 'The downloaded book file is empty: ' : '下载到的书籍文件为空：') + book.name);
-    const bytes = new Uint8Array(total); let offset = 0;
-    byteChunks.forEach((chunk) => { bytes.set(chunk, offset); offset += chunk.length; });
-    writes.push({ store: 'books', id: book.id, value: bytes.buffer, label: book.name });
+    const entry = validManifest ? manifest[book.id] : null;
+    if (!Array.isArray(entry?.files) || !entry.files.length || entry.files.some((name) => !gist.files?.[name])) {
+      if (!(await syncBytes(await oneBoxDbGet('books', book.id)))?.length) missingIds.add(book.id);
+      continue;
+    }
+    const chunks = await Promise.all(entry.files.map((name) => githubFileContent(gist.files[name])));
+    if (chunks.some((chunk) => typeof chunk !== 'string' || !chunk)) {
+      if (!(await syncBytes(await oneBoxDbGet('books', book.id)))?.length) missingIds.add(book.id);
+      continue;
+    }
+    try {
+      const byteChunks = chunks.map(syncBase64Bytes);
+      const total = byteChunks.reduce((sum, chunk) => sum + chunk.length, 0);
+      if (!total) throw Error('empty book file');
+      const bytes = new Uint8Array(total); let offset = 0;
+      byteChunks.forEach((chunk) => { bytes.set(chunk, offset); offset += chunk.length; });
+      sourceWrites.push({ id: book.id, value: bytes.buffer });
+    } catch {
+      if (!(await syncBytes(await oneBoxDbGet('books', book.id)))?.length) missingIds.add(book.id);
+    }
   }
-  for (const [id, entry] of Object.entries(manifest)) {
+  for (const [id, entry] of Object.entries(validManifest ? manifest : {})) {
     if (!entry?.cover) continue;
     const cover = await githubFileContent(gist.files?.[entry.cover]);
-    if (typeof cover !== 'string' || !/^data:image\//i.test(cover)) throw Error(state.language === 'en' ? 'A book cover is missing or invalid in the GitHub backup.' : 'GitHub 备份中的书籍封面缺失或无效。');
-    writes.push({ store: 'book-covers', id, value: cover, label: id });
+    if (typeof cover === 'string' && /^data:image\//i.test(cover)) coverWrites.push({ id, value: cover });
   }
-  for (const item of writes) {
-    if (!await oneBoxDbPut(item.store, item.id, item.value)) throw Error((state.language === 'en' ? 'Could not save book data on this device: ' : '无法将书籍数据保存到本机：') + item.label);
+  for (const item of sourceWrites) {
+    if (!await oneBoxDbPut('books', item.id, item.value) && !(await syncBytes(await oneBoxDbGet('books', item.id)))?.length) missingIds.add(item.id);
   }
+  for (const item of coverWrites) await oneBoxDbPut('book-covers', item.id, item.value);
+  const restoredIds = new Set(sourceWrites.filter((item) => !missingIds.has(item.id)).map((item) => item.id));
+  const restoredLibrary = hasLibrary ? library.map((book) => {
+    if (!book || typeof book !== 'object') return book;
+    if (book.type === 'md') { const { syncFileMissing, ...available } = book; return available; }
+    if (missingIds.has(book.id)) return { ...book, syncFileMissing: true };
+    if (restoredIds.has(book.id) || book.syncFileMissing) { const { syncFileMissing, ...available } = book; return available; }
+    return book;
+  }) : null;
+  return { library: restoredLibrary, missingBooks: requiredBooks.filter((book) => missingIds.has(book.id)).map((book) => book.name) };
 }
 function applyRemoteStorageSnapshot(remoteStorage) {
   if (!remoteStorage || typeof remoteStorage !== 'object') return;
@@ -6016,7 +6044,7 @@ async function githubDownload() {
     if (!gist?.id || !remote) throw lastError || Error(t('githubSyncInvalidData'));
     const id = gist.id;
     updateGithubSync(mode, 67, githubSyncLabel(mode, 'restore'));
-    await restoreReaderSyncAssets(remote, gist);
+    const readerRestore = await restoreReaderSyncAssets(remote, gist);
     applyRemoteStorageSnapshot(remote.storage);
     if (['light', 'dark', 'dark-gray', 'system'].includes(remote.theme)) { state.theme = remote.theme; localStorage.setItem(STORAGE.theme, state.theme); }
     if (['mono', 'purple', 'blue', 'green', 'yellow'].includes(remote.color)) { state.color = remote.color; saveColorPreference(); }
@@ -6029,7 +6057,7 @@ async function githubDownload() {
     if (Array.isArray(remote.weatherCards)) { state.weatherCards = remote.weatherCards; state.activeWeatherId = state.weatherCards[0]?.id || null; saveWeatherCards(); }
     if (Array.isArray(remote.translationHistory)) { state.translationHistory = remote.translationHistory; saveTranslationHistory(); }
     if (Array.isArray(remote.notifications)) { state.notifications = remote.notifications; saveNotifications(); }
-    if (Array.isArray(remote.library)) { state.library = remote.library; saveLibrary(); }
+    if (Array.isArray(readerRestore.library)) { state.library = readerRestore.library; saveLibrary(); }
     if (remote.readerPreferences && typeof remote.readerPreferences === 'object') { state.readerPreferences = { ...state.readerPreferences, ...remote.readerPreferences }; saveReaderPreferences(); }
     if (remote.readerLayout === 'list' || remote.readerLayout === 'grid') { state.readerLayout = remote.readerLayout; saveReaderLayout(); }
     if (typeof remote.translationHistoryOpen === 'boolean') { state.translationHistoryOpen = remote.translationHistoryOpen; saveStored(STORAGE.translationHistoryOpen, state.translationHistoryOpen); }
@@ -6060,8 +6088,14 @@ async function githubDownload() {
     if (remote.openMode === 'new-tab' || remote.openMode === 'current') { state.openMode = remote.openMode; saveStored(STORAGE.openMode, state.openMode); }
     hydrateGithubRuntimeState();
     state.github.gistId = id; saveGithub(); applyLanguage(); syncMascotDisplayMode(true); syncMascotVisibility(); renderNav(); render();
-    finishGithubSync(mode, state.language === 'en' ? 'Restore complete' : '恢复完成');
-    toast(state.language === 'en' ? 'Settings restored from GitHub' : '已从 GitHub 恢复设置');
+    const missingBooks = readerRestore.missingBooks || [];
+    const missingSummary = missingBooks.length
+      ? (state.language === 'en'
+        ? 'Restored settings and shelf; original files are missing for ' + missingBooks.length + ' book(s): ' + missingBooks.slice(0, 3).join(', ') + (missingBooks.length > 3 ? '…' : '') + '. Upload again from the device that still has the books.'
+        : '设置和书架已恢复，但 ' + missingBooks.length + ' 本书缺少原文件：' + missingBooks.slice(0, 3).join('、') + (missingBooks.length > 3 ? '…' : '') + '。请在仍保存原书的设备重新上传。')
+      : (state.language === 'en' ? 'Restore complete' : '恢复完成');
+    finishGithubSync(mode, missingSummary);
+    toast(missingBooks.length ? missingSummary : (state.language === 'en' ? 'Settings and books restored from GitHub' : '已从 GitHub 恢复设置和书籍'));
   } catch (error) {
     const message = githubBrowserError(error) || (state.language === 'en' ? 'GitHub restore failed' : 'GitHub 恢复失败');
     finishGithubSync(mode, state.language === 'en' ? 'Restore failed' : '恢复失败', message);
@@ -6096,7 +6130,7 @@ function renderGithubDialog() {
   const actions = connected
     ? '<div class="github-action-grid"><button class="primary" data-github-upload ' + (syncing ? 'disabled' : '') + '>' + t('upload') + '</button><button class="secondary" data-github-download ' + (syncing ? 'disabled' : '') + '>' + t('download') + '</button></div><button class="text-btn github-disconnect" data-github-logout ' + (syncing ? 'disabled' : '') + '>' + t('githubLogout') + '</button>'
     : (waiting ? '<button class="secondary github-connect" disabled>' + t('githubWaiting') + '</button><button class="text-btn github-cancel" data-github-cancel>' + t('githubCancel') + '</button>' : '<button class="primary github-connect" data-github-login>' + t('githubLogin') + '</button>');
-  const syncProgress = (sync.message || syncing || sync.error) ? '<section class="github-sync-progress ' + (sync.error ? 'is-error' : '') + '" aria-live="polite"><div class="github-sync-progress-head"><strong>' + escapeHtml(sync.message || (state.language === 'en' ? 'Syncing…' : '正在同步…')) + '</strong><span>' + (sync.error ? '!' : String(sync.progress) + '%') + '</span></div><div class="github-sync-progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + String(sync.progress) + '"><span style="width:' + String(sync.progress) + '%"></span></div>' + (sync.error ? '<p>' + escapeHtml(sync.error) + '</p>' : '<small>' + escapeHtml(state.language === 'en' ? 'You can close this dialog; the sync will continue.' : '可以关闭此窗口，同步仍会继续。') + '</small>') + '</section>' : '';
+  const syncProgress = (sync.message || syncing || sync.error) ? '<section class="github-sync-progress ' + (sync.error ? 'is-error' : '') + '" aria-live="polite"><div class="github-sync-progress-head"><strong>' + escapeHtml(sync.message || (state.language === 'en' ? 'Syncing…' : '正在同步…')) + '</strong><span>' + (sync.error ? '!' : String(sync.progress) + '%') + '</span></div><div class="github-sync-progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + String(sync.progress) + '"><span style="width:' + String(sync.progress) + '%"></span></div>' + (sync.error ? '<p>' + escapeHtml(sync.error) + '</p>' : sync.progress >= 100 ? '' : '<small>' + escapeHtml(state.language === 'en' ? 'You can close this dialog; the sync will continue.' : '可以关闭此窗口，同步仍会继续。') + '</small>') + '</section>' : '';
   dialog.innerHTML = '<div class="dialog-card github-dialog-card" role="dialog" aria-modal="true"><div class="dialog-head github-dialog-head"><div><h2>GitHub</h2></div><button class="icon-btn small github-dialog-close" data-close-github aria-label="' + t('close') + '">×</button></div><div class="github-dialog-body"><section class="github-status-section"><div class="github-section-label"><h3>' + t('githubSync') + '</h3></div>' + account + '</section><p class="github-dialog-note">' + escapeHtml(t('githubDescription')) + '</p><section class="github-sync-scope"><strong>' + t('githubSyncScopeTitle') + '</strong><p>' + escapeHtml(t('githubSyncScope')) + '</p><small>' + escapeHtml(t('githubSyncPrivacy')) + '</small></section><p class="github-dialog-note github-auth-hint">' + escapeHtml(t('githubAuthHint')) + '</p>' + code + manualToken + syncProgress + '<section class="github-actions">' + actions + '</section></div></div>';
   dialog.hidden = false; state.githubDialogOpen = true;
 }
