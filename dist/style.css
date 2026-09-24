@@ -1252,7 +1252,7 @@ html.reader-focus #readerDialog .reader-dialog-card { width: min(720px, 100%); m
 .feed-source-mark.bilibili, .feed-source-tag.bilibili b { background: transparent; color: #00aeec; }
 .feed-source-mark.guancha, .feed-source-tag.guancha b { background: transparent; color: #fff; }
 .feed-source-mark.hupu, .feed-source-tag.hupu b { background: #d52b2b; color: #fff; }
-.feed-source-mark.thepaper, .feed-source-tag.thepaper b { background: #d9363e; color: #fff; }
+.feed-source-mark.thepaper, .feed-source-tag.thepaper b { background: #fff; color: #222; }
 .feed-source-mark.jiemian, .feed-source-tag.jiemian b { background: #1e2734; color: #fff; }
 .feed-source-mark.footprint { background: var(--soft); color: var(--primary); }
 .feed-source-mark.footprint svg { width: 16px; height: 16px; fill: currentColor; }
@@ -1382,9 +1382,38 @@ html.reader-focus #readerDialog .reader-dialog-card { width: min(720px, 100%); m
 #workspace[data-tool="home"] .feed-source-mark.v2ex,
 #workspace[data-tool="home"] .feed-source-tag.v2ex b { background: #5c86a8; color: #fff; border: 0; }
 #workspace[data-tool="home"] .feed-source-mark.thepaper,
-#workspace[data-tool="home"] .feed-source-tag.thepaper b { background: #d9363e; color: #fff; border: 0; }
+#workspace[data-tool="home"] .feed-source-tag.thepaper b { background: #fff; color: #222; border: 1px solid color-mix(in srgb, var(--line) 72%, #222 28%); overflow: hidden; }
 #workspace[data-tool="home"] .feed-source-mark.jiemian,
-#workspace[data-tool="home"] .feed-source-tag.jiemian b { background: #1e2734; color: #fff; border: 0; }
+#workspace[data-tool="home"] .feed-source-tag.jiemian b { background: #1e2734; color: #fff; border: 0; overflow: hidden; }
+#workspace[data-tool="home"] .feed-source-mark.thepaper,
+#workspace[data-tool="home"] .feed-source-mark.jiemian { overflow: hidden; }
+#workspace[data-tool="home"] .feed-source-mark.jiemian img,
+#workspace[data-tool="home"] .feed-source-tag.jiemian b img {
+  width: 454%;
+  max-width: none;
+  height: 177%;
+  object-fit: fill;
+  object-position: left top;
+}
+.jiemian-flash-card {
+  position: relative;
+  margin: 10px 0 12px;
+  padding: 16px 18px 15px;
+  border: 1px solid color-mix(in srgb, var(--primary) 42%, var(--line));
+  border-radius: 16px;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--primary) 11%, var(--panel)), var(--panel));
+  color: var(--ink);
+  cursor: pointer;
+  box-shadow: 0 8px 22px color-mix(in srgb, var(--primary) 8%, transparent);
+}
+.jiemian-flash-card:hover,
+.jiemian-flash-card:focus-visible { background: color-mix(in srgb, var(--primary) 15%, var(--panel-2)); outline: none; }
+.jiemian-flash-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; color: var(--muted); font-size: 12px; }
+.jiemian-flash-label { display: inline-flex; align-items: center; gap: 7px; color: var(--primary); font-weight: 850; letter-spacing: .02em; }
+.jiemian-flash-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--primary); box-shadow: 0 0 0 4px color-mix(in srgb, var(--primary) 16%, transparent); }
+.jiemian-flash-card h2 { margin: 11px 0 0; font-size: 19px; line-height: 1.42; letter-spacing: -.025em; }
+.jiemian-flash-card p { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; margin: 7px 0 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
+.jiemian-flash-action { display: block; margin-top: 12px; color: var(--primary); font-size: 12px; font-weight: 800; }
 #workspace[data-tool="home"] .feed-panel { margin-top: 6px; border-radius: 16px; touch-action: pan-y; }
 #workspace[data-tool="home"].feed-pulling { transform: translate3d(0, var(--feed-pull-distance, 0px), 0); transition: none; }
 
@@ -1392,6 +1421,8 @@ html.reader-focus #readerDialog .reader-dialog-card { width: min(720px, 100%); m
   #workspace[data-tool="home"] .feed-source-panel { padding-inline: 6px; }
   #workspace[data-tool="home"] .feed-source-tab { padding-inline: 8px; }
   #workspace[data-tool="home"] .feed-source-mark { width: 20px; height: 20px; }
+  .jiemian-flash-card { margin: 8px 0 10px; padding: 14px 14px 13px; border-radius: 14px; }
+  .jiemian-flash-card h2 { font-size: 16px; }
 }
 
 /* OneBox responsive chrome and settings refinement ---------------------- */
