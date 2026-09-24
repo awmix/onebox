@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.330';
+const APP_VERSION = '2.18.331';
 // The OAuth secret stays in the Cloudflare Worker. The browser only knows the
 // public client id and receives the authorization result in the URL fragment,
 // which is consumed immediately and never sent to a server.
@@ -72,8 +72,8 @@ const FEED_SOURCE_REGISTRY = [
   { id: 'hupu', name: '虎扑', badge: '虎', icon: 'icons/hupu.ico?v=2.18.124', className: 'hupu', mobileHost: 'm.hupu.com', visibleByDefault: true, siteUrl: 'https://bbs.hupu.com/bxj', fetchers: [{ kind: 'hupu-bbs', url: 'https://bbs.hupu.com/bxj' }, { kind: 'hupu-bbs', url: 'https://bbs.hupu.com/topic-daily' }] },
   { id: 'xiaohongshu', name: '红书', badge: '红', icon: 'https://www.xiaohongshu.com/favicon.ico?v=2.18.264', className: 'xiaohongshu', visibleByDefault: true, siteUrl: 'https://www.xiaohongshu.com/explore', fetchers: [{ kind: 'xiaohongshu-explore', url: 'https://www.xiaohongshu.com/explore' }, { kind: 'xiaohongshu-hotboard', url: 'https://uapis.cn/api/v1/misc/hotboard?type=xiaohongshu&limit=30', direct: true }] },
   { id: 'douyin', name: '抖音', badge: '音', icon: 'https://www.douyin.com/favicon.ico?v=2.18.264', className: 'douyin', visibleByDefault: true, siteUrl: 'https://www.douyin.com/jingxuan', fetchers: [{ kind: 'douyin-hotboard', url: 'https://uapis.cn/api/v1/misc/hotboard?type=douyin&limit=30', direct: true }, { kind: 'douyin-jingxuan', url: 'https://www.douyin.com/jingxuan' }] },
-  { id: 'thepaper', name: '澎湃', badge: '澎', icon: 'https://m.thepaper.cn/_next/static/media/logo.8d76cf45.png?v=2.18.330', className: 'thepaper', mobileHost: 'm.thepaper.cn', visibleByDefault: true, siteUrl: 'https://m.thepaper.cn/', fetchers: [{ kind: 'thepaper-channel', url: 'https://www.thepaper.cn/channel_25950', timeoutMs: 15000, deadlineMs: 18000 }] },
-  { id: 'jiemian', name: '界面', badge: '面', icon: 'https://www.jiemian.com/favicon.ico?v=2.18.330', className: 'jiemian', mobileHost: 'www.jiemian.com', visibleByDefault: true, siteUrl: 'https://www.jiemian.com/lists/4.html', fetchers: [{ kind: 'jiemian-newsflash', url: 'https://www.jiemian.com/lists/1323kb.html', timeoutMs: 15000, deadlineMs: 18000 }] },
+  { id: 'thepaper', name: '澎湃', badge: '澎', icon: 'https://m.thepaper.cn/_next/static/media/logo.8d76cf45.png?v=2.18.331', className: 'thepaper', mobileHost: 'm.thepaper.cn', visibleByDefault: true, siteUrl: 'https://m.thepaper.cn/', fetchers: [{ kind: 'thepaper-channel', url: 'https://www.thepaper.cn/channel_25950', timeoutMs: 15000, deadlineMs: 18000 }] },
+  { id: 'jiemian', name: '界面', badge: '面', icon: 'https://www.jiemian.com/favicon.ico?v=2.18.331', className: 'jiemian', mobileHost: 'www.jiemian.com', visibleByDefault: true, siteUrl: 'https://www.jiemian.com/lists/4.html', fetchers: [{ kind: 'jiemian-newsflash', url: 'https://www.jiemian.com/lists/1323kb.html', timeoutMs: 15000, deadlineMs: 18000 }] },
 ];
 const RSS_SOURCES = FEED_SOURCE_REGISTRY.filter((source) => source.enabled !== false);
 const RSS_REFRESH_INTERVAL = 2 * 60 * 1000;
@@ -459,7 +459,7 @@ function navigationIconSources(value) {
     const parsed = new URL(url);
     const hostname = parsed.hostname;
     if (navigationUsesDesktopBrandIcon(url)) return [navigationAppAssetUrl('icons/bilibili.svg'), 'https://static.hdslb.com/images/favicon.ico', 'https://www.bilibili.com/favicon.ico'];
-    if (navigationUsesOneBoxBrandIcon(url)) return [navigationAppAssetUrl('icons/onebox-brand-v317-192.png?v=2.18.330'), navigationAppAssetUrl('icons/onebox-brand-v317-512.png?v=2.18.330')];
+    if (navigationUsesOneBoxBrandIcon(url)) return [navigationAppAssetUrl('icons/onebox-brand-v317-192.png?v=2.18.331'), navigationAppAssetUrl('icons/onebox-brand-v317-512.png?v=2.18.331')];
     const direct = navigationAssetBases(url).flatMap((base) => [
       new URL('apple-touch-icon.png', base).href,
       new URL('apple-touch-icon-dark.png', base).href,
@@ -6082,13 +6082,40 @@ async function findGithubGist() {
   }
   return found || null;
 }
+const GITHUB_SYNC_UPLOAD_BATCH_CHARS = 1200000;
+function githubSyncUploadBatches(entries) {
+  const batches = [];
+  let current = {};
+  let size = 0;
+  entries.forEach(([name, value]) => {
+    const content = value === null ? null : String(value);
+    const weight = (content ? content.length : 0) + String(name).length + 64;
+    if (Object.keys(current).length && size + weight > GITHUB_SYNC_UPLOAD_BATCH_CHARS) {
+      batches.push(current);
+      current = {};
+      size = 0;
+    }
+    current[name] = content === null ? null : { content };
+    size += weight;
+  });
+  if (Object.keys(current).length) batches.push(current);
+  return batches;
+}
+async function githubPatchGistFiles(id, files) {
+  const response = await fetch('https://api.github.com/gists/' + id, { method: 'PATCH', headers: githubHeaders(true), body: JSON.stringify({ files }) });
+  if (!response.ok) throw await githubApiError(response);
+  const updated = await response.json();
+  return updated?.files ? updated : await githubGistDetails({ id });
+}
 async function findOrCreateGist(bundle = null, onProgress = null) {
   onProgress?.(42, githubSyncLabel('upload', 'gist'));
   const found = await findGithubGist();
   if (found?.id) return found.id;
   const initialBundle = bundle || await buildGithubSyncBundle();
   onProgress?.(57, githubSyncLabel('upload', 'gist'));
-  const created = await fetch('https://api.github.com/gists', { method: 'POST', headers: githubHeaders(true), body: JSON.stringify({ description: 'OneBox settings sync', public: false, files: Object.fromEntries(Object.entries(initialBundle.files).map(([name, content]) => [name, { content }])) }) });
+  const settingsContent = initialBundle.files?.['onebox-settings.json'];
+  if (typeof settingsContent !== 'string') throw Error(state.language === 'en' ? 'OneBox settings file is missing' : 'OneBox 设置文件缺失');
+  const created = await fetch('https://api.github.com/gists', { method: 'POST', headers: githubHeaders(true), body: JSON.stringify({ description: 'OneBox settings sync', public: false, files: { 'onebox-settings.json': { content: settingsContent } } }) });
   if (!created.ok) throw await githubApiError(created);
   const gist = await created.json();
   if (!gist.id) throw Error(state.language === 'en' ? 'GitHub did not return a Gist id' : 'GitHub 未返回 Gist 标识');
@@ -6110,14 +6137,20 @@ async function githubUpload() {
     const currentResponse = await fetch('https://api.github.com/gists/' + id, { headers: githubHeaders() });
     if (!currentResponse.ok) throw await githubApiError(currentResponse);
     const current = await currentResponse.json();
-    const files = Object.fromEntries(Object.entries(bundle.files).map(([name, content]) => [name, { content }]));
-    Object.keys(current.files || {}).filter((name) => name.startsWith('onebox-book-') && !Object.prototype.hasOwnProperty.call(bundle.files, name)).forEach((name) => { files[name] = null; });
-    const response = await fetch('https://api.github.com/gists/' + id, { method: 'PATCH', headers: githubHeaders(true), body: JSON.stringify({ files }) });
-    if (!response.ok) throw await githubApiError(response);
-    // Validate the representation returned by this write, instead of an immediate
-    // follow-up GET that can observe a stale snapshot.
-    const updated = await response.json();
-    const verified = updated?.files ? updated : await githubGistDetails({ id });
+    const staleFiles = Object.keys(current.files || {}).filter((name) => name.startsWith('onebox-book-') && !Object.prototype.hasOwnProperty.call(bundle.files, name));
+    const entries = [
+      ...staleFiles.map((name) => [name, null]),
+      ...Object.entries(bundle.files).filter(([name]) => name !== 'onebox-settings.json'),
+    ];
+    const batches = githubSyncUploadBatches(entries);
+    for (let index = 0; index < batches.length; index += 1) {
+      updateGithubSync(mode, 64 + Math.round((index / Math.max(1, batches.length + 1)) * 16), githubSyncLabel(mode, 'upload'));
+      await githubPatchGistFiles(id, batches[index]);
+    }
+    updateGithubSync(mode, 80, githubSyncLabel(mode, 'upload'));
+    // Commit the manifest last so it only points at book files after those files
+    // have been uploaded. Each request stays small enough for mobile Safari.
+    const verified = await githubPatchGistFiles(id, { 'onebox-settings.json': { content: bundle.files['onebox-settings.json'] } });
     const missingFiles = Object.keys(bundle.files).filter((name) => !verified?.files?.[name]);
     if (missingFiles.length) throw Error((state.language === 'en' ? 'GitHub response is missing OneBox files: ' : 'GitHub 响应中缺少 OneBox 文件：') + missingFiles.slice(0, 3).join(', '));
     const verifiedContent = await githubFileContent(verified?.files?.['onebox-settings.json']);
