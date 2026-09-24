@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.325';
+const APP_VERSION = '2.18.326';
 // The OAuth secret stays in the Cloudflare Worker. The browser only knows the
 // public client id and receives the authorization result in the URL fragment,
 // which is consumed immediately and never sent to a server.
@@ -72,8 +72,8 @@ const FEED_SOURCE_REGISTRY = [
   { id: 'hupu', name: '虎扑', badge: '虎', icon: 'icons/hupu.ico?v=2.18.124', className: 'hupu', mobileHost: 'm.hupu.com', visibleByDefault: true, siteUrl: 'https://bbs.hupu.com/bxj', fetchers: [{ kind: 'hupu-bbs', url: 'https://bbs.hupu.com/bxj' }, { kind: 'hupu-bbs', url: 'https://bbs.hupu.com/topic-daily' }] },
   { id: 'xiaohongshu', name: '红书', badge: '红', icon: 'https://www.xiaohongshu.com/favicon.ico?v=2.18.264', className: 'xiaohongshu', visibleByDefault: true, siteUrl: 'https://www.xiaohongshu.com/explore', fetchers: [{ kind: 'xiaohongshu-explore', url: 'https://www.xiaohongshu.com/explore' }, { kind: 'xiaohongshu-hotboard', url: 'https://uapis.cn/api/v1/misc/hotboard?type=xiaohongshu&limit=30', direct: true }] },
   { id: 'douyin', name: '抖音', badge: '音', icon: 'https://www.douyin.com/favicon.ico?v=2.18.264', className: 'douyin', visibleByDefault: true, siteUrl: 'https://www.douyin.com/jingxuan', fetchers: [{ kind: 'douyin-hotboard', url: 'https://uapis.cn/api/v1/misc/hotboard?type=douyin&limit=30', direct: true }, { kind: 'douyin-jingxuan', url: 'https://www.douyin.com/jingxuan' }] },
-  { id: 'thepaper', name: '澎湃', badge: '澎', icon: 'https://m.thepaper.cn/_next/static/media/logo.8d76cf45.png?v=2.18.325', className: 'thepaper', mobileHost: 'm.thepaper.cn', visibleByDefault: true, siteUrl: 'https://m.thepaper.cn/', fetchers: [{ kind: 'thepaper-channel', url: 'https://www.thepaper.cn/channel_25950', timeoutMs: 15000, deadlineMs: 18000 }] },
-  { id: 'jiemian', name: '界面', badge: '面', icon: 'https://www.jiemian.com/favicon.ico?v=2.18.325', className: 'jiemian', mobileHost: 'www.jiemian.com', visibleByDefault: true, siteUrl: 'https://www.jiemian.com/lists/4.html', fetchers: [{ kind: 'rss', url: 'https://www.jiemian.com/lists/4.html', timeoutMs: 15000, deadlineMs: 18000 }] },
+  { id: 'thepaper', name: '澎湃', badge: '澎', icon: 'https://m.thepaper.cn/_next/static/media/logo.8d76cf45.png?v=2.18.326', className: 'thepaper', mobileHost: 'm.thepaper.cn', visibleByDefault: true, siteUrl: 'https://m.thepaper.cn/', fetchers: [{ kind: 'thepaper-channel', url: 'https://www.thepaper.cn/channel_25950', timeoutMs: 15000, deadlineMs: 18000 }] },
+  { id: 'jiemian', name: '界面', badge: '面', icon: 'https://www.jiemian.com/favicon.ico?v=2.18.326', className: 'jiemian', mobileHost: 'www.jiemian.com', visibleByDefault: true, siteUrl: 'https://www.jiemian.com/lists/4.html', fetchers: [{ kind: 'jiemian-newsflash', url: 'https://www.jiemian.com/lists/1323kb.html', timeoutMs: 15000, deadlineMs: 18000 }] },
 ];
 const RSS_SOURCES = FEED_SOURCE_REGISTRY.filter((source) => source.enabled !== false);
 const RSS_REFRESH_INTERVAL = 2 * 60 * 1000;
@@ -459,7 +459,7 @@ function navigationIconSources(value) {
     const parsed = new URL(url);
     const hostname = parsed.hostname;
     if (navigationUsesDesktopBrandIcon(url)) return [navigationAppAssetUrl('icons/bilibili.svg'), 'https://static.hdslb.com/images/favicon.ico', 'https://www.bilibili.com/favicon.ico'];
-    if (navigationUsesOneBoxBrandIcon(url)) return [navigationAppAssetUrl('icons/onebox-brand-v317-192.png?v=2.18.325'), navigationAppAssetUrl('icons/onebox-brand-v317-512.png?v=2.18.325')];
+    if (navigationUsesOneBoxBrandIcon(url)) return [navigationAppAssetUrl('icons/onebox-brand-v317-192.png?v=2.18.326'), navigationAppAssetUrl('icons/onebox-brand-v317-512.png?v=2.18.326')];
     const direct = navigationAssetBases(url).flatMap((base) => [
       new URL('apple-touch-icon.png', base).href,
       new URL('apple-touch-icon-dark.png', base).href,
@@ -1224,6 +1224,35 @@ function rssMarkdownItems(value, source) {
     }, source, { approximate: false, publishedMs: parseFeedTimestamp(publishedNode?.textContent) || syntheticFeedTime(index) });
   }).filter(Boolean);
 }
+function jiemianClockTimestamp(hour, minute, index) {
+  if (!/^\d{1,2}$/.test(String(hour)) || !/^\d{2}$/.test(String(minute))) return syntheticFeedTime(index);
+  const now = new Date();
+  let timestamp = new Date(now.getFullYear(), now.getMonth(), now.getDate(), Number(hour), Number(minute)).getTime();
+  if (timestamp > Date.now() + 5 * 60 * 1000) timestamp -= 24 * 60 * 60 * 1000;
+  return timestamp;
+}
+function jiemianNewsflashItems(value, source) {
+  const content = jinaContent(value);
+  const headings = [...content.matchAll(/^#{2,6}\s+\[([^\]]+)\]\((https?:\/\/www\.jiemian\.com\/article\/[^)\s]+)\)/gm)];
+  if (!headings.length) return rssMarkdownItems(value, source);
+  return headings.map((match, index) => {
+    const previousStart = headings[index - 1] ? (headings[index - 1].index || 0) + headings[index - 1][0].length : 0;
+    const prefix = content.slice(previousStart, match.index || 0);
+    const timeMatches = [...prefix.matchAll(/(?:^|\n)\s*\*\s+(\d{1,2}):(\d{2})\s*(?=\n|$)/g)];
+    const clock = timeMatches.at(-1);
+    const blockStart = (match.index || 0) + match[0].length;
+    const nextStart = headings[index + 1]?.index ?? content.length;
+    const description = feedText(content.slice(blockStart, nextStart))
+      .replace(/\s+\*\s+\d{1,2}:\d{2}\s*$/u, '')
+      .replace(/\s+声音提醒\s*$/u, '')
+      .trim()
+      .slice(0, 180);
+    return normalizeFeedItem({ title: match[1], link: match[2], description }, source, {
+      approximate: false,
+      publishedMs: clock ? jiemianClockTimestamp(clock[1], clock[2], index) : syntheticFeedTime(index),
+    });
+  }).filter(Boolean);
+}
 function thepaperRelativeTimestamp(value, index) {
   const text = String(value || '');
   const match = text.match(/(\d+)\s*(分钟|小时|天)前/);
@@ -1408,7 +1437,7 @@ async function fetchFeedSource(source) {
     const { response, text } = await fetchTextWithTimeout(targetUrl, { cache: 'no-store', headers: { Accept: 'text/plain, application/json, application/xml' } }, fetcher.timeoutMs || HOME_FEED_REQUEST_TIMEOUT_MS, sourceController.signal);
     if (!response.ok) throw Error('HTTP ' + response.status);
     const payload = fetcher.kind === 'rss' || fetcher.kind === 'guancha-fengwen' ? null : jinaJson(text);
-    const items = fetcher.kind === 'rss' ? rssMarkdownItems(text, source) : fetcher.kind === 'thepaper-channel' ? thepaperChannelItems(text, source) : fetcher.kind === 'hupu-bbs' ? hupuBbsItems(text, source) : fetcher.kind === 'guancha-fengwen' ? guanchaFengwenItems(text, source) : fetcher.kind === 'xiaohongshu-explore' ? xiaohongshuExploreItems(text, source) : fetcher.kind === 'douyin-jingxuan' ? douyinJingxuanItems(source) : structuredHotItems(payload, source, fetcher.kind);
+    const items = fetcher.kind === 'rss' ? rssMarkdownItems(text, source) : fetcher.kind === 'jiemian-newsflash' ? jiemianNewsflashItems(text, source) : fetcher.kind === 'thepaper-channel' ? thepaperChannelItems(text, source) : fetcher.kind === 'hupu-bbs' ? hupuBbsItems(text, source) : fetcher.kind === 'guancha-fengwen' ? guanchaFengwenItems(text, source) : fetcher.kind === 'xiaohongshu-explore' ? xiaohongshuExploreItems(text, source) : fetcher.kind === 'douyin-jingxuan' ? douyinJingxuanItems(source) : structuredHotItems(payload, source, fetcher.kind);
     if (!items.length) throw Error('Feed empty');
     return { items, feedUrl: fetcher.url };
   };
@@ -1533,7 +1562,7 @@ function renderFeedItem(item) {
 function renderJiemianFlash(item) {
   if (!item) return '';
   const description = item.description ? '<p>' + escapeHtml(item.description) + '</p>' : '';
-  return '<article class="jiemian-flash-card" data-feed-id="' + escapeHtml(item.id) + '" data-feed-link="' + escapeHtml(item.link) + '" tabindex="0" role="link"><div class="jiemian-flash-head"><span class="jiemian-flash-label"><span class="jiemian-flash-dot" aria-hidden="true"></span>界面快报</span><time datetime="' + escapeHtml(new Date(feedItemTimestamp(item) || Date.now()).toISOString()) + '">' + escapeHtml(feedDate(item)) + '</time></div><h2>' + escapeHtml(item.title) + '</h2>' + description + '<span class="jiemian-flash-action">打开快报 <span aria-hidden="true">→</span></span></article>';
+  return '<article class="jiemian-flash-card" data-feed-id="' + escapeHtml(item.id) + '" data-feed-link="' + escapeHtml(item.link) + '" data-feed-open-new-tab="true" tabindex="0" role="link"><div class="jiemian-flash-head"><span class="jiemian-flash-label"><span class="jiemian-flash-dot" aria-hidden="true"></span>界面快讯</span><time datetime="' + escapeHtml(new Date(feedItemTimestamp(item) || Date.now()).toISOString()) + '">' + escapeHtml(feedDate(item)) + '</time></div><h2>' + escapeHtml(item.title) + '</h2>' + description + '<span class="jiemian-flash-action">新页签查看快讯 <span aria-hidden="true">→</span></span></article>';
 }
 function isMobileSurface() {
   return Boolean(navigator.standalone || window.matchMedia?.('(display-mode: standalone)').matches || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.matchMedia?.('(max-width: 760px)').matches);
@@ -2265,7 +2294,7 @@ function recoverHomeLayoutAfterReturn() {
   window.setTimeout(restore, 180);
   window.setTimeout(restore, 420);
 }
-function openFeedLink(link) {
+function openFeedLink(link, forceNewTab = false) {
   const target = mobileFeedLink(feedItemByLink(link));
   if (!target) {
     toast(state.language === 'en' ? 'This article link is unavailable' : '这篇文章暂时没有可用链接', 'error');
@@ -2280,7 +2309,7 @@ function openFeedLink(link) {
   item?.classList.add('is-opening');
   item?.setAttribute('aria-busy', 'true');
   feedNavigationPending = true;
-  if (state.openMode === 'new-tab') {
+  if (forceNewTab || state.openMode === 'new-tab') {
     const opened = window.open(target, '_blank', 'noopener,noreferrer');
     clearFeedNavigationPending();
     if (!opened) toast(state.language === 'en' ? 'The new tab was blocked by the browser' : '浏览器拦截了新标签页，请允许后重试', 'error');
@@ -2360,7 +2389,9 @@ function renderHome() {
     const newOrder = Number(newIds.has(b.id)) - Number(newIds.has(a.id));
     return newOrder || ((feedItemTimestamp(b) || 0) - (feedItemTimestamp(a) || 0));
   });
-  const featuredJiemianFlash = !isFootprint && state.homeFeed.active === 'jiemian' && items.length ? items[0] : null;
+  const featuredJiemianFlash = !isFootprint && state.homeFeed.active === 'jiemian'
+    ? [...allItems].sort((a, b) => (feedItemTimestamp(b) || 0) - (feedItemTimestamp(a) || 0))[0] || null
+    : null;
   const listItems = featuredJiemianFlash ? items.filter((item) => item.id !== featuredJiemianFlash.id) : items;
   const renderLimit = isFootprint || homeFeedExpanded.has(state.homeFeed.active) ? RSS_MAX_ITEMS_PER_SOURCE : HOME_FEED_RENDER_LIMIT;
   const visibleItems = listItems.slice(0, renderLimit);
@@ -7706,7 +7737,7 @@ workspace.addEventListener('click', async (event) => {
   const feedLink = feedItem?.dataset.feedLink;
   if (feedItem) {
     if (feedLink) {
-      if (openFeedLink(feedLink)) { markFeedRead(feedItem.dataset.feedId); feedItem.classList.add('is-read'); }
+      if (openFeedLink(feedLink, feedItem.dataset.feedOpenNewTab === 'true')) { markFeedRead(feedItem.dataset.feedId); feedItem.classList.add('is-read'); }
     } else toast(state.language === 'en' ? 'This article link is unavailable' : '这篇文章暂时没有可用链接', 'error');
     return;
   }
