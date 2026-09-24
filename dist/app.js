@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.321';
+const APP_VERSION = '2.18.322';
 // The OAuth secret stays in the Cloudflare Worker. The browser only knows the
 // public client id and receives the authorization result in the URL fragment,
 // which is consumed immediately and never sent to a server.
@@ -455,7 +455,7 @@ function navigationIconSources(value) {
     const parsed = new URL(url);
     const hostname = parsed.hostname;
     if (navigationUsesDesktopBrandIcon(url)) return [navigationAppAssetUrl('icons/bilibili.svg'), 'https://static.hdslb.com/images/favicon.ico', 'https://www.bilibili.com/favicon.ico'];
-    if (navigationUsesOneBoxBrandIcon(url)) return [navigationAppAssetUrl('icons/onebox-brand-v317-192.png?v=2.18.321'), navigationAppAssetUrl('icons/onebox-brand-v317-512.png?v=2.18.321')];
+    if (navigationUsesOneBoxBrandIcon(url)) return [navigationAppAssetUrl('icons/onebox-brand-v317-192.png?v=2.18.322'), navigationAppAssetUrl('icons/onebox-brand-v317-512.png?v=2.18.322')];
     const direct = navigationAssetBases(url).flatMap((base) => [
       new URL('apple-touch-icon.png', base).href,
       new URL('apple-touch-icon-dark.png', base).href,
@@ -6131,7 +6131,7 @@ function renderGithubDialog() {
     ? '<div class="github-action-grid"><button class="primary" data-github-upload ' + (syncing ? 'disabled' : '') + '>' + t('upload') + '</button><button class="secondary" data-github-download ' + (syncing ? 'disabled' : '') + '>' + t('download') + '</button></div><button class="text-btn github-disconnect" data-github-logout ' + (syncing ? 'disabled' : '') + '>' + t('githubLogout') + '</button>'
     : (waiting ? '<button class="secondary github-connect" disabled>' + t('githubWaiting') + '</button><button class="text-btn github-cancel" data-github-cancel>' + t('githubCancel') + '</button>' : '<button class="primary github-connect" data-github-login>' + t('githubLogin') + '</button>');
   const syncProgress = (sync.message || syncing || sync.error) ? '<section class="github-sync-progress ' + (sync.error ? 'is-error' : '') + '" aria-live="polite"><div class="github-sync-progress-head"><strong>' + escapeHtml(sync.message || (state.language === 'en' ? 'Syncing…' : '正在同步…')) + '</strong><span>' + (sync.error ? '!' : String(sync.progress) + '%') + '</span></div><div class="github-sync-progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + String(sync.progress) + '"><span style="width:' + String(sync.progress) + '%"></span></div>' + (sync.error ? '<p>' + escapeHtml(sync.error) + '</p>' : sync.progress >= 100 ? '' : '<small>' + escapeHtml(state.language === 'en' ? 'You can close this dialog; the sync will continue.' : '可以关闭此窗口，同步仍会继续。') + '</small>') + '</section>' : '';
-  dialog.innerHTML = '<div class="dialog-card github-dialog-card" role="dialog" aria-modal="true"><div class="dialog-head github-dialog-head"><div><h2>GitHub</h2></div><button class="icon-btn small github-dialog-close" data-close-github aria-label="' + t('close') + '">×</button></div><div class="github-dialog-body"><section class="github-status-section"><div class="github-section-label"><h3>' + t('githubSync') + '</h3></div>' + account + '</section><p class="github-dialog-note">' + escapeHtml(t('githubDescription')) + '</p><section class="github-sync-scope"><strong>' + t('githubSyncScopeTitle') + '</strong><p>' + escapeHtml(t('githubSyncScope')) + '</p><small>' + escapeHtml(t('githubSyncPrivacy')) + '</small></section><p class="github-dialog-note github-auth-hint">' + escapeHtml(t('githubAuthHint')) + '</p>' + code + manualToken + syncProgress + '<section class="github-actions">' + actions + '</section></div></div>';
+  dialog.innerHTML = '<div class="dialog-card github-dialog-card" role="dialog" aria-modal="true"><div class="dialog-head github-dialog-head"><div><h2>GitHub</h2></div><button class="icon-btn small github-dialog-close" data-close-github aria-label="' + t('close') + '">×</button></div><div class="github-dialog-body"><section class="github-status-section"><div class="github-section-label"><h3>' + t('githubSync') + '</h3></div>' + account + '</section><p class="github-dialog-note">' + escapeHtml(t('githubDescription')) + '</p><section class="github-sync-scope"><strong>' + t('githubSyncScopeTitle') + '</strong><p>' + escapeHtml(t('githubSyncScope')) + '</p><small>' + escapeHtml(t('githubSyncPrivacy')) + '</small></section><p class="github-dialog-note github-auth-hint">' + escapeHtml(t('githubAuthHint')) + '</p>' + code + manualToken + syncProgress + '</div><section class="github-actions">' + actions + '</section></div>';
   dialog.hidden = false; state.githubDialogOpen = true;
 }
 function closeGithubDialog() { const dialog = $('#githubDialog'); if (dialog) dialog.hidden = true; state.githubDialogOpen = false; }
