@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.332';
+const APP_VERSION = '2.18.333';
 // The OAuth secret stays in the Cloudflare Worker. The browser only knows the
 // public client id and receives the authorization result in the URL fragment,
 // which is consumed immediately and never sent to a server.
@@ -72,8 +72,8 @@ const FEED_SOURCE_REGISTRY = [
   { id: 'hupu', name: '虎扑', badge: '虎', icon: 'icons/hupu.ico?v=2.18.124', className: 'hupu', mobileHost: 'm.hupu.com', visibleByDefault: true, siteUrl: 'https://bbs.hupu.com/bxj', fetchers: [{ kind: 'hupu-bbs', url: 'https://bbs.hupu.com/bxj' }, { kind: 'hupu-bbs', url: 'https://bbs.hupu.com/topic-daily' }] },
   { id: 'xiaohongshu', name: '红书', badge: '红', icon: 'https://www.xiaohongshu.com/favicon.ico?v=2.18.264', className: 'xiaohongshu', visibleByDefault: true, siteUrl: 'https://www.xiaohongshu.com/explore', fetchers: [{ kind: 'xiaohongshu-explore', url: 'https://www.xiaohongshu.com/explore' }, { kind: 'xiaohongshu-hotboard', url: 'https://uapis.cn/api/v1/misc/hotboard?type=xiaohongshu&limit=30', direct: true }] },
   { id: 'douyin', name: '抖音', badge: '音', icon: 'https://www.douyin.com/favicon.ico?v=2.18.264', className: 'douyin', visibleByDefault: true, siteUrl: 'https://www.douyin.com/jingxuan', fetchers: [{ kind: 'douyin-hotboard', url: 'https://uapis.cn/api/v1/misc/hotboard?type=douyin&limit=30', direct: true }, { kind: 'douyin-jingxuan', url: 'https://www.douyin.com/jingxuan' }] },
-  { id: 'thepaper', name: '澎湃', badge: '澎', icon: 'https://m.thepaper.cn/_next/static/media/logo.8d76cf45.png?v=2.18.332', className: 'thepaper', mobileHost: 'm.thepaper.cn', visibleByDefault: true, siteUrl: 'https://m.thepaper.cn/', fetchers: [{ kind: 'thepaper-channel', url: 'https://www.thepaper.cn/channel_25950', timeoutMs: 15000, deadlineMs: 18000 }] },
-  { id: 'jiemian', name: '界面', badge: '面', icon: 'https://www.jiemian.com/favicon.ico?v=2.18.332', className: 'jiemian', mobileHost: 'www.jiemian.com', visibleByDefault: true, siteUrl: 'https://www.jiemian.com/lists/4.html', fetchers: [{ kind: 'jiemian-newsflash', url: 'https://www.jiemian.com/lists/1323kb.html', timeoutMs: 15000, deadlineMs: 18000 }] },
+  { id: 'thepaper', name: '澎湃', badge: '澎', icon: 'https://m.thepaper.cn/_next/static/media/logo.8d76cf45.png?v=2.18.333', className: 'thepaper', mobileHost: 'm.thepaper.cn', visibleByDefault: true, siteUrl: 'https://m.thepaper.cn/', fetchers: [{ kind: 'thepaper-channel', url: 'https://www.thepaper.cn/channel_25950', timeoutMs: 15000, deadlineMs: 18000 }] },
+  { id: 'jiemian', name: '界面', badge: '面', icon: 'https://www.jiemian.com/favicon.ico?v=2.18.333', className: 'jiemian', mobileHost: 'www.jiemian.com', visibleByDefault: true, siteUrl: 'https://www.jiemian.com/lists/4.html', fetchers: [{ kind: 'jiemian-newsflash', url: 'https://www.jiemian.com/lists/1323kb.html', timeoutMs: 15000, deadlineMs: 18000 }] },
 ];
 const RSS_SOURCES = FEED_SOURCE_REGISTRY.filter((source) => source.enabled !== false);
 const RSS_REFRESH_INTERVAL = 2 * 60 * 1000;
@@ -459,7 +459,7 @@ function navigationIconSources(value) {
     const parsed = new URL(url);
     const hostname = parsed.hostname;
     if (navigationUsesDesktopBrandIcon(url)) return [navigationAppAssetUrl('icons/bilibili.svg'), 'https://static.hdslb.com/images/favicon.ico', 'https://www.bilibili.com/favicon.ico'];
-    if (navigationUsesOneBoxBrandIcon(url)) return [navigationAppAssetUrl('icons/onebox-brand-v317-192.png?v=2.18.332'), navigationAppAssetUrl('icons/onebox-brand-v317-512.png?v=2.18.332')];
+    if (navigationUsesOneBoxBrandIcon(url)) return [navigationAppAssetUrl('icons/onebox-brand-v317-192.png?v=2.18.333'), navigationAppAssetUrl('icons/onebox-brand-v317-512.png?v=2.18.333')];
     const direct = navigationAssetBases(url).flatMap((base) => [
       new URL('apple-touch-icon.png', base).href,
       new URL('apple-touch-icon-dark.png', base).href,
@@ -5941,16 +5941,27 @@ function invalidateGithubToken() {
 }
 async function githubApiError(response, fallback = '') {
   let message = '';
+  let details = '';
+  let data = null;
   try {
-    const data = await response.clone().json();
+    data = await response.clone().json();
     message = data?.message || data?.error_description || data?.error || '';
+    if (Array.isArray(data?.errors)) {
+      details = data.errors.map((item) => {
+        if (typeof item === 'string') return item;
+        return [item?.resource, item?.field, item?.code, item?.message].filter(Boolean).join(' ');
+      }).filter(Boolean).join('; ');
+    }
   } catch { /* GitHub may return an empty or non-JSON error body. */ }
   const suffix = response?.status ? ' (' + response.status + ')' : '';
   if (response?.status === 401) {
     invalidateGithubToken();
     const error = Error(t('githubAuthExpired')); error.code = 'github-auth-expired'; return error;
   }
-  return Error((message || fallback || (state.language === 'en' ? 'GitHub request failed' : 'GitHub 请求失败')) + suffix);
+  const error = Error((message || fallback || (state.language === 'en' ? 'GitHub request failed' : 'GitHub 请求失败')) + (details ? (state.language === 'en' ? ': ' : '：') + details : '') + suffix);
+  error.status = response?.status || 0;
+  error.githubErrors = Array.isArray(data?.errors) ? data.errors : [];
+  return error;
 }
 function githubSyncLabel(mode, key) {
   const english = state.language === 'en';
@@ -6082,7 +6093,7 @@ async function findGithubGist() {
   }
   return found || null;
 }
-const GITHUB_SYNC_UPLOAD_BATCH_CHARS = 1200000;
+const GITHUB_SYNC_UPLOAD_BATCH_CHARS = 900000;
 function githubSyncUploadBatches(entries) {
   const batches = [];
   let current = {};
@@ -6102,10 +6113,19 @@ function githubSyncUploadBatches(entries) {
   return batches;
 }
 async function githubPatchGistFiles(id, files) {
-  const response = await fetch('https://api.github.com/gists/' + id, { method: 'PATCH', headers: githubHeaders(true), body: JSON.stringify({ files }) });
-  if (!response.ok) throw await githubApiError(response);
-  const updated = await response.json();
-  return updated?.files ? updated : await githubGistDetails({ id });
+  let lastError = null;
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    const response = await fetch('https://api.github.com/gists/' + id, { method: 'PATCH', headers: githubHeaders(true), body: JSON.stringify({ files }) });
+    if (response.ok) {
+      const updated = await response.json();
+      return updated?.files ? updated : await githubGistDetails({ id });
+    }
+    lastError = await githubApiError(response);
+    const retryable = response.status === 422 && !lastError.githubErrors?.length && attempt < 2;
+    if (!retryable) throw lastError;
+    await sleep(1200 * (attempt + 1));
+  }
+  throw lastError || Error(state.language === 'en' ? 'GitHub request failed' : 'GitHub 请求失败');
 }
 async function verifyGithubSettingsPayload(bundle, id, initialGist) {
   const expectedContent = String(bundle.files?.['onebox-settings.json'] || '');
@@ -6180,6 +6200,7 @@ async function githubUpload() {
     for (let index = 0; index < batches.length; index += 1) {
       updateGithubSync(mode, 64 + Math.round((index / Math.max(1, batches.length + 1)) * 16), githubSyncLabel(mode, 'upload'));
       await githubPatchGistFiles(id, batches[index]);
+      if (index < batches.length - 1) await sleep(350);
     }
     updateGithubSync(mode, 80, githubSyncLabel(mode, 'upload'));
     // Commit the manifest last so it only points at book files after those files
