@@ -1253,7 +1253,7 @@ html.reader-focus #readerDialog .reader-dialog-card { width: min(720px, 100%); m
 .feed-source-mark.guancha, .feed-source-tag.guancha b { background: transparent; color: #fff; }
 .feed-source-mark.hupu, .feed-source-tag.hupu b { background: #d52b2b; color: #fff; }
 .feed-source-mark.thepaper, .feed-source-tag.thepaper b { background: #fff; color: #222; }
-.feed-source-mark.jiemian, .feed-source-tag.jiemian b { background: #1e2734; color: #fff; }
+.feed-source-mark.jiemian, .feed-source-tag.jiemian b { background: transparent; color: #fff; }
 .feed-source-mark.footprint { background: var(--soft); color: var(--primary); }
 .feed-source-mark.footprint svg { width: 16px; height: 16px; fill: currentColor; }
 @keyframes feed-spin { to { transform: rotate(360deg); } }
@@ -1384,17 +1384,9 @@ html.reader-focus #readerDialog .reader-dialog-card { width: min(720px, 100%); m
 #workspace[data-tool="home"] .feed-source-mark.thepaper,
 #workspace[data-tool="home"] .feed-source-tag.thepaper b { background: #fff; color: #222; border: 1px solid color-mix(in srgb, var(--line) 72%, #222 28%); overflow: hidden; }
 #workspace[data-tool="home"] .feed-source-mark.jiemian,
-#workspace[data-tool="home"] .feed-source-tag.jiemian b { background: #1e2734; color: #fff; border: 0; overflow: hidden; }
+#workspace[data-tool="home"] .feed-source-tag.jiemian b { background: transparent; color: #fff; border: 0; overflow: hidden; }
 #workspace[data-tool="home"] .feed-source-mark.thepaper,
 #workspace[data-tool="home"] .feed-source-mark.jiemian { overflow: hidden; }
-#workspace[data-tool="home"] .feed-source-mark.jiemian img,
-#workspace[data-tool="home"] .feed-source-tag.jiemian b img {
-  width: 454%;
-  max-width: none;
-  height: 177%;
-  object-fit: fill;
-  object-position: left top;
-}
 .jiemian-flash-card {
   position: relative;
   margin: 10px 0 12px;
