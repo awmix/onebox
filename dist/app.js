@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.327';
+const APP_VERSION = '2.18.328';
 // The OAuth secret stays in the Cloudflare Worker. The browser only knows the
 // public client id and receives the authorization result in the URL fragment,
 // which is consumed immediately and never sent to a server.
@@ -72,8 +72,8 @@ const FEED_SOURCE_REGISTRY = [
   { id: 'hupu', name: '虎扑', badge: '虎', icon: 'icons/hupu.ico?v=2.18.124', className: 'hupu', mobileHost: 'm.hupu.com', visibleByDefault: true, siteUrl: 'https://bbs.hupu.com/bxj', fetchers: [{ kind: 'hupu-bbs', url: 'https://bbs.hupu.com/bxj' }, { kind: 'hupu-bbs', url: 'https://bbs.hupu.com/topic-daily' }] },
   { id: 'xiaohongshu', name: '红书', badge: '红', icon: 'https://www.xiaohongshu.com/favicon.ico?v=2.18.264', className: 'xiaohongshu', visibleByDefault: true, siteUrl: 'https://www.xiaohongshu.com/explore', fetchers: [{ kind: 'xiaohongshu-explore', url: 'https://www.xiaohongshu.com/explore' }, { kind: 'xiaohongshu-hotboard', url: 'https://uapis.cn/api/v1/misc/hotboard?type=xiaohongshu&limit=30', direct: true }] },
   { id: 'douyin', name: '抖音', badge: '音', icon: 'https://www.douyin.com/favicon.ico?v=2.18.264', className: 'douyin', visibleByDefault: true, siteUrl: 'https://www.douyin.com/jingxuan', fetchers: [{ kind: 'douyin-hotboard', url: 'https://uapis.cn/api/v1/misc/hotboard?type=douyin&limit=30', direct: true }, { kind: 'douyin-jingxuan', url: 'https://www.douyin.com/jingxuan' }] },
-  { id: 'thepaper', name: '澎湃', badge: '澎', icon: 'https://m.thepaper.cn/_next/static/media/logo.8d76cf45.png?v=2.18.327', className: 'thepaper', mobileHost: 'm.thepaper.cn', visibleByDefault: true, siteUrl: 'https://m.thepaper.cn/', fetchers: [{ kind: 'thepaper-channel', url: 'https://www.thepaper.cn/channel_25950', timeoutMs: 15000, deadlineMs: 18000 }] },
-  { id: 'jiemian', name: '界面', badge: '面', icon: 'https://www.jiemian.com/favicon.ico?v=2.18.327', className: 'jiemian', mobileHost: 'www.jiemian.com', visibleByDefault: true, siteUrl: 'https://www.jiemian.com/lists/4.html', fetchers: [{ kind: 'jiemian-newsflash', url: 'https://www.jiemian.com/lists/1323kb.html', timeoutMs: 15000, deadlineMs: 18000 }] },
+  { id: 'thepaper', name: '澎湃', badge: '澎', icon: 'https://m.thepaper.cn/_next/static/media/logo.8d76cf45.png?v=2.18.328', className: 'thepaper', mobileHost: 'm.thepaper.cn', visibleByDefault: true, siteUrl: 'https://m.thepaper.cn/', fetchers: [{ kind: 'thepaper-channel', url: 'https://www.thepaper.cn/channel_25950', timeoutMs: 15000, deadlineMs: 18000 }] },
+  { id: 'jiemian', name: '界面', badge: '面', icon: 'https://www.jiemian.com/favicon.ico?v=2.18.328', className: 'jiemian', mobileHost: 'www.jiemian.com', visibleByDefault: true, siteUrl: 'https://www.jiemian.com/lists/4.html', fetchers: [{ kind: 'jiemian-newsflash', url: 'https://www.jiemian.com/lists/1323kb.html', timeoutMs: 15000, deadlineMs: 18000 }] },
 ];
 const RSS_SOURCES = FEED_SOURCE_REGISTRY.filter((source) => source.enabled !== false);
 const RSS_REFRESH_INTERVAL = 2 * 60 * 1000;
@@ -459,7 +459,7 @@ function navigationIconSources(value) {
     const parsed = new URL(url);
     const hostname = parsed.hostname;
     if (navigationUsesDesktopBrandIcon(url)) return [navigationAppAssetUrl('icons/bilibili.svg'), 'https://static.hdslb.com/images/favicon.ico', 'https://www.bilibili.com/favicon.ico'];
-    if (navigationUsesOneBoxBrandIcon(url)) return [navigationAppAssetUrl('icons/onebox-brand-v317-192.png?v=2.18.327'), navigationAppAssetUrl('icons/onebox-brand-v317-512.png?v=2.18.327')];
+    if (navigationUsesOneBoxBrandIcon(url)) return [navigationAppAssetUrl('icons/onebox-brand-v317-192.png?v=2.18.328'), navigationAppAssetUrl('icons/onebox-brand-v317-512.png?v=2.18.328')];
     const direct = navigationAssetBases(url).flatMap((base) => [
       new URL('apple-touch-icon.png', base).href,
       new URL('apple-touch-icon-dark.png', base).href,
@@ -5611,18 +5611,21 @@ async function buildReaderSyncAssets() {
   for (const book of state.library) {
     if (!book?.id) continue;
     const key = syncAssetKey(book.id);
-    const storedBinary = await oneBoxDbGet('books', book.id);
-    const binary = await syncBytes(storedBinary);
-    if (book.type === 'md' && typeof book.content !== 'string') throw Error((state.language === 'en' ? 'Markdown document is missing on this device: ' : '本机缺少 Markdown 文档：') + book.name);
-    if (book.type !== 'md' && !binary?.length) throw Error((state.language === 'en' ? 'Book file is missing on this device: ' : '本机缺少书籍文件：') + book.name);
-    if (book.syncFileMissing) { delete book.syncFileMissing; libraryChanged = true; }
-    if (binary?.length) {
-      const chunks = syncChunkBase64(readerBytesToBase64(binary));
-      const names = chunks.map((content, index) => {
-        const name = 'onebox-book-' + key + '-' + index + '.b64'; files[name] = content; return name;
-      });
-      books[book.id] = { files: names };
+    let binary = null;
+    if (book.type === 'md') {
+      if (typeof book.content !== 'string') throw Error((state.language === 'en' ? 'Markdown document is missing on this device: ' : '本机缺少 Markdown 文档：') + book.name);
+      binary = new TextEncoder().encode(book.content);
+    } else {
+      const storedBinary = await oneBoxDbGet('books', book.id);
+      binary = await syncBytes(storedBinary);
+      if (!binary?.length) throw Error((state.language === 'en' ? 'Book file is missing on this device: ' : '本机缺少书籍文件：') + book.name);
     }
+    if (book.syncFileMissing) { delete book.syncFileMissing; libraryChanged = true; }
+    const chunks = syncChunkBase64(readerBytesToBase64(binary));
+    const names = chunks.map((content, index) => {
+      const name = 'onebox-book-' + key + '-' + index + '.b64'; files[name] = content; return name;
+    });
+    books[book.id] = { type: book.type, size: binary.byteLength, files: names };
     let cover = await oneBoxDbGet('book-covers', book.id);
     if (!cover && book.type === 'md') cover = readerMarkdownCover(book.content);
     if (!cover && book.type === 'epub' && binary) cover = await epubCoverData(binary);
@@ -5637,12 +5640,19 @@ async function buildReaderSyncAssets() {
   if (libraryChanged) saveLibrary();
   return { files, manifest: { version: 1, books } };
 }
-function syncPayload(readerFiles = null) {
+function syncLibraryMetadata() {
+  return state.library.map((book) => {
+    if (!book || typeof book !== 'object') return book;
+    const { content, _coverData, _coverHydrating, _coverHydrated, ...metadata } = book;
+    return metadata;
+  });
+}
+function syncPayload(readerFiles = null, library = syncLibraryMetadata()) {
   return {
     schema: 2, app: 'OneBox', version: APP_VERSION, savedAt: new Date().toISOString(), storage: syncStorageSnapshot(),
     theme: state.theme, color: state.color, languageMode: state.languageMode, language: state.language,
     toolOrder: state.toolOrder, calculator: parseStored(STORAGE.calculator, {}), events: state.events,
-    weatherCards: state.weatherCards, translationHistory: state.translationHistory, notifications: state.notifications, library: state.library,
+    weatherCards: state.weatherCards, translationHistory: state.translationHistory, notifications: state.notifications, library,
     readerPreferences: state.readerPreferences, readerLayout: state.readerLayout, translationHistoryOpen: state.translationHistoryOpen,
     homeFeedRead: state.homeFeedRead, layoutMode: state.layoutMode, topDisplay: state.topDisplay, footprint: state.footprint,
     mascotVisible: state.mascotVisible, mascotDisplayMode: state.mascotDisplayMode, mascotPosition: parseStored(STORAGE.mascotPosition, null), petProfile: state.petProfile, homeFeedOrder: state.homeFeed.order,
@@ -5652,10 +5662,10 @@ function syncPayload(readerFiles = null) {
 }
 async function buildGithubSyncBundle() {
   const assets = await buildReaderSyncAssets();
-  const payload = syncPayload(assets.manifest);
+  const payload = syncPayload(assets.manifest, syncLibraryMetadata());
   return { payload, files: { 'onebox-settings.json': JSON.stringify(payload, null, 2), ...assets.files }, bookCount: Object.keys(assets.manifest.books).length };
 }
-function githubAvatarUrl(user) {
+function githubAvatarUrlfunction githubAvatarUrl(user) {
   const avatar = String(user?.avatar_url || '').trim();
   if (/^https?:\/\//i.test(avatar)) return avatar;
   const login = String(user?.login || '').trim();
@@ -5789,31 +5799,33 @@ async function restoreReaderSyncAssets(remote, gist) {
     try { const parsed = JSON.parse(storedLibrary); if (Array.isArray(parsed)) { library = parsed; hasLibrary = true; } } catch { /* legacy payload without readable library metadata */ }
   }
   const manifest = remote?.readerFiles?.books;
-  const requiredBooks = library.filter((book) => book?.id && book.type !== 'md');
+  const requiredBooks = library.filter((book) => book?.id && ['md', 'txt', 'pdf', 'epub'].includes(book.type));
   const missingIds = new Set();
   const sourceWrites = [];
   const coverWrites = [];
   const validManifest = manifest && typeof manifest === 'object' && !Array.isArray(manifest);
   for (const book of requiredBooks) {
     const entry = validManifest ? manifest[book.id] : null;
+    if (!validManifest && book.type === 'md' && typeof book.content === 'string') continue;
     if (!Array.isArray(entry?.files) || !entry.files.length || entry.files.some((name) => !gist.files?.[name])) {
-      if (!(await syncBytes(await oneBoxDbGet('books', book.id)))?.length) missingIds.add(book.id);
+      missingIds.add(book.id);
       continue;
     }
     const chunks = await Promise.all(entry.files.map((name) => githubFileContent(gist.files[name])));
     if (chunks.some((chunk) => typeof chunk !== 'string' || !chunk)) {
-      if (!(await syncBytes(await oneBoxDbGet('books', book.id)))?.length) missingIds.add(book.id);
+      missingIds.add(book.id);
       continue;
     }
     try {
       const byteChunks = chunks.map(syncBase64Bytes);
       const total = byteChunks.reduce((sum, chunk) => sum + chunk.length, 0);
       if (!total) throw Error('empty book file');
+      if (Number.isFinite(Number(entry.size)) && total !== Number(entry.size)) throw Error('book file size mismatch');
       const bytes = new Uint8Array(total); let offset = 0;
       byteChunks.forEach((chunk) => { bytes.set(chunk, offset); offset += chunk.length; });
-      sourceWrites.push({ id: book.id, value: bytes.buffer });
+      sourceWrites.push({ id: book.id, value: bytes.buffer, content: book.type === 'md' ? new TextDecoder().decode(bytes) : '' });
     } catch {
-      if (!(await syncBytes(await oneBoxDbGet('books', book.id)))?.length) missingIds.add(book.id);
+      missingIds.add(book.id);
     }
   }
   for (const [id, entry] of Object.entries(validManifest ? manifest : {})) {
@@ -5822,20 +5834,35 @@ async function restoreReaderSyncAssets(remote, gist) {
     if (typeof cover === 'string' && /^data:image\//i.test(cover)) coverWrites.push({ id, value: cover });
   }
   for (const item of sourceWrites) {
-    if (!await oneBoxDbPut('books', item.id, item.value) && !(await syncBytes(await oneBoxDbGet('books', item.id)))?.length) missingIds.add(item.id);
+    if (!await oneBoxDbPut('books', item.id, item.value)) missingIds.add(item.id);
   }
   for (const item of coverWrites) await oneBoxDbPut('book-covers', item.id, item.value);
   const restoredIds = new Set(sourceWrites.filter((item) => !missingIds.has(item.id)).map((item) => item.id));
+  const restoredSources = new Map(sourceWrites.filter((item) => !missingIds.has(item.id)).map((item) => [item.id, item]));
   const restoredLibrary = hasLibrary ? library.map((book) => {
     if (!book || typeof book !== 'object') return book;
-    if (book.type === 'md') { const { syncFileMissing, ...available } = book; return available; }
     if (missingIds.has(book.id)) return { ...book, syncFileMissing: true };
-    if (restoredIds.has(book.id) || book.syncFileMissing) { const { syncFileMissing, ...available } = book; return available; }
+    if (restoredIds.has(book.id) || book.syncFileMissing) {
+      const { syncFileMissing, ...available } = book;
+      const source = restoredSources.get(book.id);
+      return source?.content ? { ...available, content: source.content } : available;
+    }
     return book;
   }) : null;
   return { library: restoredLibrary, missingBooks: requiredBooks.filter((book) => missingIds.has(book.id)).map((book) => book.name) };
 }
-function applyRemoteStorageSnapshot(remoteStorage) {
+async function verifyReaderSyncAssets(readerFiles, gist) {
+  const manifest = readerFiles?.books;
+  if (!manifest || typeof manifest !== 'object' || Array.isArray(manifest)) return;
+  for (const entry of Object.values(manifest)) {
+    if (!Array.isArray(entry?.files) || !entry.files.length) throw Error(state.language === 'en' ? 'GitHub book manifest is incomplete' : 'GitHub 书籍清单不完整');
+    const chunks = await Promise.all(entry.files.map((name) => githubFileContent(gist?.files?.[name])));
+    if (chunks.some((chunk) => typeof chunk !== 'string' || !chunk)) throw Error(state.language === 'en' ? 'GitHub book file is incomplete' : 'GitHub 书籍文件不完整');
+    const total = chunks.reduce((sum, chunk) => sum + syncBase64Bytes(chunk).length, 0);
+    if (!total || (Number.isFinite(Number(entry.size)) && total !== Number(entry.size))) throw Error(state.language === 'en' ? 'GitHub book file size is invalid' : 'GitHub 书籍文件大小校验失败');
+  }
+}
+function applyRemoteStorageSnapshotfunction applyRemoteStorageSnapshot(remoteStorage) {
   if (!remoteStorage || typeof remoteStorage !== 'object') return;
   const remoteKeys = new Set(Object.keys(remoteStorage).filter((key) => isSyncableStorageKey(key)));
   for (let index = localStorage.length - 1; index >= 0; index -= 1) {
@@ -6094,6 +6121,8 @@ async function githubUpload() {
     const verifiedContent = await githubFileContent(verified?.files?.['onebox-settings.json']);
     const verifiedPayload = parseGithubSyncPayload(verifiedContent);
     if (verifiedPayload?.savedAt !== bundle.payload.savedAt) throw Error(state.language === 'en' ? 'GitHub did not persist the latest OneBox data' : 'GitHub 没有保存最新的 OneBox 数据');
+    updateGithubSync(mode, 84, githubSyncLabel(mode, 'finishing'));
+    await verifyReaderSyncAssets(verifiedPayload.readerFiles, verified);
     finishGithubSync(mode, state.language === 'en' ? 'Upload complete' : '上传完成');
     toast(state.language === 'en' ? 'OneBox data uploaded to GitHub' : 'OneBox 数据已上传到 GitHub');
   } catch (error) {
