@@ -9733,7 +9733,7 @@ body.dev-tools-fullscreen #workspace[data-tool="dev"] {
   box-shadow: 0 0 0 4px color-mix(in srgb, var(--primary) 18%, transparent), 0 16px 32px color-mix(in srgb, var(--ink) 12%, transparent);
 }
 
-/* 2.18.338: GitHub sync uses one compact visual system in the dialog and
+/* 2.18.339: GitHub sync uses one compact visual system in the dialog and
    remains visible as a small progress control after the dialog is closed. */
 .header-sync-indicator {
   display: inline-flex;
@@ -9921,7 +9921,7 @@ body.dev-tools-fullscreen #workspace[data-tool="dev"] {
   #githubDialog .github-action-grid { grid-template-columns: 1fr; }
 }
 
-/* 2.18.338: simplify GitHub sync copy and keep completion feedback in a
+/* 2.18.339: simplify GitHub sync copy and keep completion feedback in a
    dismissible Toast while the header indicator owns in-flight progress. */
 #toast {
   display: flex;
@@ -10014,23 +10014,20 @@ body.dev-tools-fullscreen #workspace[data-tool="dev"] {
 #githubDialog .github-connect-cta {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+  justify-content: flex-end;
+  gap: 10px;
   padding-top: 11px;
   border-top: 1px solid color-mix(in srgb, var(--line) 82%, transparent);
 }
-#githubDialog .github-connect-cta-copy { display: grid; min-width: 0; gap: 2px; }
-#githubDialog .github-connect-cta-copy strong { color: var(--ink); font-size: 11px; }
-#githubDialog .github-connect-cta-copy small { color: var(--muted); font-size: 10px; line-height: 1.35; }
 #githubDialog .github-login-cta {
   display: inline-flex;
   flex: 0 0 auto;
-  min-height: 38px;
+  min-height: 36px;
   align-items: center;
   gap: 6px;
-  padding: 7px 10px 7px 8px;
+  padding: 6px 10px 6px 8px;
   border: 1px solid color-mix(in srgb, var(--primary) 24%, transparent);
-  border-radius: 12px;
+  border-radius: 11px;
   background: var(--primary);
   color: #fff;
   box-shadow: 0 6px 14px color-mix(in srgb, var(--primary) 20%, transparent);
@@ -10041,10 +10038,13 @@ body.dev-tools-fullscreen #workspace[data-tool="dev"] {
   white-space: nowrap;
 }
 #githubDialog .github-login-cta:disabled { cursor: not-allowed; opacity: .5; box-shadow: none; }
-#githubDialog .github-login-cta-mark { display: grid; width: 22px; height: 22px; place-items: center; border-radius: 7px; background: color-mix(in srgb, #fff 18%, transparent); }
+#githubDialog .github-login-cta-mark { display: grid; width: 20px; height: 20px; place-items: center; border-radius: 6px; background: color-mix(in srgb, #fff 18%, transparent); }
 #githubDialog .github-login-cta-mark svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.7; }
 #githubDialog .github-login-cta-arrow { margin-left: 2px; font-size: 15px; line-height: 1; }
 @media (max-width: 380px) {
-  #githubDialog .github-connect-cta { align-items: stretch; flex-direction: column; }
+  #githubDialog .github-connect-cta { justify-content: stretch; }
   #githubDialog .github-login-cta { justify-content: center; width: 100%; }
 }
+
+/* The agreement is a second-level dialog opened from GitHub sign-in. */
+#agreementDialog { z-index: 1202; }
