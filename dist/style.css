@@ -9733,7 +9733,7 @@ body.dev-tools-fullscreen #workspace[data-tool="dev"] {
   box-shadow: 0 0 0 4px color-mix(in srgb, var(--primary) 18%, transparent), 0 16px 32px color-mix(in srgb, var(--ink) 12%, transparent);
 }
 
-/* 2.18.337: GitHub sync uses one compact visual system in the dialog and
+/* 2.18.338: GitHub sync uses one compact visual system in the dialog and
    remains visible as a small progress control after the dialog is closed. */
 .header-sync-indicator {
   display: inline-flex;
@@ -9919,4 +9919,132 @@ body.dev-tools-fullscreen #workspace[data-tool="dev"] {
   #githubDialog .github-dialog-body { padding: 14px 16px 16px; }
   #githubDialog .github-actions { padding: 0 16px 14px; }
   #githubDialog .github-action-grid { grid-template-columns: 1fr; }
+}
+
+/* 2.18.338: simplify GitHub sync copy and keep completion feedback in a
+   dismissible Toast while the header indicator owns in-flight progress. */
+#toast {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  pointer-events: auto;
+  padding: 10px 11px 10px 14px;
+  text-align: left;
+}
+.toast-copy { min-width: 0; overflow-wrap: anywhere; }
+.toast-close {
+  display: grid;
+  flex: 0 0 22px;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: color-mix(in srgb, #fff 18%, transparent);
+  color: currentColor;
+  cursor: pointer;
+  font: inherit;
+  font-size: 16px;
+  line-height: 1;
+}
+#githubDialog .github-section-label,
+#githubDialog .github-dialog-kicker,
+#githubDialog .github-summary,
+#githubDialog .github-sync-scope { display: none; }
+#githubDialog .github-not-connected-card {
+  display: grid;
+  align-items: stretch;
+  gap: 12px;
+  padding: 14px;
+}
+#githubDialog .github-status-card-main { display: flex; align-items: center; gap: 10px; min-width: 0; }
+#githubDialog .github-status-copy small { overflow: visible; text-overflow: clip; white-space: normal; }
+#githubDialog .github-agreement-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.45;
+}
+#githubDialog .github-agreement-check input,
+#githubDialog .github-sync-option input { flex: 0 0 auto; width: 16px; height: 16px; margin: 0; accent-color: var(--primary); }
+#githubDialog .github-agreement-link {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--primary);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+}
+#githubDialog .github-not-connected-card .github-action-button { width: 100%; min-height: 48px; }
+#githubDialog .github-custom-sync {
+  display: grid;
+  gap: 9px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 15px;
+  background: var(--panel-2);
+}
+#githubDialog .github-custom-sync-head { display: grid; gap: 2px; }
+#githubDialog .github-custom-sync-head strong { color: var(--ink); font-size: 12px; }
+#githubDialog .github-custom-sync-head small { color: var(--muted); font-size: 10px; line-height: 1.4; }
+#githubDialog .github-sync-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; }
+#githubDialog .github-sync-option {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 9px;
+  border: 1px solid color-mix(in srgb, var(--line) 78%, transparent);
+  border-radius: 10px;
+  color: var(--ink);
+  cursor: pointer;
+  font-size: 11px;
+}
+#githubDialog .github-sync-option:has(input:checked) { border-color: color-mix(in srgb, var(--primary) 42%, var(--line)); background: color-mix(in srgb, var(--primary) 7%, transparent); }
+@media (max-width: 600px) {
+  #githubDialog .github-sync-options { grid-template-columns: 1fr 1fr; }
+  #toast { max-width: calc(100vw - 28px); }
+}
+
+/* Keep the disconnected state as one composed card instead of a second full-width action card. */
+#githubDialog .github-connect-cta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 11px;
+  border-top: 1px solid color-mix(in srgb, var(--line) 82%, transparent);
+}
+#githubDialog .github-connect-cta-copy { display: grid; min-width: 0; gap: 2px; }
+#githubDialog .github-connect-cta-copy strong { color: var(--ink); font-size: 11px; }
+#githubDialog .github-connect-cta-copy small { color: var(--muted); font-size: 10px; line-height: 1.35; }
+#githubDialog .github-login-cta {
+  display: inline-flex;
+  flex: 0 0 auto;
+  min-height: 38px;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 10px 7px 8px;
+  border: 1px solid color-mix(in srgb, var(--primary) 24%, transparent);
+  border-radius: 12px;
+  background: var(--primary);
+  color: #fff;
+  box-shadow: 0 6px 14px color-mix(in srgb, var(--primary) 20%, transparent);
+  cursor: pointer;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+#githubDialog .github-login-cta:disabled { cursor: not-allowed; opacity: .5; box-shadow: none; }
+#githubDialog .github-login-cta-mark { display: grid; width: 22px; height: 22px; place-items: center; border-radius: 7px; background: color-mix(in srgb, #fff 18%, transparent); }
+#githubDialog .github-login-cta-mark svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.7; }
+#githubDialog .github-login-cta-arrow { margin-left: 2px; font-size: 15px; line-height: 1; }
+@media (max-width: 380px) {
+  #githubDialog .github-connect-cta { align-items: stretch; flex-direction: column; }
+  #githubDialog .github-login-cta { justify-content: center; width: 100%; }
 }
