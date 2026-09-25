@@ -9733,7 +9733,7 @@ body.dev-tools-fullscreen #workspace[data-tool="dev"] {
   box-shadow: 0 0 0 4px color-mix(in srgb, var(--primary) 18%, transparent), 0 16px 32px color-mix(in srgb, var(--ink) 12%, transparent);
 }
 
-/* 2.18.342: GitHub sync uses one compact visual system in the dialog and
+/* 2.18.344: GitHub sync uses one compact visual system in the dialog and
    remains visible as a small progress control after the dialog is closed. */
 .header-sync-indicator {
   display: inline-flex;
@@ -9921,7 +9921,7 @@ body.dev-tools-fullscreen #workspace[data-tool="dev"] {
   #githubDialog .github-action-grid { grid-template-columns: 1fr; }
 }
 
-/* 2.18.342: simplify GitHub sync copy and keep completion feedback in a
+/* 2.18.344: simplify GitHub sync copy and keep completion feedback in a
    dismissible Toast while the header indicator owns in-flight progress. */
 #toast {
   display: flex;
@@ -10049,7 +10049,7 @@ body.dev-tools-fullscreen #workspace[data-tool="dev"] {
 /* The agreement is a second-level dialog opened from GitHub sign-in. */
 #agreementDialog { z-index: 1202; }
 
-/* 2.18.342: keep sync choices compact and make each action read as one
+/* 2.18.344: keep sync choices compact and make each action read as one
    consistent control instead of a title, hint and trailing arrow. */
 #githubDialog .github-custom-sync { gap: 10px; }
 #githubDialog .github-custom-sync-head { display: block; }
@@ -10073,7 +10073,7 @@ body.dev-tools-fullscreen #workspace[data-tool="dev"] {
   #githubDialog .github-sync-options { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 
-/* 2.18.342: make the three connected actions equal tiles on every viewport. */
+/* 2.18.344: make the three connected actions equal tiles on every viewport. */
 #githubDialog .github-action-grid {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
@@ -10111,7 +10111,7 @@ body.dev-tools-fullscreen #workspace[data-tool="dev"] {
   #githubDialog .github-action-button { min-height: 74px; padding-inline: 4px; }
 }
 
-/* 2.18.342: soften the primary action and reduce icon weight for a calmer row. */
+/* 2.18.344: soften the primary action and reduce icon weight for a calmer row. */
 #githubDialog .github-action-button.is-primary {
   border-color: color-mix(in srgb, var(--primary) 30%, var(--line));
   background: color-mix(in srgb, var(--primary) 9%, var(--panel));
@@ -10131,4 +10131,136 @@ body.dev-tools-fullscreen #workspace[data-tool="dev"] {
 #githubDialog .github-action-icon svg {
   width: 14px;
   height: 14px;
+}
+
+/* 2.18.344: reduce the action row so it sits quietly below sync choices. */
+#githubDialog .github-action-button {
+  min-height: 64px;
+  gap: 5px;
+  padding-block: 7px;
+}
+#githubDialog .github-action-icon {
+  flex-basis: 20px;
+  width: 20px;
+  height: 20px;
+  border-radius: 7px;
+}
+#githubDialog .github-action-icon svg {
+  width: 12px;
+  height: 12px;
+}
+@media (max-width: 600px) {
+  #githubDialog .github-action-button { min-height: 62px; }
+}
+
+/* 2.18.344: give the disconnected state a clearer status, consent and action hierarchy. */
+#githubDialog .github-not-connected-card {
+  gap: 11px;
+  padding: 16px;
+  border-radius: 20px;
+  background: color-mix(in srgb, var(--panel-2) 88%, var(--panel));
+}
+#githubDialog .github-status-card-main { gap: 12px; }
+#githubDialog .github-not-connected-card .github-status-icon {
+  flex-basis: 42px;
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--primary) 10%, var(--panel));
+  color: var(--primary);
+}
+#githubDialog .github-not-connected-card .github-status-icon svg {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.7;
+}
+#githubDialog .github-not-connected-card .github-status-copy { gap: 3px; }
+#githubDialog .github-not-connected-card .github-status-copy strong {
+  font-size: 18px;
+  letter-spacing: -.02em;
+}
+#githubDialog .github-not-connected-card .github-status-copy small {
+  font-size: 12px;
+  line-height: 1.45;
+}
+#githubDialog .github-agreement-check {
+  align-items: center;
+  gap: 10px;
+  padding: 10px 11px;
+  border: 1px solid color-mix(in srgb, var(--line) 82%, var(--primary) 18%);
+  border-radius: 13px;
+  background: var(--panel);
+  color: var(--muted);
+  line-height: 1.4;
+}
+#githubDialog .github-agreement-check > input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+#githubDialog .github-agreement-check > span {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+#githubDialog .github-agreement-check > span::before {
+  display: block;
+  flex: 0 0 20px;
+  width: 20px;
+  height: 20px;
+  border: 1.5px solid color-mix(in srgb, var(--muted) 46%, var(--line));
+  border-radius: 6px;
+  background: var(--panel-2);
+  content: '';
+  transition: background .16s ease, border-color .16s ease;
+}
+#githubDialog .github-agreement-check > span::after {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  width: 8px;
+  height: 4px;
+  border-bottom: 2px solid #fff;
+  border-left: 2px solid #fff;
+  content: '';
+  opacity: 0;
+  transform: rotate(-45deg) scale(.7);
+  transition: opacity .16s ease, transform .16s ease;
+}
+#githubDialog .github-agreement-check > input:checked + span::before {
+  border-color: var(--primary);
+  background: var(--primary);
+}
+#githubDialog .github-agreement-check > input:checked + span::after {
+  opacity: 1;
+  transform: rotate(-45deg) scale(1);
+}
+#githubDialog .github-agreement-check > input:focus-visible + span::before {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 20%, transparent);
+}
+#githubDialog .github-connect-cta {
+  justify-content: stretch;
+  padding-top: 1px;
+  border-top: 0;
+}
+#githubDialog .github-login-cta {
+  width: 100%;
+  min-height: 44px;
+  justify-content: center;
+  border-radius: 13px;
+  box-shadow: 0 6px 16px color-mix(in srgb, var(--primary) 16%, transparent);
+}
+#githubDialog .github-login-cta-mark {
+  width: 22px;
+  height: 22px;
+  border-radius: 7px;
 }
