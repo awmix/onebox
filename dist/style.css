@@ -9733,7 +9733,7 @@ body.dev-tools-fullscreen #workspace[data-tool="dev"] {
   box-shadow: 0 0 0 4px color-mix(in srgb, var(--primary) 18%, transparent), 0 16px 32px color-mix(in srgb, var(--ink) 12%, transparent);
 }
 
-/* 2.18.345: GitHub sync uses one compact visual system in the dialog and
+/* 2.18.346: GitHub sync uses one compact visual system in the dialog and
    remains visible as a small progress control after the dialog is closed. */
 .header-sync-indicator {
   display: inline-flex;
@@ -9921,7 +9921,7 @@ body.dev-tools-fullscreen #workspace[data-tool="dev"] {
   #githubDialog .github-action-grid { grid-template-columns: 1fr; }
 }
 
-/* 2.18.345: simplify GitHub sync copy and keep completion feedback in a
+/* 2.18.346: simplify GitHub sync copy and keep completion feedback in a
    dismissible Toast while the header indicator owns in-flight progress. */
 #toast {
   display: flex;
@@ -10049,7 +10049,7 @@ body.dev-tools-fullscreen #workspace[data-tool="dev"] {
 /* The agreement is a second-level dialog opened from GitHub sign-in. */
 #agreementDialog { z-index: 1202; }
 
-/* 2.18.345: keep sync choices compact and make each action read as one
+/* 2.18.346: keep sync choices compact and make each action read as one
    consistent control instead of a title, hint and trailing arrow. */
 #githubDialog .github-custom-sync { gap: 10px; }
 #githubDialog .github-custom-sync-head { display: block; }
@@ -10073,7 +10073,7 @@ body.dev-tools-fullscreen #workspace[data-tool="dev"] {
   #githubDialog .github-sync-options { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 
-/* 2.18.345: make the three connected actions equal tiles on every viewport. */
+/* 2.18.346: make the three connected actions equal tiles on every viewport. */
 #githubDialog .github-action-grid {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
@@ -10111,7 +10111,7 @@ body.dev-tools-fullscreen #workspace[data-tool="dev"] {
   #githubDialog .github-action-button { min-height: 74px; padding-inline: 4px; }
 }
 
-/* 2.18.345: soften the primary action and reduce icon weight for a calmer row. */
+/* 2.18.346: soften the primary action and reduce icon weight for a calmer row. */
 #githubDialog .github-action-button.is-primary {
   border-color: color-mix(in srgb, var(--primary) 30%, var(--line));
   background: color-mix(in srgb, var(--primary) 9%, var(--panel));
@@ -10133,7 +10133,7 @@ body.dev-tools-fullscreen #workspace[data-tool="dev"] {
   height: 14px;
 }
 
-/* 2.18.345: reduce the action row so it sits quietly below sync choices. */
+/* 2.18.346: reduce the action row so it sits quietly below sync choices. */
 #githubDialog .github-action-button {
   min-height: 64px;
   gap: 5px;
@@ -10153,7 +10153,7 @@ body.dev-tools-fullscreen #workspace[data-tool="dev"] {
   #githubDialog .github-action-button { min-height: 62px; }
 }
 
-/* 2.18.345: give the disconnected state a clearer status, consent and action hierarchy. */
+/* 2.18.346: give the disconnected state a clearer status, consent and action hierarchy. */
 #githubDialog .github-not-connected-card {
   gap: 11px;
   padding: 16px;
@@ -10265,7 +10265,7 @@ body.dev-tools-fullscreen #workspace[data-tool="dev"] {
   border-radius: 7px;
 }
 
-/* 2.18.345: use one calm surface with a clear status, consent and action flow. */
+/* 2.18.346: use one calm surface with a clear status, consent and action flow. */
 #githubDialog .github-dialog-card { width: min(460px, 100%); }
 #githubDialog .github-dialog-head {
   padding: 18px 22px 10px;
@@ -10316,4 +10316,102 @@ body.dev-tools-fullscreen #workspace[data-tool="dev"] {
 @media (max-width: 600px) {
   #githubDialog .github-dialog-head { padding: 16px 18px 8px; }
   #githubDialog .github-dialog-body { padding: 8px 18px 18px; }
+}
+
+/* 2.18.346: quiet the connected state and make sync choices lightweight. */
+#githubDialog .github-status-card.is-connected {
+  padding: 2px 0 12px;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  background: transparent;
+}
+#githubDialog .github-status-card.is-connected .github-status-icon {
+  flex-basis: 38px;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+}
+#githubDialog .github-status-card.is-connected .github-status-copy strong { font-size: 16px; }
+#githubDialog .github-status-card.is-connected .github-status-copy small { font-size: 11px; }
+#githubDialog .github-custom-sync {
+  gap: 10px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+#githubDialog .github-custom-sync-head strong { font-size: 13px; }
+#githubDialog .github-sync-options {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+#githubDialog .github-sync-option {
+  min-height: 34px;
+  justify-content: flex-start;
+  gap: 6px;
+  padding: 6px 7px;
+  border-color: color-mix(in srgb, var(--line) 88%, var(--primary) 12%);
+  border-radius: 10px;
+  background: var(--panel-2);
+  font-size: 11px;
+}
+#githubDialog .github-sync-option input {
+  appearance: none;
+  display: grid;
+  flex: 0 0 15px;
+  width: 15px;
+  height: 15px;
+  margin: 0;
+  place-content: center;
+  border: 1.5px solid color-mix(in srgb, var(--muted) 42%, var(--line));
+  border-radius: 5px;
+  background: transparent;
+  accent-color: transparent;
+}
+#githubDialog .github-sync-option input::after {
+  width: 7px;
+  height: 4px;
+  border-bottom: 1.7px solid #fff;
+  border-left: 1.7px solid #fff;
+  content: '';
+  opacity: 0;
+  transform: rotate(-45deg) scale(.75);
+  transition: opacity .14s ease, transform .14s ease;
+}
+#githubDialog .github-sync-option input:checked {
+  border-color: var(--primary);
+  background: var(--primary);
+}
+#githubDialog .github-sync-option input:checked::after {
+  opacity: 1;
+  transform: rotate(-45deg) scale(1);
+}
+#githubDialog .github-sync-option:has(input:checked) {
+  border-color: color-mix(in srgb, var(--primary) 28%, var(--line));
+  background: color-mix(in srgb, var(--primary) 6%, var(--panel-2));
+}
+#githubDialog .github-actions {
+  gap: 8px;
+  padding: 12px 18px 16px;
+  border-top: 1px solid var(--line);
+  background: color-mix(in srgb, var(--panel-2) 36%, var(--panel));
+}
+#githubDialog .github-action-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; }
+#githubDialog .github-action-button {
+  min-height: 56px;
+  gap: 4px;
+  padding: 7px 4px;
+  border-radius: 12px;
+}
+#githubDialog .github-action-icon {
+  flex-basis: 18px;
+  width: 18px;
+  height: 18px;
+  border-radius: 6px;
+}
+#githubDialog .github-action-icon svg { width: 11px; height: 11px; }
+#githubDialog .github-action-copy strong { font-size: 11px; }
+@media (max-width: 600px) {
+  #githubDialog .github-actions { padding: 11px 16px 14px; }
+  #githubDialog .github-action-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
