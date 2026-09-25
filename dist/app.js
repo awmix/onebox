@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.352';
+const APP_VERSION = '2.18.353';
 // The OAuth secret stays in the Cloudflare Worker. The browser only knows the
 // public client id and receives the authorization result in the URL fragment,
 // which is consumed immediately and never sent to a server.
@@ -6336,7 +6336,19 @@ async function findOrCreateGist(bundle = null, onProgress = null, forceNew = fal
   onProgress?.(42, githubSyncLabel('upload', 'gist'));
   if (!forceNew) {
     const found = await findGithubGist();
-    if (found?.id) return found.id;
+    if (found?.id) {
+      try {
+        const content = await githubFileContent(found.files?.['onebox-settings.json']);
+        parseGithubSyncPayload(content);
+        return found.id;
+      } catch (error) {
+        if (error?.code === 'github-auth-expired') throw error;
+        // Do not keep retrying a damaged legacy Gist. A fresh private Gist
+        // gives the current device a valid backup without touching its data.
+        state.github.gistId = '';
+        saveGithub();
+      }
+    }
   }
   const initialBundle = bundle || await buildGithubSyncBundle();
   onProgress?.(57, githubSyncLabel('upload', 'gist'));

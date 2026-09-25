@@ -9733,7 +9733,7 @@ body.dev-tools-fullscreen #workspace[data-tool="dev"] {
   box-shadow: 0 0 0 4px color-mix(in srgb, var(--primary) 18%, transparent), 0 16px 32px color-mix(in srgb, var(--ink) 12%, transparent);
 }
 
-/* 2.18.352: GitHub sync uses one compact visual system in the dialog and
+/* 2.18.353: GitHub sync uses one compact visual system in the dialog and
    remains visible as a small progress control after the dialog is closed. */
 .header-sync-indicator {
   display: inline-flex;
@@ -9921,7 +9921,7 @@ body.dev-tools-fullscreen #workspace[data-tool="dev"] {
   #githubDialog .github-action-grid { grid-template-columns: 1fr; }
 }
 
-/* 2.18.352: simplify GitHub sync copy and keep completion feedback in a
+/* 2.18.353: simplify GitHub sync copy and keep completion feedback in a
    dismissible Toast while the header indicator owns in-flight progress. */
 #toast {
   display: flex;
@@ -10049,7 +10049,7 @@ body.dev-tools-fullscreen #workspace[data-tool="dev"] {
 /* The agreement is a second-level dialog opened from GitHub sign-in. */
 #agreementDialog { z-index: 1202; }
 
-/* 2.18.352: keep sync choices compact and make each action read as one
+/* 2.18.353: keep sync choices compact and make each action read as one
    consistent control instead of a title, hint and trailing arrow. */
 #githubDialog .github-custom-sync { gap: 10px; }
 #githubDialog .github-custom-sync-head { display: block; }
@@ -10073,7 +10073,7 @@ body.dev-tools-fullscreen #workspace[data-tool="dev"] {
   #githubDialog .github-sync-options { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 
-/* 2.18.352: make the three connected actions equal tiles on every viewport. */
+/* 2.18.353: make the three connected actions equal tiles on every viewport. */
 #githubDialog .github-action-grid {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
@@ -10111,7 +10111,7 @@ body.dev-tools-fullscreen #workspace[data-tool="dev"] {
   #githubDialog .github-action-button { min-height: 74px; padding-inline: 4px; }
 }
 
-/* 2.18.352: soften the primary action and reduce icon weight for a calmer row. */
+/* 2.18.353: soften the primary action and reduce icon weight for a calmer row. */
 #githubDialog .github-action-button.is-primary {
   border-color: color-mix(in srgb, var(--primary) 30%, var(--line));
   background: color-mix(in srgb, var(--primary) 9%, var(--panel));
@@ -10133,7 +10133,7 @@ body.dev-tools-fullscreen #workspace[data-tool="dev"] {
   height: 14px;
 }
 
-/* 2.18.352: reduce the action row so it sits quietly below sync choices. */
+/* 2.18.353: reduce the action row so it sits quietly below sync choices. */
 #githubDialog .github-action-button {
   min-height: 64px;
   gap: 5px;
@@ -10153,7 +10153,7 @@ body.dev-tools-fullscreen #workspace[data-tool="dev"] {
   #githubDialog .github-action-button { min-height: 62px; }
 }
 
-/* 2.18.352: give the disconnected state a clearer status, consent and action hierarchy. */
+/* 2.18.353: give the disconnected state a clearer status, consent and action hierarchy. */
 #githubDialog .github-not-connected-card {
   gap: 11px;
   padding: 16px;
@@ -10265,7 +10265,7 @@ body.dev-tools-fullscreen #workspace[data-tool="dev"] {
   border-radius: 7px;
 }
 
-/* 2.18.352: use one calm surface with a clear status, consent and action flow. */
+/* 2.18.353: use one calm surface with a clear status, consent and action flow. */
 #githubDialog .github-dialog-card { width: min(460px, 100%); }
 #githubDialog .github-dialog-head {
   padding: 18px 22px 10px;
@@ -10318,7 +10318,7 @@ body.dev-tools-fullscreen #workspace[data-tool="dev"] {
   #githubDialog .github-dialog-body { padding: 8px 18px 18px; }
 }
 
-/* 2.18.352: quiet the connected state and make sync choices lightweight. */
+/* 2.18.353: quiet the connected state and make sync choices lightweight. */
 #githubDialog .github-status-card.is-connected {
   padding: 2px 0 12px;
   border: 0;
@@ -10416,7 +10416,7 @@ body.dev-tools-fullscreen #workspace[data-tool="dev"] {
   #githubDialog .github-action-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 
-/* 2.18.352: make sync checks lighter and align the action row with the body. */
+/* 2.18.353: make sync checks lighter and align the action row with the body. */
 #githubDialog .github-sync-option {
   gap: 10px;
 }
@@ -10465,7 +10465,7 @@ body.dev-tools-fullscreen #workspace[data-tool="dev"] {
   #githubDialog .github-actions { padding-inline: 16px; }
 }
 
-/* 2.18.352: use the same compact switches as Settings for sync choices. */
+/* 2.18.353: use the same compact switches as Settings for sync choices. */
 #githubDialog .github-sync-option {
   display: flex;
   align-items: center;
@@ -10521,7 +10521,7 @@ body.dev-tools-fullscreen #workspace[data-tool="dev"] {
   background: var(--panel-2);
 }
 
-/* 2.18.352: match Settings > Top display exactly; no mini-cards around switches. */
+/* 2.18.353: match Settings > Top display exactly; no mini-cards around switches. */
 #githubDialog .github-sync-option {
   display: inline-flex;
   align-items: center;
@@ -10556,7 +10556,7 @@ body.dev-tools-fullscreen #workspace[data-tool="dev"] {
   background: transparent;
 }
 
-/* 2.18.352: keep the sync switch flat like Settings, without the heavy ring. */
+/* 2.18.353: keep the sync switch flat like Settings, without the heavy ring. */
 #githubDialog .github-sync-option input {
   border: 0;
   box-shadow: none;
@@ -10567,7 +10567,7 @@ body.dev-tools-fullscreen #workspace[data-tool="dev"] {
   box-shadow: none;
 }
 
-/* 2.18.352: reset the global form-field padding so the switch stays pill-shaped. */
+/* 2.18.353: reset the global form-field padding so the switch stays pill-shaped. */
 #githubDialog .github-sync-option input {
   padding: 0 !important;
   line-height: 17px;
