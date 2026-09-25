@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.351';
+const APP_VERSION = '2.18.352';
 // The OAuth secret stays in the Cloudflare Worker. The browser only knows the
 // public client id and receives the authorization result in the URL fragment,
 // which is consumed immediately and never sent to a server.
@@ -128,10 +128,20 @@ const GITHUB_CUSTOM_SYNC_STORAGE_KEYS = Object.freeze({
   translation: new Set([STORAGE.translationHistory, STORAGE.translationHistoryOpen]),
   calculator: new Set([STORAGE.calculator]),
 });
+const GITHUB_SYNC_GROUP_FIELDS = Object.freeze({
+  settings: ['theme', 'color', 'languageMode', 'language', 'layoutMode', 'topDisplay', 'footprint', 'mascotVisible', 'mascotDisplayMode', 'mascotPosition', 'petProfile'],
+  navigation: ['toolOrder', 'homeFeedOrder', 'homeFeedVisibility', 'navigation', 'navigationLocation', 'openMode'],
+  reading: ['library', 'readerPreferences', 'readerLayout', 'homeFeedRead', 'readerFiles'],
+  messages: ['notifications', 'notificationPreference'],
+  calendar: ['events'],
+  weather: ['weatherCards'],
+  translation: ['translationHistory', 'translationHistoryOpen'],
+  calculator: ['calculator'],
+});
 function githubSyncCustomGroupForStorageKey(key) {
   return Object.entries(GITHUB_CUSTOM_SYNC_STORAGE_KEYS).find(([, keys]) => keys.has(key))?.[0] || '';
 }
-function githubSyncCustomGroupEnabled(group, selection = state.githubSyncSelection) { return !group || selection?.[group] !== false; }
+function githubSyncCustomGroupEnabled(group, selection = state.githubSyncSelection) { return Boolean(group) && selection?.[group] !== false; }
 function githubSyncStorageKeyEnabled(key, selection = state.githubSyncSelection) {
   return githubSyncCustomGroupEnabled(githubSyncCustomGroupForStorageKey(key), selection);
 }
@@ -5620,7 +5630,7 @@ async function githubApiFetch(url, options = {}) {
   throw lastError || Error(state.language === 'en' ? 'GitHub request failed' : 'GitHub 请求失败');
 }
 const GITHUB_SYNC_CHUNK_CHARS = 700000;
-const GITHUB_SYNC_EXCLUDED_STORAGE_KEYS = new Set([STORAGE.github, STORAGE.githubAgreement, STORAGE.githubSyncSelection, STORAGE.homeFeeds, STORAGE.library]);
+const GITHUB_SYNC_EXCLUDED_STORAGE_KEYS = new Set([STORAGE.github, STORAGE.githubAgreement, STORAGE.githubSyncSelection, STORAGE.homeFeeds, STORAGE.library, STORAGE.devTools, STORAGE.homeFeedActive, STORAGE.homeFeedVisibilityMigration, STORAGE.toolActive]);
 function isSyncableStorageKey(key) {
   return String(key || '').startsWith('onebox.')
     && !GITHUB_SYNC_EXCLUDED_STORAGE_KEYS.has(key)
@@ -5709,6 +5719,15 @@ function syncPayload(readerFiles = null, library = syncLibraryMetadata()) {
     ...(selection.calculator ? { calculator: parseStored(STORAGE.calculator, {}) } : {}),
   };
 }
+function preserveDisabledGithubPayloadGroups(payload, remote, selection) {
+  Object.entries(GITHUB_SYNC_GROUP_FIELDS).forEach(([group, fields]) => {
+    if (selection[group] !== false) return;
+    fields.forEach((key) => {
+      if (!Object.prototype.hasOwnProperty.call(payload, key) && Object.prototype.hasOwnProperty.call(remote, key)) payload[key] = remote[key];
+    });
+  });
+  return payload;
+}
 async function buildGithubSyncBundle() {
   const readingEnabled = githubSyncCustomGroupEnabled('reading');
   const assets = readingEnabled ? await buildReaderSyncAssets() : { manifest: null, files: {} };
@@ -5733,12 +5752,14 @@ async function mergeGithubUploadBundle(bundle, id) {
   ['events', 'weatherCards', 'translationHistory', 'notifications', 'library', 'homeFeedRead', 'navigation'].forEach(mergeField);
   if (selection.calculator && remote.calculator && payload.calculator) payload.calculator = mergeGithubValue(remote.calculator, payload.calculator);
   if (remote.storage && payload.storage) {
-    const retainedRemoteStorage = Object.fromEntries(Object.entries(remote.storage).filter(([key]) => githubSyncStorageKeyEnabled(key, selection)));
-    payload.storage = { ...retainedRemoteStorage, ...payload.storage };
+    // An unchecked group is intentionally left untouched in the cloud. Keep
+    // all of its existing storage instead of deleting it from the manifest.
+    payload.storage = { ...remote.storage, ...payload.storage };
     GITHUB_MERGE_STORAGE_KEYS.forEach((key) => {
       if (typeof remote.storage[key] === 'string' && typeof payload.storage[key] === 'string') payload.storage[key] = mergeGithubStorageValue(key, remote.storage[key], payload.storage[key]);
     });
   }
+  preserveDisabledGithubPayloadGroups(payload, remote, selection);
   if (remote.readerFiles?.books && payload.readerFiles?.books) payload.readerFiles = { ...payload.readerFiles, books: { ...remote.readerFiles.books, ...payload.readerFiles.books } };
   const files = { ...bundle.files, 'onebox-settings.json': JSON.stringify(payload, null, 2) };
   return { ...bundle, payload, files, bookCount: Object.keys(payload.readerFiles?.books || {}).length };
@@ -6366,7 +6387,7 @@ async function githubUpload(allowFreshGistRetry = true, forceNewGist = false) {
     if (missingFiles.length) throw Error((state.language === 'en' ? 'GitHub response is missing OneBox files: ' : 'GitHub 响应中缺少 OneBox 文件：') + missingFiles.slice(0, 3).join(', '));
     const verifiedPayload = settingsVerification.payload;
     updateGithubSync(mode, 84, githubSyncLabel(mode, 'finishing'));
-    await verifyReaderSyncAssets(verifiedPayload.readerFiles, verified);
+    if (githubSyncCustomGroupEnabled('reading')) await verifyReaderSyncAssets(verifiedPayload.readerFiles, verified);
     finishGithubSync(mode, state.language === 'en' ? 'Upload complete' : '上传完成');
     toast(state.language === 'en' ? 'OneBox data uploaded to GitHub' : 'OneBox 数据已上传到 GitHub', 'info', { persistent: true });
   } catch (error) {
