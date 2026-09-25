@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.340';
+const APP_VERSION = '2.18.341';
 // The OAuth secret stays in the Cloudflare Worker. The browser only knows the
 // public client id and receives the authorization result in the URL fragment,
 // which is consumed immediately and never sent to a server.
@@ -6504,7 +6504,7 @@ function renderGithubDialog() {
   const logoutIcon = '<svg viewBox="0 0 24 24"><path d="M10 4H6.5A2.5 2.5 0 0 0 4 6.5v11A2.5 2.5 0 0 0 6.5 20H10"/><path d="M13 8l4 4-4 4M8 12h9"/></svg>';
   const customSync = connected ? '<section class="github-custom-sync"><div class="github-custom-sync-head"><strong>' + t('githubCustomSync') + '</strong></div><div class="github-sync-options">' + [['settings', 'githubOptionSettings'], ['navigation', 'githubOptionNavigation'], ['reading', 'githubOptionReading'], ['messages', 'githubOptionMessages'], ['calendar', 'githubOptionCalendar'], ['weather', 'githubOptionWeather'], ['translation', 'githubOptionTranslation'], ['calculator', 'githubOptionCalculator']].map(([key, label]) => '<label class="github-sync-option"><input type="checkbox" data-github-sync-option="' + key + '" ' + (selection[key] ? 'checked' : '') + '><span>' + t(label) + '</span></label>').join('') + '</div></section>' : '';
   const actions = connected
-    ? '<div class="github-action-grid">' + actionButton('upload', t('githubBackup'), uploadIcon, true) + actionButton('download', t('githubRestore'), downloadIcon) + '</div><button class="github-disconnect-button" data-github-logout ' + (syncing ? 'disabled' : '') + '><span class="github-disconnect-icon" aria-hidden="true">' + logoutIcon + '</span><span class="github-disconnect-copy"><strong>' + t('githubLogout') + '</strong><small>' + t('githubLogoutHint') + '</small></span></button>'
+    ? '<div class="github-action-grid">' + actionButton('upload', t('githubBackup'), uploadIcon, true) + actionButton('download', t('githubRestore'), downloadIcon) + actionButton('logout', t('githubLogout'), logoutIcon) + '</div>'
     : '';
   dialog.innerHTML = '<div class="dialog-card github-dialog-card" role="dialog" aria-modal="true"><div class="dialog-head github-dialog-head"><div class="github-dialog-title"><h2>GitHub</h2></div><button class="icon-btn small github-dialog-close" data-close-github aria-label="' + t('close') + '">×</button></div><div class="github-dialog-body"><section class="github-status-section">' + account + '</section>' + code + manualToken + customSync + '</div>' + (actions ? '<section class="github-actions">' + actions + '</section>' : '') + '</div>';
   dialog.hidden = false; state.githubDialogOpen = true;
