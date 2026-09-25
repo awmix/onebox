@@ -1,5 +1,5 @@
 /* OneBox 2.0 — dependency-free, mobile-first PWA application layer. */
-const APP_VERSION = '2.18.339';
+const APP_VERSION = '2.18.340';
 // The OAuth secret stays in the Cloudflare Worker. The browser only knows the
 // public client id and receives the authorization result in the URL fragment,
 // which is consumed immediately and never sent to a server.
@@ -111,7 +111,7 @@ pageSwipeStage.parentNode.insertBefore(homeSourceNav, pageSwipeStage);
 const parseStored = (key, fallback) => {
   try { return JSON.parse(localStorage.getItem(key)) ?? fallback; } catch { return fallback; }
 };
-const GITHUB_CUSTOM_SYNC_DEFAULTS = Object.freeze({ calendar: true, weather: true, translation: true, notifications: true, calculator: true });
+const GITHUB_CUSTOM_SYNC_DEFAULTS = Object.freeze({ settings: true, navigation: true, reading: true, messages: true, calendar: true, weather: true, translation: true, calculator: true });
 function normalizeGithubSyncSelection(value) {
   const source = value && typeof value === 'object' ? value : {};
   return Object.fromEntries(Object.keys(GITHUB_CUSTOM_SYNC_DEFAULTS).map((key) => [key, source[key] !== false]));
@@ -119,10 +119,13 @@ function normalizeGithubSyncSelection(value) {
 function readGithubSyncSelection() { return normalizeGithubSyncSelection(parseStored(STORAGE.githubSyncSelection, GITHUB_CUSTOM_SYNC_DEFAULTS)); }
 function saveGithubSyncSelection() { saveStored(STORAGE.githubSyncSelection, state.githubSyncSelection); }
 const GITHUB_CUSTOM_SYNC_STORAGE_KEYS = Object.freeze({
+  settings: new Set([STORAGE.theme, STORAGE.language, STORAGE.layout, STORAGE.color, STORAGE.colorExplicit, STORAGE.topDisplay, STORAGE.footprint, STORAGE.mascotVisible, STORAGE.mascotDisplayMode, STORAGE.mascotPosition, STORAGE.petProfile]),
+  navigation: new Set([STORAGE.toolOrder, STORAGE.navigation, STORAGE.navigationLocation, STORAGE.openMode, STORAGE.homeFeedOrder, STORAGE.homeFeedVisibility]),
+  reading: new Set([STORAGE.readerPreferences, STORAGE.readerLayout, STORAGE.homeFeedRead]),
+  messages: new Set([STORAGE.notifications, STORAGE.notificationPreference]),
   calendar: new Set([STORAGE.events]),
   weather: new Set([STORAGE.weatherCards, STORAGE.legacyWeather]),
   translation: new Set([STORAGE.translationHistory, STORAGE.translationHistoryOpen]),
-  notifications: new Set([STORAGE.notifications, STORAGE.notificationPreference]),
   calculator: new Set([STORAGE.calculator]),
 });
 function githubSyncCustomGroupForStorageKey(key) {
@@ -265,7 +268,7 @@ const DICT = {
     copied: '已复制', translationInput: '输入待翻译内容', translateNow: '开始翻译', saveTranslation: '保存到本机',
     source: '源语言', target: '目标语言', translationResult: '翻译结果', translationHistory: '最近翻译',
     noTranslation: '翻译结果会显示在这里。', noHistory: '还没有保存翻译。',
-    githubSync: 'GitHub 云同步', githubDescription: '将本机设置、阅读数据和书籍保存到你的私有 Gist。', githubNotConnectedHint: '连接 GitHub 私有 Gist 后即可跨设备同步，授权后开启同步。', githubConnectedHint: '已连接（同步设置、导航、阅读数据）', githubCustomSync: '自定义同步内容', githubCustomSyncHint: '勾选可同步，不勾选不同步', githubOptionCalendar: '日程', githubOptionWeather: '天气卡片', githubOptionTranslation: '翻译记录', githubOptionNotifications: '通知', githubOptionCalculator: '计算器', githubAgreementCheck: '我已阅读并同意用户协议', githubAgreementRequired: '请先阅读并同意用户协议后再登录 GitHub。',
+    githubSync: 'GitHub 云同步', githubDescription: '将本机设置、阅读数据和书籍保存到你的私有 Gist。', githubNotConnectedHint: '连接 GitHub 私有 Gist 后即可跨设备同步，授权后开启同步。', githubConnectedHint: '同步设置、导航、阅读、消息等数据', githubCustomSync: '自定义同步内容', githubCustomSyncHint: '勾选可同步，不勾选不同步', githubOptionSettings: '设置', githubOptionNavigation: '导航', githubOptionReading: '阅读', githubOptionMessages: '消息', githubOptionCalendar: '日程', githubOptionWeather: '天气', githubOptionTranslation: '翻译', githubOptionCalculator: '计算器', githubAgreementCheck: '我已阅读并同意用户协议', githubAgreementRequired: '请先阅读并同意用户协议后再登录 GitHub。',
     githubClientId: 'GitHub OAuth Client ID', githubClientHint: 'OneBox 已内置公开的授权标识，不需要手动配置。', githubDeveloperSettings: '打开 OAuth Apps 设置',
     githubBrowserFlowError: '无法打开 GitHub 授权页，请检查网络后重试。', githubNetworkError: '无法连接 GitHub API，请检查网络或稍后重试。', githubAccessToken: 'GitHub 访问令牌', githubTokenHint: '令牌只保存在当前设备，需要 gist 权限。', githubUseToken: '使用访问令牌连接', githubTokenMissing: '请先填写 GitHub 访问令牌。', githubTokenInvalid: '访问令牌无效或没有可用权限。', githubTokenConnected: 'GitHub 已连接', githubWaiting: '等待 GitHub 授权…', githubCancel: '取消授权',
     githubSyncScopeTitle: '同步内容', githubSyncScope: '设置、导航、阅读数据和本地书籍。', githubSyncPrivacy: '令牌和首页网络缓存不会同步。', githubAuthHint: '授权后会自动返回 OneBox。', githubUploadHint: '保存本机最新数据', githubDownloadHint: '恢复最近备份', githubConnectHint: '授权后开启同步', githubLogoutHint: '仅断开本机连接', githubBackgroundHint: '关闭窗口也会继续。',
@@ -310,7 +313,7 @@ const DICT = {
     copied: 'Copied', translationInput: 'Text to translate', translateNow: 'Translate', saveTranslation: 'Save locally',
     source: 'Source', target: 'Target', translationResult: 'Translation', translationHistory: 'Recent translations',
     noTranslation: 'Your translation will appear here.', noHistory: 'No saved translations yet.',
-    githubSync: 'GitHub cloud sync', githubDescription: 'Save this device’s settings, reading data and books to your private Gist.', githubNotConnectedHint: 'Connect to a private GitHub Gist to sync across devices; authorization enables sync.', githubConnectedHint: 'Connected (settings, navigation and reading data sync)', githubCustomSync: 'Custom sync content', githubCustomSyncHint: 'Checked items sync; unchecked items stay local', githubOptionCalendar: 'Calendar', githubOptionWeather: 'Weather cards', githubOptionTranslation: 'Translation history', githubOptionNotifications: 'Notifications', githubOptionCalculator: 'Calculator', githubAgreementCheck: 'I have read and agree to the User Agreement', githubAgreementRequired: 'Please read and agree to the User Agreement before signing in to GitHub.',
+    githubSync: 'GitHub cloud sync', githubDescription: 'Save this device’s settings, reading data and books to your private Gist.', githubNotConnectedHint: 'Connect to a private GitHub Gist to sync across devices; authorization enables sync.', githubConnectedHint: 'Sync settings, navigation, reading and message data', githubCustomSync: 'Custom sync content', githubCustomSyncHint: 'Checked items sync; unchecked items stay local', githubOptionSettings: 'Settings', githubOptionNavigation: 'Navigation', githubOptionReading: 'Reading', githubOptionMessages: 'Messages', githubOptionCalendar: 'Calendar', githubOptionWeather: 'Weather', githubOptionTranslation: 'Translation', githubOptionCalculator: 'Calculator', githubAgreementCheck: 'I have read and agree to the User Agreement', githubAgreementRequired: 'Please read and agree to the User Agreement before signing in to GitHub.',
     githubClientId: 'GitHub OAuth Client ID', githubClientHint: 'OneBox includes its public authorization identifier; no manual setup is required.', githubDeveloperSettings: 'Open OAuth Apps settings',
     githubBrowserFlowError: 'GitHub authorization could not be opened. Check your network and try again.', githubNetworkError: 'Could not connect to the GitHub API. Check your network and try again.', githubAccessToken: 'GitHub access token', githubTokenHint: 'Stored only on this device; gist permission is required.', githubUseToken: 'Connect with access token', githubTokenMissing: 'Enter a GitHub access token first.', githubTokenInvalid: 'The access token is invalid or lacks the required permission.', githubTokenConnected: 'GitHub connected', githubWaiting: 'Waiting for GitHub authorization…', githubCancel: 'Cancel authorization',
     githubSyncScopeTitle: 'Sync content', githubSyncScope: 'Settings, navigation, reading data and local books.', githubSyncPrivacy: 'Tokens and home network caches are not synced.', githubAuthHint: 'You will return to OneBox after authorization.', githubUploadHint: 'Save the latest device data', githubDownloadHint: 'Restore the latest backup', githubConnectHint: 'Authorize to enable sync', githubLogoutHint: 'Disconnect this device only', githubBackgroundHint: 'Closing the window will not stop it.',
@@ -5693,26 +5696,24 @@ function syncLibraryMetadata() {
 }
 function syncPayload(readerFiles = null, library = syncLibraryMetadata()) {
   const selection = normalizeGithubSyncSelection(state.githubSyncSelection);
+  const enabled = (group) => selection[group] === true;
   return {
     schema: 2, app: 'OneBox', version: APP_VERSION, savedAt: new Date().toISOString(), storage: syncStorageSnapshot(selection),
-    theme: state.theme, color: state.color, languageMode: state.languageMode, language: state.language,
-    toolOrder: state.toolOrder, library,
-    readerPreferences: state.readerPreferences, readerLayout: state.readerLayout,
-    homeFeedRead: state.homeFeedRead, layoutMode: state.layoutMode, topDisplay: state.topDisplay, footprint: state.footprint,
-    mascotVisible: state.mascotVisible, mascotDisplayMode: state.mascotDisplayMode, mascotPosition: parseStored(STORAGE.mascotPosition, null), petProfile: state.petProfile, homeFeedOrder: state.homeFeed.order,
-    homeFeedVisibility: state.homeFeed.visible, navigation: state.navigation, navigationLocation: state.navigationLocation, openMode: state.openMode,
-    readerFiles,
+    ...(enabled('settings') ? { theme: state.theme, color: state.color, languageMode: state.languageMode, language: state.language, layoutMode: state.layoutMode, topDisplay: state.topDisplay, footprint: state.footprint, mascotVisible: state.mascotVisible, mascotDisplayMode: state.mascotDisplayMode, mascotPosition: parseStored(STORAGE.mascotPosition, null), petProfile: state.petProfile } : {}),
+    ...(enabled('navigation') ? { toolOrder: state.toolOrder, homeFeedOrder: state.homeFeed.order, homeFeedVisibility: state.homeFeed.visible, navigation: state.navigation, navigationLocation: state.navigationLocation, openMode: state.openMode } : {}),
+    ...(enabled('reading') ? { library, readerPreferences: state.readerPreferences, readerLayout: state.readerLayout, homeFeedRead: state.homeFeedRead, readerFiles } : {}),
+    ...(enabled('messages') ? { notifications: state.notifications, notificationPreference: state.notificationPreference } : {}),
     ...(selection.calendar ? { events: state.events } : {}),
     ...(selection.weather ? { weatherCards: state.weatherCards } : {}),
     ...(selection.translation ? { translationHistory: state.translationHistory, translationHistoryOpen: state.translationHistoryOpen } : {}),
-    ...(selection.notifications ? { notifications: state.notifications, notificationPreference: state.notificationPreference } : {}),
     ...(selection.calculator ? { calculator: parseStored(STORAGE.calculator, {}) } : {}),
   };
 }
 async function buildGithubSyncBundle() {
-  const assets = await buildReaderSyncAssets();
-  const payload = syncPayload(assets.manifest, syncLibraryMetadata());
-  return { payload, files: { 'onebox-settings.json': JSON.stringify(payload, null, 2), ...assets.files }, bookCount: Object.keys(assets.manifest.books).length };
+  const readingEnabled = githubSyncCustomGroupEnabled('reading');
+  const assets = readingEnabled ? await buildReaderSyncAssets() : { manifest: null, files: {} };
+  const payload = syncPayload(assets.manifest, readingEnabled ? syncLibraryMetadata() : []);
+  return { payload, files: { 'onebox-settings.json': JSON.stringify(payload, null, 2), ...assets.files }, bookCount: Object.keys(assets.manifest?.books || {}).length };
 }
 async function mergeGithubUploadBundle(bundle, id) {
   if (!bundle?.payload || !id) return bundle;
@@ -5732,7 +5733,8 @@ async function mergeGithubUploadBundle(bundle, id) {
   ['events', 'weatherCards', 'translationHistory', 'notifications', 'library', 'homeFeedRead', 'navigation'].forEach(mergeField);
   if (selection.calculator && remote.calculator && payload.calculator) payload.calculator = mergeGithubValue(remote.calculator, payload.calculator);
   if (remote.storage && payload.storage) {
-    payload.storage = { ...remote.storage, ...payload.storage };
+    const retainedRemoteStorage = Object.fromEntries(Object.entries(remote.storage).filter(([key]) => githubSyncStorageKeyEnabled(key, selection)));
+    payload.storage = { ...retainedRemoteStorage, ...payload.storage };
     GITHUB_MERGE_STORAGE_KEYS.forEach((key) => {
       if (typeof remote.storage[key] === 'string' && typeof payload.storage[key] === 'string') payload.storage[key] = mergeGithubStorageValue(key, remote.storage[key], payload.storage[key]);
     });
@@ -6406,30 +6408,34 @@ async function githubDownload() {
     if (!gist?.id || !remote) throw lastError || Error(t('githubSyncInvalidData'));
     const id = gist.id;
     updateGithubSync(mode, 67, githubSyncLabel(mode, 'restore'));
-    const readerRestore = await restoreReaderSyncAssets(remote, gist);
+    const settingsEnabled = githubSyncCustomGroupEnabled('settings');
+    const navigationEnabled = githubSyncCustomGroupEnabled('navigation');
+    const readingEnabled = githubSyncCustomGroupEnabled('reading');
+    const messagesEnabled = githubSyncCustomGroupEnabled('messages');
+    const readerRestore = readingEnabled ? await restoreReaderSyncAssets(remote, gist) : { library: null, missingBooks: [] };
     applyRemoteStorageSnapshot(remote.storage);
-    if (['light', 'dark', 'dark-gray', 'system'].includes(remote.theme)) { state.theme = remote.theme; localStorage.setItem(STORAGE.theme, state.theme); }
-    if (['mono', 'purple', 'blue', 'green', 'yellow'].includes(remote.color)) { state.color = remote.color; saveColorPreference(); }
-    if (remote.languageMode || remote.language) { state.languageMode = ['zh', 'en', 'system'].includes(remote.languageMode || remote.language) ? (remote.languageMode || remote.language) : 'system'; localStorage.setItem(STORAGE.language, state.languageMode); }
+    if (settingsEnabled && ['light', 'dark', 'dark-gray', 'system'].includes(remote.theme)) { state.theme = remote.theme; localStorage.setItem(STORAGE.theme, state.theme); }
+    if (settingsEnabled && ['mono', 'purple', 'blue', 'green', 'yellow'].includes(remote.color)) { state.color = remote.color; saveColorPreference(); }
+    if (settingsEnabled && (remote.languageMode || remote.language)) { state.languageMode = ['zh', 'en', 'system'].includes(remote.languageMode || remote.language) ? (remote.languageMode || remote.language) : 'system'; localStorage.setItem(STORAGE.language, state.languageMode); }
     const remoteNavigationLocation = remote.navigationLocation === 'tools' ? 'tools' : remote.navigationLocation === 'main' ? 'main' : null;
-    if (Array.isArray(remote.toolOrder)) { state.toolOrder = normalizeToolOrder(remote.toolOrder, remoteNavigationLocation === 'tools', remoteNavigationLocation === 'tools'); saveToolOrder(); }
+    if (navigationEnabled && Array.isArray(remote.toolOrder)) { state.toolOrder = normalizeToolOrder(remote.toolOrder, remoteNavigationLocation === 'tools', remoteNavigationLocation === 'tools'); saveToolOrder(); }
     if (githubSyncCustomGroupEnabled('calculator') && remote.calculator) saveStored(STORAGE.calculator, mergeGithubValue(parseStored(STORAGE.calculator, {}), remote.calculator));
     hydrateCalculatorFromStorage();
     if (githubSyncCustomGroupEnabled('calendar') && remote.events) { state.events = mergeGithubValue(state.events, remote.events); saveEvents(); }
     if (githubSyncCustomGroupEnabled('weather') && Array.isArray(remote.weatherCards)) { state.weatherCards = mergeGithubValue(state.weatherCards, remote.weatherCards); state.activeWeatherId = state.weatherCards[0]?.id || null; saveWeatherCards(); }
     if (githubSyncCustomGroupEnabled('translation') && Array.isArray(remote.translationHistory)) { state.translationHistory = mergeGithubValue(state.translationHistory, remote.translationHistory); saveTranslationHistory(); }
-    if (githubSyncCustomGroupEnabled('notifications') && Array.isArray(remote.notifications)) { state.notifications = mergeGithubValue(state.notifications, remote.notifications); saveNotifications(); }
-    if (Array.isArray(readerRestore.library)) { state.library = mergeGithubValue(state.library, readerRestore.library); saveLibrary(); }
-    if (remote.readerPreferences && typeof remote.readerPreferences === 'object') { state.readerPreferences = { ...state.readerPreferences, ...remote.readerPreferences }; saveReaderPreferences(); }
-    if (remote.readerLayout === 'list' || remote.readerLayout === 'grid') { state.readerLayout = remote.readerLayout; saveReaderLayout(); }
+    if (messagesEnabled && Array.isArray(remote.notifications)) { state.notifications = mergeGithubValue(state.notifications, remote.notifications); saveNotifications(); }
+    if (readingEnabled && Array.isArray(readerRestore.library)) { state.library = mergeGithubValue(state.library, readerRestore.library); saveLibrary(); }
+    if (readingEnabled && remote.readerPreferences && typeof remote.readerPreferences === 'object') { state.readerPreferences = { ...state.readerPreferences, ...remote.readerPreferences }; saveReaderPreferences(); }
+    if (readingEnabled && (remote.readerLayout === 'list' || remote.readerLayout === 'grid')) { state.readerLayout = remote.readerLayout; saveReaderLayout(); }
     if (githubSyncCustomGroupEnabled('translation') && typeof remote.translationHistoryOpen === 'boolean') { state.translationHistoryOpen = remote.translationHistoryOpen; saveStored(STORAGE.translationHistoryOpen, state.translationHistoryOpen); }
-    if (remote.homeFeedRead && typeof remote.homeFeedRead === 'object') { state.homeFeedRead = mergeGithubValue(state.homeFeedRead, remote.homeFeedRead); saveHomeFeedRead(); }
-    if (remote.layoutMode === 'simple' || remote.layoutMode === 'classic') { state.layoutMode = remote.layoutMode; saveLayoutPreference(); }
-    if (remote.topDisplay && typeof remote.topDisplay === 'object') { state.topDisplay = { theme: remote.topDisplay.theme !== false, language: remote.topDisplay.language !== false, messages: remote.topDisplay.messages !== false }; saveTopDisplay(); }
-    if (Array.isArray(remote.homeFeedOrder)) { state.homeFeed.order = normalizeHomeFeedOrder(remote.homeFeedOrder); saveHomeFeedOrder(); }
-    if (Array.isArray(remote.homeFeedVisibility)) { state.homeFeed.visible = normalizeHomeFeedVisibility(remote.homeFeedVisibility); saveHomeFeedVisibility(); }
-    if (remote.navigation && Array.isArray(remote.navigation.items)) { state.navigation = normalizeNavigation(mergeGithubValue(state.navigation, remote.navigation)); saveNavigation(); }
-    if (remoteNavigationLocation) {
+    if (readingEnabled && remote.homeFeedRead && typeof remote.homeFeedRead === 'object') { state.homeFeedRead = mergeGithubValue(state.homeFeedRead, remote.homeFeedRead); saveHomeFeedRead(); }
+    if (settingsEnabled && (remote.layoutMode === 'simple' || remote.layoutMode === 'classic')) { state.layoutMode = remote.layoutMode; saveLayoutPreference(); }
+    if (settingsEnabled && remote.topDisplay && typeof remote.topDisplay === 'object') { state.topDisplay = { theme: remote.topDisplay.theme !== false, language: remote.topDisplay.language !== false, messages: remote.topDisplay.messages !== false }; saveTopDisplay(); }
+    if (navigationEnabled && Array.isArray(remote.homeFeedOrder)) { state.homeFeed.order = normalizeHomeFeedOrder(remote.homeFeedOrder); saveHomeFeedOrder(); }
+    if (navigationEnabled && Array.isArray(remote.homeFeedVisibility)) { state.homeFeed.visible = normalizeHomeFeedVisibility(remote.homeFeedVisibility); saveHomeFeedVisibility(); }
+    if (navigationEnabled && remote.navigation && Array.isArray(remote.navigation.items)) { state.navigation = normalizeNavigation(mergeGithubValue(state.navigation, remote.navigation)); saveNavigation(); }
+    if (navigationEnabled && remoteNavigationLocation) {
       state.navigationLocation = remoteNavigationLocation;
       state.toolOrder = normalizeToolOrder(state.toolOrder, state.navigationLocation === 'tools', state.navigationLocation === 'tools');
       localStorage.setItem(STORAGE.navigationLocation, state.navigationLocation);
@@ -6437,17 +6443,17 @@ async function githubDownload() {
       if (state.navigationLocation === 'tools' && state.section === 'navigation') state.section = 'tools', state.tool = 'navigation';
       if (state.navigationLocation === 'main' && state.section === 'tools' && state.tool === 'navigation') state.section = 'navigation';
     }
-    if (typeof remote.footprint === 'boolean') { state.footprint = remote.footprint; saveFootprintPreference(); }
-    if (typeof remote.mascotVisible === 'boolean') { state.mascotVisible = remote.mascotVisible; saveMascotVisibility(); }
-    if (remote.mascotDisplayMode === 'full' || remote.mascotDisplayMode === 'half') { state.mascotDisplayMode = remote.mascotDisplayMode; saveMascotDisplayMode(); }
-    if (remote.mascotPosition && Number.isFinite(Number(remote.mascotPosition.left)) && Number.isFinite(Number(remote.mascotPosition.top))) {
+    if (settingsEnabled && typeof remote.footprint === 'boolean') { state.footprint = remote.footprint; saveFootprintPreference(); }
+    if (settingsEnabled && typeof remote.mascotVisible === 'boolean') { state.mascotVisible = remote.mascotVisible; saveMascotVisibility(); }
+    if (settingsEnabled && (remote.mascotDisplayMode === 'full' || remote.mascotDisplayMode === 'half')) { state.mascotDisplayMode = remote.mascotDisplayMode; saveMascotDisplayMode(); }
+    if (settingsEnabled && remote.mascotPosition && Number.isFinite(Number(remote.mascotPosition.left)) && Number.isFinite(Number(remote.mascotPosition.top))) {
       const position = { left: Number(remote.mascotPosition.left), top: Number(remote.mascotPosition.top) };
       saveStored(STORAGE.mascotPosition, position);
       if (mascotRuntime.root) mascotSetPosition(position.left, position.top, false);
     }
-    if (remote.petProfile && typeof remote.petProfile === 'object') { state.petProfile = normalizePetProfile(remote.petProfile); savePetProfile(); }
-    if (githubSyncCustomGroupEnabled('notifications') && (remote.notificationPreference === 'deny' || remote.notificationPreference === 'allow')) { state.notificationPreference = remote.notificationPreference; saveStored(STORAGE.notificationPreference, state.notificationPreference); }
-    if (remote.openMode === 'new-tab' || remote.openMode === 'current') { state.openMode = remote.openMode; saveStored(STORAGE.openMode, state.openMode); }
+    if (settingsEnabled && remote.petProfile && typeof remote.petProfile === 'object') { state.petProfile = normalizePetProfile(remote.petProfile); savePetProfile(); }
+    if (messagesEnabled && (remote.notificationPreference === 'deny' || remote.notificationPreference === 'allow')) { state.notificationPreference = remote.notificationPreference; saveStored(STORAGE.notificationPreference, state.notificationPreference); }
+    if (navigationEnabled && (remote.openMode === 'new-tab' || remote.openMode === 'current')) { state.openMode = remote.openMode; saveStored(STORAGE.openMode, state.openMode); }
     hydrateGithubRuntimeState();
     state.github.gistId = id; saveGithub(); applyLanguage(); syncMascotDisplayMode(true); syncMascotVisibility(); renderNav(); render();
     const missingBooks = readerRestore.missingBooks || [];
@@ -6492,12 +6498,13 @@ function renderGithubDialog() {
     : '<div class="github-status-card github-not-connected-card"><div class="github-status-card-main"><span class="github-status-icon">' + githubIcon + '</span><span class="github-status-copy"><strong>' + t('githubNotConnected') + '</strong><small>' + t('githubNotConnectedHint') + '</small></span></div><label class="github-agreement-check"><input id="githubAgreement" type="checkbox" ' + (agreementChecked ? 'checked' : '') + '><span>' + t('githubAgreementCheck') + ' <button type="button" class="github-agreement-link" data-open-agreement>' + t('viewAgreement') + '</button></span></label>' + (waiting ? '<div class="github-waiting-actions"><button class="github-secondary-button github-connect" disabled>' + t('githubWaiting') + '</button><button class="github-secondary-button github-cancel" data-github-cancel>' + t('githubCancel') + '</button></div>' : '<div class="github-connect-cta"><button class="github-login-cta" data-github-login ' + (!agreementChecked ? 'disabled' : '') + '><span class="github-login-cta-mark" aria-hidden="true">' + githubIcon + '</span><span>' + t('githubLogin') + '</span><span class="github-login-cta-arrow" aria-hidden="true">→</span></button></div>') + '</div>';
   const code = state.github.userCode ? '<div class="device-code"><div><small>' + (state.language === 'en' ? 'Authorize OneBox in GitHub' : '请在 GitHub 中授权 OneBox') + '</small><strong>' + escapeHtml(state.github.userCode) + '</strong><small>' + escapeHtml(t('githubWaiting')) + '</small></div><a class="github-device-link" href="' + escapeHtml(state.github.verificationUriComplete || state.github.verificationUri || 'https://github.com/login/device') + '" target="_blank" rel="noreferrer">' + t('openDevice') + '</a></div>' : '';
   const manualToken = state.github.manualTokenOpen && !connected ? '<section class="github-manual-token"><label for="githubAccessToken">' + t('githubAccessToken') + '</label><input id="githubAccessToken" type="password" placeholder="github_pat_…" autocomplete="off"><p>' + t('githubTokenHint') + '</p><button class="github-secondary-button" data-github-token>' + t('githubUseToken') + '</button></section>' : '';
-  const actionButton = (type, label, hint, icon, primary = false) => '<button class="github-action-button' + (primary ? ' is-primary' : '') + '" data-github-' + type + (syncing ? ' disabled' : '') + '><span class="github-action-icon" aria-hidden="true">' + icon + '</span><span class="github-action-copy"><strong>' + label + '</strong><small>' + hint + '</small></span><span class="github-action-arrow" aria-hidden="true">→</span></button>';
-  const uploadIcon = '<svg viewBox="0 0 24 24"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5M5 14.5V19h14v-4.5"/></svg>';
-  const downloadIcon = '<svg viewBox="0 0 24 24"><path d="M12 4v12m0 0 4.5-4.5M12 16 7.5 11.5M5 19.5h14"/></svg>';
-  const customSync = connected ? '<section class="github-custom-sync"><div class="github-custom-sync-head"><strong>' + t('githubCustomSync') + '</strong><small>' + t('githubCustomSyncHint') + '</small></div><div class="github-sync-options">' + [['calendar', 'githubOptionCalendar'], ['weather', 'githubOptionWeather'], ['translation', 'githubOptionTranslation'], ['notifications', 'githubOptionNotifications'], ['calculator', 'githubOptionCalculator']].map(([key, label]) => '<label class="github-sync-option"><input type="checkbox" data-github-sync-option="' + key + '" ' + (selection[key] ? 'checked' : '') + '><span>' + t(label) + '</span></label>').join('') + '</div></section>' : '';
+  const actionButton = (type, label, icon, primary = false) => '<button class="github-action-button' + (primary ? ' is-primary' : '') + '" data-github-' + type + (syncing ? ' disabled' : '') + '><span class="github-action-icon" aria-hidden="true">' + icon + '</span><span class="github-action-copy"><strong>' + label + '</strong></span></button>';
+  const uploadIcon = '<svg viewBox="0 0 24 24"><path d="M5 17.5a4.5 4.5 0 0 1 .8-8.93A6.5 6.5 0 0 1 18 10.5h.5a3.5 3.5 0 0 1 0 7H15"/><path d="M12 20V10m0 0-3 3m3-3 3 3"/></svg>';
+  const downloadIcon = '<svg viewBox="0 0 24 24"><path d="M5 17.5a4.5 4.5 0 0 1 .8-8.93A6.5 6.5 0 0 1 18 10.5h.5a3.5 3.5 0 0 1 0 7H15"/><path d="M12 7v10m0 0-3-3m3 3 3-3"/></svg>';
+  const logoutIcon = '<svg viewBox="0 0 24 24"><path d="M10 4H6.5A2.5 2.5 0 0 0 4 6.5v11A2.5 2.5 0 0 0 6.5 20H10"/><path d="M13 8l4 4-4 4M8 12h9"/></svg>';
+  const customSync = connected ? '<section class="github-custom-sync"><div class="github-custom-sync-head"><strong>' + t('githubCustomSync') + '</strong></div><div class="github-sync-options">' + [['settings', 'githubOptionSettings'], ['navigation', 'githubOptionNavigation'], ['reading', 'githubOptionReading'], ['messages', 'githubOptionMessages'], ['calendar', 'githubOptionCalendar'], ['weather', 'githubOptionWeather'], ['translation', 'githubOptionTranslation'], ['calculator', 'githubOptionCalculator']].map(([key, label]) => '<label class="github-sync-option"><input type="checkbox" data-github-sync-option="' + key + '" ' + (selection[key] ? 'checked' : '') + '><span>' + t(label) + '</span></label>').join('') + '</div></section>' : '';
   const actions = connected
-    ? '<div class="github-action-grid">' + actionButton('upload', t('githubBackup'), t('githubUploadHint'), uploadIcon, true) + actionButton('download', t('githubRestore'), t('githubDownloadHint'), downloadIcon) + '</div><button class="github-disconnect-button" data-github-logout ' + (syncing ? 'disabled' : '') + '><span class="github-disconnect-icon" aria-hidden="true">↪</span><span><strong>' + t('githubLogout') + '</strong><small>' + t('githubLogoutHint') + '</small></span></button>'
+    ? '<div class="github-action-grid">' + actionButton('upload', t('githubBackup'), uploadIcon, true) + actionButton('download', t('githubRestore'), downloadIcon) + '</div><button class="github-disconnect-button" data-github-logout ' + (syncing ? 'disabled' : '') + '><span class="github-disconnect-icon" aria-hidden="true">' + logoutIcon + '</span><span class="github-disconnect-copy"><strong>' + t('githubLogout') + '</strong><small>' + t('githubLogoutHint') + '</small></span></button>'
     : '';
   dialog.innerHTML = '<div class="dialog-card github-dialog-card" role="dialog" aria-modal="true"><div class="dialog-head github-dialog-head"><div class="github-dialog-title"><h2>GitHub</h2></div><button class="icon-btn small github-dialog-close" data-close-github aria-label="' + t('close') + '">×</button></div><div class="github-dialog-body"><section class="github-status-section">' + account + '</section>' + code + manualToken + customSync + '</div>' + (actions ? '<section class="github-actions">' + actions + '</section>' : '') + '</div>';
   dialog.hidden = false; state.githubDialogOpen = true;

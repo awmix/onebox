@@ -9733,7 +9733,7 @@ body.dev-tools-fullscreen #workspace[data-tool="dev"] {
   box-shadow: 0 0 0 4px color-mix(in srgb, var(--primary) 18%, transparent), 0 16px 32px color-mix(in srgb, var(--ink) 12%, transparent);
 }
 
-/* 2.18.339: GitHub sync uses one compact visual system in the dialog and
+/* 2.18.340: GitHub sync uses one compact visual system in the dialog and
    remains visible as a small progress control after the dialog is closed. */
 .header-sync-indicator {
   display: inline-flex;
@@ -9921,7 +9921,7 @@ body.dev-tools-fullscreen #workspace[data-tool="dev"] {
   #githubDialog .github-action-grid { grid-template-columns: 1fr; }
 }
 
-/* 2.18.339: simplify GitHub sync copy and keep completion feedback in a
+/* 2.18.340: simplify GitHub sync copy and keep completion feedback in a
    dismissible Toast while the header indicator owns in-flight progress. */
 #toast {
   display: flex;
@@ -10048,3 +10048,27 @@ body.dev-tools-fullscreen #workspace[data-tool="dev"] {
 
 /* The agreement is a second-level dialog opened from GitHub sign-in. */
 #agreementDialog { z-index: 1202; }
+
+/* 2.18.340: keep sync choices compact and make each action read as one
+   consistent control instead of a title, hint and trailing arrow. */
+#githubDialog .github-custom-sync { gap: 10px; }
+#githubDialog .github-custom-sync-head { display: block; }
+#githubDialog .github-sync-options { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+#githubDialog .github-sync-option { justify-content: center; gap: 5px; min-height: 34px; padding: 7px 5px; font-size: 11px; }
+#githubDialog .github-sync-option input { width: 14px; height: 14px; }
+#githubDialog .github-action-button { min-height: 48px; gap: 8px; padding: 8px 10px; border-radius: 13px; }
+#githubDialog .github-action-icon { flex-basis: 28px; width: 28px; height: 28px; border-radius: 9px; }
+#githubDialog .github-action-icon svg { width: 16px; height: 16px; }
+#githubDialog .github-action-copy { display: block; }
+#githubDialog .github-action-copy strong { font-size: 12px; }
+#githubDialog .github-action-copy small,
+#githubDialog .github-action-arrow { display: none; }
+#githubDialog .github-disconnect-button { justify-content: flex-start; min-height: 40px; padding: 7px 10px; }
+#githubDialog .github-disconnect-icon { display: grid; width: 26px; height: 26px; flex-basis: 26px; }
+#githubDialog .github-disconnect-icon svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.8; }
+#githubDialog .github-disconnect-copy { display: flex; align-items: baseline; gap: 8px; }
+#githubDialog .github-disconnect-copy strong { font-size: 11px; }
+#githubDialog .github-disconnect-copy small { font-size: 10px; }
+@media (max-width: 600px) {
+  #githubDialog .github-sync-options { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
